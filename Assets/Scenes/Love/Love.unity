@@ -159,7 +159,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a5415d347c765a34bb0669a55d0a750a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dimensions: {x: 7, y: 6}
+  dimensions: {x: 6, y: 5}
 --- !u!156049354 &1326609499
 Grid:
   m_ObjectHideFlags: 0
@@ -225,7 +225,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 9, y: 8}
+  m_Size: {x: 8, y: 7}
   m_EdgeRadius: 0
 --- !u!114 &1326609503
 MonoBehaviour:
@@ -242,6 +242,7 @@ MonoBehaviour:
   boardController: {fileID: 1326609501}
   tokensClickDetector: {fileID: 1326609504}
   swipeDetector: {fileID: 1326609505}
+  selectedToken: {fileID: 0}
 --- !u!114 &1326609504
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -268,8 +269,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   board: {fileID: 1326609498}
-  releaseDetectionDistance: 1
-  dragDetectionDistance: 2
+  releaseDetectionDistance: 0.5
+  dragDetectionDistance: 1
 --- !u!114 &1326609506
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -421,7 +422,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 0.93725497, g: 0.79215693, b: 0.86666673, a: 0}
+  m_BackGroundColor: {r: 0.43989998, g: 0.4744383, b: 0.53, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0

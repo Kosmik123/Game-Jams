@@ -5,7 +5,7 @@ namespace Bipolar.Match3
 {
     public class SwipeDetector : MonoBehaviour, IDragHandler, IEndDragHandler
     {
-        public delegate void TokenSwipeEventHandler(Token token, MoveDirection direction);
+        public delegate void TokenSwipeEventHandler(Vector2Int tokenCoord, Vector2Int direction);
         public event TokenSwipeEventHandler OnTokenSwiped;
 
         [SerializeField]
@@ -24,16 +24,20 @@ namespace Bipolar.Match3
                 return;
 
             var pressWorldPosition = eventData.pointerPressRaycast.worldPosition;
-            var token = board.GetTokenAtPosition(pressWorldPosition);
-            if (token == null)
+            var tokenCoord = board.WorldToCoord(pressWorldPosition);
+            if (board.GetToken(tokenCoord) == null)
                 return;
 
-            var currentWorldPosition = eventData.pointerCurrentRaycast.worldPosition;
+            var pointerCurrentRaycast = eventData.pointerCurrentRaycast;
+            if (pointerCurrentRaycast.isValid == false)
+                return;
+
+            var currentWorldPosition = pointerCurrentRaycast.worldPosition;
             var delta = currentWorldPosition - pressWorldPosition;
             if (delta.sqrMagnitude > dragDetectionDistance * dragDetectionDistance)
             {
                 canDrag = false;
-                OnTokenSwiped?.Invoke(token, GetDirectionFromMove(delta));
+                OnTokenSwiped?.Invoke(tokenCoord, GetDirectionFromMove(delta));
             }
         }
 
@@ -46,25 +50,29 @@ namespace Bipolar.Match3
             }
             
             var pressWorldPosition = eventData.pointerPressRaycast.worldPosition;
-            var token = board.GetTokenAtPosition(pressWorldPosition);
-            if (token == null)
+            var tokenCoord = board.WorldToCoord(pressWorldPosition);
+            if (board.GetToken(tokenCoord) == null)
                 return;
 
-            var releaseWorldPosition = eventData.pointerCurrentRaycast.worldPosition;
+            var pointerCurrentRaycast = eventData.pointerCurrentRaycast;
+            if (pointerCurrentRaycast.isValid == false)
+                return;
+
+            var releaseWorldPosition = pointerCurrentRaycast.worldPosition;
             var delta = releaseWorldPosition - pressWorldPosition;
             if (delta.sqrMagnitude > releaseDetectionDistance * releaseDetectionDistance)
             {
-                OnTokenSwiped?.Invoke(token, GetDirectionFromMove(delta));
+                OnTokenSwiped?.Invoke(tokenCoord, GetDirectionFromMove(delta));
             }
         }
 
-        private MoveDirection GetDirectionFromMove(Vector2 moveDelta)
+        private Vector2Int GetDirectionFromMove(Vector2 moveDelta)
         {
             // TODO wziąć pod uwagę różne ustawenia swizzle grida (i być może kształt też)
             if (Mathf.Abs(moveDelta.x) > Mathf.Abs(moveDelta.y))
-                return moveDelta.x < 0 ? MoveDirection.Left : MoveDirection.Right; 
+                return moveDelta.x < 0 ? Vector2Int.left : Vector2Int.right; 
 
-            return moveDelta.y < 0 ? MoveDirection.Down : MoveDirection.Up;
+            return moveDelta.y < 0 ? Vector2Int.down : Vector2Int.up;
         }
     }
 }

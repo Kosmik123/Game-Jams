@@ -88,20 +88,36 @@ namespace Bipolar.Match3
                     this.tokens[j, i] = tokens[j, i];
         }
 
+        public void SwapTokens(Vector2Int token1Coord, Vector2Int token2Coord)
+        {
+            var swapped = (tokens[token2Coord.y, token2Coord.x], tokens[token1Coord.y, token1Coord.x]);
+            (tokens[token1Coord.y, token1Coord.x], tokens[token2Coord.y, token2Coord.x]) = swapped;
+        }
+
         public Token GetTokenAtPosition(Vector3 worldPosition)
         {
             var coord = WorldToCoord(worldPosition);
             return GetToken(coord);
         }
 
+        public bool Contains(Vector2Int coord) => Contains(coord.x, coord.y);
+        
+        public bool Contains(int xCoord, int yCoord)
+        {
+            if (xCoord < 0 || yCoord < 0)
+                return false;
+
+            if (xCoord >= dimensions.x || yCoord >= dimensions.y)
+                return false;
+
+            return true;
+        }
+
         public Token GetToken(Vector2Int coord) => GetToken(coord.x, coord.y);
 
         public Token GetToken(int xCoord, int yCoord)
         {
-            if (xCoord < 0 || yCoord < 0)
-                return null;
-
-            if (xCoord >= dimensions.x || yCoord >= dimensions.y)
+            if (Contains(xCoord, yCoord) == false)
                 return null;
 
             return tokens[yCoord, xCoord];

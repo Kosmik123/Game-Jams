@@ -1,22 +1,23 @@
 ﻿using System.Collections;
 using UnityEngine;
-using UnityEngine.EventSystems;
 
 namespace Bipolar.Match3
 {
     public class Token : MonoBehaviour
     {
-        public event System.Action OnInitialized;
         public event System.Action<Token> OnMovementEnded;
+        public event System.Action<TokenType> OnTypeChanged;
 
         [SerializeField]
         private TokenType type;
-        public TokenType Type => type;
-
-        public void Initialize(TokenType tokenType)
+        public TokenType Type
         {
-            type = tokenType;
-            OnInitialized?.Invoke();
+            get => type;
+            set
+            {
+                type = value;
+                OnTypeChanged?.Invoke(type);
+            }
         }
 
         private const float defaultMoveTime = 0.5f;
@@ -41,6 +42,11 @@ namespace Bipolar.Match3
             }
             transform.position = targetPosition;
             OnMovementEnded?.Invoke(this);
+        }
+
+        private void OnValidate()
+        {
+            Type = type;
         }
     }
 }

@@ -13,17 +13,17 @@ namespace Bipolar.Match3
 
         private void OnEnable()
         {
-            token.OnInitialized += Token_OnInitialized;       
+            token.OnTypeChanged += Token_OnInitialized;       
         }
 
-        private void Token_OnInitialized()
+        private void Token_OnInitialized(TokenType type)
         {
-            spriteRenderer.color = settings.GetTokenColor(token.Type);  
+            spriteRenderer.color = settings.GetTokenColor(type);  
         }
 
         private void OnDisable()
         {
-            token.OnInitialized -= Token_OnInitialized;       
+            token.OnTypeChanged -= Token_OnInitialized;       
         }
     }
 }
