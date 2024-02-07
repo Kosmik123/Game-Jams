@@ -2,14 +2,19 @@
 
 namespace Bipolar.Match3
 {
-    public class TokensSpawner : MonoBehaviour
+    public abstract class TokensSpawner : MonoBehaviour
+    {
+        public abstract Token SpawnToken();
+    }
+
+    public class InstantiatingTokensSpawner : TokensSpawner
     {
         [SerializeField]
         private Token tokenPrototype;
         [SerializeField]
         private Transform tokensContainer;
 
-        public Token SpawnToken()
+        public override Token SpawnToken()
         {
             var token = Instantiate(tokenPrototype, tokensContainer);
             token.IsDestroyed = false;
