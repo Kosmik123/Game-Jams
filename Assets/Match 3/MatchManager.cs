@@ -7,10 +7,15 @@ namespace Bipolar.Match3
 {
     public class MatchManager : MonoBehaviour
     {
+        public event System.Action<int> OnScoreChanged;
+
         [SerializeField]
         private BoardController boardController;
         [SerializeField]
         private SwapManager swapManager;
+
+        [SerializeField, ReadOnly]
+        private int score = 0;
 
         private void OnEnable()
         {
@@ -71,6 +76,8 @@ namespace Bipolar.Match3
         private readonly List<Token> currentlyClearedTokens = new List<Token>();
         private void ClearChainTokens(TokensChain chain)
         {
+            int multiplier = Mathf.Max(1, chain.Size - 2);
+            score += multiplier * chain.Size;
             foreach (var tokenCoord in chain.TokenCoords)
             {
                 var token = boardController.Board.GetToken(tokenCoord);
@@ -85,6 +92,8 @@ namespace Bipolar.Match3
                     token.IsCleared = true;
                 }
             }
+            OnScoreChanged?.Invoke(score);
+        }
 
         private void Token_OnCleared(Token token)
         {
