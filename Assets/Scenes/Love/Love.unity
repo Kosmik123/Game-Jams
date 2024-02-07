@@ -200,7 +200,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   settings: {fileID: 11400000, guid: bfcf2dc1b16691f419860f7968a3652b, type: 2}
   tokensSpawner: {fileID: 1326609506}
-  CollapseDirection: {x: 0, y: 1}
+  collapseDirection: 1
 --- !u!61 &1326609502
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -242,7 +242,8 @@ MonoBehaviour:
   boardController: {fileID: 1326609501}
   tokensClickDetector: {fileID: 1326609504}
   swipeDetector: {fileID: 1326609505}
-  selectedToken: {fileID: 0}
+  matchMaker: {fileID: 0}
+  selectedTokenCoord: {x: -1, y: -1}
 --- !u!114 &1326609504
 MonoBehaviour:
   m_ObjectHideFlags: 0
