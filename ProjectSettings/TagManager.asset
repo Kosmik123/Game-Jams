@@ -44,3 +44,12 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: Body
+    uniqueID: 3613959411
+    locked: 0
+  - name: Head
+    uniqueID: 574039509
+    locked: 0
+  - name: Face
+    uniqueID: 3363605129
+    locked: 0
