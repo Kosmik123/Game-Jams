@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using NaughtyAttributes;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -19,7 +20,7 @@ namespace Bipolar.Match3
 
         private void SwapManager_OnSwapRequested(Vector2Int tokenCoord1, Vector2Int tokenCoord2)
         {
-            if (boardController.AreTokensMoving == false)
+            if (boardController.AreTokensMoving == false && currentlyClearedTokens.Count <= 0)
                 SwapTokens(tokenCoord1, tokenCoord2);
         }
 
@@ -62,22 +63,35 @@ namespace Bipolar.Match3
             }
 
             foreach (var chain in tokenChains)
-            {
-                DestroyChainTokens(chain);
-            }
+                ClearChainTokens(chain);
 
-            boardController.Collapse();
             return tokenChains.Count > 0;
         }
 
-        private void DestroyChainTokens(TokensChain chain)
+        private readonly List<Token> currentlyClearedTokens = new List<Token>();
+        private void ClearChainTokens(TokensChain chain)
         {
             foreach (var tokenCoord in chain.TokenCoords)
             {
                 var token = boardController.Board.GetToken(tokenCoord);
-                Destroy(token.gameObject);
-                token.IsDestroyed = true;
+                currentlyClearedTokens.Add(token);
+                token.OnCleared += Token_OnCleared;
+                if (token.TryGetComponent<TokenClearingBehavior>(out var clearing))
+                {
+                    clearing.ClearToken();
+                }
+                else
+                {
+                    token.IsCleared = true;
+                }
             }
+
+        private void Token_OnCleared(Token token)
+        {
+            token.OnCleared -= Token_OnCleared;
+            currentlyClearedTokens.Remove(token);
+            if (currentlyClearedTokens.Count <= 0)
+                boardController.Collapse();
         }
 
         private static readonly Vector2Int[] chainsDirections =

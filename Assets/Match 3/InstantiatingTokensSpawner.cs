@@ -16,9 +16,10 @@ namespace Bipolar.Match3
 
         public override Token SpawnToken()
         {
-            var token = Instantiate(tokenPrototype, tokensContainer);
-            token.IsDestroyed = false;
-            return token;
+            var spawnedToken = Instantiate(tokenPrototype, tokensContainer);
+            spawnedToken.IsCleared = false;
+            spawnedToken.OnCleared += token => Destroy(token.gameObject);
+            return spawnedToken;
         }
     }
 }

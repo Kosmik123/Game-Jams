@@ -5,7 +5,7 @@ namespace Bipolar.Match3
     public class Token : MonoBehaviour
     {
         public event System.Action<TokenType> OnTypeChanged;
-        public event System.Action OnDestroyed;
+        public event System.Action<Token> OnCleared;
 
         [SerializeField]
         private TokenType type;
@@ -19,11 +19,16 @@ namespace Bipolar.Match3
             }
         }
 
-        public bool IsDestroyed { get; set; } = false;
-
-        void OnDestroy()
+        private bool isCleared = false;
+        public bool IsCleared
         {
-            OnDestroyed?.Invoke();
+            get => isCleared;
+            set
+            {
+                isCleared = value;
+                if (isCleared)
+                    OnCleared?.Invoke(this);
+            }
         }
 
         private void OnValidate()
@@ -31,12 +36,4 @@ namespace Bipolar.Match3
             Type = type;
         }
     }
-
-    [RequireComponent(typeof(Token))]
-    public abstract class TokenDestroyBehavior : MonoBehaviour
-    {
-        public abstract void DestroyToken();
-    }
-
-
 }

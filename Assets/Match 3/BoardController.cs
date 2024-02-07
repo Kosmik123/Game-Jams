@@ -125,7 +125,7 @@ namespace Bipolar.Match3
 
                 // odtąd są inne czynnności
                 var token = Board.GetToken(coord);
-                if (token == null || token.IsDestroyed)
+                if (token == null || token.IsCleared)
                 {
                     nonExistingTokensCount++;
                 }
@@ -135,7 +135,7 @@ namespace Bipolar.Match3
                     var targetCoord = coord + offsetToMove;
                     Board.SetToken(null, coord);
                     Board.SetToken(token, targetCoord);
-                    StartTokenMovement(token, targetCoord, 0.5f); // to samo
+                    StartTokenMovement(token, targetCoord, 0.3f); // to samo
                 }
             }
 
@@ -160,7 +160,7 @@ namespace Bipolar.Match3
                 var spawnCoord = coord + spawnOffset;
                 var newToken = CreateToken(spawnCoord.x, spawnCoord.y, false);
                 Board.SetToken(newToken, coord);
-                StartTokenMovement(newToken, coord, 0.5f); // to samo
+                StartTokenMovement(newToken, coord, 0.3f); // to samo
             }
         }
 
