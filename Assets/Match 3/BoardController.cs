@@ -46,11 +46,16 @@ namespace Bipolar.Match3
             var tokens = new Token[Board.Dimentions.y, Board.Dimentions.x];
 
             OnTokensMovementStopped += CallColapseEvent;
+            var spawnOffset = CollapseDirection;
+            spawnOffset.Scale(Board.Dimentions);
+
             for (int j = 0; j < Board.Dimentions.y; j++)
             {
                 for (int i = 0; i < Board.Dimentions.x; i++)
                 {
-                    var token = CreateToken(i, j, true, true);
+                    var spawnCoord = new Vector2Int(i, j) - spawnOffset;
+                    var token = CreateToken(spawnCoord.x, spawnCoord.y, true);
+                    StartTokenMovement(token, i, j);
                     tokens[j, i] = token;
                 }
             }
@@ -63,26 +68,14 @@ namespace Bipolar.Match3
             OnTokensColapsed?.Invoke();
         }
 
-        private Token CreateToken(int xCoord, int yCoord, bool withMove = true, bool avoidMatches = false)
+        private Token CreateToken(int xCoord, int yCoord, bool avoidMatches = false)
         {
             var spawnCoord = new Vector2Int(xCoord, yCoord);
-            if (withMove)
-            {
-                var spawnOffset = CollapseDirection;
-                spawnOffset.Scale(Board.Dimentions);
-                spawnCoord -= spawnOffset;
-            }
-
             Vector3 spawnPosition = Board.CoordToWorld(spawnCoord);
             var token = tokensSpawner.SpawnToken();
             token.transform.position = spawnPosition;
             token.gameObject.name = $"Token {xCoord}:{yCoord}";
             token.Type = settings.TokenTypes[Random.Range(0, settings.TokenTypes.Count)];
-            if (withMove)
-            {
-                StartTokenMovement(token, xCoord, yCoord);
-            }
-            
             return token;
         }
 

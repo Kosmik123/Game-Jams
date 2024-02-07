@@ -50,7 +50,11 @@ namespace Bipolar.Match3
         private void BoardController_OnTokensSwapped(Vector2Int tokenCoord1, Vector2Int tokenCoord2)
         {
             boardController.OnTokensSwapped -= BoardController_OnTokensSwapped;
-            FindMatches();
+            bool wasCorrectMove = FindMatches();
+            if (wasCorrectMove == false)
+            {
+                boardController.SwapTokens(tokenCoord1, tokenCoord2);
+            }
         }
 
 
@@ -60,7 +64,7 @@ namespace Bipolar.Match3
             FindMatches();
         }
 
-        private void FindMatches()
+        private bool FindMatches()
         {
             tokenChains.Clear();
             for (int j = 0; j < boardController.Board.Dimentions.y; j++)
@@ -86,6 +90,12 @@ namespace Bipolar.Match3
                 }
             }
 
+            Invoke(nameof(Collapse), 0);
+            return tokenChains.Count > 0;
+        }
+
+        private void Collapse()
+        {
             boardController.Collapse();
         }
 
@@ -149,36 +159,6 @@ namespace Bipolar.Match3
             swipeDetector.OnTokenSwiped -= SwipeDetector_OnTokenSwiped;
             boardController.OnTokensColapsed -= BoardController_OnTokensColapsed;
             tokensClickDetector.OnTokenClicked -= TokensClickDetector_OnTokenClicked;
-        }
-    }
-
-    public class TokensChain
-    {
-        public TokenType TokenType { get; private set; }
-        private readonly HashSet<Vector2Int> tokenCoords = new HashSet<Vector2Int>();
-        public IReadOnlyCollection<Vector2Int> TokenCoords => tokenCoords;
-        public bool IsMatchFound { get; set; } = false;
-        public bool Contains(Vector2Int tokenCoord) => tokenCoords.Contains(tokenCoord);
-        public int Size => tokenCoords.Count;
-
-        public TokensChain(TokenType type)
-        {
-            TokenType = type;
-        }
-
-        public void Add(Vector2Int tokenCoord)
-        {
-            tokenCoords.Add(tokenCoord);
-        }
-
-        public void Add(TokensChain chain)
-        {
-            tokenCoords.UnionWith(chain.TokenCoords);
-        }
-
-        public void Clear()
-        {
-            tokenCoords.Clear();
         }
     }
 }

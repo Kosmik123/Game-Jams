@@ -1,3 +1,4 @@
+using NaughtyAttributes;
 using UnityEngine;
 
 namespace Bipolar.Match3
@@ -67,21 +68,6 @@ namespace Bipolar.Match3
             return transform.TransformPoint(localPosition);
         }
 
-        private void OnDrawGizmosSelected()
-        {
-            var color = Color.yellow;
-            color.a = 0.5f;
-            Gizmos.color = color;
-            for (int j = 0; j < dimensions.y; j++)
-            {
-                for (int i = 0; i < dimensions.x; i++)
-                {
-                    Vector3 position = CoordToWorld(i, j);
-                    Gizmos.DrawSphere(position, Grid.cellSize.z / 2f);
-                }
-            }
-        }
-
         public void SetTokens(Token[,] tokens)
         {
             for (int j = 0; j < Dimentions.y; j++)
@@ -94,10 +80,10 @@ namespace Bipolar.Match3
             tokens[coord.y, coord.x] = token;
         }
 
-        public void SwapTokens(Vector2Int token1Coord, Vector2Int token2Coord)
+        public void SwapTokens(Vector2Int tokenCoord1, Vector2Int tokenCoord2)
         {
-            var swapped = (tokens[token2Coord.y, token2Coord.x], tokens[token1Coord.y, token1Coord.x]);
-            (tokens[token1Coord.y, token1Coord.x], tokens[token2Coord.y, token2Coord.x]) = swapped;
+            var swapped = (tokens[tokenCoord2.y, tokenCoord2.x], tokens[tokenCoord1.y, tokenCoord1.x]);
+            (tokens[tokenCoord1.y, tokenCoord1.x], tokens[tokenCoord2.y, tokenCoord2.x]) = swapped;
         }
 
         public Token GetTokenAtPosition(Vector3 worldPosition)
@@ -107,7 +93,7 @@ namespace Bipolar.Match3
         }
 
         public bool Contains(Vector2Int coord) => Contains(coord.x, coord.y);
-        
+
         public bool Contains(int xCoord, int yCoord)
         {
             if (xCoord < 0 || yCoord < 0)
@@ -133,5 +119,24 @@ namespace Bipolar.Match3
         {
             Dimentions = dimensions;
         }
+
+        private void OnDrawGizmosSelected()
+        {
+            var darkColor = Color.black;
+            var lightColor = Color.white;
+            lightColor.a = darkColor.a = 0.3f;
+
+            for (int j = 0; j < dimensions.y; j++)
+            {
+                for (int i = 0; i < dimensions.x; i++)
+                {
+                    bool isEven = (i + j) % 2 == 0;
+                    Gizmos.color = isEven ? darkColor : lightColor; 
+                    Vector3 position = CoordToWorld(i, j);
+                    Gizmos.DrawCube(position, Grid.cellSize);
+                }
+            }
+        }
+
     }
 }
