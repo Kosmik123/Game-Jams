@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace Bipolar.Match3
 {
@@ -29,40 +31,53 @@ namespace Bipolar.Match3
         private TokensSpawner tokensSpawner;
 
         [SerializeField]
-        private Vector2Int CollapseDirection;
+        private MoveDirection collapseDirection;
+        public Vector2Int CollapseDirection
+        { 
+            get
+            {
+                return collapseDirection switch
+                {
+                    MoveDirection.Up => Vector2Int.up,
+                    MoveDirection.Left => Vector2Int.left,
+                    MoveDirection.Right => Vector2Int.right,
+                    _ => Vector2Int.down,
+                };
+            } 
+        }
         
-        private readonly List<Token> currentlyMovingTokens = new List<Token>();
+        private readonly List<TokenMovement> currentlyMovingTokens = new List<TokenMovement>();
         public bool AreTokensMoving => currentlyMovingTokens.Count > 0;
 
         private void Start()
         {
-            PopulateBoard();
+            Collapse();
         }
 
-        private void PopulateBoard()
+        //private void PopulateBoard()
+        //{
+        //    var tokens = new Token[Board.Dimentions.y, Board.Dimentions.x];
+
+        //    OnTokensMovementStopped += CallColapseEvent;
+        //    var spawnOffset = CollapseDirection;
+        //    spawnOffset.Scale(Board.Dimentions);
+
+        //    for (int j = 0; j < Board.Dimentions.y; j++)
+        //    {
+        //        for (int i = 0; i < Board.Dimentions.x; i++)
+        //        {
+        //            var spawnCoord = new Vector2Int(i, j) - spawnOffset;
+        //            var token = CreateToken(spawnCoord.x, spawnCoord.y, true);
+        //            StartTokenMovement(token, i, j);
+        //            tokens[j, i] = token;
+        //        }
+        //    }
+        //    Board.SetTokens(tokens);
+        //}
+
+        private void CallCollapseEvent()
         {
-            var tokens = new Token[Board.Dimentions.y, Board.Dimentions.x];
-
-            OnTokensMovementStopped += CallColapseEvent;
-            var spawnOffset = CollapseDirection;
-            spawnOffset.Scale(Board.Dimentions);
-
-            for (int j = 0; j < Board.Dimentions.y; j++)
-            {
-                for (int i = 0; i < Board.Dimentions.x; i++)
-                {
-                    var spawnCoord = new Vector2Int(i, j) - spawnOffset;
-                    var token = CreateToken(spawnCoord.x, spawnCoord.y, true);
-                    StartTokenMovement(token, i, j);
-                    tokens[j, i] = token;
-                }
-            }
-            Board.SetTokens(tokens);
-        }
-
-        private void CallColapseEvent()
-        {
-            OnTokensMovementStopped -= CallColapseEvent;
+            OnTokensMovementStopped -= CallCollapseEvent;
             OnTokensColapsed?.Invoke();
         }
 
@@ -92,7 +107,7 @@ namespace Bipolar.Match3
             }
 
             if (colapsed)
-                OnTokensMovementStopped += CallColapseEvent;
+                OnTokensMovementStopped += CallCollapseEvent;
         }
 
         private int CollapseTokensInLine(int lineIndex, int iterationAxis)
@@ -102,7 +117,7 @@ namespace Bipolar.Match3
 
             int startCellIndex = CollapseDirection[collapseAxis] > 0 ? -1 : 0; // odwrócony warunek
 
-            int nonExistingTokensCount = 0;
+            int nonExistingTokensCount = 0; // inna rzecz
             for (int i = 0; i < lineSize; i++) // troszkę inne
             {
                 var coord = Vector2Int.zero; // to samo
@@ -121,7 +136,7 @@ namespace Bipolar.Match3
                     var targetCoord = coord + offsetToMove;
                     Board.SetToken(null, coord);
                     Board.SetToken(token, targetCoord);
-                    StartTokenMovement(token, targetCoord);
+                    StartTokenMovement(token, targetCoord, 0.5f); // to samo
                 }
             }
 
@@ -130,41 +145,41 @@ namespace Bipolar.Match3
 
         private void RefillLine(int lineIndex, int count, int iterationAxis)
         {
-            int collapseAxis = 1 - iterationAxis;
-            int lineSize = Board.Dimentions[collapseAxis];
+            int collapseAxis = 1 - iterationAxis; // to samo
+            int lineSize = Board.Dimentions[collapseAxis]; // to samo
 
-            int startCellIndex = CollapseDirection[collapseAxis] < 0 ? -1 : 0;
+            int startCellIndex = CollapseDirection[collapseAxis] < 0 ? -1 : 0; // odwrócony warunek
 
-            var spawnOffset = -CollapseDirection * count;
+            var spawnOffset = -CollapseDirection * count; // inna rzecz
             for (int i = 0; i < count; i++) 
             {
-                var coord = Vector2Int.zero;
-                coord[iterationAxis] = lineIndex;
-                coord[collapseAxis] = (startCellIndex + i * CollapseDirection[collapseAxis] + lineSize) % lineSize;
+                var coord = Vector2Int.zero; // to samo
+                coord[iterationAxis] = lineIndex; // to samo
+                coord[collapseAxis] = (startCellIndex + i * CollapseDirection[collapseAxis] + lineSize) % lineSize; // odwrócony znak
 
                 // odtąd inne czynnności
                 var spawnCoord = coord + spawnOffset;
                 var newToken = CreateToken(spawnCoord.x, spawnCoord.y, false);
                 Board.SetToken(newToken, coord);
-                StartTokenMovement(newToken, coord);
+                StartTokenMovement(newToken, coord, 0.5f); // to samo
             }
         }
 
         private System.Action swapEndedCallback;
-        public void SwapTokens(Vector2Int token1Coord, Vector2Int token2Coord)
+        public void SwapTokens(Vector2Int tokenCoord1, Vector2Int tokenCoord2)
         {
-            var token1 = Board.GetToken(token1Coord);
-            var token2 = Board.GetToken(token2Coord);
+            var token1 = Board.GetToken(tokenCoord1);
+            var token2 = Board.GetToken(tokenCoord2);
 
-            StartTokenMovement(token2, token1Coord);
-            StartTokenMovement(token1, token2Coord);
+            StartTokenMovement(token2, tokenCoord1);
+            StartTokenMovement(token1, tokenCoord2);
 
-            Board.SwapTokens(token1Coord, token2Coord);
+            Board.SwapTokens(tokenCoord1, tokenCoord2);
             OnTokensMovementStopped += BoardController_OnTokensMovementStopped;
             swapEndedCallback = () =>
             {
                 swapEndedCallback = null;
-                OnTokensSwapped?.Invoke(token1Coord, token2Coord);
+                OnTokensSwapped?.Invoke(tokenCoord1, tokenCoord2);
             };
         }
 
@@ -174,22 +189,28 @@ namespace Bipolar.Match3
             swapEndedCallback.Invoke();
         }
 
-        public void StartTokenMovement(Token token, Vector2Int targetCoord) => StartTokenMovement(token, targetCoord.x, targetCoord.y);
-        public void StartTokenMovement(Token token, int xTargetCoord, int yTargetCoord)
+        public void StartTokenMovement(Token token, Vector2Int targetCoord, float duration = -1) => StartTokenMovement(token, targetCoord.x, targetCoord.y, duration);
+        public void StartTokenMovement(Token token, int xTargetCoord, int yTargetCoord, float duration = -1)
         {
-            token.OnMovementEnded += Token_OnMovementEnded;
-            token.BeginMovingToPosition(Board.CoordToWorld(xTargetCoord, yTargetCoord));
-            currentlyMovingTokens.Add(token);
+            if (token.TryGetComponent<TokenMovement>(out var tokenMovement))
+            {
+                tokenMovement.OnMovementEnded += Token_OnMovementEnded;
+                tokenMovement.BeginMovingToPosition(Board.CoordToWorld(xTargetCoord, yTargetCoord), duration);
+                currentlyMovingTokens.Add(tokenMovement);
+            } 
         }
 
-        private void Token_OnMovementEnded(Token token)
+        private void Token_OnMovementEnded(TokenMovement tokenMovement)
         {
-            token.OnMovementEnded -= Token_OnMovementEnded;
-            currentlyMovingTokens.Remove(token);
+            tokenMovement.OnMovementEnded -= Token_OnMovementEnded;
+            currentlyMovingTokens.Remove(tokenMovement);
+            CheckMovementFinish();
+        }
+
+        private void CheckMovementFinish()
+        {
             if (AreTokensMoving == false)
-            {
                 OnTokensMovementStopped?.Invoke();
-            }
         }
     }
 }

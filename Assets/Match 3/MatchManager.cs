@@ -4,6 +4,11 @@ using UnityEngine;
 
 namespace Bipolar.Match3
 {
+    public class MatchMaker : MonoBehaviour
+    {
+
+    }
+
     public class MatchManager : MonoBehaviour
     {
         [SerializeField]
@@ -12,6 +17,8 @@ namespace Bipolar.Match3
         private TokensClickDetector tokensClickDetector;
         [SerializeField]
         private SwipeDetector swipeDetector;
+        [SerializeField]
+        private MatchMaker matchMaker;
 
         [SerializeField]
         private Vector2Int selectedTokenCoord = -Vector2Int.one;
@@ -107,16 +114,21 @@ namespace Bipolar.Match3
 
             foreach (var chain in tokenChains)
             {
-                foreach (var tokenCoord in chain.TokenCoords)
-                {
-                    var token = boardController.Board.GetToken(tokenCoord);
-                    Destroy(token.gameObject);
-                    token.IsDestroyed = true;
-                }
+                DestroyChainTokens(chain);
             }
 
             boardController.Collapse();
             return tokenChains.Count > 0;
+        }
+
+        private void DestroyChainTokens(TokensChain chain)
+        {
+            foreach (var tokenCoord in chain.TokenCoords)
+            {
+                var token = boardController.Board.GetToken(tokenCoord);
+                Destroy(token.gameObject);
+                token.IsDestroyed = true;
+            }
         }
 
         private static readonly Vector2Int[] chainsDirections =
