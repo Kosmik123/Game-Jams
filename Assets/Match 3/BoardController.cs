@@ -1,7 +1,5 @@
-﻿using ICSharpCode.NRefactory.Parser;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.EventSystems;
 
 namespace Bipolar.Match3
 {
@@ -99,16 +97,19 @@ namespace Bipolar.Match3
 
         private int CollapseTokensInLine(int lineIndex, int iterationAxis)
         {
-            int collapseAxis = 1 - iterationAxis;
-            int lineSize = Board.Dimentions[collapseAxis];
+            int collapseAxis = 1 - iterationAxis; // to samo
+            int lineSize = Board.Dimentions[collapseAxis]; // to samo
+
+            int startCellIndex = CollapseDirection[collapseAxis] > 0 ? -1 : 0; // odwrócony warunek
+
             int nonExistingTokensCount = 0;
-            for (int i = 0; i < lineSize; i++)
+            for (int i = 0; i < lineSize; i++) // troszkę inne
             {
-                var coord = Vector2Int.zero;
-                coord[iterationAxis] = lineIndex;
-                int startCellIndex = CollapseDirection[collapseAxis] > 0 ? -1 : 0;
-                coord[collapseAxis] = (startCellIndex + i * -CollapseDirection[collapseAxis] + lineSize) % lineSize;
-  
+                var coord = Vector2Int.zero; // to samo
+                coord[iterationAxis] = lineIndex; // to samo
+                coord[collapseAxis] = (startCellIndex + i * -CollapseDirection[collapseAxis] + lineSize) % lineSize; // odwrócony znak
+
+                // odtąd są inne czynnności
                 var token = Board.GetToken(coord);
                 if (token == null || token.IsDestroyed)
                 {
@@ -129,18 +130,20 @@ namespace Bipolar.Match3
 
         private void RefillLine(int lineIndex, int count, int iterationAxis)
         {
-            var spawnOffset = -CollapseDirection * count;
             int collapseAxis = 1 - iterationAxis;
             int lineSize = Board.Dimentions[collapseAxis];
+
             int startCellIndex = CollapseDirection[collapseAxis] < 0 ? -1 : 0;
 
-            for (int i = 0; i < count; i++)
+            var spawnOffset = -CollapseDirection * count;
+            for (int i = 0; i < count; i++) 
             {
                 var coord = Vector2Int.zero;
                 coord[iterationAxis] = lineIndex;
                 coord[collapseAxis] = (startCellIndex + i * CollapseDirection[collapseAxis] + lineSize) % lineSize;
-                var spawnCoord = coord + spawnOffset;
 
+                // odtąd inne czynnności
+                var spawnCoord = coord + spawnOffset;
                 var newToken = CreateToken(spawnCoord.x, spawnCoord.y, false);
                 Board.SetToken(newToken, coord);
                 StartTokenMovement(newToken, coord);
