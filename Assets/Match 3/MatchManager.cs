@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -15,7 +14,12 @@ namespace Bipolar.Match3
         private SwipeDetector swipeDetector;
 
         [SerializeField]
-        private Token selectedToken;
+        private Vector2Int selectedTokenCoord = -Vector2Int.one;
+
+        private void Awake()
+        {
+            selectedTokenCoord = -Vector2Int.one;
+        }
 
         private void OnEnable()
         {
@@ -26,7 +30,27 @@ namespace Bipolar.Match3
 
         private void TokensClickDetector_OnTokenClicked(Vector2Int tokenCoord)
         {
-            selectedToken = boardController.Board.GetToken(tokenCoord);
+            if (boardController.AreTokensMoving)
+                return;
+
+            if (TrySwapSelectedTokens(tokenCoord) == false)
+            {
+                selectedTokenCoord = tokenCoord;
+            }
+        }
+
+        private bool TrySwapSelectedTokens(Vector2Int tokenCoord)
+        {
+            if (boardController.Board.Contains(selectedTokenCoord) == false)
+                return false;
+
+            var xDistance = Mathf.Abs(tokenCoord.x - selectedTokenCoord.x);
+            var yDistance = Mathf.Abs(tokenCoord.y - selectedTokenCoord.y);
+            if ((xDistance != 1 || yDistance != 0) && (xDistance != 0 || yDistance != 1))
+                return false;
+
+            SwapTokens(selectedTokenCoord, tokenCoord);
+            return true;
         }
 
         private void SwipeDetector_OnTokenSwiped(Vector2Int tokenCoord, Vector2Int direction)
@@ -43,6 +67,8 @@ namespace Bipolar.Match3
 
         private void SwapTokens(Vector2Int tokenCoord1, Vector2Int tokenCoord2)
         {
+            selectedTokenCoord = -Vector2Int.one;
+
             boardController.SwapTokens(tokenCoord1, tokenCoord2);
             boardController.OnTokensSwapped += BoardController_OnTokensSwapped;
         }
@@ -56,7 +82,6 @@ namespace Bipolar.Match3
                 boardController.SwapTokens(tokenCoord1, tokenCoord2);
             }
         }
-
 
         private List<TokensChain> tokenChains = new List<TokensChain>();
         private void BoardController_OnTokensColapsed()
@@ -90,13 +115,8 @@ namespace Bipolar.Match3
                 }
             }
 
-            Invoke(nameof(Collapse), 0);
-            return tokenChains.Count > 0;
-        }
-
-        private void Collapse()
-        {
             boardController.Collapse();
+            return tokenChains.Count > 0;
         }
 
         private static readonly Vector2Int[] chainsDirections =
