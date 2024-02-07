@@ -41,13 +41,13 @@ namespace Bipolar.Match3
             SwapTokens(tokenCoord, otherTokenCoord);
         }
 
-        private void SwapTokens(Vector2Int token1Coord, Vector2Int token2Coord)
+        private void SwapTokens(Vector2Int tokenCoord1, Vector2Int tokenCoord2)
         {
-            boardController.SwapTokens(token1Coord, token2Coord);
+            boardController.SwapTokens(tokenCoord1, tokenCoord2);
             boardController.OnTokensSwapped += BoardController_OnTokensSwapped;
         }
 
-        private void BoardController_OnTokensSwapped(Vector2Int token1Coord, Vector2Int token2Coord)
+        private void BoardController_OnTokensSwapped(Vector2Int tokenCoord1, Vector2Int tokenCoord2)
         {
             boardController.OnTokensSwapped -= BoardController_OnTokensSwapped;
             FindMatches();
@@ -75,6 +75,18 @@ namespace Bipolar.Match3
                             tokenChains.Add(chain);
                 }
             }
+
+            foreach (var chain in tokenChains)
+            {
+                foreach (var tokenCoord in chain.TokenCoords)
+                {
+                    var token = boardController.Board.GetToken(tokenCoord);
+                    Destroy(token.gameObject);
+                    token.IsDestroyed = true;
+                }
+            }
+
+            boardController.Collapse();
         }
 
         private static readonly Vector2Int[] chainsDirections =

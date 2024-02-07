@@ -10,7 +10,7 @@ namespace Bipolar.Match3
         {
             get
             {
-                if ( _grid == null )
+                if (_grid == null)
                     _grid = GetComponent<Grid>();
                 return _grid;
             }
@@ -22,7 +22,7 @@ namespace Bipolar.Match3
         {
             get => dimensions;
             set
-            { 
+            {
                 dimensions = value;
                 CalculateOtherDimensions();
             }
@@ -45,9 +45,11 @@ namespace Bipolar.Match3
             RealDimensions.Scale(Dimentions);
         }
 
-        public Vector3 CoordToWorld(int x, int y)
+        public Vector3 CoordToWorld(int x, int y) => CoordToWorld(new Vector2(x, y));
+
+        public Vector3 CoordToWorld(Vector2 vector2)
         {
-            var gridPosition = localStartCoord + new Vector2(x, y);
+            var gridPosition = localStartCoord + vector2;
             return CellToGlobalInterpolated(gridPosition);
         }
 
@@ -58,7 +60,6 @@ namespace Bipolar.Match3
             var coord = (Vector2)gridPosition - localStartCoord;
             return Vector2Int.RoundToInt(coord);
         }
-
 
         private Vector3 CellToGlobalInterpolated(Vector2 cellPosition)
         {
@@ -86,6 +87,11 @@ namespace Bipolar.Match3
             for (int j = 0; j < Dimentions.y; j++)
                 for (int i = 0; i < Dimentions.x; i++)
                     this.tokens[j, i] = tokens[j, i];
+        }
+
+        public void SetToken(Token token, Vector2Int coord)
+        {
+            tokens[coord.y, coord.x] = token;
         }
 
         public void SwapTokens(Vector2Int token1Coord, Vector2Int token2Coord)

@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using JetBrains.Annotations;
+using System.Collections;
 using UnityEngine;
 
 namespace Bipolar.Match3
@@ -7,6 +8,7 @@ namespace Bipolar.Match3
     {
         public event System.Action<Token> OnMovementEnded;
         public event System.Action<TokenType> OnTypeChanged;
+        public event System.Action OnDestroyed;
 
         [SerializeField]
         private TokenType type;
@@ -19,6 +21,8 @@ namespace Bipolar.Match3
                 OnTypeChanged?.Invoke(type);
             }
         }
+
+        public bool IsDestroyed { get; set; } = false;
 
         private const float defaultMoveTime = 0.5f;
         public void BeginMovingToPosition(Vector3 position, float moveDuration = -1)
@@ -42,6 +46,11 @@ namespace Bipolar.Match3
             }
             transform.position = targetPosition;
             OnMovementEnded?.Invoke(this);
+        }
+
+        void OnDestroy()
+        {
+            OnDestroyed?.Invoke();
         }
 
         private void OnValidate()

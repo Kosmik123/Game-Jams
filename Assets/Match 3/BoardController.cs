@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using ICSharpCode.NRefactory.Parser;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -7,7 +8,7 @@ namespace Bipolar.Match3
     [RequireComponent(typeof(Board))]
     public class BoardController : MonoBehaviour
     {
-        public delegate void TokensSwapEventHandler(Vector2Int token1Coord, Vector2Int token2Coord);
+        public delegate void TokensSwapEventHandler(Vector2Int tokenCoord1, Vector2Int tokenCoord2);
 
         public event System.Action OnTokensMovementStopped;
         public event System.Action OnTokensColapsed;
@@ -30,7 +31,7 @@ namespace Bipolar.Match3
         private TokensSpawner tokensSpawner;
 
         [SerializeField]
-        private MoveDirection collapseDirection;
+        private Vector2Int CollapseDirection;
         
         private readonly List<Token> currentlyMovingTokens = new List<Token>();
         public bool AreTokensMoving => currentlyMovingTokens.Count > 0;
@@ -44,7 +45,7 @@ namespace Bipolar.Match3
         {
             var tokens = new Token[Board.Dimentions.y, Board.Dimentions.x];
 
-            OnTokensMovementStopped += CallInitialColapseEvent;
+            OnTokensMovementStopped += CallColapseEvent;
             for (int j = 0; j < Board.Dimentions.y; j++)
             {
                 for (int i = 0; i < Board.Dimentions.x; i++)
@@ -56,37 +57,23 @@ namespace Bipolar.Match3
             Board.SetTokens(tokens);
         }
 
-        private void CallInitialColapseEvent()
+        private void CallColapseEvent()
         {
-            OnTokensMovementStopped -= CallInitialColapseEvent;
+            OnTokensMovementStopped -= CallColapseEvent;
             OnTokensColapsed?.Invoke();
         }
 
         private Token CreateToken(int xCoord, int yCoord, bool withMove = true, bool avoidMatches = false)
         {
-            int xSpawnCoord = xCoord;
-            int ySpawnCoord = yCoord;
+            var spawnCoord = new Vector2Int(xCoord, yCoord);
             if (withMove)
             {
-                switch (collapseDirection)
-                {
-                    case MoveDirection.Left:
-                        xSpawnCoord += Board.Dimentions.x;
-                        break;
-                    case MoveDirection.Up:
-                        ySpawnCoord -= Board.Dimentions.y;
-                        break;
-                    case MoveDirection.Right:
-                        xSpawnCoord -= Board.Dimentions.x;
-                        break;
-                    case MoveDirection.Down:
-                        ySpawnCoord += Board.Dimentions.y;
-                        break;
-                }
+                var spawnOffset = CollapseDirection;
+                spawnOffset.Scale(Board.Dimentions);
+                spawnCoord -= spawnOffset;
             }
 
-            Vector3 spawnPosition = Board.CoordToWorld(xSpawnCoord, ySpawnCoord);
-
+            Vector3 spawnPosition = Board.CoordToWorld(spawnCoord);
             var token = tokensSpawner.SpawnToken();
             token.transform.position = spawnPosition;
             token.gameObject.name = $"Token {xCoord}:{yCoord}";
@@ -99,6 +86,73 @@ namespace Bipolar.Match3
             return token;
         }
 
+        public void Collapse()
+        {
+            int iterationAxis = (CollapseDirection.x != 0) ? 1 : 0;
+            bool colapsed = false;
+            for (int lineIndex = 0; lineIndex < Board.Dimentions[iterationAxis]; lineIndex++)
+            {
+                int emptyCellsCount = CollapseTokensInLine(lineIndex, iterationAxis);
+                if (emptyCellsCount > 0)
+                {
+                    colapsed = true;
+                    RefillLine(lineIndex, emptyCellsCount, iterationAxis);
+                }
+            }
+
+            if (colapsed)
+                OnTokensMovementStopped += CallColapseEvent;
+        }
+
+        private int CollapseTokensInLine(int lineIndex, int iterationAxis)
+        {
+            int collapseAxis = 1 - iterationAxis;
+            int lineSize = Board.Dimentions[collapseAxis];
+            int nonExistingTokensCount = 0;
+            for (int i = 0; i < lineSize; i++)
+            {
+                var coord = Vector2Int.zero;
+                coord[iterationAxis] = lineIndex;
+                int startCellIndex = CollapseDirection[collapseAxis] > 0 ? -1 : 0;
+                coord[collapseAxis] = (startCellIndex + i * -CollapseDirection[collapseAxis] + lineSize) % lineSize;
+  
+                var token = Board.GetToken(coord);
+                if (token == null || token.IsDestroyed)
+                {
+                    nonExistingTokensCount++;
+                }
+                else if (nonExistingTokensCount > 0)
+                {
+                    var offsetToMove = CollapseDirection * nonExistingTokensCount;
+                    var targetCoord = coord + offsetToMove;
+                    Board.SetToken(null, coord);
+                    Board.SetToken(token, targetCoord);
+                    StartTokenMovement(token, targetCoord);
+                }
+            }
+
+            return nonExistingTokensCount;
+        }
+
+        private void RefillLine(int lineIndex, int count, int iterationAxis)
+        {
+            var spawnOffset = -CollapseDirection * count;
+            int collapseAxis = 1 - iterationAxis;
+            int lineSize = Board.Dimentions[collapseAxis];
+            int startCellIndex = CollapseDirection[collapseAxis] < 0 ? -1 : 0;
+
+            for (int i = 0; i < count; i++)
+            {
+                var coord = Vector2Int.zero;
+                coord[iterationAxis] = lineIndex;
+                coord[collapseAxis] = (startCellIndex + i * CollapseDirection[collapseAxis] + lineSize) % lineSize;
+                var spawnCoord = coord + spawnOffset;
+
+                var newToken = CreateToken(spawnCoord.x, spawnCoord.y, false);
+                Board.SetToken(newToken, coord);
+                StartTokenMovement(newToken, coord);
+            }
+        }
 
         private System.Action swapEndedCallback;
         public void SwapTokens(Vector2Int token1Coord, Vector2Int token2Coord)

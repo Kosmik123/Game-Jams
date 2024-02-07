@@ -12,6 +12,7 @@ namespace Bipolar.Match3
         public Token SpawnToken()
         {
             var token = Instantiate(tokenPrototype, tokensContainer);
+            token.IsDestroyed = false;
             return token;
         }
     }
