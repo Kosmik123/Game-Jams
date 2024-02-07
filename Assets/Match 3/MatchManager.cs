@@ -4,78 +4,27 @@ using UnityEngine;
 
 namespace Bipolar.Match3
 {
-    public class MatchMaker : MonoBehaviour
-    {
-
-    }
-
     public class MatchManager : MonoBehaviour
     {
         [SerializeField]
         private BoardController boardController;
         [SerializeField]
-        private TokensClickDetector tokensClickDetector;
-        [SerializeField]
-        private SwipeDetector swipeDetector;
-        [SerializeField]
-        private MatchMaker matchMaker;
-
-        [SerializeField]
-        private Vector2Int selectedTokenCoord = -Vector2Int.one;
-
-        private void Awake()
-        {
-            selectedTokenCoord = -Vector2Int.one;
-        }
+        private SwapManager swapManager;
 
         private void OnEnable()
         {
-            swipeDetector.OnTokenSwiped += SwipeDetector_OnTokenSwiped;
-            tokensClickDetector.OnTokenClicked += TokensClickDetector_OnTokenClicked;
             boardController.OnTokensColapsed += BoardController_OnTokensColapsed;
+            swapManager.OnSwapRequested += SwapManager_OnSwapRequested;
         }
 
-        private void TokensClickDetector_OnTokenClicked(Vector2Int tokenCoord)
+        private void SwapManager_OnSwapRequested(Vector2Int tokenCoord1, Vector2Int tokenCoord2)
         {
-            if (boardController.AreTokensMoving)
-                return;
-
-            if (TrySwapSelectedTokens(tokenCoord) == false)
-            {
-                selectedTokenCoord = tokenCoord;
-            }
-        }
-
-        private bool TrySwapSelectedTokens(Vector2Int tokenCoord)
-        {
-            if (boardController.Board.Contains(selectedTokenCoord) == false)
-                return false;
-
-            var xDistance = Mathf.Abs(tokenCoord.x - selectedTokenCoord.x);
-            var yDistance = Mathf.Abs(tokenCoord.y - selectedTokenCoord.y);
-            if ((xDistance != 1 || yDistance != 0) && (xDistance != 0 || yDistance != 1))
-                return false;
-
-            SwapTokens(selectedTokenCoord, tokenCoord);
-            return true;
-        }
-
-        private void SwipeDetector_OnTokenSwiped(Vector2Int tokenCoord, Vector2Int direction)
-        {
-            if (boardController.AreTokensMoving)
-                return;
-
-            var otherTokenCoord = tokenCoord + direction;
-            if (boardController.Board.Contains(otherTokenCoord) == false)
-                return;
-
-            SwapTokens(tokenCoord, otherTokenCoord);
+            if (boardController.AreTokensMoving == false)
+                SwapTokens(tokenCoord1, tokenCoord2);
         }
 
         private void SwapTokens(Vector2Int tokenCoord1, Vector2Int tokenCoord2)
         {
-            selectedTokenCoord = -Vector2Int.one;
-
             boardController.SwapTokens(tokenCoord1, tokenCoord2);
             boardController.OnTokensSwapped += BoardController_OnTokensSwapped;
         }
@@ -188,9 +137,8 @@ namespace Bipolar.Match3
 
         private void OnDisable()
         {
-            swipeDetector.OnTokenSwiped -= SwipeDetector_OnTokenSwiped;
             boardController.OnTokensColapsed -= BoardController_OnTokensColapsed;
-            tokensClickDetector.OnTokenClicked -= TokensClickDetector_OnTokenClicked;
+            swapManager.OnSwapRequested -= SwapManager_OnSwapRequested;
         }
     }
 }

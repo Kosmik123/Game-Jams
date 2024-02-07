@@ -1,15 +1,14 @@
 ﻿using System.Collections.Generic;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
 namespace Bipolar.Match3
 {
+    public delegate void TokensSwapEventHandler(Vector2Int tokenCoord1, Vector2Int tokenCoord2);
+
     [RequireComponent(typeof(Board))]
     public class BoardController : MonoBehaviour
     {
-        public delegate void TokensSwapEventHandler(Vector2Int tokenCoord1, Vector2Int tokenCoord2);
-
         public event System.Action OnTokensMovementStopped;
         public event System.Action OnTokensColapsed;
         public event TokensSwapEventHandler OnTokensSwapped;
