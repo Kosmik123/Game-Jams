@@ -49,11 +49,6 @@ namespace Bipolar.Match3
         private readonly List<TokenMovement> currentlyMovingTokens = new List<TokenMovement>();
         public bool AreTokensMoving => currentlyMovingTokens.Count > 0;
 
-        private void Start()
-        {
-            Collapse();
-        }
-
         private void CallCollapseEvent()
         {
             OnTokensMovementStopped -= CallCollapseEvent;
@@ -66,7 +61,6 @@ namespace Bipolar.Match3
             Vector3 spawnPosition = Board.CoordToWorld(spawnCoord);
             var token = tokensSpawner.SpawnToken();
             token.transform.position = spawnPosition;
-            token.gameObject.name = $"Token {xCoord}:{yCoord}";
             token.Type = settings.TokenTypes[Random.Range(0, settings.TokenTypes.Count)];
             return token;
         }

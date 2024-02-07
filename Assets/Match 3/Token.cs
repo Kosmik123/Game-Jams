@@ -15,6 +15,8 @@ namespace Bipolar.Match3
             set
             {
                 type = value;
+                if (gameObject.scene.IsValid()) 
+                    gameObject.name = $"Token ({type.name})";
                 OnTypeChanged?.Invoke(type);
             }
         }

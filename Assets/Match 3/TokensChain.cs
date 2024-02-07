@@ -5,12 +5,14 @@ namespace Bipolar.Match3
 {
     public class TokensChain
     {
+        public TokenType TokenType { get; private set; }
         private readonly HashSet<Vector2Int> tokenCoords = new HashSet<Vector2Int>();
         public IReadOnlyCollection<Vector2Int> TokenCoords => tokenCoords;
         public bool IsMatchFound { get; set; } = false;
         public bool Contains(Vector2Int tokenCoord) => tokenCoords.Contains(tokenCoord);
         public int Size => tokenCoords.Count;
-        public TokenType TokenType { get; private set; }
+        public int HorizontalLinesCount { get; set; }
+        public int VerticalLinesCount { get; set; }
 
         public TokensChain(TokenType type)
         {
@@ -30,6 +32,11 @@ namespace Bipolar.Match3
         public void Clear()
         {
             tokenCoords.Clear();
+        }
+
+        public override string ToString()
+        {
+            return $"Tokens Chain ({TokenType.name}): {Size}, H: {HorizontalLinesCount}, V: {VerticalLinesCount}";
         }
     }
 }
