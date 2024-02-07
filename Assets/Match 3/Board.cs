@@ -24,7 +24,7 @@ namespace Bipolar.Match3
             get => dimensions;
             set
             {
-                dimensions = value;
+                dimensions = new Vector2Int(Mathf.Max(1, value.x), Mathf.Max(1, value.y));
                 CalculateOtherDimensions();
             }
         }
