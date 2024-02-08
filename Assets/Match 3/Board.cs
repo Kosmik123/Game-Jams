@@ -6,6 +6,8 @@ namespace Bipolar.Match3
     [RequireComponent(typeof(Grid))]
     public class Board : MonoBehaviour
     {
+        public event System.Action<Vector2Int> OnDimensionsChanged;
+
         private Grid _grid;
         public Grid Grid
         {
@@ -19,13 +21,14 @@ namespace Bipolar.Match3
 
         [SerializeField]
         private Vector2Int dimensions;
-        public Vector2Int Dimentions
+        public Vector2Int Dimensions
         {
             get => dimensions;
             set
             {
                 dimensions = new Vector2Int(Mathf.Max(1, value.x), Mathf.Max(1, value.y));
                 CalculateOtherDimensions();
+                OnDimensionsChanged?.Invoke(dimensions);
             }
         }
         private Vector2 localStartCoord;
@@ -42,8 +45,9 @@ namespace Bipolar.Match3
         private void CalculateOtherDimensions()
         {
             localStartCoord = -new Vector2((dimensions.x - 1) / 2f, (dimensions.y - 1) / 2f);
-            RealDimensions = Grid.cellSize + Grid.cellGap;
-            RealDimensions.Scale(Dimentions);
+            Vector2 realDimensions = Grid.cellSize + Grid.cellGap;
+            realDimensions.Scale(Dimensions);
+            RealDimensions = realDimensions;
         }
 
         public Vector3 CoordToWorld(int x, int y) => CoordToWorld(new Vector2(x, y));
@@ -70,8 +74,8 @@ namespace Bipolar.Match3
 
         public void SetTokens(Token[,] tokens)
         {
-            for (int j = 0; j < Dimentions.y; j++)
-                for (int i = 0; i < Dimentions.x; i++)
+            for (int j = 0; j < Dimensions.y; j++)
+                for (int i = 0; i < Dimensions.x; i++)
                     this.tokens[j, i] = tokens[j, i];
         }
 
@@ -117,7 +121,7 @@ namespace Bipolar.Match3
 
         private void OnValidate()
         {
-            Dimentions = dimensions;
+            Dimensions = dimensions;
         }
 
         private void OnDrawGizmosSelected()
@@ -131,7 +135,7 @@ namespace Bipolar.Match3
                 for (int i = 0; i < dimensions.x; i++)
                 {
                     bool isEven = (i + j) % 2 == 0;
-                    Gizmos.color = isEven ? darkColor : lightColor; 
+                    Gizmos.color = isEven ? lightColor : darkColor; 
                     Vector3 position = CoordToWorld(i, j);
                     Gizmos.DrawCube(position, Grid.cellSize);
                 }

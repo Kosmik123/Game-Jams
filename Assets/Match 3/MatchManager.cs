@@ -61,9 +61,9 @@ namespace Bipolar.Match3
         private bool FindMatches()
         {
             tokenChains.Clear();
-            for (int j = 0; j < boardController.Board.Dimentions.y; j++)
+            for (int j = 0; j < boardController.Board.Dimensions.y; j++)
             {
-                for (int i = 0; i < boardController.Board.Dimentions.x; i++)
+                for (int i = 0; i < boardController.Board.Dimensions.x; i++)
                 {
                     Vector2Int coord = new Vector2Int(i, j);
                     if (tokenChains.FirstOrDefault(chain => chain.Contains(coord)) != null)

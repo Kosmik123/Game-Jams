@@ -69,7 +69,7 @@ namespace Bipolar.Match3
         {
             int iterationAxis = (CollapseDirection.x != 0) ? 1 : 0;
             bool colapsed = false;
-            for (int lineIndex = 0; lineIndex < Board.Dimentions[iterationAxis]; lineIndex++)
+            for (int lineIndex = 0; lineIndex < Board.Dimensions[iterationAxis]; lineIndex++)
             {
                 int emptyCellsCount = CollapseTokensInLine(lineIndex, iterationAxis);
                 if (emptyCellsCount > 0)
@@ -86,7 +86,7 @@ namespace Bipolar.Match3
         private int CollapseTokensInLine(int lineIndex, int iterationAxis)
         {
             int collapseAxis = 1 - iterationAxis; // to samo
-            int lineSize = Board.Dimentions[collapseAxis]; // to samo
+            int lineSize = Board.Dimensions[collapseAxis]; // to samo
 
             int startCellIndex = CollapseDirection[collapseAxis] > 0 ? -1 : 0; // odwrócony warunek
             int lineCollapseDirection = CollapseDirection[collapseAxis] == 0 ? 1 : -CollapseDirection[collapseAxis];
@@ -120,7 +120,7 @@ namespace Bipolar.Match3
         private void RefillLine(int lineIndex, int count, int iterationAxis)
         {
             int collapseAxis = 1 - iterationAxis; // to samo
-            int lineSize = Board.Dimentions[collapseAxis]; // to samo
+            int lineSize = Board.Dimensions[collapseAxis]; // to samo
 
             int startCellIndex = CollapseDirection[collapseAxis] < 0 ? -1 : 0; // odwrócony warunek
             var spawnOffset = -CollapseDirection * count; // inna rzecz
