@@ -142,7 +142,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 652656b15449b32459404130197981d5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  settings: {fileID: 11400000, guid: d6c7d0374c0da374eacdc1e810510b6a, type: 2}
+  settings: {fileID: 11400000, guid: 6cbd141b186142040832182f9aa5d533, type: 2}
   token: {fileID: 8659477918814487130}
   spriteRenderer: {fileID: 6498957211488724397}
 --- !u!114 &7116366943012761630

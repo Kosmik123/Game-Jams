@@ -18,7 +18,10 @@ namespace Bipolar.Match3
 
         private void Token_OnInitialized(TokenType type)
         {
-            spriteRenderer.color = settings.GetTokenColor(type);  
+            spriteRenderer.color = settings.GetTokenColor(type);
+            var sprite = settings.GetTokenSprite(type);
+            if (sprite != null)
+                spriteRenderer.sprite = sprite;
         }
 
         private void OnDisable()
