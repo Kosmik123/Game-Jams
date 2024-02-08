@@ -56,6 +56,8 @@ namespace Bipolar.Match3
             FindMatches();
         }
 
+
+        private readonly Queue<Vector2Int> coordsToCheck = new Queue<Vector2Int>(); 
         private bool FindMatches()
         {
             tokenChains.Clear();
@@ -63,6 +65,7 @@ namespace Bipolar.Match3
             {
                 for (int i = 0; i < boardController.Board.Dimentions.x; i++)
                 {
+                    coordsToCheck.Clear();
                     Vector2Int coord = new Vector2Int(i, j);
                     if (tokenChains.FirstOrDefault(chain => chain.Contains(coord)) != null)
                         continue;
@@ -119,7 +122,7 @@ namespace Bipolar.Match3
             Vector2Int.down
         };
 
-        private bool FindMatches(TokensChain chain, Vector2Int tokenCoord, Vector2Int exception = default, Vector2Int exception2 = default)
+        private bool FindMatches(TokensChain chain, Vector2Int tokenCoord, Vector2Int exception = default, bool twoSidedException = true)
         {
             if (chain.Contains(tokenCoord))
                 return false;
@@ -127,7 +130,7 @@ namespace Bipolar.Match3
             chain.Add(tokenCoord);
             foreach (var direction in chainsDirections)
             {
-                if (direction != exception && direction != exception2)
+                if (direction != exception && (twoSidedException == false || direction != -exception))
                     PopulateChain(chain, tokenCoord, direction);
             }
 
@@ -145,21 +148,29 @@ namespace Bipolar.Match3
                 return false;
 
             bool isChainInThisDirection = false;
-            var furtherCoord = nearCoord + direction;
-            var furtherToken = boardController.Board.GetToken(furtherCoord);
-            if (furtherToken && furtherToken.Type == chain.TokenType)
+
+            var furtherCoord = nearCoord;
+            do
             {
-                isChainInThisDirection = true;
-                chain.IsMatchFound = true;
-                if (FindMatches(chain, furtherCoord, -direction))
+                furtherCoord += direction;
+                var furtherToken = boardController.Board.GetToken(furtherCoord);
+                if (furtherToken && furtherToken.Type == chain.TokenType)
                 {
-                    Debug.Log($"Adding h/v of {furtherCoord}");
+                    isChainInThisDirection = true;
+                    Debug.Log($"Adding h/v going forward ending at {furtherCoord}");
                     if (direction.x != 0)
                         chain.HorizontalLinesCount++;
                     else if (direction.y != 0)
                         chain.VerticalLinesCount++;
+                    chain.IsMatchFound = true;
+
+                    FindMatches(chain, nearCoord, direction);
+                    FindMatches(chain, furtherCoord, direction);
                 }
+                else
+                    break;
             }
+            while (true);
 
             if (isChainInThisDirection == false)
             {
@@ -168,21 +179,22 @@ namespace Bipolar.Match3
                 if (backToken && backToken.Type == chain.TokenType)
                 {
                     isChainInThisDirection = true;
+                    Debug.Log($"Adding h/v going back: {nearCoord}-{tokenCoord}-{backCoord}");
+                    if (direction.x != 0)
+                        chain.HorizontalLinesCount++;
+                    else if (direction.y != 0)
+                        chain.VerticalLinesCount++;
                     chain.IsMatchFound = true;
-                    if (FindMatches(chain, backCoord, -direction, direction))
+
+                    FindMatches(chain, nearCoord, direction);
+                    if (FindMatches(chain, backCoord, direction))
                     {
-                        Debug.Log($"Adding h/v of {backCoord}");
-                        if (direction.x != 0)
-                            chain.HorizontalLinesCount++;
-                        else if (direction.y != 0)
-                            chain.VerticalLinesCount++;
+
                     }
                 }
             }
 
-            if (isChainInThisDirection)
-                FindMatches(chain, nearCoord);
-            
+
             return isChainInThisDirection;
         }
 
