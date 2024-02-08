@@ -61,7 +61,7 @@ namespace Bipolar.Match3
             Vector3 spawnPosition = Board.CoordToWorld(spawnCoord);
             var token = tokensSpawner.SpawnToken();
             token.transform.position = spawnPosition;
-            token.Type = settings.TokenTypes[Random.Range(0, settings.TokenTypes.Count)];
+            token.Type = settings.GetTokenType();
             return token;
         }
 

@@ -5,6 +5,8 @@ using UnityEngine;
 [Serializable]
 public struct MatchRequest
 {
+    [Min(0)]
+    public int requestsCount;
     public TokenType type;
     [Min(0)]
     public int size;

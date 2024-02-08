@@ -53,3 +53,6 @@ TagManager:
   - name: Face
     uniqueID: 3363605129
     locked: 0
+  - name: Overlay
+    uniqueID: 1510555323
+    locked: 0
