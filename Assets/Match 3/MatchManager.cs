@@ -7,15 +7,13 @@ namespace Bipolar.Match3
 {
     public class MatchManager : MonoBehaviour
     {
-        public event System.Action<int> OnScoreChanged;
+        public event System.Action OnMatchingFailed;
+        public event System.Action<TokensChain> OnTokensMatched;
 
         [SerializeField]
         private BoardController boardController;
         [SerializeField]
         private SwapManager swapManager;
-
-        [SerializeField, ReadOnly]
-        private int score = 0;
 
         private void OnEnable()
         {
@@ -47,6 +45,7 @@ namespace Bipolar.Match3
             if (wasCorrectMove == false)
             {
                 boardController.SwapTokens(tokenCoord1, tokenCoord2);
+                OnMatchingFailed?.Invoke();
             }
         }
 
@@ -55,7 +54,6 @@ namespace Bipolar.Match3
         {
             FindMatches();
         }
-
 
         private readonly Queue<Vector2Int> coordsToCheck = new Queue<Vector2Int>();
         private bool FindMatches()
@@ -71,11 +69,8 @@ namespace Bipolar.Match3
 
                     coordsToCheck.Clear();
                     coordsToCheck.Enqueue(coord);
-                    var chain = new TokensChain()
-                    {
-                        TokenType = boardController.Board.GetToken(coord).Type
-                    };
-
+                    var chain = new TokensChain();
+                    chain.TokenType = boardController.Board.GetToken(coord).Type;
                     FindMatches(chain, coordsToCheck);
 
                     if (chain.IsMatchFound)
@@ -84,7 +79,10 @@ namespace Bipolar.Match3
             }
 
             foreach (var chain in tokenChains)
+            {
+                OnTokensMatched?.Invoke(chain);
                 ClearChainTokens(chain);
+            }
 
             return tokenChains.Count > 0;
         }
@@ -165,9 +163,6 @@ namespace Bipolar.Match3
         private readonly List<Token> currentlyClearedTokens = new List<Token>();
         private void ClearChainTokens(TokensChain chain)
         {
-            Debug.Log(chain);
-            int multiplier = Mathf.Max(1, chain.Size - 2);
-            score += multiplier * chain.Size;
             foreach (var tokenCoord in chain.TokenCoords)
             {
                 var token = boardController.Board.GetToken(tokenCoord);
@@ -182,7 +177,6 @@ namespace Bipolar.Match3
                     token.IsCleared = true;
                 }
             }
-            OnScoreChanged?.Invoke(score);
         }
 
         private void Token_OnCleared(Token token)
