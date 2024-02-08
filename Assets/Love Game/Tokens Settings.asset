@@ -13,4 +13,8 @@ MonoBehaviour:
   m_Name: Tokens Settings
   m_EditorClassIdentifier: 
   possibleTokenTypes:
+  - {fileID: 11400000, guid: 81dc62b5e6618454782b3b9c07b79190, type: 2}
+  - {fileID: 11400000, guid: a330ec7f1ea9d9f4386e02e9e6ea92b9, type: 2}
+  - {fileID: 11400000, guid: 2b5f9b08b153441419f420a388563929, type: 2}
+  - {fileID: 11400000, guid: 87dedae100910004bbf18cd45b766a26, type: 2}
   - {fileID: 11400000, guid: c94f1101479b35342adeb3bf967e487e, type: 2}

@@ -71,7 +71,11 @@ namespace Bipolar.Match3
 
                     coordsToCheck.Clear();
                     coordsToCheck.Enqueue(coord);
-                    var chain = new TokensChain(boardController.Board.GetToken(coord).Type);
+                    var chain = new TokensChain()
+                    {
+                        TokenType = boardController.Board.GetToken(coord).Type
+                    };
+
                     FindMatches(chain, coordsToCheck);
 
                     if (chain.IsMatchFound)

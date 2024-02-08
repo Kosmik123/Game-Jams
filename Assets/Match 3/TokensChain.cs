@@ -5,22 +5,17 @@ namespace Bipolar.Match3
 {
     public class TokensChain
     {
-        public TokenType TokenType { get; private set; }
+        public TokenType TokenType { get; set; }
         private readonly HashSet<Vector2Int> tokenCoords = new HashSet<Vector2Int>();
         public IReadOnlyCollection<Vector2Int> TokenCoords => tokenCoords;
         public bool IsMatchFound { get; set; } = false;
         public bool Contains(Vector2Int tokenCoord) => tokenCoords.Contains(tokenCoord);
         public int Size => tokenCoords.Count;
 
-        private readonly HashSet<Vector2Int> horizontalLines = new HashSet<Vector2Int>();
-        private readonly HashSet<Vector2Int> verticalLines = new HashSet<Vector2Int>();
-        public int HorizontalLinesCount => horizontalLines.Count;
-        public int VerticalLinesCount => verticalLines.Count;
-
-        public TokensChain(TokenType type)
-        {
-            TokenType = type;
-        }
+        private readonly HashSet<Vector2Int> horizontalTrios = new HashSet<Vector2Int>();
+        private readonly HashSet<Vector2Int> verticalTrios = new HashSet<Vector2Int>();
+        public int HorizontalTriosCount => horizontalTrios.Count;
+        public int VerticalTriosCount => verticalTrios.Count;
 
         public void Add(Vector2Int tokenCoord)
         {
@@ -29,22 +24,25 @@ namespace Bipolar.Match3
 
         public void AddHorizontal(Vector2Int lineCenter)
         {
-            horizontalLines.Add(lineCenter);
+            horizontalTrios.Add(lineCenter);
         }
 
         public void AddVertical(Vector2Int lineCenter)
         {
-            verticalLines.Add(lineCenter);
+            verticalTrios.Add(lineCenter);
         }
 
         public void Clear()
         {
+            TokenType = null;
             tokenCoords.Clear();
+            verticalTrios.Clear();
+            horizontalTrios.Clear();
         }
 
         public override string ToString()
         {
-            return $"Tokens Chain ({TokenType.name}): {Size}, H: {HorizontalLinesCount}, V: {VerticalLinesCount}";
+            return $"Tokens Chain ({TokenType.name}): {Size}, H: {HorizontalTriosCount}, V: {VerticalTriosCount}";
         }
     }
 }
