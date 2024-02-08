@@ -11,8 +11,11 @@ namespace Bipolar.Match3
         public bool IsMatchFound { get; set; } = false;
         public bool Contains(Vector2Int tokenCoord) => tokenCoords.Contains(tokenCoord);
         public int Size => tokenCoords.Count;
-        public int HorizontalLinesCount { get; set; }
-        public int VerticalLinesCount { get; set; }
+
+        private readonly HashSet<Vector2Int> horizontalLines = new HashSet<Vector2Int>();
+        private readonly HashSet<Vector2Int> verticalLines = new HashSet<Vector2Int>();
+        public int HorizontalLinesCount => horizontalLines.Count;
+        public int VerticalLinesCount => verticalLines.Count;
 
         public TokensChain(TokenType type)
         {
@@ -24,9 +27,14 @@ namespace Bipolar.Match3
             tokenCoords.Add(tokenCoord);
         }
 
-        public void Add(TokensChain chain)
+        public void AddHorizontal(Vector2Int lineCenter)
         {
-            tokenCoords.UnionWith(chain.TokenCoords);
+            horizontalLines.Add(lineCenter);
+        }
+
+        public void AddVertical(Vector2Int lineCenter)
+        {
+            verticalLines.Add(lineCenter);
         }
 
         public void Clear()

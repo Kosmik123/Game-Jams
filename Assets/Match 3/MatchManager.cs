@@ -57,7 +57,7 @@ namespace Bipolar.Match3
         }
 
 
-        private readonly Queue<Vector2Int> coordsToCheck = new Queue<Vector2Int>(); 
+        private readonly Queue<Vector2Int> coordsToCheck = new Queue<Vector2Int>();
         private bool FindMatches()
         {
             tokenChains.Clear();
@@ -65,13 +65,15 @@ namespace Bipolar.Match3
             {
                 for (int i = 0; i < boardController.Board.Dimentions.x; i++)
                 {
-                    coordsToCheck.Clear();
                     Vector2Int coord = new Vector2Int(i, j);
                     if (tokenChains.FirstOrDefault(chain => chain.Contains(coord)) != null)
                         continue;
-                    
+
+                    coordsToCheck.Clear();
+                    coordsToCheck.Enqueue(coord);
                     var chain = new TokensChain(boardController.Board.GetToken(coord).Type);
-                    FindMatches(chain, coord);
+                    FindMatches(chain, coordsToCheck);
+
                     if (chain.IsMatchFound)
                         tokenChains.Add(chain);
                 }
@@ -81,6 +83,79 @@ namespace Bipolar.Match3
                 ClearChainTokens(chain);
 
             return tokenChains.Count > 0;
+        }
+
+        private static readonly Vector2Int[] chainsDirections =
+        {
+            Vector2Int.right,
+            Vector2Int.up,
+            Vector2Int.left,
+            Vector2Int.down
+        };
+
+        private void FindMatches(TokensChain chain, Queue<Vector2Int> coordsToCheck)
+        {
+            while (coordsToCheck.Count > 0)
+            {
+                var tokenCoord = coordsToCheck.Dequeue();
+                chain.Add(tokenCoord);
+                foreach (var direction in chainsDirections)
+                {
+                    TryAddLineToChain(chain, tokenCoord, direction, coordsToCheck);
+                }
+            }
+        }
+
+        private bool TryAddLineToChain(TokensChain chain, Vector2Int tokenCoord, Vector2Int direction, Queue<Vector2Int> coordsToCheck)
+        {
+            var nearCoord = tokenCoord + direction;
+            var nearToken = boardController.Board.GetToken(nearCoord);
+            if (nearToken == null || chain.TokenType != nearToken.Type)
+                return false;
+
+            var backCoord = tokenCoord - direction;
+            var backToken = boardController.Board.GetToken(backCoord);
+            if (backToken && chain.TokenType == backToken.Type)
+            {
+                chain.IsMatchFound = true;
+                TryEnqueueCoord(chain, coordsToCheck, nearCoord);
+                TryEnqueueCoord(chain, coordsToCheck, backCoord);
+                AddLineToChain(chain, tokenCoord, direction);
+                return true;
+            }
+
+            var furtherCoord = nearCoord + direction;
+            var furtherToken = boardController.Board.GetToken(furtherCoord);
+            if (furtherToken && chain.TokenType == furtherToken.Type)
+            {
+                chain.IsMatchFound = true;
+                TryEnqueueCoord(chain, coordsToCheck, nearCoord);
+                TryEnqueueCoord(chain, coordsToCheck, furtherCoord);
+                AddLineToChain(chain, nearCoord, direction);
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool TryEnqueueCoord(TokensChain chain, Queue<Vector2Int> coordToCheck, Vector2Int coord)
+        {
+            if (chain.Contains(coord))
+                return false;
+
+            if (coordsToCheck.Contains(coord))
+                return false;
+
+            coordsToCheck.Enqueue(coord);
+            return true;
+        }
+
+        private void AddLineToChain(TokensChain chain, Vector2Int centerCoord, Vector2Int direction)
+        {
+            if (direction.x != 0)
+                chain.AddHorizontal(centerCoord);
+            else if (direction.y != 0)
+                chain.AddVertical(centerCoord);
         }
 
         private readonly List<Token> currentlyClearedTokens = new List<Token>();
@@ -112,90 +187,6 @@ namespace Bipolar.Match3
             currentlyClearedTokens.Remove(token);
             if (currentlyClearedTokens.Count <= 0)
                 boardController.Collapse();
-        }
-
-        private static readonly Vector2Int[] chainsDirections =
-        {
-            Vector2Int.right,
-            Vector2Int.up,
-            Vector2Int.left,
-            Vector2Int.down
-        };
-
-        private bool FindMatches(TokensChain chain, Vector2Int tokenCoord, Vector2Int exception = default, bool twoSidedException = true)
-        {
-            if (chain.Contains(tokenCoord))
-                return false;
-
-            chain.Add(tokenCoord);
-            foreach (var direction in chainsDirections)
-            {
-                if (direction != exception && (twoSidedException == false || direction != -exception))
-                    PopulateChain(chain, tokenCoord, direction);
-            }
-
-            return true;
-        }
-
-        private bool PopulateChain(TokensChain chain, Vector2Int tokenCoord, Vector2Int direction)
-        {
-            var nearCoord = tokenCoord + direction;
-            if (boardController.Board.Contains(nearCoord) == false)
-                return false;
-
-            var nearToken = boardController.Board.GetToken(nearCoord);
-            if (chain.TokenType != nearToken.Type)
-                return false;
-
-            bool isChainInThisDirection = false;
-
-            var furtherCoord = nearCoord;
-            do
-            {
-                furtherCoord += direction;
-                var furtherToken = boardController.Board.GetToken(furtherCoord);
-                if (furtherToken && furtherToken.Type == chain.TokenType)
-                {
-                    isChainInThisDirection = true;
-                    Debug.Log($"Adding h/v going forward ending at {furtherCoord}");
-                    if (direction.x != 0)
-                        chain.HorizontalLinesCount++;
-                    else if (direction.y != 0)
-                        chain.VerticalLinesCount++;
-                    chain.IsMatchFound = true;
-
-                    FindMatches(chain, nearCoord, direction);
-                    FindMatches(chain, furtherCoord, direction);
-                }
-                else
-                    break;
-            }
-            while (true);
-
-            if (isChainInThisDirection == false)
-            {
-                var backCoord = tokenCoord - direction;
-                var backToken = boardController.Board.GetToken(backCoord);
-                if (backToken && backToken.Type == chain.TokenType)
-                {
-                    isChainInThisDirection = true;
-                    Debug.Log($"Adding h/v going back: {nearCoord}-{tokenCoord}-{backCoord}");
-                    if (direction.x != 0)
-                        chain.HorizontalLinesCount++;
-                    else if (direction.y != 0)
-                        chain.VerticalLinesCount++;
-                    chain.IsMatchFound = true;
-
-                    FindMatches(chain, nearCoord, direction);
-                    if (FindMatches(chain, backCoord, direction))
-                    {
-
-                    }
-                }
-            }
-
-
-            return isChainInThisDirection;
         }
 
         private void OnDisable()
