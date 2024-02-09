@@ -36,9 +36,15 @@ namespace Bipolar.Match3
 
         private Token[,] tokens;
 
+        public Token this[Vector2Int coord]
+        {
+            get => tokens[coord.x, coord.y];
+            set => tokens[coord.x, coord.y] = value;
+        }
+
         private void Awake()
         {
-            tokens = new Token[dimensions.y, dimensions.x];
+            tokens = new Token[dimensions.x, dimensions.y];
             CalculateOtherDimensions();
         }
 
@@ -76,18 +82,18 @@ namespace Bipolar.Match3
         {
             for (int j = 0; j < Dimensions.y; j++)
                 for (int i = 0; i < Dimensions.x; i++)
-                    this.tokens[j, i] = tokens[j, i];
+                    this.tokens[i, j] = tokens[i, j];
         }
 
         public void SetToken(Token token, Vector2Int coord)
         {
-            tokens[coord.y, coord.x] = token;
+            tokens[coord.x, coord.y] = token;
         }
 
         public void SwapTokens(Vector2Int tokenCoord1, Vector2Int tokenCoord2)
         {
-            var swapped = (tokens[tokenCoord2.y, tokenCoord2.x], tokens[tokenCoord1.y, tokenCoord1.x]);
-            (tokens[tokenCoord1.y, tokenCoord1.x], tokens[tokenCoord2.y, tokenCoord2.x]) = swapped;
+            var swapped = (tokens[tokenCoord2.x, tokenCoord2.y], tokens[tokenCoord1.x, tokenCoord1.y]);
+            (tokens[tokenCoord1.x, tokenCoord1.y], tokens[tokenCoord2.x, tokenCoord2.y]) = swapped;
         }
 
         public Token GetTokenAtPosition(Vector3 worldPosition)
@@ -116,7 +122,7 @@ namespace Bipolar.Match3
             if (Contains(xCoord, yCoord) == false)
                 return null;
 
-            return tokens[yCoord, xCoord];
+            return tokens[xCoord, yCoord];
         }
 
         private void OnValidate()

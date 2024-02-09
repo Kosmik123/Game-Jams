@@ -283,7 +283,7 @@ SpriteRenderer:
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 2
-  m_Size: {x: 7, y: 6}
+  m_Size: {x: 7, y: 5}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -390,7 +390,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   matchManager: {fileID: 1547492757}
   settings: {fileID: 11400000, guid: bfcf2dc1b16691f419860f7968a3652b, type: 2}
-  requestIndex: 0
+  requestNumber: 0
   currentRequest:
     requestsCount: 0
     type: {fileID: 11400000, guid: 2b5f9b08b153441419f420a388563929, type: 2}
@@ -447,7 +447,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a5415d347c765a34bb0669a55d0a750a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dimensions: {x: 7, y: 6}
+  dimensions: {x: 7, y: 5}
 --- !u!156049354 &1326609499
 Grid:
   m_ObjectHideFlags: 0
@@ -606,6 +606,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   boardController: {fileID: 1326609501}
   swapManager: {fileID: 1547492756}
+  combo: 0
 --- !u!4 &1547492758
 Transform:
   m_ObjectHideFlags: 0
@@ -897,6 +898,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1531642693043828030, guid: 69f84fa3e5df950458ae61ff57657d6b, type: 3}
+      propertyPath: m_text
+      value: '3 x <sprite index=4> '
+      objectReference: {fileID: 0}
     - target: {fileID: 1531642693043828030, guid: 69f84fa3e5df950458ae61ff57657d6b, type: 3}
       propertyPath: m_fontSizeBase
       value: 100

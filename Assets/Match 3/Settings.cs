@@ -4,8 +4,14 @@ using System.Linq;
 
 namespace Bipolar.Match3
 {
+    public interface ITokenTypeProvider
+    {
+        public TokenType GetTokenType();
+
+    }
+
     [CreateAssetMenu(menuName = CreateAssetsPath.Root + "Settings")]
-    public class Settings : ScriptableObject
+    public class Settings : ScriptableObject, ITokenTypeProvider
     {
         [SerializeField]
         private TokenType[] possibleTokenTypes;

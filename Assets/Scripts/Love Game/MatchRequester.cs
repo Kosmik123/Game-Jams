@@ -16,11 +16,13 @@ public class MatchRequester : MonoBehaviour
 
     [Header("States")]
     [SerializeField, ReadOnly]
-    private int requestIndex;
+    private int requestNumber;
     [SerializeField, ReadOnly]
     public MatchRequest currentRequest;
     [SerializeField, ReadOnly]
     public int requestsCountDone;
+
+    private int previousTypeIndex = 0;
 
     private void OnEnable()
     {
@@ -29,26 +31,28 @@ public class MatchRequester : MonoBehaviour
 
     private void Start()
     {
-        requestIndex = 1;
+        requestNumber = 1;
         NextRequest();
     }
 
     private void NextRequest()
     {
         requestsCountDone = 0;
-        requestIndex++;
-        int randomIndex = Random.Range(0, settings.TokenTypes.Count);
-        var randomType = settings.TokenTypes[randomIndex];
+        requestNumber++;
+        int typeIndex = Random.Range(1, settings.TokenTypes.Count);
+        if (typeIndex == previousTypeIndex)
+            typeIndex = 0;
+        var randomType = settings.TokenTypes[typeIndex];
         currentRequest = new MatchRequest()
         {
             type = randomType,
             horizontalCount = 0,
             verticalCount = 0,
             size = 1,
-            requestsCount = requestIndex,
+            requestsCount = requestNumber,
         };
-
-        OnNewRequestRequested?.Invoke(currentRequest, randomIndex);
+        previousTypeIndex = typeIndex;
+        OnNewRequestRequested?.Invoke(currentRequest, typeIndex);
     }
 
     private void MatchManager_OnTokensMatched(TokensChain chain)
@@ -66,7 +70,7 @@ public class MatchRequester : MonoBehaviour
         if (chain.VerticalTriosCount < request.verticalCount)
             return;
 
-        requestsCountDone += chain.Size;
+        requestsCountDone += chain.Size + chain.HorizontalTriosCount + chain.VerticalTriosCount - 1;
         int remaining = currentRequest.requestsCount - requestsCountDone;
         if (remaining > 0)
             OnRequestUpdated?.Invoke(remaining);

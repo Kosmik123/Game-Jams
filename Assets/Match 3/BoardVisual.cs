@@ -11,6 +11,7 @@ namespace Bipolar.Match3
 
         private void OnEnable()
         {
+            RefreshGraphic(board.Dimensions);
             board.OnDimensionsChanged += RefreshGraphic;
         }
 
