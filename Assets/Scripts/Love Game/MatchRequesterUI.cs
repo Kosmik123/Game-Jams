@@ -1,13 +1,25 @@
-﻿using UnityEngine;
+﻿using Bipolar.Match3;
+using System.Linq;
+using UnityEngine;
 
 public class MatchRequesterUI : MonoBehaviour
 {
+    [System.Serializable]
+    public struct TokenTypeToSpriteAssetMapping
+    {
+        public TokenType tokenType;
+        public string spriteAssetName;
+    }
+
     [SerializeField]
     private MatchRequester matchRequester;
     [SerializeField]
     private TMPro.TextMeshProUGUI label;
 
-    private int spriteIndex;
+    [SerializeField]
+    private TokenTypeToSpriteAssetMapping[] tokenSpriteNamesMappings;
+
+    private string currentSpriteName;
 
     private void OnEnable()
     {
@@ -15,16 +27,23 @@ public class MatchRequesterUI : MonoBehaviour
         matchRequester.OnRequestUpdated += RefreshBubbleState;
     }
 
-    private void MatchRequester_OnNewRequestRequested(MatchRequest request, int spriteIndex)
+    private void MatchRequester_OnNewRequestRequested(MatchRequest request)
     {
-        this.spriteIndex = spriteIndex;
-        label.text = $"{request.requestsCount} x <sprite index={spriteIndex}>";
+        currentSpriteName = tokenSpriteNamesMappings.First(mapping => mapping.tokenType == request.type).spriteAssetName;
+        SetRequestText(request.requestsCount, currentSpriteName);
     }
     
     private void RefreshBubbleState(int remaining)
     {
-        label.text = $"{remaining} x <sprite index={spriteIndex}>";
+        SetRequestText(remaining, currentSpriteName);
     }
+
+    private void SetRequestText(int remainingCount, string spriteAssetName)
+    {
+        label.text = $"{remainingCount} x <sprite name={spriteAssetName}>";
+    }
+
+
 
     private void OnDisable()
     {

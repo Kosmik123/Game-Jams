@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class MatchRequester : MonoBehaviour
 {
-    public event System.Action<MatchRequest, int> OnNewRequestRequested;
+    public event System.Action<MatchRequest> OnNewRequestRequested;
     public event System.Action<int> OnRequestUpdated;
 
     [SerializeField]
@@ -39,10 +39,8 @@ public class MatchRequester : MonoBehaviour
     {
         requestsCountDone = 0;
         requestNumber++;
-        int typeIndex = Random.Range(1, settings.TokenTypes.Count);
-        if (typeIndex == previousTypeIndex)
-            typeIndex = 0;
-        var randomType = settings.TokenTypes[typeIndex];
+
+        var randomType = settings.GetTokenTypeExcept(currentRequest.type);
         currentRequest = new MatchRequest()
         {
             type = randomType,
@@ -51,8 +49,7 @@ public class MatchRequester : MonoBehaviour
             size = 1,
             requestsCount = requestNumber,
         };
-        previousTypeIndex = typeIndex;
-        OnNewRequestRequested?.Invoke(currentRequest, typeIndex);
+        OnNewRequestRequested?.Invoke(currentRequest);
     }
 
     private void MatchManager_OnTokensMatched(TokensChain chain)

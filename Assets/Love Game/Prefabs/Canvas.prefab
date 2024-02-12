@@ -249,6 +249,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   matchRequester: {fileID: 0}
   label: {fileID: 1531642693043828030}
+  tokenSpriteNamesMappings:
+  - tokenType: {fileID: 11400000, guid: 81dc62b5e6618454782b3b9c07b79190, type: 2}
+    spriteAssetName: bee
+  - tokenType: {fileID: 11400000, guid: a330ec7f1ea9d9f4386e02e9e6ea92b9, type: 2}
+    spriteAssetName: gift
+  - tokenType: {fileID: 11400000, guid: 2b5f9b08b153441419f420a388563929, type: 2}
+    spriteAssetName: rabbit
+  - tokenType: {fileID: 11400000, guid: 87dedae100910004bbf18cd45b766a26, type: 2}
+    spriteAssetName: hourglass
+  - tokenType: {fileID: 11400000, guid: c94f1101479b35342adeb3bf967e487e, type: 2}
+    spriteAssetName: letter
 --- !u!1 &6013516940750933920
 GameObject:
   m_ObjectHideFlags: 0

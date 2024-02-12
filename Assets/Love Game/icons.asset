@@ -43,32 +43,32 @@ MonoBehaviour:
     m_Unicode: 65534
     m_GlyphIndex: 0
     m_Scale: 1
-    m_Name: icons_0
-    m_HashCode: 1990013079
+    m_Name: bee
+    m_HashCode: 107970
   - m_ElementType: 2
     m_Unicode: 65534
     m_GlyphIndex: 1
     m_Scale: 1
-    m_Name: icons_1
-    m_HashCode: 1990013078
+    m_Name: gift
+    m_HashCode: 3671036
   - m_ElementType: 2
     m_Unicode: 65534
     m_GlyphIndex: 2
     m_Scale: 1
-    m_Name: icons_2
-    m_HashCode: 1990013077
+    m_Name: rabbit
+    m_HashCode: 206575662
   - m_ElementType: 2
     m_Unicode: 65534
     m_GlyphIndex: 3
     m_Scale: 1
-    m_Name: icons_3
-    m_HashCode: 1990013076
+    m_Name: hourglass
+    m_HashCode: -860213398
   - m_ElementType: 2
     m_Unicode: 65534
     m_GlyphIndex: 4
     m_Scale: 1
-    m_Name: icons_4
-    m_HashCode: 1990013075
+    m_Name: letter
+    m_HashCode: -184007490
   m_SpriteGlyphTable:
   - m_Index: 0
     m_Metrics:
