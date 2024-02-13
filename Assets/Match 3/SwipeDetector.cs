@@ -68,11 +68,14 @@ namespace Bipolar.Match3
 
         private Vector2Int GetDirectionFromMove(Vector2 moveDelta)
         {
-            // TODO wziąć pod uwagę różne ustawenia swizzle grida (i być może kształt też)
+            // TODO wziąć pod uwagę różne kształty grida
+            Vector2Int swipeDirection;
             if (Mathf.Abs(moveDelta.x) > Mathf.Abs(moveDelta.y))
-                return moveDelta.x < 0 ? Vector2Int.left : Vector2Int.right; 
+                swipeDirection = moveDelta.x < 0 ? Vector2Int.left : Vector2Int.right;
+            else
+                swipeDirection = moveDelta.y < 0 ? Vector2Int.down : Vector2Int.up;
 
-            return moveDelta.y < 0 ? Vector2Int.down : Vector2Int.up;
+            return Vector2Int.RoundToInt(Grid.Swizzle(board.Grid.cellSwizzle, (Vector2)swipeDirection));
         }
     }
 }
