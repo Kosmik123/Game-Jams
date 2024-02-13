@@ -4,7 +4,6 @@ using UnityEngine.EventSystems;
 
 namespace Bipolar.Match3
 {
-    public delegate void TokensSwapEventHandler(Vector2Int tokenCoord1, Vector2Int tokenCoord2);
 
     [RequireComponent(typeof(RectangularBoard))]
     public class BoardController : MonoBehaviour
@@ -25,9 +24,9 @@ namespace Bipolar.Match3
         }
 
         [SerializeField]
-        private Settings settings;
-        [SerializeField]
         private TokensSpawner tokensSpawner;
+        [SerializeField]
+        private TokenTypeProvider tokenTypeProvider;
 
         [SerializeField]
         private MoveDirection collapseDirection;
@@ -49,19 +48,13 @@ namespace Bipolar.Match3
         private readonly List<TokenMovement> currentlyMovingTokens = new List<TokenMovement>();
         public bool AreTokensMoving => currentlyMovingTokens.Count > 0;
 
-        private void CallCollapseEvent()
-        {
-            OnTokensMovementStopped -= CallCollapseEvent;
-            OnTokensColapsed?.Invoke();
-        }
-
         private Token CreateToken(int xCoord, int yCoord, bool avoidMatches = false)
         {
             var spawnCoord = new Vector2Int(xCoord, yCoord);
             Vector3 spawnPosition = Board.CoordToWorld(spawnCoord);
             var token = tokensSpawner.SpawnToken();
             token.transform.position = spawnPosition;
-            token.Type = settings.GetTokenType();
+            token.Type = tokenTypeProvider.GetTokenType(xCoord, yCoord);
             return token;
         }
 
@@ -81,6 +74,12 @@ namespace Bipolar.Match3
 
             if (colapsed)
                 OnTokensMovementStopped += CallCollapseEvent;
+        }
+
+        private void CallCollapseEvent()
+        {
+            OnTokensMovementStopped -= CallCollapseEvent;
+            OnTokensColapsed?.Invoke();
         }
 
         private int CollapseTokensInLine(int lineIndex, int iterationAxis)

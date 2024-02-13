@@ -5,6 +5,8 @@ using UnityEngine;
 
 namespace Bipolar.Match3
 {
+    public delegate void TokensSwapEventHandler(Vector2Int tokenCoord1, Vector2Int tokenCoord2);
+
     public class MatchManager : MonoBehaviour
     {
         public event System.Action OnMatchingFailed;

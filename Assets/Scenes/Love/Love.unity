@@ -393,7 +393,7 @@ MonoBehaviour:
   requestNumber: 0
   currentRequest:
     requestsCount: 0
-    type: {fileID: 11400000, guid: 2b5f9b08b153441419f420a388563929, type: 2}
+    type: {fileID: 0}
     size: 0
     horizontalCount: 0
     verticalCount: 0
@@ -428,6 +428,7 @@ GameObject:
   - component: {fileID: 1326609504}
   - component: {fileID: 1326609505}
   - component: {fileID: 1326609506}
+  - component: {fileID: 1326609503}
   m_Layer: 0
   m_Name: Match-3 Board
   m_TagString: Untagged
@@ -486,9 +487,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 320ea8779def0f44480820ce9ac10202, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  settings: {fileID: 11400000, guid: bfcf2dc1b16691f419860f7968a3652b, type: 2}
   tokensSpawner: {fileID: 1326609506}
-  collapseDirection: 1
+  tokenTypeProvider: {fileID: 1326609503}
+  collapseDirection: 4
 --- !u!61 &1326609502
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -515,6 +516,20 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 8, y: 7}
   m_EdgeRadius: 0
+--- !u!114 &1326609503
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1326609497}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd5cc66134acf8241aa8c19c13e4224f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  settings: {fileID: 11400000, guid: bfcf2dc1b16691f419860f7968a3652b, type: 2}
+  board: {fileID: 1326609498}
 --- !u!114 &1326609504
 MonoBehaviour:
   m_ObjectHideFlags: 0
