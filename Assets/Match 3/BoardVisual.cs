@@ -5,7 +5,7 @@ namespace Bipolar.Match3
     public class BoardVisual : MonoBehaviour
     {
         [SerializeField]
-        private Board board;
+        private RectangularBoard board;
         [SerializeField]
         private SpriteRenderer spriteRenderer;
 

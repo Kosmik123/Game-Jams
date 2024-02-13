@@ -7,7 +7,7 @@ namespace Bipolar.Match3
         public event TokensSwapEventHandler OnSwapRequested;
 
         [SerializeField]
-        private Board board;
+        private RectangularBoard board;
         [SerializeField]
         private TokensClickDetector tokensClickDetector;
         [SerializeField]

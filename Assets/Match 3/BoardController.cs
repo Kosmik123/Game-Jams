@@ -6,20 +6,20 @@ namespace Bipolar.Match3
 {
     public delegate void TokensSwapEventHandler(Vector2Int tokenCoord1, Vector2Int tokenCoord2);
 
-    [RequireComponent(typeof(Board))]
+    [RequireComponent(typeof(RectangularBoard))]
     public class BoardController : MonoBehaviour
     {
         public event System.Action OnTokensMovementStopped;
         public event System.Action OnTokensColapsed;
         public event TokensSwapEventHandler OnTokensSwapped;
 
-        private Board _board;
-        public Board Board
+        private RectangularBoard _board;
+        public RectangularBoard Board
         {
             get
             {
                 if (_board == null)
-                    _board = GetComponent<Board>();
+                    _board = GetComponent<RectangularBoard>();
                 return _board;
             }
         }
@@ -108,8 +108,8 @@ namespace Bipolar.Match3
                 {
                     var offsetToMove = CollapseDirection * nonExistingTokensCount;
                     var targetCoord = coord + offsetToMove;
-                    Board.SetToken(null, coord);
-                    Board.SetToken(token, targetCoord);
+                    Board[coord] = null;
+                    Board[targetCoord] = token;
                     StartTokenMovement(token, targetCoord, 0.3f); // to samo
                 }
             }
@@ -136,7 +136,7 @@ namespace Bipolar.Match3
                 // odtąd inne czynnności
                 var spawnCoord = coord + spawnOffset;
                 var newToken = CreateToken(spawnCoord.x, spawnCoord.y, false);
-                Board.SetToken(newToken, coord);
+                Board[coord] = newToken;
                 StartTokenMovement(newToken, coord, 0.3f); // to samo
             }
         }
@@ -150,7 +150,13 @@ namespace Bipolar.Match3
             StartTokenMovement(token2, tokenCoord1);
             StartTokenMovement(token1, tokenCoord2);
 
-            Board.SwapTokens(tokenCoord1, tokenCoord2);
+
+            var temp = Board[tokenCoord1];
+            Board[tokenCoord1] = Board[tokenCoord2];
+            Board[tokenCoord2] = temp;
+
+            //(Board[tokenCoord1], Board[tokenCoord2]) = (Board[tokenCoord2], Board[tokenCoord1]);
+
             OnTokensMovementStopped += BoardController_OnTokensMovementStopped;
             swapEndedCallback = () =>
             {
