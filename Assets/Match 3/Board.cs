@@ -17,7 +17,15 @@ namespace Bipolar.Match3
 
         protected Token[,] tokens;
 
-        public abstract bool Contains(Vector2Int coord);
+        public Token this[Vector2Int coord]
+        {
+            get => tokens[coord.x, coord.y];
+            set => tokens[coord.x, coord.y] = value;
+        }
+
+        public bool Contains(Vector2Int coord) => Contains(coord.x, coord.y);
+        public abstract bool Contains(int x, int y);
+
         public abstract Vector2Int WorldToCoord(Vector3 worldPosition);
         public Vector3 CoordToWorld(float x, float y) => CoordToWorld(new Vector2(x, y));
         public abstract Vector3 CoordToWorld(Vector2 coord);

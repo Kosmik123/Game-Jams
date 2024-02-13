@@ -4,7 +4,6 @@ using UnityEngine;
 
 namespace Bipolar.Match3
 {
-
     [RequireComponent(typeof(Grid))]
     public class RectangularBoard : Board
     {
@@ -24,12 +23,6 @@ namespace Bipolar.Match3
         }
         private Vector2 localStartCoord;
         public Vector2 RealDimensions { get; private set; }
-
-        public Token this[Vector2Int coord]
-        {
-            get => tokens[coord.x, coord.y];
-            set => tokens[coord.x, coord.y] = value;
-        }
 
         private void Awake()
         {
@@ -65,9 +58,7 @@ namespace Bipolar.Match3
             return transform.TransformPoint(localPosition);
         }
 
-        public override bool Contains(Vector2Int coord) => Contains(coord.x, coord.y);
-
-        public bool Contains(int xCoord, int yCoord)
+        public override bool Contains(int xCoord, int yCoord)
         {
             if (xCoord < 0 || yCoord < 0)
                 return false;

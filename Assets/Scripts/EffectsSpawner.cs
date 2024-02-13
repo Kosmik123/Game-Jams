@@ -11,7 +11,7 @@ public class EffectsSpawner : MonoBehaviour
     [SerializeField]
     private MatchManager matchManager;
     [SerializeField]
-    private RectangularBoard board;
+    private Board board;
 
     [SerializeField]
     private Transform target;

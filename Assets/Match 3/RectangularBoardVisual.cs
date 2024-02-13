@@ -2,7 +2,7 @@
 
 namespace Bipolar.Match3
 {
-    public class BoardVisual : MonoBehaviour
+    public class RectangularBoardVisual : MonoBehaviour
     {
         [SerializeField]
         private RectangularBoard board;
