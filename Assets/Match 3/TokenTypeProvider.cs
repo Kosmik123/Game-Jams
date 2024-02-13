@@ -2,14 +2,8 @@
 
 namespace Bipolar.Match3
 {
-    public class TokenTypeProvider : MonoBehaviour
+    public abstract class TokenTypeProvider : MonoBehaviour
     {
-        [SerializeField]
-        private Settings settings;
-
-        public TokenType GetTokenType(int x, int y)
-        {
-            return settings.GetTokenType();
-        }
+        public abstract TokenType GetTokenType(int x, int y);
     }
 }
