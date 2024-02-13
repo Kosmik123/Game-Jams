@@ -67,7 +67,9 @@ public class MatchRequester : MonoBehaviour
         if (chain.VerticalTriosCount < request.verticalCount)
             return;
 
-        requestsCountDone += chain.Size + chain.HorizontalTriosCount + chain.VerticalTriosCount - 1;
+        int obtainedTokens = chain.Size + chain.HorizontalTriosCount + chain.VerticalTriosCount - 1;
+        obtainedTokens += matchManager.Combo - 1;
+        requestsCountDone += obtainedTokens;
         int remaining = currentRequest.requestsCount - requestsCountDone;
         if (remaining > 0)
             OnRequestUpdated?.Invoke(remaining);

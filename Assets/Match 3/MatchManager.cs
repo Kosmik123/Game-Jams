@@ -17,6 +17,7 @@ namespace Bipolar.Match3
 
         [SerializeField]
         private int combo;
+        public int Combo => combo;
 
         private void OnEnable()
         {
