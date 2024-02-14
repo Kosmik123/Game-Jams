@@ -10,14 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f195ecd2a1f701443aa145540b95283e, type: 3}
-  m_Name: board tileset_3
+  m_Name: Up Tile
   m_EditorClassIdentifier: 
-  m_Sprite: {fileID: -8203033088597850306, guid: fc49deb9c1ceb984d8ff2db64a62fb51, type: 3}
-  m_Color:
-    r: 1
-    g: 1
-    b: 1
-    a: 1
+  m_Sprite: {fileID: -112984896364133074, guid: fc49deb9c1ceb984d8ff2db64a62fb51, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Transform:
     e00: 1
     e01: 0
@@ -38,3 +34,4 @@ MonoBehaviour:
   m_InstancedGameObject: {fileID: 0}
   m_Flags: 1
   m_ColliderType: 1
+  direction: {x: 0, y: 1}

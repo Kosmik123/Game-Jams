@@ -172,3 +172,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   shrinkingDuration: 0.2
   resizedVisual: {fileID: 2145013969330228007}
+  token: {fileID: 8659477918814487130}
