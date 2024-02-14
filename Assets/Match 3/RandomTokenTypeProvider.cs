@@ -2,7 +2,6 @@
 
 namespace Bipolar.Match3
 {
-
     public class RandomTokenTypeProvider : TokenTypeProvider
     {
         [SerializeField]

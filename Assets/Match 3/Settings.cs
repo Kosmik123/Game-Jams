@@ -32,12 +32,15 @@ namespace Bipolar.Match3
         }
 
         private readonly List<TokenType> tempAvailableTypes = new List<TokenType>();
-        public TokenType GetTokenTypeExcept(IReadOnlyList<TokenType> exceptions)
+        public TokenType GetTokenTypeExcept(IReadOnlyCollection<TokenType> exceptions)
         {
             tempAvailableTypes.Clear();
             foreach (var type in TokenTypes)
                 if (exceptions.Contains(type) == false)
                     tempAvailableTypes.Add(type);
+
+            if (tempAvailableTypes.Count <= 0)
+                return GetTokenType();
 
             return tempAvailableTypes[Random.Range(0, tempAvailableTypes.Count)];
         }
