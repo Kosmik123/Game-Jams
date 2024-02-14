@@ -19,6 +19,12 @@ namespace Bipolar.Match3
 
         public IReadOnlyCollection<Vector2Int> StartingCoords => startingCoords;
 
+        public override Token this[Vector2Int coord] 
+        { 
+            get => tokensByCoords[coord];
+            set => tokensByCoords[coord] = value; 
+        }
+
         private void Reset()
         {
             tilemap = GetComponentInChildren<Tilemap>();
