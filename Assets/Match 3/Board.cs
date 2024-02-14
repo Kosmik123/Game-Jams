@@ -15,12 +15,10 @@ namespace Bipolar.Match3
             }
         }
 
-        protected Token[,] tokens;
-
-        public Token this[Vector2Int coord]
+        public abstract Token this[Vector2Int coord]
         {
-            get => tokens[coord.x, coord.y];
-            set => tokens[coord.x, coord.y] = value;
+            get;
+            set;
         }
 
         public bool Contains(Vector2Int coord) => Contains(coord.x, coord.y);
@@ -29,5 +27,8 @@ namespace Bipolar.Match3
         public abstract Vector2Int WorldToCoord(Vector3 worldPosition);
         public Vector3 CoordToWorld(float x, float y) => CoordToWorld(new Vector2(x, y));
         public abstract Vector3 CoordToWorld(Vector2 coord);
+
+        public Token GetToken(Vector2Int coord) => GetToken(coord.x, coord.y);
+        public abstract Token GetToken(int x, int y);
     }
 }

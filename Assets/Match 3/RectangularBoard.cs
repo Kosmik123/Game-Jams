@@ -24,6 +24,13 @@ namespace Bipolar.Match3
         private Vector2 localStartCoord;
         public Vector2 RealDimensions { get; private set; }
 
+        private Token[,] tokens;
+        public override Token this[Vector2Int coord]
+        {
+            get => tokens [coord.x, coord.y];
+            set => tokens [coord.x, coord.y] = value;
+        }
+
         private void Awake()
         {
             tokens = new Token[dimensions.x, dimensions.y];
@@ -69,14 +76,16 @@ namespace Bipolar.Match3
             return true;
         }
 
-        public Token GetToken(Vector2Int coord) => GetToken(coord.x, coord.y);
-
-        public Token GetToken(int xCoord, int yCoord)
+        public override Token GetToken(int xCoord, int yCoord)
         {
             if (Contains(xCoord, yCoord) == false)
                 return null;
 
-            return tokens[xCoord, yCoord];
+            var token = tokens[xCoord, yCoord];
+            if (token == null || token.IsCleared)
+                return null;
+
+            return token;
         }
 
         private void OnValidate()
