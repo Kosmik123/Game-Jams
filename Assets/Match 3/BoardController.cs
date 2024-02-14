@@ -25,8 +25,14 @@ namespace Bipolar.Match3
 
         [SerializeField]
         private TokensSpawner tokensSpawner;
+
         [SerializeField]
         private TokenTypeProvider tokenTypeProvider;
+        public TokenTypeProvider TokenTypeProvider 
+        {
+            get => tokenTypeProvider; 
+            set => tokenTypeProvider = value; 
+        }
 
         [SerializeField]
         private MoveDirection collapseDirection;
@@ -48,12 +54,9 @@ namespace Bipolar.Match3
         private readonly List<TokenMovement> currentlyMovingTokens = new List<TokenMovement>();
         public bool AreTokensMoving => currentlyMovingTokens.Count > 0;
 
-        private Token CreateToken(int xCoord, int yCoord, bool avoidMatches = false)
+        private Token CreateToken(int xCoord, int yCoord)
         {
-            var spawnCoord = new Vector2Int(xCoord, yCoord);
-            Vector3 spawnPosition = Board.CoordToWorld(spawnCoord);
             var token = tokensSpawner.SpawnToken();
-            token.transform.position = spawnPosition;
             token.Type = tokenTypeProvider.GetTokenType(xCoord, yCoord);
             return token;
         }
@@ -134,7 +137,8 @@ namespace Bipolar.Match3
 
                 // odtąd inne czynnności
                 var spawnCoord = coord + spawnOffset;
-                var newToken = CreateToken(spawnCoord.x, spawnCoord.y, false);
+                var newToken = CreateToken(coord.x, coord.y);
+                newToken.transform.position = Board.CoordToWorld(spawnCoord);
                 Board[coord] = newToken;
                 StartTokenMovement(newToken, coord, 0.3f); // to samo
             }
