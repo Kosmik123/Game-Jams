@@ -97,7 +97,10 @@ namespace Bipolar.Match3
 
         public override Token GetToken(int x, int y)
         {
-            return null;
+            if (Contains(x, y) == false)
+                return null;
+
+            return this[new Vector2Int(x, y)];
         }
 
         public override Vector2Int WorldToCoord(Vector3 worldPosition)
