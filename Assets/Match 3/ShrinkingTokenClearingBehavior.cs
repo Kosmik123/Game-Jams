@@ -9,6 +9,13 @@ namespace Bipolar.Match3
         private float shrinkingDuration = 0.2f;
         [SerializeField]
         private Transform resizedVisual;
+        [SerializeField]
+        private Token token;
+
+        private void OnEnable()
+        {
+            resizedVisual.localScale = Vector3.one;
+        }
 
         public override void ClearToken()
         {
@@ -27,7 +34,7 @@ namespace Bipolar.Match3
                 yield return null;
             }
             resizedVisual.localScale = Vector3.zero;
-            GetComponent<Token>().IsCleared = true;
+            token.IsCleared = true;
         }
     }
 }
