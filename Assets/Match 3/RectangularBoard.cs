@@ -76,18 +76,6 @@ namespace Bipolar.Match3
             return true;
         }
 
-        public override Token GetToken(int xCoord, int yCoord)
-        {
-            if (Contains(xCoord, yCoord) == false)
-                return null;
-
-            var token = tokens[xCoord, yCoord];
-            if (token == null || token.IsCleared)
-                return null;
-
-            return token;
-        }
-
         private void OnValidate()
         {
             Dimensions = dimensions;

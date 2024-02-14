@@ -28,7 +28,17 @@ namespace Bipolar.Match3
         public Vector3 CoordToWorld(float x, float y) => CoordToWorld(new Vector2(x, y));
         public abstract Vector3 CoordToWorld(Vector2 coord);
 
-        public Token GetToken(Vector2Int coord) => GetToken(coord.x, coord.y);
-        public abstract Token GetToken(int x, int y);
+        public Token GetToken(int x, int y) => GetToken(new Vector2Int(x, y));
+        public Token GetToken(Vector2Int coord)
+        {
+            if (Contains(coord) == false)
+                return null;
+
+            var token = this[coord];
+            if (token == null || token.IsCleared)
+                return null;
+
+            return token;
+        }
     }
 }

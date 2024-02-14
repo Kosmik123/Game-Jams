@@ -95,14 +95,6 @@ namespace Bipolar.Match3
             return cellPosition + Grid.Swizzle(Grid.cellSwizzle, tilemap.tileAnchor);
         }
 
-        public override Token GetToken(int x, int y)
-        {
-            if (Contains(x, y) == false)
-                return null;
-
-            return this[new Vector2Int(x, y)];
-        }
-
         public override Vector2Int WorldToCoord(Vector3 worldPosition)
         {
             worldPosition -= tilemap.tileAnchor;
