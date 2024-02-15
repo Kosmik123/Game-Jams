@@ -3,44 +3,55 @@ using UnityEngine;
 
 namespace Bipolar.Match3
 {
-    [RequireComponent(typeof(RectangularBoard))]
-    public class BoardController : MonoBehaviour
+    public abstract class BoardController<T> : MonoBehaviour where T : Board
     {
-        public event System.Action OnTokensMovementStopped;
-        public event System.Action OnTokensColapsed;
-        public event TokensSwapEventHandler OnTokensSwapped;
+        public abstract event System.Action OnTokensMovementStopped;
 
-        private RectangularBoard _board;
-        public RectangularBoard Board
+        private T _board;
+        public T Board
         {
             get
             {
                 if (_board == null)
-                    _board = GetComponent<RectangularBoard>();
+                    _board = GetComponent<T>();
                 return _board;
             }
         }
 
         [SerializeField]
         private TokensSpawner tokensSpawner;
+        public TokensSpawner TokensSpawner
+        {
+            get => tokensSpawner;
+            set => tokensSpawner = value;
+        }
 
         [SerializeField]
         private TokenTypeProvider tokenTypeProvider;
-        public TokenTypeProvider TokenTypeProvider 
+        public TokenTypeProvider TokenTypeProvider
         {
-            get => tokenTypeProvider; 
-            set => tokenTypeProvider = value; 
+            get => tokenTypeProvider;
+            set => tokenTypeProvider = value;
         }
+
+        protected Token CreateToken(int x, int y)
+        {
+            var token = TokensSpawner.SpawnToken();
+            token.Type = TokenTypeProvider.GetTokenType(x, y);
+            return token;
+        }
+    }
+
+    [RequireComponent(typeof(RectangularBoard))]
+    public class RectangularBoardController : BoardController<RectangularBoard>
+    {
+        public override event System.Action OnTokensMovementStopped;
+
+        public event System.Action OnTokensColapsed;
+        public event TokensSwapEventHandler OnTokensSwapped;
         
         private readonly List<TokenMovement> currentlyMovingTokens = new List<TokenMovement>();
         public bool AreTokensMoving => currentlyMovingTokens.Count > 0;
-
-        private Token CreateToken(int xCoord, int yCoord)
-        {
-            var token = tokensSpawner.SpawnToken();
-            token.Type = tokenTypeProvider.GetTokenType(xCoord, yCoord);
-            return token;
-        }
 
         public void Collapse()
         {

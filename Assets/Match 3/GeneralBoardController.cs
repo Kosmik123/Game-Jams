@@ -5,37 +5,15 @@ using UnityEngine;
 
 namespace Bipolar.Match3
 {
-    public class GeneralBoardController : MonoBehaviour
+    [RequireComponent(typeof(GeneralBoard))]
+    public class GeneralBoardController : BoardController<GeneralBoard>
     {
-        public event System.Action OnTokensMovementStopped;
-
-        private GeneralBoard _board;
-        public GeneralBoard Board
-        {
-            get
-            {
-                if (_board == null)
-                    _board = GetComponent<GeneralBoard>();
-                return _board;
-            }
-        }
-
-        [SerializeField]
-        private TokensSpawner tokensSpawner;
-
-        [SerializeField]
-        private TokenTypeProvider tokenTypeProvider;
-        public TokenTypeProvider TokenTypeProvider
-        {
-            get => tokenTypeProvider;
-            set => tokenTypeProvider = value;
-        }
-
+        public override event System.Action OnTokensMovementStopped;
+        
         private readonly List<TokenMovement> currentlyMovingTokens = new List<TokenMovement>();
         public bool AreTokensMoving => currentlyMovingTokens.Count > 0;
 
         private readonly Dictionary<Token, Coroutine> tokenMovementCoroutines = new Dictionary<Token, Coroutine>();
-
 
         private void Start()
         {
@@ -128,14 +106,7 @@ namespace Bipolar.Match3
                 StartTokenMovingTokenAlongLine(newToken, line, -1, i + 1);
             }
         }
-
-        private Token CreateToken(int x, int y)
-        {
-            var token = tokensSpawner.SpawnToken();
-            token.Type = tokenTypeProvider.GetTokenType(x, y);
-            return token;
-        }
-
+        
         private void OnDisable()
         {
             

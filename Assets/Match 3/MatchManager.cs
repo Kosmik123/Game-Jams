@@ -13,7 +13,7 @@ namespace Bipolar.Match3
         public event System.Action<TokensChain> OnTokensMatched;
 
         [SerializeField]
-        private BoardController boardController;
+        private RectangularBoardController boardController;
         [SerializeField]
         private SwapManager swapManager;
 
