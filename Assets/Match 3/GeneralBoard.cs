@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 using System.Linq;
 using System;
+using System.Collections;
 
 namespace Bipolar.Match3
 {
@@ -11,19 +12,29 @@ namespace Bipolar.Match3
         [SerializeField]
         private Tilemap tilemap;
 
-        private readonly HashSet<Vector2Int> includedCoords = new HashSet<Vector2Int>();
-        private readonly Dictionary<Vector2Int, Vector2Int> targetCoords = new Dictionary<Vector2Int, Vector2Int>();
-        private readonly HashSet<Vector2Int> startingCoords = new HashSet<Vector2Int>();
+        private readonly List<Vector2Int> includedCoords = new List<Vector2Int>();
+
+        private readonly HashSet<int> startingCoordsIndices = new HashSet<int>();
+        private readonly HashSet<int> endingCoordsIndices = new HashSet<int>();
+        private int[] targetCoordsIndexes;
+        private int[] sourceCoordsIndexes;
+
+        //public IReadOnlyList<Vector2Int> StartingCoords { get; private set; } 
+        //public IReadOnlyList<Vector2Int> EndingCoords { get; private set; }
 
         private readonly Dictionary<Vector2Int, Token> tokensByCoords = new Dictionary<Vector2Int, Token>();
-
-        public IReadOnlyCollection<Vector2Int> StartingCoords => startingCoords;
-
         public override Token this[Vector2Int coord] 
         { 
             get => tokensByCoords[coord];
             set => tokensByCoords[coord] = value; 
         }
+
+        public Vector2Int GetCoordFromIndex(int index) => includedCoords[index];
+        public int GetTargetIndex(int sourceIndex) => targetCoordsIndexes[sourceIndex];
+        public int GetSourceIndex(int targetIndex) => sourceCoordsIndexes[targetIndex];
+
+        private CoordsLine[] lines;
+        public IReadOnlyList<CoordsLine> Lines => lines;
 
         private void Reset()
         {
@@ -42,18 +53,22 @@ namespace Bipolar.Match3
             var coordBounds = tilemap.cellBounds;
             var remainingCoordsToDetermine = new HashSet<Vector2Int>();
 
-            startingCoords.Clear();
-            targetCoords.Clear();
+            var tempTargetCoordsIndexesDict = new Dictionary<int, int>();
+
+            startingCoordsIndices.Clear();
+            endingCoordsIndices.Clear();
+
             for (int y = coordBounds.yMin; y <= coordBounds.yMax; y++)
             {
                 for (int x = coordBounds.xMin; x <= coordBounds.xMax; x++)
                 {
                     var coord = new Vector2Int(x, y);
                     remainingCoordsToDetermine.Add(coord);
-                    startingCoords.Add(coord);
                 }
             }
 
+            var notStartingCoords = new HashSet<int>();
+            var notEndingCoords = new HashSet<int>();
             while (remainingCoordsToDetermine.Count > 0)
             {
                 var coord = remainingCoordsToDetermine.First();
@@ -61,26 +76,95 @@ namespace Bipolar.Match3
 
                 var tile = tilemap.GetTile<GeneralBoardTile>((Vector3Int)coord);
                 if (tile == null)
-                {
-                    startingCoords.Remove(coord);
                     continue;
+
+                int coordIndex = includedCoords.IndexOf(coord);
+                if (coordIndex < 0)
+                {
+                    coordIndex = includedCoords.Count;
+                    includedCoords.Add(coord);
                 }
-                includedCoords.Add(coord);
 
                 var direction = tile.Direction;
                 if (direction == Vector2Int.zero)
+                {
+                    startingCoordsIndices.Add(coordIndex);
+                    endingCoordsIndices.Add(coordIndex);
                     continue;
+                }
 
                 var targetCoord = coord + direction;
-                startingCoords.Remove(targetCoord);
-                
                 var targetTile = tilemap.GetTile<GeneralBoardTile>((Vector3Int)targetCoord);
                 if (targetTile == null)
                     continue;
 
-                includedCoords.Add(targetCoord);
-                targetCoords.Add(coord, targetCoord);
+                int targetCoordIndex = includedCoords.IndexOf(targetCoord);
+                if (targetCoordIndex < 0)
+                {
+                    targetCoordIndex = includedCoords.Count;
+                    includedCoords.Add(targetCoord);
+                }
+
+                startingCoordsIndices.Add(coordIndex);
+                notEndingCoords.Add(coordIndex);
+
+                endingCoordsIndices.Add(targetCoordIndex);
+                notStartingCoords.Add(targetCoordIndex);
+
+                tempTargetCoordsIndexesDict.Add(coordIndex, targetCoordIndex);
             }
+
+            startingCoordsIndices.ExceptWith(notStartingCoords);
+            endingCoordsIndices.ExceptWith(notEndingCoords);
+
+            int indexesCount = tempTargetCoordsIndexesDict.Keys.Max() + 1;
+            targetCoordsIndexes = new int[indexesCount];
+            sourceCoordsIndexes = new int[indexesCount];
+            for (int i = 0; i < indexesCount; i++)
+            {
+                targetCoordsIndexes[i] = -1;
+                sourceCoordsIndexes[i] = -1;
+            }
+            foreach (var kvp in tempTargetCoordsIndexesDict)
+            {
+                targetCoordsIndexes[kvp.Key] = kvp.Value;
+                sourceCoordsIndexes[kvp.Value] = kvp.Key;
+            }
+
+            //var tempCoords = new List<Vector2Int>();
+            //foreach (var index in startingCoordsIndices)
+            //    tempCoords.Add(includedCoords[index]);
+            //StartingCoords = tempCoords.ToArray();
+
+            //tempCoords.Clear();
+            //foreach (var index in endingCoordsIndices)
+            //    tempCoords.Add(includedCoords[index]);
+            //EndingCoords = tempCoords.ToArray();
+
+            lines = new CoordsLine[startingCoordsIndices.Count];
+            int lineIndex = 0;
+            foreach (var index in startingCoordsIndices)
+            {
+                lines[lineIndex] = CreateCoordsLine(index);
+                lineIndex++;
+            }
+        }
+
+        private CoordsLine CreateCoordsLine(int startingIndex)
+        {
+            var coordsList = new List<Vector2Int>();
+
+            int index = startingIndex;
+            do 
+            {
+                var coord = includedCoords[index];
+                coordsList.Add(coord);
+                index = targetCoordsIndexes[index];
+                if (index < 0)
+                    break;
+            }
+            while (true);
+            return new CoordsLine(coordsList);
         }
 
         public override bool Contains(int x, int y)
@@ -103,17 +187,79 @@ namespace Bipolar.Match3
 
         private void OnDrawGizmosSelected()
         {
-            Gizmos.color = Color.yellow;
-            foreach (var kvp in targetCoords)
+            if (targetCoordsIndexes != null && includedCoords.Count > 0)
             {
-                var start = CoordToWorld(kvp.Key);
-                var target = CoordToWorld(kvp.Value);
-                Gizmos.DrawLine(start, target);
+                Gizmos.color = Color.yellow;
+                for (int sourceIndex = 0; sourceIndex < targetCoordsIndexes.Length; sourceIndex++)
+                {
+                    int targetIndex = targetCoordsIndexes[sourceIndex];
+                    if (targetIndex < 0)
+                        continue;
+
+                    var start = CoordToWorld(includedCoords[sourceIndex]);
+                    var target = CoordToWorld(includedCoords[targetIndex]);
+                    Gizmos.DrawLine(start, target);
+                }
+
+                Gizmos.color = Color.green;
+                foreach (var index in startingCoordsIndices)
+                {
+                    var coord = includedCoords[index];
+                    var tile = tilemap.GetTile<GeneralBoardTile>((Vector3Int)coord);
+                    Gizmos.DrawSphere(CoordToWorld(coord) - (Vector3)(0.1f * (Vector2)tile.Direction), 0.1f);
+                }
+
+                Gizmos.color = Color.red;
+                foreach (var index in endingCoordsIndices)
+                {
+                    var coord = includedCoords[index];
+                    var tile = tilemap.GetTile<GeneralBoardTile>((Vector3Int)coord);
+                    Gizmos.DrawSphere(CoordToWorld(coord) + (Vector3)(0.1f * (Vector2)tile.Direction), 0.1f);
+                }
+            }
+        }
+
+        public class CoordsCollection : IEnumerable<Vector2Int>
+        {
+            private IReadOnlyList<Vector2Int> elements;
+            public IReadOnlyCollection<int> indices;
+
+            public CoordsCollection(IReadOnlyList<Vector2Int> elements, IReadOnlyCollection<int> indices)
+            {
+                this.elements = elements;
+                this.indices = indices;
             }
 
-            foreach (var start in startingCoords)
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+            public IEnumerator<Vector2Int> GetEnumerator() => new CoordEnumerator(elements, indices);
+        }
+        public class CoordEnumerator : IEnumerator<Vector2Int>
+        {
+            private IReadOnlyList<Vector2Int> elements;
+            private IEnumerator<int> indexEnumerator; 
+
+            public CoordEnumerator(IReadOnlyList<Vector2Int> elements, IReadOnlyCollection<int> indices)
             {
-                Gizmos.DrawSphere(CoordToWorld(start), 0.1f);
+                this.elements = elements;
+                indexEnumerator = indices.GetEnumerator();
+            }
+
+            public Vector2Int Current => elements[indexEnumerator.Current];
+            object IEnumerator.Current => Current;
+            public void Dispose() { }
+            public bool MoveNext() => indexEnumerator.MoveNext();
+            public void Reset() => indexEnumerator.Reset();
+        }
+
+        public class CoordsLine
+        {
+            private Vector2Int[] coords;
+            public IReadOnlyList<Vector2Int> Coords => coords;
+            public int Size => coords.Length;
+
+            public CoordsLine(IEnumerable<Vector2Int> coords)
+            {
+                this.coords = coords.ToArray();
             }
         }
     }

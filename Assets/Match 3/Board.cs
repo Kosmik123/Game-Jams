@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace Bipolar.Match3
 {
@@ -15,11 +16,9 @@ namespace Bipolar.Match3
             }
         }
 
-        public abstract Token this[Vector2Int coord]
-        {
-            get;
-            set;
-        }
+        // TODO public abstract IReadOnlyCollection<Token> Tokens { get; }
+
+        public abstract Token this[Vector2Int coord] { get; set; }
 
         public bool Contains(Vector2Int coord) => Contains(coord.x, coord.y);
         public abstract bool Contains(int x, int y);
