@@ -1,6 +1,7 @@
 using NaughtyAttributes;
 using System;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace Bipolar.Match3
 {
@@ -22,6 +23,23 @@ namespace Bipolar.Match3
         }
         private Vector2 localStartCoord;
         public Vector2 RealDimensions { get; private set; }
+
+        [SerializeField]
+        private MoveDirection collapseDirection;
+        public Vector2Int CollapseDirection
+        {
+            get
+            {
+                return collapseDirection switch
+                {
+                    MoveDirection.Up => Vector2Int.up,
+                    MoveDirection.Left => Vector2Int.left,
+                    MoveDirection.Right => Vector2Int.right,
+                    MoveDirection.Down => Vector2Int.down,
+                    _ => Vector2Int.zero,
+                };
+            }
+        }
 
         private Token[,] tokens;
         public override Token this[Vector2Int coord]

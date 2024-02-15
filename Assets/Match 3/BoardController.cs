@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.EventSystems;
 
 namespace Bipolar.Match3
 {
@@ -32,23 +31,6 @@ namespace Bipolar.Match3
             get => tokenTypeProvider; 
             set => tokenTypeProvider = value; 
         }
-
-        [SerializeField]
-        private MoveDirection collapseDirection;
-        public Vector2Int CollapseDirection
-        { 
-            get
-            {
-                return collapseDirection switch
-                {
-                    MoveDirection.Up => Vector2Int.up,
-                    MoveDirection.Left => Vector2Int.left,
-                    MoveDirection.Right => Vector2Int.right,
-                    MoveDirection.Down => Vector2Int.down,
-                    _ => Vector2Int.zero,
-                };
-            } 
-        }
         
         private readonly List<TokenMovement> currentlyMovingTokens = new List<TokenMovement>();
         public bool AreTokensMoving => currentlyMovingTokens.Count > 0;
@@ -62,7 +44,7 @@ namespace Bipolar.Match3
 
         public void Collapse()
         {
-            int iterationAxis = (CollapseDirection.x != 0) ? 1 : 0;
+            int iterationAxis = (Board.CollapseDirection.x != 0) ? 1 : 0;
             bool colapsed = false;
             for (int lineIndex = 0; lineIndex < Board.Dimensions[iterationAxis]; lineIndex++)
             {
@@ -89,8 +71,8 @@ namespace Bipolar.Match3
             int collapseAxis = 1 - iterationAxis; // to samo
             int lineSize = Board.Dimensions[collapseAxis]; // to samo
 
-            int startCellIndex = CollapseDirection[collapseAxis] > 0 ? -1 : 0; // odwrócony warunek
-            int lineCollapseDirection = CollapseDirection[collapseAxis] == 0 ? 1 : -CollapseDirection[collapseAxis];
+            int startCellIndex = Board.CollapseDirection[collapseAxis] > 0 ? -1 : 0; // odwrócony warunek
+            int lineCollapseDirection = Board.CollapseDirection[collapseAxis] == 0 ? 1 : -Board.CollapseDirection[collapseAxis];
 
             int nonExistingTokensCount = 0; // inna rzecz
             for (int i = 0; i < lineSize; i++) // troszkę inne
@@ -107,7 +89,7 @@ namespace Bipolar.Match3
                 }
                 else if (nonExistingTokensCount > 0)
                 {
-                    var offsetToMove = CollapseDirection * nonExistingTokensCount;
+                    var offsetToMove = Board.CollapseDirection * nonExistingTokensCount;
                     var targetCoord = coord + offsetToMove;
                     Board[coord] = null;
                     Board[targetCoord] = token;
@@ -123,10 +105,10 @@ namespace Bipolar.Match3
             int collapseAxis = 1 - iterationAxis; // to samo
             int lineSize = Board.Dimensions[collapseAxis]; // to samo
 
-            int startCellIndex = CollapseDirection[collapseAxis] < 0 ? -1 : 0; // odwrócony warunek
-            var spawnOffset = -CollapseDirection * count; // inna rzecz
+            int startCellIndex = Board.CollapseDirection[collapseAxis] < 0 ? -1 : 0; // odwrócony warunek
+            var spawnOffset = -Board.CollapseDirection * count; // inna rzecz
             
-            int refillingDirection = (int)Mathf.Sign(CollapseDirection[collapseAxis] + float.Epsilon);
+            int refillingDirection = (int)Mathf.Sign(Board.CollapseDirection[collapseAxis] + float.Epsilon);
 
             for (int i = 0; i < count; i++) 
             {
