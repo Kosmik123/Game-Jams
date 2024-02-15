@@ -29,7 +29,6 @@ namespace Bipolar.Match3
             StartCoroutine(MovementCo(position, moveTime));
         }
 
-
         private IEnumerator MovementCo(Vector3 position, float duration)
         {
             Vector3 startPosition = transform.position;

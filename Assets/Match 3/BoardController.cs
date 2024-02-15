@@ -4,7 +4,6 @@ using UnityEngine.EventSystems;
 
 namespace Bipolar.Match3
 {
-
     [RequireComponent(typeof(RectangularBoard))]
     public class BoardController : MonoBehaviour
     {
