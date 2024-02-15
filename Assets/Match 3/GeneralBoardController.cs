@@ -82,13 +82,12 @@ namespace Bipolar.Match3
         private IEnumerator TokenMovementCo(Token token, GeneralBoard.CoordsLine line, int fromIndex, int cellDistance)
         {
             var startIndex = fromIndex;
-            for (int i = 1; i < cellDistance; i++)
+            for (int i = 1; i <= cellDistance; i++)
             {
                 int targetIndex = fromIndex + i;
-                var startCoord = line.Coords[startIndex];
                 var targetCoord = line.Coords[targetIndex];
 
-                var startPosition = Board.CoordToWorld(startCoord);
+                var startPosition = startIndex < 0 ? token.transform.position : Board.CoordToWorld(line.Coords[startIndex]);
                 var targetPosition = Board.CoordToWorld(targetCoord);
 
                 float progress = 0;
@@ -107,11 +106,16 @@ namespace Bipolar.Match3
 
         private void RefillLine(GeneralBoard.CoordsLine line, int count)
         {
+            var startCoord = line.Coords[0];
+            var creatingDirection = -Board.GetDirection(startCoord);
             for (int i = 0; i < count; i++)
             {
                 var coord = line.Coords[i];
                 var newToken = CreateToken(coord.x, coord.y);
-                //newToken.transform.position = 
+                var spawningCoord = startCoord + creatingDirection * (count - i);
+                var spawningPosition = Board.CoordToWorld(spawningCoord);
+                newToken.transform.position = spawningPosition;
+                StartTokenMovingTokenAlongLine(newToken, line, -1, i + 1);
             }
         }
 

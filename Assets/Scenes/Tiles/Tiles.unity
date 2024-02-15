@@ -969,8 +969,8 @@ TilemapRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: -444416985
+  m_SortingLayer: -1
   m_SortingOrder: 0
   m_ChunkSize: {x: 32, y: 32, z: 32}
   m_ChunkCullingBounds: {x: 0, y: 0, z: 0}
@@ -994,6 +994,36 @@ Transform:
   m_Father: {fileID: 675987279}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &372769026
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 372769027}
+  m_Layer: 0
+  m_Name: Tokens
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &372769027
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 372769026}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 675987279}
+  m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &675987276
 GameObject:
   m_ObjectHideFlags: 0
@@ -1006,6 +1036,8 @@ GameObject:
   - component: {fileID: 675987278}
   - component: {fileID: 675987277}
   - component: {fileID: 675987280}
+  - component: {fileID: 675987281}
+  - component: {fileID: 675987282}
   m_Layer: 0
   m_Name: General Board
   m_TagString: Untagged
@@ -1051,6 +1083,7 @@ Transform:
   m_Children:
   - {fileID: 309857553}
   - {fileID: 1956633186}
+  - {fileID: 372769027}
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1066,8 +1099,35 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: abbde8c0b88dc8a4a994a2f3a6a9c515, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tokensSpawner: {fileID: 0}
-  tokenTypeProvider: {fileID: 0}
+  tokensSpawner: {fileID: 675987281}
+  tokenTypeProvider: {fileID: 675987282}
+--- !u!114 &675987281
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 675987276}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb5b0b50e4443aa4c956db5c0986a3bf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  tokenPrototype: {fileID: 8659477918814487130, guid: 99f817c17fef7814f91b2e2618469c76, type: 3}
+  tokensContainer: {fileID: 372769027}
+--- !u!114 &675987282
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 675987276}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd5cc66134acf8241aa8c19c13e4224f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  settings: {fileID: 11400000, guid: bfcf2dc1b16691f419860f7968a3652b, type: 2}
 --- !u!1 &1956633185
 GameObject:
   m_ObjectHideFlags: 0

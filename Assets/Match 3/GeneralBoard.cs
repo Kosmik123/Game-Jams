@@ -19,15 +19,14 @@ namespace Bipolar.Match3
         private int[] targetCoordsIndexes;
         private int[] sourceCoordsIndexes;
 
-        //public IReadOnlyList<Vector2Int> StartingCoords { get; private set; } 
-        //public IReadOnlyList<Vector2Int> EndingCoords { get; private set; }
-
         private readonly Dictionary<Vector2Int, Token> tokensByCoords = new Dictionary<Vector2Int, Token>();
         public override Token this[Vector2Int coord] 
         { 
             get => tokensByCoords[coord];
             set => tokensByCoords[coord] = value; 
         }
+
+        private readonly Dictionary<Vector2Int, Vector2Int> directions = new Dictionary<Vector2Int, Vector2Int>();
 
         public Vector2Int GetCoordFromIndex(int index) => includedCoords[index];
         public int GetTargetIndex(int sourceIndex) => targetCoordsIndexes[sourceIndex];
@@ -57,6 +56,7 @@ namespace Bipolar.Match3
 
             startingCoordsIndices.Clear();
             endingCoordsIndices.Clear();
+            directions.Clear();
 
             for (int y = coordBounds.yMin; y <= coordBounds.yMax; y++)
             {
@@ -74,10 +74,11 @@ namespace Bipolar.Match3
                 var coord = remainingCoordsToDetermine.First();
                 remainingCoordsToDetermine.Remove(coord);
 
-                var tile = tilemap.GetTile<GeneralBoardTile>((Vector3Int)coord);
-                if (tile == null)
+                if (TryGetTile(coord, out var tile) == false)
                     continue;
 
+                var direction = tile.Direction;
+                directions.Add(coord, direction);
                 int coordIndex = includedCoords.IndexOf(coord);
                 if (coordIndex < 0)
                 {
@@ -85,7 +86,6 @@ namespace Bipolar.Match3
                     includedCoords.Add(coord);
                 }
 
-                var direction = tile.Direction;
                 if (direction == Vector2Int.zero)
                 {
                     startingCoordsIndices.Add(coordIndex);
@@ -94,8 +94,7 @@ namespace Bipolar.Match3
                 }
 
                 var targetCoord = coord + direction;
-                var targetTile = tilemap.GetTile<GeneralBoardTile>((Vector3Int)targetCoord);
-                if (targetTile == null)
+                if (TryGetTile(targetCoord, out var targetTile) == false)
                     continue;
 
                 int targetCoordIndex = includedCoords.IndexOf(targetCoord);
@@ -131,16 +130,6 @@ namespace Bipolar.Match3
                 sourceCoordsIndexes[kvp.Value] = kvp.Key;
             }
 
-            //var tempCoords = new List<Vector2Int>();
-            //foreach (var index in startingCoordsIndices)
-            //    tempCoords.Add(includedCoords[index]);
-            //StartingCoords = tempCoords.ToArray();
-
-            //tempCoords.Clear();
-            //foreach (var index in endingCoordsIndices)
-            //    tempCoords.Add(includedCoords[index]);
-            //EndingCoords = tempCoords.ToArray();
-
             lines = new CoordsLine[startingCoordsIndices.Count];
             int lineIndex = 0;
             foreach (var index in startingCoordsIndices)
@@ -148,6 +137,12 @@ namespace Bipolar.Match3
                 lines[lineIndex] = CreateCoordsLine(index);
                 lineIndex++;
             }
+        }
+
+        private bool TryGetTile(Vector2Int coord, out GeneralBoardTile tile)
+        {
+            tile = tilemap.GetTile<GeneralBoardTile>((Vector3Int)coord);
+            return tile != null;
         }
 
         private CoordsLine CreateCoordsLine(int startingIndex)
@@ -170,7 +165,7 @@ namespace Bipolar.Match3
         public override bool Contains(int x, int y)
         {
             return tilemap.cellBounds.Contains(new Vector3Int(x, y, tilemap.cellBounds.z))
-                && includedCoords.Contains(new Vector2Int(x, y));
+                && tokensByCoords.ContainsKey(new Vector2Int(x, y));
         }
 
         public override Vector3 CoordToWorld(Vector2 coord)
@@ -184,6 +179,8 @@ namespace Bipolar.Match3
             worldPosition -= tilemap.tileAnchor;
             return (Vector2Int)tilemap.WorldToCell(worldPosition);
         }
+
+        public Vector2Int GetDirection(Vector2Int coord) => directions[coord];
 
         private void OnDrawGizmosSelected()
         {
@@ -205,16 +202,16 @@ namespace Bipolar.Match3
                 foreach (var index in startingCoordsIndices)
                 {
                     var coord = includedCoords[index];
-                    var tile = tilemap.GetTile<GeneralBoardTile>((Vector3Int)coord);
-                    Gizmos.DrawSphere(CoordToWorld(coord) - (Vector3)(0.1f * (Vector2)tile.Direction), 0.1f);
+                    if (TryGetTile(coord, out var tile))
+                        Gizmos.DrawSphere(CoordToWorld(coord) - (Vector3)(0.1f * (Vector2)tile.Direction), 0.1f);
                 }
 
                 Gizmos.color = Color.red;
                 foreach (var index in endingCoordsIndices)
                 {
                     var coord = includedCoords[index];
-                    var tile = tilemap.GetTile<GeneralBoardTile>((Vector3Int)coord);
-                    Gizmos.DrawSphere(CoordToWorld(coord) + (Vector3)(0.1f * (Vector2)tile.Direction), 0.1f);
+                    if (TryGetTile(coord, out var tile))
+                        Gizmos.DrawSphere(CoordToWorld(coord) + (Vector3)(0.1f * (Vector2)tile.Direction), 0.1f);
                 }
             }
         }
@@ -250,7 +247,6 @@ namespace Bipolar.Match3
             public bool MoveNext() => indexEnumerator.MoveNext();
             public void Reset() => indexEnumerator.Reset();
         }
-
         public class CoordsLine
         {
             private Vector2Int[] coords;
