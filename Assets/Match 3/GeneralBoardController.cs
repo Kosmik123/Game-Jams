@@ -7,6 +7,8 @@ namespace Bipolar.Match3
 {
     public class GeneralBoardController : MonoBehaviour
     {
+        public event System.Action OnTokensMovementStopped;
+
         private GeneralBoard _board;
         public GeneralBoard Board
         {
@@ -91,7 +93,7 @@ namespace Bipolar.Match3
                 var targetPosition = Board.CoordToWorld(targetCoord);
                 float realDistance = Vector3.Distance(startPosition, targetPosition);
 
-                float progressSpeed = 1f / realDistance; 
+                float progressSpeed = 5f / realDistance; 
 
                 float progress = 0;
                 while (progress < 1)
@@ -105,6 +107,11 @@ namespace Bipolar.Match3
             }
 
             tokenMovementCoroutines.Remove(token);
+            if (tokenMovementCoroutines.Count <= 0)
+            {
+                Debug.Log("Koniec ruchu");
+                OnTokensMovementStopped?.Invoke();
+            }
         }
 
         private void RefillLine(GeneralBoard.CoordsLine line, int count)
