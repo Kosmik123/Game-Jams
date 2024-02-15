@@ -215,7 +215,7 @@ namespace Bipolar.Match3
                 }
             }
         }
-
+/*
         public class CoordsCollection : IEnumerable<Vector2Int>
         {
             private IReadOnlyList<Vector2Int> elements;
@@ -246,12 +246,12 @@ namespace Bipolar.Match3
             public void Dispose() { }
             public bool MoveNext() => indexEnumerator.MoveNext();
             public void Reset() => indexEnumerator.Reset();
-        }
+        }*/
+
         public class CoordsLine
         {
             private Vector2Int[] coords;
             public IReadOnlyList<Vector2Int> Coords => coords;
-            public int Size => coords.Length;
 
             public CoordsLine(IEnumerable<Vector2Int> coords)
             {

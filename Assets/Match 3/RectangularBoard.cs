@@ -4,7 +4,6 @@ using UnityEngine;
 
 namespace Bipolar.Match3
 {
-    [RequireComponent(typeof(Grid))]
     public class RectangularBoard : Board
     {
         public event System.Action<Vector2Int> OnDimensionsChanged;

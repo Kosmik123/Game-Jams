@@ -44,6 +44,5 @@ namespace Bipolar.Match3
             transform.position = targetPosition;
             OnMovementEnded?.Invoke(this);
         }
-
     }
 }
