@@ -89,13 +89,16 @@ namespace Bipolar.Match3
 
                 var startPosition = startIndex < 0 ? token.transform.position : Board.CoordToWorld(line.Coords[startIndex]);
                 var targetPosition = Board.CoordToWorld(targetCoord);
+                float realDistance = Vector3.Distance(startPosition, targetPosition);
+
+                float progressSpeed = 1f / realDistance; 
 
                 float progress = 0;
                 while (progress < 1)
                 {
-                    progress += Time.deltaTime;
                     token.transform.position = Vector3.Lerp(startPosition, targetPosition, progress); 
                     yield return null;
+                    progress += Time.deltaTime * progressSpeed;
                 }
                 token.transform.position = targetPosition;
                 startIndex = targetIndex;
