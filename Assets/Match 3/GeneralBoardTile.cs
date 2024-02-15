@@ -11,6 +11,10 @@ namespace Bipolar.Match3
         private Vector2Int direction;
         public Vector2Int Direction => direction;
 
+        [SerializeField]
+        private bool jump;
+        public bool Jump => jump;
+
         private void Awake()
         {
             Validate();
