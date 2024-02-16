@@ -3,45 +3,6 @@ using UnityEngine;
 
 namespace Bipolar.Match3
 {
-    public abstract class BoardController<T> : MonoBehaviour where T : Board
-    {
-        public abstract event System.Action OnTokensMovementStopped;
-
-        private T _board;
-        public T Board
-        {
-            get
-            {
-                if (_board == null)
-                    _board = GetComponent<T>();
-                return _board;
-            }
-        }
-
-        [SerializeField]
-        private TokensSpawner tokensSpawner;
-        public TokensSpawner TokensSpawner
-        {
-            get => tokensSpawner;
-            set => tokensSpawner = value;
-        }
-
-        [SerializeField]
-        private TokenTypeProvider tokenTypeProvider;
-        public TokenTypeProvider TokenTypeProvider
-        {
-            get => tokenTypeProvider;
-            set => tokenTypeProvider = value;
-        }
-
-        protected Token CreateToken(int x, int y)
-        {
-            var token = TokensSpawner.SpawnToken();
-            token.Type = TokenTypeProvider.GetTokenType(x, y);
-            return token;
-        }
-    }
-
     [RequireComponent(typeof(RectangularBoard))]
     public class RectangularBoardController : BoardController<RectangularBoard>
     {
@@ -53,11 +14,11 @@ namespace Bipolar.Match3
         private readonly List<TokenMovement> currentlyMovingTokens = new List<TokenMovement>();
         public bool AreTokensMoving => currentlyMovingTokens.Count > 0;
 
-        public void Collapse()
+        public override void Collapse()
         {
-            int iterationAxis = (Board.CollapseDirection.x != 0) ? 1 : 0;
+            int iterationAxis = (board.CollapseDirection.x != 0) ? 1 : 0;
             bool colapsed = false;
-            for (int lineIndex = 0; lineIndex < Board.Dimensions[iterationAxis]; lineIndex++)
+            for (int lineIndex = 0; lineIndex < board.Dimensions[iterationAxis]; lineIndex++)
             {
                 int emptyCellsCount = CollapseTokensInLine(lineIndex, iterationAxis);
                 if (emptyCellsCount > 0)
@@ -80,10 +41,10 @@ namespace Bipolar.Match3
         private int CollapseTokensInLine(int lineIndex, int iterationAxis)
         {
             int collapseAxis = 1 - iterationAxis; // to samo
-            int lineSize = Board.Dimensions[collapseAxis]; // to samo
+            int lineSize = board.Dimensions[collapseAxis]; // to samo
 
-            int startCellIndex = Board.CollapseDirection[collapseAxis] > 0 ? -1 : 0; // odwrócony warunek
-            int lineCollapseDirection = Board.CollapseDirection[collapseAxis] == 0 ? 1 : -Board.CollapseDirection[collapseAxis];
+            int startCellIndex = board.CollapseDirection[collapseAxis] > 0 ? -1 : 0; // odwrócony warunek
+            int lineCollapseDirection = board.CollapseDirection[collapseAxis] == 0 ? 1 : -board.CollapseDirection[collapseAxis];
 
             int nonExistingTokensCount = 0; // inna rzecz
             for (int i = 0; i < lineSize; i++) // troszkę inne
@@ -100,7 +61,7 @@ namespace Bipolar.Match3
                 }
                 else if (nonExistingTokensCount > 0)
                 {
-                    var offsetToMove = Board.CollapseDirection * nonExistingTokensCount;
+                    var offsetToMove = board.CollapseDirection * nonExistingTokensCount;
                     var targetCoord = coord + offsetToMove;
                     Board[coord] = null;
                     Board[targetCoord] = token;
@@ -114,12 +75,12 @@ namespace Bipolar.Match3
         private void RefillLine(int lineIndex, int count, int iterationAxis)
         {
             int collapseAxis = 1 - iterationAxis; // to samo
-            int lineSize = Board.Dimensions[collapseAxis]; // to samo
+            int lineSize = board.Dimensions[collapseAxis]; // to samo
 
-            int startCellIndex = Board.CollapseDirection[collapseAxis] < 0 ? -1 : 0; // odwrócony warunek
-            var spawnOffset = -Board.CollapseDirection * count; // inna rzecz
+            int startCellIndex = board.CollapseDirection[collapseAxis] < 0 ? -1 : 0; // odwrócony warunek
+            var spawnOffset = -board.CollapseDirection * count; // inna rzecz
             
-            int refillingDirection = (int)Mathf.Sign(Board.CollapseDirection[collapseAxis] + float.Epsilon);
+            int refillingDirection = board.CollapseDirection[collapseAxis] == 0 ? 1 : board.CollapseDirection[collapseAxis];
 
             for (int i = 0; i < count; i++) 
             {

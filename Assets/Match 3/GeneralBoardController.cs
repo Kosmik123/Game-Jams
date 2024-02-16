@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -20,12 +19,12 @@ namespace Bipolar.Match3
             Collapse();
         }
 
-        public void Collapse()
+        public override void Collapse()
         {
-            foreach (var line in Board.Lines)
+            bool colapsed = false;
+            foreach (var line in board.Lines)
             {
                 int emptyCellsCount = CollapseTokensInLine(line);
-                bool colapsed = false;
                 if (emptyCellsCount > 0)
                 {
                     colapsed = true;
@@ -95,13 +94,13 @@ namespace Bipolar.Match3
         private void RefillLine(GeneralBoard.CoordsLine line, int count)
         {
             var startCoord = line.Coords[0];
-            var creatingDirection = -Board.GetDirection(startCoord);
+            var creatingDirection = -board.GetDirection(startCoord);
             for (int i = 0; i < count; i++)
             {
                 var coord = line.Coords[i];
                 var newToken = CreateToken(coord.x, coord.y);
                 var spawningCoord = startCoord + creatingDirection * (count - i);
-                var spawningPosition = Board.CoordToWorld(spawningCoord);
+                var spawningPosition = board.CoordToWorld(spawningCoord);
                 newToken.transform.position = spawningPosition;
                 StartTokenMovingTokenAlongLine(newToken, line, -1, i + 1);
             }
