@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Scenes/Tiles/Tiles.unity
+    guid: dc53710aca0151b4b8dbeec3c2627b04
+  - enabled: 1
     path: Assets/Scenes/Love/Love.unity
     guid: 07cd5110ac909774b868a81307cc5766
   m_configObjects: {}
