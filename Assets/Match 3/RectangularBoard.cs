@@ -1,5 +1,5 @@
-using NaughtyAttributes;
-using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -21,8 +21,9 @@ namespace Bipolar.Match3
                 OnDimensionsChanged?.Invoke(dimensions);
             }
         }
-        private Vector2 localStartCoord;
-        public Vector2 RealDimensions { get; private set; }
+
+        [field: SerializeField]
+        public Vector3 LocalCenter { get; private set; }
 
         [SerializeField]
         private MoveDirection collapseDirection;
@@ -54,32 +55,30 @@ namespace Bipolar.Match3
             CalculateOtherDimensions();
         }
 
+        public Vector2 hexAddTest;
+        public Vector2 hexScaleTest;
         private void CalculateOtherDimensions()
         {
-            localStartCoord = -new Vector2((dimensions.x - 1) / 2f, (dimensions.y - 1) / 2f);
-            Vector2 realDimensions = Grid.cellSize + Grid.cellGap;
-            realDimensions.Scale(Dimensions);
-            RealDimensions = realDimensions;
+            Vector3Int lastCellCoord = (Vector3Int)Dimensions - Vector3Int.one;
+            var bottomLeft = Grid.CellToLocal(Vector3Int.zero);
+            var topRight = Grid.CellToLocal(lastCellCoord);
+            if (Grid.cellLayout == GridLayout.CellLayout.Hexagon && ((Vector3Int)Dimensions - Vector3Int.one).y % 2 == 0)
+                topRight.x = Grid.CellToLocalInterpolated(lastCellCoord + Vector3.one / 2).x;
+
+            var localCenter = (bottomLeft + topRight) / 2;
+            LocalCenter = Grid.Swizzle(Grid.cellSwizzle, localCenter);
         }
 
-        public override Vector3 CoordToWorld(Vector2 vector2)
+        public override Vector3 CoordToWorld(Vector2 coord)
         {
-            var gridPosition = localStartCoord + vector2;
-            return CellToGlobalInterpolated(gridPosition);
+            var localPosition = Grid.CellToLocalInterpolated(coord);
+            return transform.TransformPoint(localPosition) - LocalCenter;
         }
 
         public override Vector2Int WorldToCoord(Vector3 worldPosition)
         {
-            var localPosition = transform.InverseTransformPoint(worldPosition);
-            var gridPosition = Grid.LocalToCellInterpolated(localPosition);
-            var coord = (Vector2)gridPosition - localStartCoord;
-            return Vector2Int.RoundToInt(coord);
-        }
-
-        private Vector3 CellToGlobalInterpolated(Vector2 cellPosition)
-        {
-            var localPosition = Grid.CellToLocalInterpolated(cellPosition);
-            return transform.TransformPoint(localPosition);
+            var coord = Grid.WorldToCell(worldPosition + LocalCenter);
+            return (Vector2Int)coord;
         }
 
         public override bool Contains(int xCoord, int yCoord)
@@ -102,17 +101,28 @@ namespace Bipolar.Match3
         {
             var darkColor = Color.black;
             var lightColor = Color.white;
-            lightColor.a = darkColor.a = 0.3f;
+            var redColor = Color.red;
+            lightColor.a = darkColor.a = redColor.a = 0.3f;
 
             for (int j = 0; j < dimensions.y; j++)
             {
                 for (int i = 0; i < dimensions.x; i++)
                 {
-                    bool isEven = (i + j) % 2 == 0;
-                    Gizmos.color = isEven ? lightColor : darkColor; 
                     Vector3 position = CoordToWorld(i, j);
                     Vector3 cubeSize = Grid.cellSize;
-                    Gizmos.DrawCube(position, cubeSize);
+                    bool isEven = (i + j) % 2 == 0;
+                    switch (Grid.cellLayout)
+                    {
+                        case GridLayout.CellLayout.Rectangle:
+                            Gizmos.color = isEven ? lightColor : darkColor;
+                            Gizmos.DrawCube(position, cubeSize);
+                            break;
+                        default:
+                            int remainder = (i + j) % 3;
+                            //Gizmos.color = remainder == 0 ? darkColor : remainder == 1 ? lightColor : redColor;
+                            Gizmos.DrawSphere(position, cubeSize.z / 3);
+                            break;
+                    }
                 }
             }
         }
