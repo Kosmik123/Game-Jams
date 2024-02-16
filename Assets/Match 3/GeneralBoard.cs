@@ -78,6 +78,10 @@ namespace Bipolar.Match3
                     continue;
 
                 var direction = tile.Direction;
+                if (Grid.cellLayout == GridLayout.CellLayout.Hexagon
+                    && direction.y != 0 && direction.x == 0 && coord.y % 2 == 0)
+                    direction.x -= 1;
+
                 directions.Add(coord, direction);
                 int coordIndex = includedCoords.IndexOf(coord);
                 if (coordIndex < 0)
@@ -86,16 +90,19 @@ namespace Bipolar.Match3
                     includedCoords.Add(coord);
                 }
 
+                startingCoordsIndices.Add(coordIndex);
                 if (direction == Vector2Int.zero)
                 {
-                    startingCoordsIndices.Add(coordIndex);
                     endingCoordsIndices.Add(coordIndex);
                     continue;
                 }
 
                 var targetCoord = coord + direction;
                 if (TryGetTile(targetCoord, out var targetTile) == false)
+                {
+                    endingCoordsIndices.Add(coordIndex);
                     continue;
+                }
 
                 int targetCoordIndex = includedCoords.IndexOf(targetCoord);
                 if (targetCoordIndex < 0)
@@ -104,9 +111,7 @@ namespace Bipolar.Match3
                     includedCoords.Add(targetCoord);
                 }
 
-                startingCoordsIndices.Add(coordIndex);
                 notEndingCoords.Add(coordIndex);
-
                 endingCoordsIndices.Add(targetCoordIndex);
                 notStartingCoords.Add(targetCoordIndex);
 
@@ -116,7 +121,10 @@ namespace Bipolar.Match3
             startingCoordsIndices.ExceptWith(notStartingCoords);
             endingCoordsIndices.ExceptWith(notEndingCoords);
 
-            int indexesCount = tempTargetCoordsIndexesDict.Keys.Max() + 1;
+
+            int indexesCount = 0;
+            if (tempTargetCoordsIndexesDict.Keys.Count > 0)
+                indexesCount = tempTargetCoordsIndexesDict.Keys.Max() + 1;
             targetCoordsIndexes = new int[indexesCount];
             sourceCoordsIndexes = new int[indexesCount];
             for (int i = 0; i < indexesCount; i++)
@@ -150,15 +158,16 @@ namespace Bipolar.Match3
             var coordsList = new List<Vector2Int>();
 
             int index = startingIndex;
-            do 
+            while (index >= 0)
             {
                 var coord = includedCoords[index];
                 coordsList.Add(coord);
-                index = targetCoordsIndexes[index];
-                if (index < 0)
+                if (index >= targetCoordsIndexes.Length)
                     break;
+                
+                index = targetCoordsIndexes[index];
             }
-            while (true);
+
             return new CoordsLine(coordsList);
         }
 
