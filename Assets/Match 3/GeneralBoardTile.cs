@@ -4,7 +4,7 @@ using UnityEngine.Tilemaps;
 
 namespace Bipolar.Match3
 {
-    [CreateAssetMenu]
+    [CreateAssetMenu(menuName = CreateAssetsPath.Root + "General Board Tile")]
     public class GeneralBoardTile : Tile
     {
         [SerializeField]

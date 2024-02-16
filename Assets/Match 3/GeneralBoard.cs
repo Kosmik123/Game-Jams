@@ -121,17 +121,8 @@ namespace Bipolar.Match3
             startingCoordsIndices.ExceptWith(notStartingCoords);
             endingCoordsIndices.ExceptWith(notEndingCoords);
 
-
-            int indexesCount = 0;
-            if (tempTargetCoordsIndexesDict.Keys.Count > 0)
-                indexesCount = tempTargetCoordsIndexesDict.Keys.Max() + 1;
-            targetCoordsIndexes = new int[indexesCount];
-            sourceCoordsIndexes = new int[indexesCount];
-            for (int i = 0; i < indexesCount; i++)
-            {
-                targetCoordsIndexes[i] = -1;
-                sourceCoordsIndexes[i] = -1;
-            }
+            targetCoordsIndexes = CreateCoordsIndexesArray(tempTargetCoordsIndexesDict.Keys);
+            sourceCoordsIndexes = CreateCoordsIndexesArray(tempTargetCoordsIndexesDict.Values);
             foreach (var kvp in tempTargetCoordsIndexesDict)
             {
                 targetCoordsIndexes[kvp.Key] = kvp.Value;
@@ -146,6 +137,21 @@ namespace Bipolar.Match3
                 lineIndex++;
             }
         }
+
+        private int[] CreateCoordsIndexesArray(IReadOnlyCollection<int> countCollection)
+        {
+            int count = 0;
+            if (countCollection.Count > 0)
+                count = countCollection.Max() + 1;
+
+            var array = new int[count];
+            for (int i = 0; i < count; i++)
+                array[i] = -1;
+
+            return array;
+        }
+
+
 
         private bool TryGetTile(Vector2Int coord, out GeneralBoardTile tile)
         {
