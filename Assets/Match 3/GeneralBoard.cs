@@ -35,6 +35,8 @@ namespace Bipolar.Match3
         private CoordsLine[] lines;
         public IReadOnlyList<CoordsLine> Lines => lines;
 
+        public override IReadOnlyCollection<Token> Tokens => tokensByCoords.Values;
+
         private void Reset()
         {
             tilemap = GetComponentInChildren<Tilemap>();

@@ -17,7 +17,7 @@ namespace Bipolar.Match3
             }
         }
 
-        // TODO public abstract IReadOnlyCollection<Token> Tokens { get; }
+        public abstract IReadOnlyCollection<Token> Tokens { get; }
 
         public abstract Token this[Vector2Int coord] { get; set; }
 

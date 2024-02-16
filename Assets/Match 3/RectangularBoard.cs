@@ -49,6 +49,16 @@ namespace Bipolar.Match3
             set => tokens [coord.x, coord.y] = value;
         }
 
+        private TokensCollection tokensCollection = null;
+        public override IReadOnlyCollection<Token> Tokens
+        {
+            get
+            {
+                tokensCollection ??= new TokensCollection(this);
+                return tokensCollection;
+            }
+        }
+
         private void Awake()
         {
             tokens = new Token[dimensions.x, dimensions.y];
@@ -125,6 +135,23 @@ namespace Bipolar.Match3
                     }
                 }
             }
+        }
+
+        public class TokensCollection : IReadOnlyCollection<Token>
+        {
+            private readonly RectangularBoard board;
+
+            public TokensCollection(RectangularBoard board) => this.board = board;
+
+            public int Count => board.Dimensions.x * board.Dimensions.y;
+
+            public IEnumerator<Token> GetEnumerator()
+            {
+                foreach (var token in board.tokens)
+                    yield return token;
+            }
+
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         }
     }
 }
