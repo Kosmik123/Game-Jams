@@ -11,11 +11,12 @@ namespace Bipolar.Match3
         private Tilemap tilemap;
 
         private readonly List<Vector2Int> includedCoords = new List<Vector2Int>();
+        public IReadOnlyList<Vector2Int> Coords => includedCoords;
 
         private readonly HashSet<int> startingCoordsIndices = new HashSet<int>();
         private readonly HashSet<int> endingCoordsIndices = new HashSet<int>();
-        private int[] targetCoordsIndexes;
-        private int[] sourceCoordsIndexes;
+        //private int[] targetCoordsIndexes;
+       // private int[] sourceCoordsIndexes;
 
         private readonly Dictionary<Vector2Int, Token> tokensByCoords = new Dictionary<Vector2Int, Token>();
         public override Token this[Vector2Int coord] 
@@ -27,8 +28,6 @@ namespace Bipolar.Match3
         private readonly Dictionary<Vector2Int, Vector2Int> directions = new Dictionary<Vector2Int, Vector2Int>();
 
         public Vector2Int GetCoordFromIndex(int index) => includedCoords[index];
-        public int GetTargetIndex(int sourceIndex) => targetCoordsIndexes[sourceIndex];
-        public int GetSourceIndex(int targetIndex) => sourceCoordsIndexes[targetIndex];
 
         private CoordsLine[] lines;
         public IReadOnlyList<CoordsLine> Lines => lines;
@@ -52,7 +51,7 @@ namespace Bipolar.Match3
             var coordBounds = tilemap.cellBounds;
             var remainingCoordsToDetermine = new HashSet<Vector2Int>();
 
-            var tempTargetCoordsIndexesDict = new Dictionary<int, int>();
+            var tempSourceCoordsIndexesDict = new Dictionary<int, int>();
 
             startingCoordsIndices.Clear();
             endingCoordsIndices.Clear();
@@ -111,25 +110,26 @@ namespace Bipolar.Match3
                 endingCoordsIndices.Add(targetCoordIndex);
                 notStartingCoords.Add(targetCoordIndex);
 
-                tempTargetCoordsIndexesDict.Add(coordIndex, targetCoordIndex);
+                if (tempSourceCoordsIndexesDict.ContainsKey(targetCoordIndex) == false)
+                    tempSourceCoordsIndexesDict.Add(targetCoordIndex, coordIndex);
             }
 
             startingCoordsIndices.ExceptWith(notStartingCoords);
             endingCoordsIndices.ExceptWith(notEndingCoords);
 
-            targetCoordsIndexes = CreateCoordsIndexesArray(tempTargetCoordsIndexesDict.Keys);
-            sourceCoordsIndexes = CreateCoordsIndexesArray(tempTargetCoordsIndexesDict.Values);
-            foreach (var kvp in tempTargetCoordsIndexesDict)
+            var targetCoordsIndexes = CreateCoordsIndexesArray(tempSourceCoordsIndexesDict.Values);
+            var sourceCoordsIndexes = CreateCoordsIndexesArray(tempSourceCoordsIndexesDict.Keys);
+            foreach (var kvp in tempSourceCoordsIndexesDict)
             {
-                targetCoordsIndexes[kvp.Key] = kvp.Value;
-                sourceCoordsIndexes[kvp.Value] = kvp.Key;
+                sourceCoordsIndexes[kvp.Key] = kvp.Value;
+                targetCoordsIndexes[kvp.Value] = kvp.Key;
             }
 
             lines = new CoordsLine[startingCoordsIndices.Count];
             int lineIndex = 0;
             foreach (var index in startingCoordsIndices)
             {
-                lines[lineIndex] = CreateCoordsLine(index);
+                lines[lineIndex] = CreateCoordsLine(index, targetCoordsIndexes);
                 lineIndex++;
             }
         }
@@ -174,7 +174,7 @@ namespace Bipolar.Match3
             return tile != null;
         }
 
-        private CoordsLine CreateCoordsLine(int startingIndex)
+        private CoordsLine CreateCoordsLine(int startingIndex, IReadOnlyList<int> targetCoordsIndexes)
         {
             var coordsList = new List<Vector2Int>();
 
@@ -183,7 +183,7 @@ namespace Bipolar.Match3
             {
                 var coord = includedCoords[index];
                 coordsList.Add(coord);
-                if (index >= targetCoordsIndexes.Length)
+                if (index >= targetCoordsIndexes.Count)
                     break;
                 
                 index = targetCoordsIndexes[index];
@@ -214,36 +214,72 @@ namespace Bipolar.Match3
 
         private void OnDrawGizmosSelected()
         {
-            if (targetCoordsIndexes != null && includedCoords.Count > 0)
+            if (Lines != null && includedCoords.Count > 0)
             {
-                Gizmos.color = Color.yellow;
-                for (int sourceIndex = 0; sourceIndex < targetCoordsIndexes.Length; sourceIndex++)
+                foreach (var line in Lines)
                 {
-                    int targetIndex = targetCoordsIndexes[sourceIndex];
-                    if (targetIndex < 0)
-                        continue;
+                    for (int i = 0; i < line.Coords.Count; i++)
+                    {
+                        var coord = line.Coords[i];
+                        if (i > 0)
+                        {
+                            Gizmos.color = Color.yellow;
+                            int previousIndex = i - 1;
+                            var sourceCoord = line.Coords[previousIndex];
+                            var start = CoordToWorld(sourceCoord);
+                            var target = CoordToWorld(coord);
+                            Gizmos.DrawLine(start, target);
+                        }
 
-                    var start = CoordToWorld(includedCoords[sourceIndex]);
-                    var target = CoordToWorld(includedCoords[targetIndex]);
-                    Gizmos.DrawLine(start, target);
-                }
+                        if (i == 0)
+                        {
+                            Gizmos.color = Color.green;
+                            if (TryGetTile(coord, out var tile))
+                                Gizmos.DrawSphere(CoordToWorld(coord) + (Vector3)(0.1f * (Vector2)tile.Direction), 0.1f);
+                        }
+                        else if (i == line.Coords.Count - 1)
+                        {
+                            Gizmos.color = Color.red;
+                            if (TryGetTile(coord, out var tile))
+                                Gizmos.DrawSphere(CoordToWorld(coord) - (Vector3)(0.1f * (Vector2)tile.Direction), 0.1f);
+                        }
+                    }
 
-                Gizmos.color = Color.green;
-                foreach (var index in startingCoordsIndices)
-                {
-                    var coord = includedCoords[index];
-                    if (TryGetTile(coord, out var tile))
-                        Gizmos.DrawSphere(CoordToWorld(coord) - (Vector3)(0.1f * (Vector2)tile.Direction), 0.1f);
-                }
 
-                Gizmos.color = Color.red;
-                foreach (var index in endingCoordsIndices)
-                {
-                    var coord = includedCoords[index];
-                    if (TryGetTile(coord, out var tile))
-                        Gizmos.DrawSphere(CoordToWorld(coord) + (Vector3)(0.1f * (Vector2)tile.Direction), 0.1f);
+
                 }
             }
+
+            //if (targetCoordsIndexes != null && includedCoords.Count > 0)
+            //{
+            //    Gizmos.color = Color.yellow;
+            //    for (int sourceIndex = 0; sourceIndex < targetCoordsIndexes.Length; sourceIndex++)
+            //    {
+            //        int targetIndex = targetCoordsIndexes[sourceIndex];
+            //        if (targetIndex < 0)
+            //            continue;
+
+            //        var start = CoordToWorld(includedCoords[sourceIndex]);
+            //        var target = CoordToWorld(includedCoords[targetIndex]);
+            //        Gizmos.DrawLine(start, target);
+            //    }
+
+            //    Gizmos.color = Color.green;
+            //    foreach (var index in startingCoordsIndices)
+            //    {
+            //        var coord = includedCoords[index];
+            //        if (TryGetTile(coord, out var tile))
+            //            Gizmos.DrawSphere(CoordToWorld(coord) - (Vector3)(0.1f * (Vector2)tile.Direction), 0.1f);
+            //    }
+
+            //    Gizmos.color = Color.red;
+            //    foreach (var index in endingCoordsIndices)
+            //    {
+            //        var coord = includedCoords[index];
+            //        if (TryGetTile(coord, out var tile))
+            //            Gizmos.DrawSphere(CoordToWorld(coord) + (Vector3)(0.1f * (Vector2)tile.Direction), 0.1f);
+            //    }
+            //}
         }
 /*
         public class CoordsCollection : IEnumerable<Vector2Int>
