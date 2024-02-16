@@ -2,8 +2,6 @@
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using System.Linq;
-using System;
-using System.Collections;
 
 namespace Bipolar.Match3
 {
@@ -172,14 +170,14 @@ namespace Bipolar.Match3
 
         public override Vector3 CoordToWorld(Vector2 coord)
         {
-            Vector3 cellPosition = tilemap.CellToWorld(Vector3Int.RoundToInt(coord));
+            Vector3 cellPosition = base.CoordToWorld(coord);
             return cellPosition + Grid.Swizzle(Grid.cellSwizzle, tilemap.tileAnchor);
         }
 
         public override Vector2Int WorldToCoord(Vector3 worldPosition)
         {
             worldPosition -= tilemap.tileAnchor;
-            return (Vector2Int)tilemap.WorldToCell(worldPosition);
+            return base.WorldToCoord(worldPosition);
         }
 
         public Vector2Int GetDirection(Vector2Int coord) => directions[coord];

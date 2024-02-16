@@ -22,8 +22,7 @@ namespace Bipolar.Match3
             }
         }
 
-        [field: SerializeField]
-        public Vector3 LocalCenter { get; private set; }
+        private Vector3 localCenter;
 
         [SerializeField]
         private MoveDirection collapseDirection;
@@ -59,36 +58,31 @@ namespace Bipolar.Match3
             }
         }
 
-        private void Awake()
+        protected override void Awake()
         {
+            base.Awake();
             tokens = new Token[dimensions.x, dimensions.y];
             CalculateOtherDimensions();
         }
 
-        public Vector2 hexAddTest;
-        public Vector2 hexScaleTest;
         private void CalculateOtherDimensions()
         {
             Vector3Int lastCellCoord = (Vector3Int)Dimensions - Vector3Int.one;
-            var bottomLeft = Grid.CellToLocal(Vector3Int.zero);
             var topRight = Grid.CellToLocal(lastCellCoord);
             if (Grid.cellLayout == GridLayout.CellLayout.Hexagon && ((Vector3Int)Dimensions - Vector3Int.one).y % 2 == 0)
                 topRight.x = Grid.CellToLocalInterpolated(lastCellCoord + Vector3.one / 2).x;
 
-            var localCenter = (bottomLeft + topRight) / 2;
-            LocalCenter = Grid.Swizzle(Grid.cellSwizzle, localCenter);
+            localCenter = topRight / 2; 
         }
 
         public override Vector3 CoordToWorld(Vector2 coord)
         {
-            var localPosition = Grid.CellToLocalInterpolated(coord);
-            return transform.TransformPoint(localPosition) - LocalCenter;
+            return base.CoordToWorld(coord) - localCenter;
         }
 
         public override Vector2Int WorldToCoord(Vector3 worldPosition)
         {
-            var coord = Grid.WorldToCell(worldPosition + LocalCenter);
-            return (Vector2Int)coord;
+            return base.WorldToCoord(worldPosition + localCenter);
         }
 
         public override bool Contains(int xCoord, int yCoord)
