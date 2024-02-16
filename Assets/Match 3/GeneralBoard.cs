@@ -40,7 +40,7 @@ namespace Bipolar.Match3
             tilemap = GetComponentInChildren<Tilemap>();
         }
 
-        private void Awake()
+        protected override void Awake()
         {
             RefreshBoard();
         }
@@ -77,11 +77,7 @@ namespace Bipolar.Match3
                 if (TryGetTile(coord, out var tile) == false)
                     continue;
 
-                var direction = tile.Direction;
-                if (Grid.cellLayout == GridLayout.CellLayout.Hexagon
-                    && direction.y != 0 && direction.x == 0 && coord.y % 2 == 0)
-                    direction.x -= 1;
-
+                var direction = GetTileDirection(coord, tile, Grid.cellLayout == GridLayout.CellLayout.Hexagon);
                 directions.Add(coord, direction);
                 int coordIndex = includedCoords.IndexOf(coord);
                 if (coordIndex < 0)
@@ -136,6 +132,25 @@ namespace Bipolar.Match3
                 lines[lineIndex] = CreateCoordsLine(index);
                 lineIndex++;
             }
+        }
+
+        public static Vector2Int GetTileDirection(Vector2Int coord, GeneralBoardTile tile, bool isHexagonal)
+        {
+            var direction = tile.Direction;
+            if (isHexagonal && direction.y != 0)
+            {
+                if (coord.y % 2 == 0)
+                {
+                    if (direction.x > 0)
+                        direction.x = 0;
+                }
+                else
+                {
+                    if (direction.x <= 0)
+                        direction.x += 1;
+                }
+            }
+            return direction;
         }
 
         private int[] CreateCoordsIndexesArray(IReadOnlyCollection<int> countCollection)
