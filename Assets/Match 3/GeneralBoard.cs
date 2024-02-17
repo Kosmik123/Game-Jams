@@ -161,8 +161,6 @@ namespace Bipolar.Match3
             return array;
         }
 
-
-
         private bool TryGetTile(Vector2Int coord, out GeneralBoardTile tile)
         {
             tile = tilemap.GetTile<GeneralBoardTile>((Vector3Int)coord);
@@ -218,96 +216,41 @@ namespace Bipolar.Match3
                         var coord = line.Coords[i];
                         if (i > 0)
                         {
-                            Gizmos.color = Color.yellow;
-                            int previousIndex = i - 1;
-                            var sourceCoord = line.Coords[previousIndex];
-                            var start = CoordToWorld(sourceCoord);
-                            var target = CoordToWorld(coord);
-                            Gizmos.DrawLine(start, target);
+                            var sourceCoord = line.Coords[i - 1];
+                            GizmosDrawLineSegment(sourceCoord, coord);
                         }
 
                         if (i == 0)
                         {
-                            Gizmos.color = Color.green;
-                            if (TryGetTile(coord, out var tile))
-                                Gizmos.DrawSphere(CoordToWorld(coord) + (Vector3)(0.1f * (Vector2)tile.Direction), 0.1f);
+                            GizmosDrawLineStart(coord);
                         }
                         else if (i == line.Coords.Count - 1)
                         {
-                            Gizmos.color = Color.red;
-                            if (TryGetTile(coord, out var tile))
-                                Gizmos.DrawSphere(CoordToWorld(coord) - (Vector3)(0.1f * (Vector2)tile.Direction), 0.1f);
+                            GizmosDrawLineEnd(coord);
                         }
                     }
-
-
-
                 }
             }
-
-            //if (targetCoordsIndexes != null && includedCoords.Count > 0)
-            //{
-            //    Gizmos.color = Color.yellow;
-            //    for (int sourceIndex = 0; sourceIndex < targetCoordsIndexes.Length; sourceIndex++)
-            //    {
-            //        int targetIndex = targetCoordsIndexes[sourceIndex];
-            //        if (targetIndex < 0)
-            //            continue;
-
-            //        var start = CoordToWorld(includedCoords[sourceIndex]);
-            //        var target = CoordToWorld(includedCoords[targetIndex]);
-            //        Gizmos.DrawLine(start, target);
-            //    }
-
-            //    Gizmos.color = Color.green;
-            //    foreach (var index in startingCoordsIndices)
-            //    {
-            //        var coord = includedCoords[index];
-            //        if (TryGetTile(coord, out var tile))
-            //            Gizmos.DrawSphere(CoordToWorld(coord) - (Vector3)(0.1f * (Vector2)tile.Direction), 0.1f);
-            //    }
-
-            //    Gizmos.color = Color.red;
-            //    foreach (var index in endingCoordsIndices)
-            //    {
-            //        var coord = includedCoords[index];
-            //        if (TryGetTile(coord, out var tile))
-            //            Gizmos.DrawSphere(CoordToWorld(coord) + (Vector3)(0.1f * (Vector2)tile.Direction), 0.1f);
-            //    }
-            //}
         }
-/*
-        public class CoordsCollection : IEnumerable<Vector2Int>
+
+        private void GizmosDrawLineSegment(Vector2Int start, Vector2Int end)
         {
-            private IReadOnlyList<Vector2Int> elements;
-            public IReadOnlyCollection<int> indices;
-
-            public CoordsCollection(IReadOnlyList<Vector2Int> elements, IReadOnlyCollection<int> indices)
-            {
-                this.elements = elements;
-                this.indices = indices;
-            }
-
-            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-            public IEnumerator<Vector2Int> GetEnumerator() => new CoordEnumerator(elements, indices);
+            var startPos = CoordToWorld(start);
+            var target = CoordToWorld(end);
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawLine(startPos, target);
         }
-        public class CoordEnumerator : IEnumerator<Vector2Int>
+
+        private void GizmosDrawLineStart(Vector2Int coord) => GizmosDrawLineTip(coord, Color.green, 0.1f);
+        private void GizmosDrawLineEnd(Vector2Int coord) => GizmosDrawLineTip(coord, Color.red, -0.1f);
+        private void GizmosDrawLineTip(Vector2Int coord, Color color, float offset)
         {
-            private IReadOnlyList<Vector2Int> elements;
-            private IEnumerator<int> indexEnumerator; 
-
-            public CoordEnumerator(IReadOnlyList<Vector2Int> elements, IReadOnlyCollection<int> indices)
+            if (TryGetTile(coord, out var tile))
             {
-                this.elements = elements;
-                indexEnumerator = indices.GetEnumerator();
+                Gizmos.color = color;
+                Gizmos.DrawSphere(CoordToWorld(coord) + (Vector3)(offset * (Vector2)tile.Direction), 0.1f);
             }
-
-            public Vector2Int Current => elements[indexEnumerator.Current];
-            object IEnumerator.Current => Current;
-            public void Dispose() { }
-            public bool MoveNext() => indexEnumerator.MoveNext();
-            public void Reset() => indexEnumerator.Reset();
-        }*/
+        }
 
         public class CoordsLine
         {
