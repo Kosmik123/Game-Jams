@@ -30,14 +30,15 @@ namespace Bipolar.Match3
         {
             get
             {
-                return collapseDirection switch
+                var dir = collapseDirection switch
                 {
-                    MoveDirection.Up => Vector2Int.up,
-                    MoveDirection.Left => Vector2Int.left,
-                    MoveDirection.Right => Vector2Int.right,
-                    MoveDirection.Down => Vector2Int.down,
-                    _ => Vector2Int.zero,
+                    MoveDirection.Up => Vector3.up,
+                    MoveDirection.Left => Vector3.left,
+                    MoveDirection.Right => Vector3.right,
+                    MoveDirection.Down => Vector3.down,
+                    _ => Vector3.zero,
                 };
+                return Vector2Int.RoundToInt(Grid.Swizzle(Grid.cellSwizzle, dir));
             }
         }
 
@@ -70,8 +71,12 @@ namespace Bipolar.Match3
             Vector3Int lastCellCoord = (Vector3Int)Dimensions - Vector3Int.one;
             var topRight = Grid.CellToLocal(lastCellCoord);
             if (Grid.cellLayout == GridLayout.CellLayout.Hexagon && ((Vector3Int)Dimensions - Vector3Int.one).y % 2 == 0)
-                topRight.x = Grid.CellToLocalInterpolated(lastCellCoord + Vector3.one / 2).x;
-
+            {
+                var right = Grid.Swizzle(Grid.cellSwizzle, Vector3.right);
+                var upForward = Grid.Swizzle(Grid.cellSwizzle, new Vector3(0, 1, 1));
+                topRight = Vector3.Scale(upForward, topRight);
+                topRight += Vector3.Scale(right, Grid.CellToLocalInterpolated(lastCellCoord + Vector3.one / 2));
+            }
             localCenter = topRight / 2; 
         }
 
