@@ -9,11 +9,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f195ecd2a1f701443aa145540b95283e, type: 3}
-  m_Name: UpLeft Hex2 Tile
+  m_Script: {fileID: 13312, guid: 0000000000000000e000000000000000, type: 0}
+  m_Name: Hexagon
   m_EditorClassIdentifier: 
-  m_Sprite: {fileID: 5533153845485262857, guid: 0340c090152bbbe4a8e76867f7249709, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Sprite: {fileID: 2747690628134850419, guid: 16037dbd798344f57a526d53d48f5ead, type: 3}
+  m_Color: {r: 0.745283, g: 0.3726415, b: 0, a: 1}
   m_Transform:
     e00: 1
     e01: 0
@@ -34,5 +34,3 @@ MonoBehaviour:
   m_InstancedGameObject: {fileID: 0}
   m_Flags: 1
   m_ColliderType: 1
-  direction: {x: 1, y: -1}
-  jump: 0

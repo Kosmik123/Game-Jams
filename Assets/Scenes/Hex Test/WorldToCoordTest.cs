@@ -12,7 +12,6 @@ public class WorldToCoordTest : MonoBehaviour
     [SerializeField]
     private Transform snappedCursor;
 
-
     public bool useGrid;
 
     private void Awake()
