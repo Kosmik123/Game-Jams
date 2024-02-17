@@ -13,11 +13,6 @@ namespace Bipolar.Match3
         private readonly List<Vector2Int> includedCoords = new List<Vector2Int>();
         public IReadOnlyList<Vector2Int> Coords => includedCoords;
 
-        private readonly HashSet<int> startingCoordsIndices = new HashSet<int>();
-        private readonly HashSet<int> endingCoordsIndices = new HashSet<int>();
-        //private int[] targetCoordsIndexes;
-       // private int[] sourceCoordsIndexes;
-
         private readonly Dictionary<Vector2Int, Token> tokensByCoords = new Dictionary<Vector2Int, Token>();
         public override Token this[Vector2Int coord] 
         { 
@@ -53,8 +48,8 @@ namespace Bipolar.Match3
 
             var tempSourceCoordsIndexesDict = new Dictionary<int, int>();
 
-            startingCoordsIndices.Clear();
-            endingCoordsIndices.Clear();
+            var startingCoordsIndices = new HashSet<int>();
+            var endingCoordsIndices = new HashSet<int>();
             directions.Clear();
 
             for (int y = coordBounds.yMin; y <= coordBounds.yMax; y++)
