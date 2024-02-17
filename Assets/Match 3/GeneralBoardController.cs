@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace Bipolar.Match3
@@ -7,8 +6,9 @@ namespace Bipolar.Match3
     [RequireComponent(typeof(GeneralBoard))]
     public class GeneralBoardController : BoardController<GeneralBoard>
     {
-        public override event System.Action OnTokensMovementStopped;
-        
+        [SerializeField]
+        private GeneralBoardTokensMovementManager tokensMovementManager;
+
         private readonly List<TokenMovement> currentlyMovingTokens = new List<TokenMovement>();
         public bool AreTokensMoving => currentlyMovingTokens.Count > 0;
 
@@ -46,50 +46,10 @@ namespace Bipolar.Match3
                 }
                 else if (nonExistingTokensCount > 0)
                 {
-                    StartMovingTokenAlongLine(token, line, index, nonExistingTokensCount);
+                    tokensMovementManager.StartMovingTokenAlongLine(token, line, index, nonExistingTokensCount);
                 }
             }
             return nonExistingTokensCount;
-        }
-
-        private void StartMovingTokenAlongLine(Token token, GeneralBoard.CoordsLine line, int fromIndex, int cellDistance)
-        {
-            var movementCoroutine = StartCoroutine(TokenMovementCo(token, line, fromIndex, cellDistance));
-            tokenMovementCoroutines.Add(token, movementCoroutine);
-        }
-
-        private readonly WaitForFixedUpdate waitForFixedUpdate = new WaitForFixedUpdate();
-        private IEnumerator TokenMovementCo(Token token, GeneralBoard.CoordsLine line, int fromIndex, int cellDistance)
-        {
-            var startIndex = fromIndex;
-            for (int i = 1; i <= cellDistance; i++)
-            {
-                int targetIndex = fromIndex + i;
-                var targetCoord = line.Coords[targetIndex];
-
-                var startPosition = startIndex < 0 ? token.transform.position : Board.CoordToWorld(line.Coords[startIndex]);
-                var targetPosition = Board.CoordToWorld(targetCoord);
-                float realDistance = Vector3.Distance(startPosition, targetPosition);
-
-                float progressSpeed = 5f / realDistance; 
-
-                float progress = 0;
-                while (progress < 1)
-                {
-                    token.transform.position = Vector3.Lerp(startPosition, targetPosition, progress); 
-                    yield return waitForFixedUpdate;
-                    progress += Time.fixedDeltaTime * progressSpeed;
-                }
-                token.transform.position = targetPosition;
-                startIndex = targetIndex;
-            }
-
-            tokenMovementCoroutines.Remove(token);
-            if (tokenMovementCoroutines.Count <= 0)
-            {
-                Debug.Log("Koniec ruchu");
-                OnTokensMovementStopped?.Invoke();
-            }
         }
 
         private void RefillLine(GeneralBoard.CoordsLine line, int count)
@@ -103,13 +63,8 @@ namespace Bipolar.Match3
                 var newToken = CreateToken(coord.x, coord.y);
                 var spawningPosition = firstCellPosition + (Vector3)(creatingDirection * (count - i));
                 newToken.transform.position = spawningPosition;
-                StartMovingTokenAlongLine(newToken, line, -1, i + 1);
+                tokensMovementManager.StartMovingTokenAlongLine(newToken, line, -1, i + 1);
             }
-        }
-        
-        private void OnDisable()
-        {
-            
         }
     }
 }

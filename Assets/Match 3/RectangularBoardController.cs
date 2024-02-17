@@ -6,8 +6,7 @@ namespace Bipolar.Match3
     [RequireComponent(typeof(RectangularBoard))]
     public class RectangularBoardController : BoardController<RectangularBoard>
     {
-        public override event System.Action OnTokensMovementStopped;
-
+        public event System.Action OnTokensMovementStopped;
         public event System.Action OnTokensColapsed;
         public event TokensSwapEventHandler OnTokensSwapped;
         

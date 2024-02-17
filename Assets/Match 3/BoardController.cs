@@ -34,8 +34,6 @@ namespace Bipolar.Match3
 
     public abstract class BoardController<T> : BoardController where T : Board
     {
-        public abstract event System.Action OnTokensMovementStopped;
-
         [SerializeField]
         protected T board;
         public override Board Board => board;
