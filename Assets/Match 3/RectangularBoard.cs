@@ -137,11 +137,6 @@ namespace Bipolar.Match3
                     }
                 }
             }
-
-
-
-
-
         }
 
         public class TokensCollection : IReadOnlyCollection<Token>

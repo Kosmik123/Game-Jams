@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using System.Linq;
+using PlasticPipe.PlasticProtocol.Messages;
 
 namespace Bipolar.Match3
 {
@@ -88,7 +89,27 @@ namespace Bipolar.Match3
                 }
 
                 var targetCoord = coord + direction;
-                if (TryGetTile(targetCoord, out var targetTile) == false)
+                if (tile.Jump)
+                {
+                    Debug.Log("Jump");
+                    bool hasJumpTarget = false;
+                    while (TilemapContainsCoord(targetCoord))
+                    {
+                        if (TryGetTile(targetCoord, out _))
+                        {
+                            hasJumpTarget = true;
+                            break;
+                        }
+                        targetCoord += GetTileDirection(targetCoord, tile, Grid.cellLayout == GridLayout.CellLayout.Hexagon);
+                    }
+
+                    if (hasJumpTarget == false)
+                    {
+                        endingCoordsIndices.Add(coordIndex);
+                        continue;
+                    }
+                }
+                else if (TryGetTile(targetCoord, out _) == false)
                 {
                     endingCoordsIndices.Add(coordIndex);
                     continue;
@@ -127,6 +148,12 @@ namespace Bipolar.Match3
                 lines[lineIndex] = CreateCoordsLine(index, targetCoordsIndexes);
                 lineIndex++;
             }
+        }
+
+        private bool TilemapContainsCoord(Vector2Int coord)
+        {
+            var bounds = tilemap.cellBounds;
+            return coord.y >= bounds.yMin && coord.y < bounds.yMax && coord.x >= bounds.xMin && coord.x < bounds.xMax;
         }
 
         public static Vector2Int GetTileDirection(Vector2Int coord, GeneralBoardTile tile, bool isHexagonal)
@@ -216,7 +243,6 @@ namespace Bipolar.Match3
             return nextWorldPos - worldPos;
         }
 
-
         private void OnDrawGizmosSelected()
         {
             if (Lines != null && includedCoords.Count > 0)
@@ -245,16 +271,17 @@ namespace Bipolar.Match3
             }
         }
 
+        private readonly Color orange = (0.5f * Color.red + 0.5f * Color.yellow);
         private void GizmosDrawLineSegment(Vector2Int start, Vector2Int end)
         {
             var startPos = CoordToWorld(start);
             var target = CoordToWorld(end);
-            Gizmos.color = Color.yellow;
+            Gizmos.color = orange;
             Gizmos.DrawLine(startPos, target);
         }
 
-        private void GizmosDrawLineStart(Vector2Int coord) => GizmosDrawLineTip(coord, Color.green, 0.1f);
-        private void GizmosDrawLineEnd(Vector2Int coord) => GizmosDrawLineTip(coord, Color.red, -0.1f);
+        private void GizmosDrawLineStart(Vector2Int coord) => GizmosDrawLineTip(coord, Color.green, -0.1f);
+        private void GizmosDrawLineEnd(Vector2Int coord) => GizmosDrawLineTip(coord, Color.red, 0.1f);
         private void GizmosDrawLineTip(Vector2Int coord, Color color, float offset)
         {
             if (TryGetTile(coord, out var tile))
