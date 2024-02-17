@@ -3,15 +3,15 @@ using UnityEngine;
 
 namespace Bipolar.Match3
 {
-    public class RectangularBoardTokensMovementManager : MonoBehaviour
+    public class RectangularBoardTokensMovementManager : TokensMovementManager
     {
-        public event System.Action OnTokensMovementStopped;
+        public override event System.Action OnTokensMovementStopped;
 
         [SerializeField]
         private RectangularBoard board;
 
         private readonly List<TokenMovement> currentlyMovingTokens = new List<TokenMovement>();
-        public bool AreTokensMoving => currentlyMovingTokens.Count > 0;
+        public override bool AreTokensMoving => currentlyMovingTokens.Count > 0;
 
         public void StartTokenMovement(Token token, Vector2Int targetCoord, float duration = -1) => StartTokenMovement(token, targetCoord.x, targetCoord.y, duration);
         public void StartTokenMovement(Token token, int xTargetCoord, int yTargetCoord, float duration = -1)

@@ -4,9 +4,9 @@ using UnityEngine;
 
 namespace Bipolar.Match3
 {
-    public class GeneralBoardTokensMovementManager : MonoBehaviour
+    public class GeneralBoardTokensMovementManager : TokensMovementManager
     {
-        public event System.Action OnTokensMovementStopped;
+        public override event System.Action OnTokensMovementStopped;
 
         private GeneralBoard _board;
         public GeneralBoard Board
@@ -20,8 +20,7 @@ namespace Bipolar.Match3
         }
 
         private readonly Dictionary<Token, Coroutine> tokenMovementCoroutines = new Dictionary<Token, Coroutine>();
-
-        private readonly WaitForFixedUpdate waitForFixedUpdate = new WaitForFixedUpdate();
+        public override bool AreTokensMoving => tokenMovementCoroutines.Count > 0;
 
         public void StartMovingTokenAlongLine(Token token, GeneralBoard.CoordsLine line, int fromIndex, int cellDistance)
         {
