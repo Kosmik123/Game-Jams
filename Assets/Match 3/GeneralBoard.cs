@@ -205,6 +205,18 @@ namespace Bipolar.Match3
 
         public Vector2Int GetDirection(Vector2Int coord) => directions[coord];
 
+        public Vector2 GetRealDirection(Vector2Int coord)
+        {
+            var direction = GetDirection(coord);
+            var nextCoord = coord + direction;
+
+            var worldPos = CoordToWorld(coord);
+            var nextWorldPos = CoordToWorld(nextCoord);
+
+            return Grid.InverseSwizzle(Grid.cellSwizzle, nextWorldPos - worldPos);
+        }
+
+
         private void OnDrawGizmosSelected()
         {
             if (Lines != null && includedCoords.Count > 0)
