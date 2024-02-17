@@ -46,18 +46,19 @@ namespace Bipolar.Match3
                 }
                 else if (nonExistingTokensCount > 0)
                 {
-                    StartTokenMovingTokenAlongLine(token, line, index, nonExistingTokensCount);
+                    StartMovingTokenAlongLine(token, line, index, nonExistingTokensCount);
                 }
             }
             return nonExistingTokensCount;
         }
 
-        private void StartTokenMovingTokenAlongLine(Token token, GeneralBoard.CoordsLine line, int fromIndex, int cellDistance)
+        private void StartMovingTokenAlongLine(Token token, GeneralBoard.CoordsLine line, int fromIndex, int cellDistance)
         {
             var movementCoroutine = StartCoroutine(TokenMovementCo(token, line, fromIndex, cellDistance));
             tokenMovementCoroutines.Add(token, movementCoroutine);
         }
 
+        private readonly WaitForFixedUpdate waitForFixedUpdate = new WaitForFixedUpdate();
         private IEnumerator TokenMovementCo(Token token, GeneralBoard.CoordsLine line, int fromIndex, int cellDistance)
         {
             var startIndex = fromIndex;
@@ -76,8 +77,8 @@ namespace Bipolar.Match3
                 while (progress < 1)
                 {
                     token.transform.position = Vector3.Lerp(startPosition, targetPosition, progress); 
-                    yield return null;
-                    progress += Time.deltaTime * progressSpeed;
+                    yield return waitForFixedUpdate;
+                    progress += Time.fixedDeltaTime * progressSpeed;
                 }
                 token.transform.position = targetPosition;
                 startIndex = targetIndex;
@@ -94,15 +95,15 @@ namespace Bipolar.Match3
         private void RefillLine(GeneralBoard.CoordsLine line, int count)
         {
             var startCoord = line.Coords[0];
-            var creatingDirection = -board.GetDirection(startCoord);
+            var creatingDirection = -board.GetRealDirection(startCoord);
+            var firstCellPosition = board.CoordToWorld(startCoord);
             for (int i = 0; i < count; i++)
             {
                 var coord = line.Coords[i];
                 var newToken = CreateToken(coord.x, coord.y);
-                var spawningCoord = startCoord + creatingDirection * (count - i);
-                var spawningPosition = board.CoordToWorld(spawningCoord);
+                var spawningPosition = firstCellPosition + (Vector3)(creatingDirection * (count - i));
                 newToken.transform.position = spawningPosition;
-                StartTokenMovingTokenAlongLine(newToken, line, -1, i + 1);
+                StartMovingTokenAlongLine(newToken, line, -1, i + 1);
             }
         }
         
