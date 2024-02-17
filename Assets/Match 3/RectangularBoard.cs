@@ -118,12 +118,12 @@ namespace Bipolar.Match3
                     switch (Grid.cellLayout)
                     {
                         case GridLayout.CellLayout.Rectangle:
-                            Gizmos.color = isEven ? lightColor : darkColor;
+                            Gizmos.color = isEven ? darkColor : lightColor;
                             Gizmos.DrawCube(position, cubeSize);
                             break;
                         default:
-                            int remainder = (i + j) % 3;
-                            //Gizmos.color = remainder == 0 ? darkColor : remainder == 1 ? lightColor : redColor;
+                            int remainder = (i - (j % 2)) % 3;
+                            Gizmos.color = remainder == 0 ? darkColor : remainder == 1 ? lightColor : redColor;
                             Gizmos.DrawSphere(position, cubeSize.z / 3);
                             break;
                     }
