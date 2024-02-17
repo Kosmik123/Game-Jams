@@ -121,14 +121,27 @@ namespace Bipolar.Match3
                             Gizmos.color = isEven ? darkColor : lightColor;
                             Gizmos.DrawCube(position, cubeSize);
                             break;
-                        default:
+                        case GridLayout.CellLayout.Hexagon:
                             int remainder = (i - (j % 2)) % 3;
                             Gizmos.color = remainder == 0 ? darkColor : remainder == 1 ? lightColor : redColor;
-                            Gizmos.DrawSphere(position, cubeSize.z / 3);
+                            Gizmos.DrawSphere(position, cubeSize.z / 2);
+                            break;
+                        default:
+                            Gizmos.color = isEven ? darkColor : lightColor;
+                            var matrix = Gizmos.matrix;
+                            var isometricRotation = Quaternion.AngleAxis(45, Vector3.forward);
+                            Gizmos.matrix = Matrix4x4.TRS(position, isometricRotation, cubeSize / 2);
+                            Gizmos.DrawCube(Vector3.zero, Vector3.one);
+                            Gizmos.matrix = matrix;
                             break;
                     }
                 }
             }
+
+
+
+
+
         }
 
         public class TokensCollection : IReadOnlyCollection<Token>

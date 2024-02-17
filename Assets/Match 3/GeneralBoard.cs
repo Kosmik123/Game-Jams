@@ -213,7 +213,7 @@ namespace Bipolar.Match3
             var worldPos = CoordToWorld(coord);
             var nextWorldPos = CoordToWorld(nextCoord);
 
-            return Grid.InverseSwizzle(Grid.cellSwizzle, nextWorldPos - worldPos);
+            return nextWorldPos - worldPos;
         }
 
 
