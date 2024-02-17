@@ -55,7 +55,7 @@ namespace Bipolar.Match3
             return (Vector2Int)coord;
         }
 
-        public Token GetToken(int x, int y) => GetToken(new Vector2Int(x, y));
+       public Token GetToken(int x, int y) => GetToken(new Vector2Int(x, y));
         public Token GetToken(Vector2Int coord)
         {
             if (Contains(coord) == false)
