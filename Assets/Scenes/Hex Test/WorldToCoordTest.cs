@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class WorldToCoordTest : MonoBehaviour
 {
-    private Board board;
+    public Board board;
 
     public Grid grid;
 
@@ -14,10 +14,10 @@ public class WorldToCoordTest : MonoBehaviour
 
     public bool useGrid;
 
-    private void Awake()
+    private void Reset()
     {
-        grid = GetComponent<Grid>();
-        board = GetComponent<Board>();
+        grid = FindObjectOfType<Grid>();
+        board = FindObjectOfType<Board>();
     }
 
     private void Update()

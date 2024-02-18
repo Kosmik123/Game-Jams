@@ -2,6 +2,16 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+public static class ComponentExtensions
+{
+    public static T GetCachedComponent<T>(this Component owner, ref T component) where T : Component
+    {
+        if (component == null)
+            component = owner.GetComponent<T>();
+        return component;
+    }
+}
+
 namespace Bipolar.Match3
 {
     [RequireComponent(typeof(RectangularBoard))]

@@ -61,13 +61,18 @@ public class MatchRequester : MonoBehaviour
         if (chain.Size < request.size)
             return;
 
-        if (chain.HorizontalTriosCount < request.horizontalCount)
-            return;
+        int obtainedTokens = chain.Size;
+        if (chain is TriosTokensChain triosTokensChain)
+        {
+            if (triosTokensChain.HorizontalTriosCount < request.horizontalCount)
+                return;
 
-        if (chain.VerticalTriosCount < request.verticalCount)
-            return;
+            if (triosTokensChain.VerticalTriosCount < request.verticalCount)
+                return;
+            
+            obtainedTokens += triosTokensChain.HorizontalTriosCount + triosTokensChain.VerticalTriosCount - 1;
+        }
 
-        int obtainedTokens = chain.Size + chain.HorizontalTriosCount + chain.VerticalTriosCount - 1;
         obtainedTokens += matchManager.Combo - 1;
         requestsCountDone += obtainedTokens;
         int remaining = currentRequest.requestsCount - requestsCountDone;

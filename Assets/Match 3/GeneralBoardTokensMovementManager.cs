@@ -10,15 +10,7 @@ namespace Bipolar.Match3
         public override event System.Action OnTokensMovementStopped;
 
         private GeneralBoard _board;
-        public GeneralBoard Board
-        {
-            get
-            {
-                if (_board == null)
-                    _board = GetComponent<GeneralBoard>();
-                return _board;
-            }
-        }
+        public GeneralBoard Board => this.GetCachedComponent(ref _board);
 
         private readonly Dictionary<Token, Coroutine> tokenMovementCoroutines = new Dictionary<Token, Coroutine>();
         public override bool AreTokensMoving => tokenMovementCoroutines.Count > 0;
