@@ -46,7 +46,7 @@ namespace Bipolar.Match3
                 }
                 else if (nonExistingTokensCount > 0)
                 {
-                    tokensMovementManager.StartMovingTokenAlongLine(token, line, index, nonExistingTokensCount);
+                    tokensMovementManager.StartTokenMovement(token, line, index, nonExistingTokensCount);
                 }
             }
             return nonExistingTokensCount;
@@ -63,7 +63,7 @@ namespace Bipolar.Match3
                 var newToken = CreateToken(coord.x, coord.y);
                 var spawningPosition = firstCellPosition + (Vector3)(creatingDirection * (count - i));
                 newToken.transform.position = spawningPosition;
-                tokensMovementManager.StartMovingTokenAlongLine(newToken, line, -1, i + 1);
+                tokensMovementManager.StartTokenMovement(newToken, line, -1, i + 1);
             }
         }
     }

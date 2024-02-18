@@ -1,38 +1,45 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Bipolar.Match3
 {
+    [RequireComponent(typeof(RectangularBoard))]
     public class RectangularBoardTokensMovementManager : TokensMovementManager
     {
         public override event System.Action OnTokensMovementStopped;
 
         [SerializeField]
         private RectangularBoard board;
+        [SerializeField]
+        private float defaultMovementDuration;
 
-        private readonly List<TokenMovement> currentlyMovingTokens = new List<TokenMovement>();
-        public override bool AreTokensMoving => currentlyMovingTokens.Count > 0;
+        private readonly Dictionary<Token, Coroutine> tokenMovementCoroutines = new Dictionary<Token, Coroutine>();
+        public override bool AreTokensMoving => tokenMovementCoroutines.Count > 0;
 
-        public void StartTokenMovement(Token token, Vector2Int targetCoord, float duration = -1) => StartTokenMovement(token, targetCoord.x, targetCoord.y, duration);
-        public void StartTokenMovement(Token token, int xTargetCoord, int yTargetCoord, float duration = -1)
+        public void StartTokenMovement(Token token, Vector2Int targetCoord, float duration = -1) 
         {
-            if (token.TryGetComponent<TokenMovement>(out var tokenMovement))
+            if (duration < 0)
+                duration = defaultMovementDuration;
+            var movementCoroutine = StartCoroutine(MovementCo(token, board.CoordToWorld(targetCoord), duration));
+            tokenMovementCoroutines.Add(token, movementCoroutine);
+        }
+
+        private IEnumerator MovementCo(Token token, Vector3 target, float duration)
+        {
+            Vector3 startPosition = token.transform.position;
+            Vector3 targetPosition = target;
+            float moveProgress = 0;
+            float progressSpeed = 1f / duration;
+            while (moveProgress < 1)
             {
-                tokenMovement.OnMovementEnded += Token_OnMovementEnded;
-                tokenMovement.BeginMovingToPosition(board.CoordToWorld(xTargetCoord, yTargetCoord), duration);
-                currentlyMovingTokens.Add(tokenMovement);
+                moveProgress += progressSpeed * Time.deltaTime;
+                token.transform.position = Vector3.Lerp(startPosition, targetPosition, moveProgress);
+                yield return null;
             }
-        }
+            token.transform.position = targetPosition;
 
-        private void Token_OnMovementEnded(TokenMovement tokenMovement)
-        {
-            tokenMovement.OnMovementEnded -= Token_OnMovementEnded;
-            currentlyMovingTokens.Remove(tokenMovement);
-            CheckMovementFinish();
-        }
-
-        private void CheckMovementFinish()
-        {
+            tokenMovementCoroutines.Remove(token);
             if (AreTokensMoving == false)
                 OnTokensMovementStopped?.Invoke();
         }

@@ -93,7 +93,6 @@ GameObject:
   - component: {fileID: 1648779522968943170}
   - component: {fileID: 8659477918814487130}
   - component: {fileID: 3543778578307599170}
-  - component: {fileID: 7116366943012761630}
   - component: {fileID: 3995686044317911266}
   m_Layer: 0
   m_Name: Token
@@ -145,19 +144,6 @@ MonoBehaviour:
   settings: {fileID: 11400000, guid: 6cbd141b186142040832182f9aa5d533, type: 2}
   token: {fileID: 8659477918814487130}
   spriteRenderer: {fileID: 6498957211488724397}
---- !u!114 &7116366943012761630
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5752366049757682039}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 00af0b2e57d626c4a8ec21cb96f04a7e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  defaultMoveTime: 0.2
 --- !u!114 &3995686044317911266
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace Bipolar.Match3
 {
+    [RequireComponent(typeof(GeneralBoard))]
     public class GeneralBoardTokensMovementManager : TokensMovementManager
     {
         public override event System.Action OnTokensMovementStopped;
@@ -22,7 +23,7 @@ namespace Bipolar.Match3
         private readonly Dictionary<Token, Coroutine> tokenMovementCoroutines = new Dictionary<Token, Coroutine>();
         public override bool AreTokensMoving => tokenMovementCoroutines.Count > 0;
 
-        public void StartMovingTokenAlongLine(Token token, GeneralBoard.CoordsLine line, int fromIndex, int cellDistance)
+        public void StartTokenMovement(Token token, GeneralBoard.CoordsLine line, int fromIndex, int cellDistance)
         {
             var movementCoroutine = StartCoroutine(TokenMovementCo(token, line, fromIndex, cellDistance));
             tokenMovementCoroutines.Add(token, movementCoroutine);
@@ -40,7 +41,7 @@ namespace Bipolar.Match3
                 var targetPosition = Board.CoordToWorld(targetCoord);
                 float realDistance = Vector3.Distance(startPosition, targetPosition);
 
-                float progressSpeed = 5f / realDistance;
+                float progressSpeed = 8f / realDistance;
 
                 float progress = 0;
                 while (progress < 1)
@@ -54,11 +55,8 @@ namespace Bipolar.Match3
             }
 
             tokenMovementCoroutines.Remove(token);
-            if (tokenMovementCoroutines.Count <= 0)
-            {
-                Debug.Log("Koniec ruchu");
+            if (AreTokensMoving == false)
                 OnTokensMovementStopped?.Invoke();
-            }
         }
     }
 }
