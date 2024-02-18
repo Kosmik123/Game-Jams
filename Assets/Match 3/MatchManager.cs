@@ -11,7 +11,7 @@ namespace Bipolar.Match3
         public event System.Action<TokensChain> OnTokensMatched;
 
         [SerializeField]
-        private RectangularBoardController boardController;
+        private BoardController boardController;
         [SerializeField]
         private SwapManager swapManager;
 
@@ -42,8 +42,8 @@ namespace Bipolar.Match3
         private void SwapTokens(Vector2Int tokenCoord1, Vector2Int tokenCoord2)
         {
             combo = 0;
-            boardController.SwapTokens(tokenCoord1, tokenCoord2);
             boardController.OnTokensSwapped += BoardController_OnTokensSwapped;
+            boardController.SwapTokens(tokenCoord1, tokenCoord2);
         }
 
         private void BoardController_OnTokensSwapped(Vector2Int tokenCoord1, Vector2Int tokenCoord2)

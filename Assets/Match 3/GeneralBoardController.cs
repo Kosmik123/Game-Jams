@@ -1,18 +1,16 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Bipolar.Match3
 {
     [RequireComponent(typeof(GeneralBoard))]
     public class GeneralBoardController : BoardController<GeneralBoard>
     {
+        public override event System.Action OnTokensColapsed;
+        public override event TokensSwapEventHandler OnTokensSwapped;
+
         [SerializeField]
         private GeneralBoardTokensMovementManager tokensMovementManager;
-
-        private readonly List<TokenMovement> currentlyMovingTokens = new List<TokenMovement>();
-        public bool AreTokensMoving => currentlyMovingTokens.Count > 0;
-
-        private readonly Dictionary<Token, Coroutine> tokenMovementCoroutines = new Dictionary<Token, Coroutine>();
+        public override bool AreTokensMoving => tokensMovementManager.AreTokensMoving;
 
         private void Start()
         {
@@ -31,6 +29,15 @@ namespace Bipolar.Match3
                     RefillLine(line, emptyCellsCount);
                 }
             }
+
+            if (colapsed)
+                tokensMovementManager.OnTokensMovementStopped += CallCollapseEvent;
+        }
+
+        private void CallCollapseEvent()
+        {
+            tokensMovementManager.OnTokensMovementStopped -= CallCollapseEvent;
+            OnTokensColapsed?.Invoke();
         }
 
         private int CollapseTokensInLine(GeneralBoard.CoordsLine line)
@@ -65,6 +72,18 @@ namespace Bipolar.Match3
                 newToken.transform.position = spawningPosition;
                 tokensMovementManager.StartTokenMovement(newToken, line, -1, i + 1);
             }
+        }
+
+        public override void SwapTokens(Vector2Int tokenCoord1, Vector2Int tokenCoord2)
+        {
+            (Board[tokenCoord1], Board[tokenCoord2]) = (Board[tokenCoord2], Board[tokenCoord1]);
+            
+            var token1 = Board.GetToken(tokenCoord1);
+            var token2 = Board.GetToken(tokenCoord2);
+            token2.transform.position = Board.CoordToWorld(tokenCoord1);
+            token1.transform.position = Board.CoordToWorld(tokenCoord2);
+
+            OnTokensSwapped(tokenCoord1, tokenCoord2);
         }
     }
 }

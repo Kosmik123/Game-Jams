@@ -4,6 +4,9 @@ namespace Bipolar.Match3
 {
     public abstract class BoardController : MonoBehaviour
     {
+        public abstract event System.Action OnTokensColapsed;
+        public abstract event TokensSwapEventHandler OnTokensSwapped;
+
         public abstract Board Board { get; }
 
         [SerializeField]
@@ -22,6 +25,8 @@ namespace Bipolar.Match3
             set => tokenTypeProvider = value;
         }
 
+        public abstract bool AreTokensMoving { get; }
+
         protected Token CreateToken(int x, int y)
         {
             var token = TokensSpawner.SpawnToken();
@@ -30,6 +35,8 @@ namespace Bipolar.Match3
         }
 
         public abstract void Collapse();
+
+        public abstract void SwapTokens(Vector2Int tokenCoord1, Vector2Int tokenCoord2);
     }
 
     public abstract class BoardController<T> : BoardController where T : Board
