@@ -19,12 +19,12 @@ namespace Bipolar.Match3
 
         public override void SwapTokens(Vector2Int pieceCoord1, Vector2Int pieceCoord2)
         {
-            (Board[pieceCoord1], Board[pieceCoord2]) = (Board[pieceCoord2], Board[pieceCoord1]);
-            
             var piece1 = Board.GetPiece(pieceCoord1);
             var piece2 = Board.GetPiece(pieceCoord2);
             piece2.transform.position = Board.CoordToWorld(pieceCoord1);
             piece1.transform.position = Board.CoordToWorld(pieceCoord2);
+            
+            (Board[pieceCoord1], Board[pieceCoord2]) = (Board[pieceCoord2], Board[pieceCoord1]);
 
             OnPiecesSwapped?.Invoke(pieceCoord1, pieceCoord2);
         }
