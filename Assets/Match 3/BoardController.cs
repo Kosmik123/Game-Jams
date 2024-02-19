@@ -5,8 +5,8 @@ namespace Bipolar.Match3
     [DisallowMultipleComponent, RequireComponent(typeof(Board), typeof(BoardCollapsing<>))]
     public abstract class BoardController : MonoBehaviour
     {
-        public abstract event System.Action OnPiecesColapsed;
         public abstract event PiecesSwapEventHandler OnPiecesSwapped;
+        public abstract event System.Action OnPiecesColapsed;
 
         public abstract Board Board { get; }
 
@@ -45,6 +45,16 @@ namespace Bipolar.Match3
         where TBoard : Board
         where TCollapsing : BoardCollapsing<TBoard>
     {
+        public override event System.Action OnPiecesColapsed
+        {
+            add => Collapsing.OnPiecesColapsed += value;
+            remove
+            {
+                if (Collapsing)
+                    Collapsing.OnPiecesColapsed -= value;
+            }
+        }
+
         protected TBoard board;
         public override Board Board
         {
@@ -61,35 +71,17 @@ namespace Bipolar.Match3
         {
             get
             {
-                if (collapsing == null)
+                if (collapsing == null && this)
                     collapsing = GetComponent<TCollapsing>();
                 return collapsing;
             }
         }
 
-        private void Awake()
+        protected virtual void Awake()
         {
             board = GetComponent<TBoard>();
         }
 
         public override void Collapse() => Collapsing.Collapse();
-    }
-
-    [RequireComponent(typeof(Board)), DisallowMultipleComponent]
-    public abstract class BoardCollapsing<TBoard>: MonoBehaviour
-        where TBoard : Board
-    {
-        private TBoard board;
-        public TBoard Board
-        {
-            get
-            {
-                if (board == null)
-                    board = GetComponent<TBoard>();
-                return board;
-            }
-        }
-
-        public abstract void Collapse();
     }
 }

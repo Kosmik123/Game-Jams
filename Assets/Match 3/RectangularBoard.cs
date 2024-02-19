@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.EventSystems;
 
 namespace Bipolar.Match3
 {
@@ -23,24 +22,6 @@ namespace Bipolar.Match3
         }
 
         private Vector3 localCenter;
-
-        [SerializeField]
-        private MoveDirection collapseDirection;
-        public Vector2Int CollapseDirection
-        {
-            get
-            {
-                var dir = collapseDirection switch
-                {
-                    MoveDirection.Up => Vector3.up,
-                    MoveDirection.Left => Vector3.left,
-                    MoveDirection.Right => Vector3.right,
-                    MoveDirection.Down => Vector3.down,
-                    _ => Vector3.zero,
-                };
-                return Vector2Int.RoundToInt(Grid.Swizzle(Grid.cellSwizzle, dir));
-            }
-        }
 
         private Piece[,] pieces;
         public override Piece this[Vector2Int coord]

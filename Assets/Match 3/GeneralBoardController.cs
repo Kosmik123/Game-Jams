@@ -4,6 +4,8 @@ namespace Bipolar.Match3
 {
     public class GeneralBoardCollapsing : BoardCollapsing<GeneralBoard>
     {
+        public override event System.Action OnPiecesColapsed;
+
         public override void Collapse()
         {
             throw new System.NotImplementedException();
@@ -17,8 +19,8 @@ namespace Bipolar.Match3
         public override event PiecesSwapEventHandler OnPiecesSwapped;
 
         [SerializeField]
-        private GeneralBoardPiecesMovementManager piecesMovementManager;
-        public override bool ArePiecesMoving => piecesMovementManager.ArePiecesMoving;
+        private GeneralBoardPiecesMovementManager tokensMovementManager;
+        public override bool ArePiecesMoving => tokensMovementManager.ArePiecesMoving;
 
         public override void Collapse()
         {
@@ -34,12 +36,12 @@ namespace Bipolar.Match3
             }
 
             if (colapsed)
-                piecesMovementManager.OnPiecesMovementStopped += CallCollapseEvent;
+                tokensMovementManager.OnPiecesMovementStopped += CallCollapseEvent;
         }
 
         private void CallCollapseEvent()
         {
-            piecesMovementManager.OnPiecesMovementStopped -= CallCollapseEvent;
+            tokensMovementManager.OnPiecesMovementStopped -= CallCollapseEvent;
             OnPiecesColapsed?.Invoke();
         }
 
@@ -56,7 +58,7 @@ namespace Bipolar.Match3
                 }
                 else if (nonExistingTokensCount > 0)
                 {
-                    piecesMovementManager.StartPieceMovement(token, line, index, nonExistingTokensCount);
+                    tokensMovementManager.StartPieceMovement(token, line, index, nonExistingTokensCount);
                 }
             }
             return nonExistingTokensCount;
@@ -74,7 +76,7 @@ namespace Bipolar.Match3
 
                 var spawningPosition = firstCellPosition + (Vector3)(creatingDirection * (count - i));
                 newToken.transform.position = spawningPosition;
-                piecesMovementManager.StartPieceMovement(newToken, line, -1, i + 1);
+                tokensMovementManager.StartPieceMovement(newToken, line, -1, i + 1);
             }
         }
 

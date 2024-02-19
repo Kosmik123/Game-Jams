@@ -32,10 +32,11 @@ namespace Bipolar.Match3
         }
         private float sqrDragDetectionDistance;
 
-        private bool hasDragged = true;
+        private bool hasDragged = false;
 
         private void Awake()
         {
+            hasDragged = false;
             DragDetectionDistance = DragDetectionDistance;
         }
 
