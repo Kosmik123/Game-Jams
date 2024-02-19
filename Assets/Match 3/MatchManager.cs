@@ -16,7 +16,7 @@ namespace Bipolar.Match3
         private SwapManager swapManager;
 
         [SerializeField]
-        private Matcher matcher;
+        private RectangularBoardMatcher matcher;
 
         [SerializeField]
         private int combo;

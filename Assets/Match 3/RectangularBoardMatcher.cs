@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Bipolar.Match3
 {
-    public class Matcher : MonoBehaviour
+    public class RectangularBoardMatcher : MonoBehaviour
     {
         private static readonly Vector2Int[] chainsDirections =
         {
@@ -30,19 +30,25 @@ namespace Bipolar.Match3
                     if (tokenChains.FirstOrDefault(chain => chain.Contains(coord)) != null)
                         continue;
 
-                    coordsToCheck.Clear();
-                    coordsToCheck.Enqueue(coord);
-                    var chain = new TriosTokensChain();
-                    chain.TokenType = board.GetToken(coord).Type;
-                    FindMatches(board, chain, coordsToCheck);
-
-                    if (chain.IsMatchFound)
-                        tokenChains.Add(chain);
+                    CreateTokensChain(board, coord, coordsToCheck);
                 }
             }
         }
 
-        private void FindMatches(RectangularBoard board, TriosTokensChain chain, Queue<Vector2Int> coordsToCheck)
+        private void CreateTokensChain(RectangularBoard board, Vector2Int coord, Queue<Vector2Int> coordsToCheck = null)
+        {
+            coordsToCheck ??= new Queue<Vector2Int>();
+            coordsToCheck.Clear();
+            coordsToCheck.Enqueue(coord);
+            var chain = new TriosTokensChain();
+            chain.TokenType = board.GetToken(coord).Type;
+            FindMatches(board, chain, coordsToCheck);
+
+            if (chain.IsMatchFound)
+                tokenChains.Add(chain);
+        }
+
+        private static void FindMatches(RectangularBoard board, TriosTokensChain chain, Queue<Vector2Int> coordsToCheck)
         {
             while (coordsToCheck.Count > 0)
             {
@@ -55,7 +61,7 @@ namespace Bipolar.Match3
             }
         }
 
-        private bool TryAddLineToChain(RectangularBoard board, TriosTokensChain chain, Vector2Int tokenCoord, Vector2Int direction, Queue<Vector2Int> coordsToCheck)
+        private static bool TryAddLineToChain(RectangularBoard board, TriosTokensChain chain, Vector2Int tokenCoord, Vector2Int direction, Queue<Vector2Int> coordsToCheck)
         {
             var nearCoord = tokenCoord + direction;
             var nearToken = board.GetToken(nearCoord);
@@ -87,7 +93,7 @@ namespace Bipolar.Match3
             return false;
         }
 
-        private void AddLineToChain(TriosTokensChain chain, Vector2Int centerCoord, Vector2Int direction)
+        private static void AddLineToChain(TriosTokensChain chain, Vector2Int centerCoord, Vector2Int direction)
         {
             if (direction.x != 0)
                 chain.AddHorizontal(centerCoord);
