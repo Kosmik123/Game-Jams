@@ -45,10 +45,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 60efbec5b1f9ce24da4ff508d7fb868e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  board: {fileID: 0}
   grid: {fileID: 0}
   cursor: {fileID: 2191485264774975647}
   snappedCursor: {fileID: 2191485265627833552}
   useGrid: 0
+  coord: {x: 0, y: 0}
 --- !u!1 &2191485264774975641
 GameObject:
   m_ObjectHideFlags: 0
@@ -201,7 +203,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 122
+  m_SortingOrder: 100
   m_Sprite: {fileID: -2135585597343286014, guid: eed45a33cd08446c8b88325cf82fc52f, type: 3}
   m_Color: {r: 0.15178525, g: 1, b: 0, a: 1}
   m_FlipX: 0

@@ -5,6 +5,7 @@ namespace Bipolar.Match3
     public class SwapManager : MonoBehaviour
     {
         public event TokensSwapEventHandler OnSwapRequested;
+        public event System.Action<Vector2Int> OnTokenSelected;
 
         [SerializeField]
         private Board board;
@@ -26,7 +27,7 @@ namespace Bipolar.Match3
         {
             if (TrySwapSelectedTokens(tokenCoord) == false)
             {
-                selectedTokenCoord = tokenCoord;
+                SelectToken(tokenCoord);
             }
         }
 
@@ -53,9 +54,16 @@ namespace Bipolar.Match3
             return true;
         }
 
+        private void SelectToken(Vector2Int tokenCoord)
+        {
+            selectedTokenCoord = tokenCoord;
+            if (board.Contains(selectedTokenCoord)) 
+                OnTokenSelected?.Invoke(selectedTokenCoord);
+        }
+
         private void RequestSwap(Vector2Int tokenCoord1, Vector2Int tokenCoord2)
         {
-            selectedTokenCoord = -Vector2Int.one;
+            SelectToken(-Vector2Int.one);
             OnSwapRequested?.Invoke(tokenCoord1, tokenCoord2);
         }    
 

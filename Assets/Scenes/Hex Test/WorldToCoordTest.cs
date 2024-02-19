@@ -14,6 +14,8 @@ public class WorldToCoordTest : MonoBehaviour
 
     public bool useGrid;
 
+    public Vector2Int coord;
+
     private void Reset()
     {
         grid = FindObjectOfType<Grid>();
@@ -29,11 +31,12 @@ public class WorldToCoordTest : MonoBehaviour
         if (useGrid)
         {
             var coord = grid.WorldToCell(mouseWorldPosition);
+            this.coord = (Vector2Int)coord;
             snappedCursorPosition = grid.transform.TransformPoint(grid.CellToLocalInterpolated(coord));
         }
         else
         {
-            var coord = board.WorldToCoord(mouseWorldPosition);
+            coord = board.WorldToCoord(mouseWorldPosition);
             snappedCursorPosition = board.CoordToWorld(coord);
         }
         snappedCursor.position = snappedCursorPosition;

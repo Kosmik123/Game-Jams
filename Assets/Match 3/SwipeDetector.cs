@@ -12,15 +12,36 @@ namespace Bipolar.Match3
         private Board board;
 
         [SerializeField]
-        private float releaseDetectionDistance = 1;
-        [SerializeField]
-        private float dragDetectionDistance = 2; 
+        private float releaseDetectionDistance = 0.5f;
+        public float ReleaseDetectionDistance
+        {
+            get => releaseDetectionDistance;
+            set => releaseDetectionDistance = value;
+        }
 
-        private bool canDrag = true;
+        [SerializeField]
+        private float dragDetectionDistance = 1; 
+        public float DragDetectionDistance
+        {
+            get => dragDetectionDistance;
+            set
+            {
+                dragDetectionDistance = value;
+                sqrDragDetectionDistance = dragDetectionDistance * dragDetectionDistance;
+            }
+        }
+        private float sqrDragDetectionDistance;
+
+        private bool hasDragged = true;
+
+        private void Awake()
+        {
+            DragDetectionDistance = DragDetectionDistance;
+        }
 
         public void OnDrag(PointerEventData eventData)
         {
-            if (canDrag == false)
+            if (hasDragged)
                 return;
 
             var pressWorldPosition = eventData.pointerPressRaycast.worldPosition;
@@ -34,18 +55,18 @@ namespace Bipolar.Match3
 
             var currentWorldPosition = pointerCurrentRaycast.worldPosition;
             var delta = currentWorldPosition - pressWorldPosition;
-            if (delta.sqrMagnitude > dragDetectionDistance * dragDetectionDistance)
+            if (delta.sqrMagnitude > sqrDragDetectionDistance)
             {
-                canDrag = false;
+                hasDragged = true;
                 OnTokenSwiped?.Invoke(tokenCoord, GetDirectionFromMove(delta));
             }
         }
 
         public void OnEndDrag(PointerEventData eventData)
         {
-            if (canDrag == false)
+            if (hasDragged)
             {
-                canDrag = true;
+                hasDragged = false;
                 return;
             }
             
@@ -76,6 +97,11 @@ namespace Bipolar.Match3
                 swipeDirection = moveDelta.y < 0 ? Vector2Int.down : Vector2Int.up;
 
             return Vector2Int.RoundToInt(Grid.Swizzle(board.Grid.cellSwizzle, (Vector2)swipeDirection));
+        }
+
+        private void OnValidate()
+        {
+            DragDetectionDistance = DragDetectionDistance;
         }
     }
 }
