@@ -78,11 +78,12 @@ namespace Bipolar.Match3
         private readonly List<Token> currentlyClearedTokens = new List<Token>();
         private void ClearChainTokens(TokensChain chain)
         {
-            foreach (var tokenCoord in chain.TokenCoords)
+            foreach (var coord in chain.TokenCoords)
             {
-                var token = boardController.Board.GetToken(tokenCoord);
+                var token = boardController.Board.GetToken(coord);
                 currentlyClearedTokens.Add(token);
                 token.OnCleared += Token_OnCleared;
+                boardController.Board[coord] = null;
                 if (token.TryGetComponent<TokenClearingBehavior>(out var clearing))
                 {
                     clearing.ClearToken();
