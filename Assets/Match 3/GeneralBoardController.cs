@@ -12,11 +12,6 @@ namespace Bipolar.Match3
         private GeneralBoardTokensMovementManager tokensMovementManager;
         public override bool AreTokensMoving => tokensMovementManager.AreTokensMoving;
 
-        private void Start()
-        {
-            Collapse();
-        }
-
         public override void Collapse()
         {
             bool colapsed = false;
@@ -43,7 +38,7 @@ namespace Bipolar.Match3
         private int CollapseTokensInLine(GeneralBoard.CoordsLine line)
         {
             int nonExistingTokensCount = 0;
-            for (int index = 0; index < line.Coords.Count; index++)
+            for (int index = line.Coords.Count - 1; index >= 0; index--)
             {
                 var coord = line.Coords[index];
                 var token = Board.GetToken(coord);
@@ -67,7 +62,8 @@ namespace Bipolar.Match3
             for (int i = 0; i < count; i++)
             {
                 var coord = line.Coords[i];
-                var newToken = CreateToken(coord.x, coord.y);
+                var newToken = CreateToken(coord);
+
                 var spawningPosition = firstCellPosition + (Vector3)(creatingDirection * (count - i));
                 newToken.transform.position = spawningPosition;
                 tokensMovementManager.StartTokenMovement(newToken, line, -1, i + 1);
