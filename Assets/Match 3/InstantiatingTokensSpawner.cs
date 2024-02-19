@@ -3,14 +3,14 @@ using UnityEngine;
 
 namespace Bipolar.Match3
 {
-    public class InstantiatingTokensSpawner : TokensSpawner
+    public class InstantiatingTokensSpawner : PiecesSpawner
     {
         [SerializeField]
-        private Token tokenPrototype;
+        private Piece tokenPrototype;
         [SerializeField]
         private Transform tokensContainer;
 
-        public override Token SpawnToken()
+        public override Piece SpawnPiece()
         {
             var spawnedToken = Instantiate(tokenPrototype, tokensContainer);
             spawnedToken.IsCleared = false;

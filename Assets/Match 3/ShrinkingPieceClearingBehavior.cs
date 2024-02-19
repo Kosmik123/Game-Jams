@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Bipolar.Match3
 {
-    public class ShrinkingTokenClearingBehavior : TokenClearingBehavior
+    public class ShrinkingPieceClearingBehavior : PieceClearingBehavior
     {
         [SerializeField]
         private float shrinkingDuration = 0.2f;
@@ -15,7 +15,7 @@ namespace Bipolar.Match3
             resizedVisual.localScale = Vector3.one;
         }
 
-        public override void ClearToken()
+        public override void ClearPiece()
         {
             StartCoroutine(ShrinkingCo());
         }

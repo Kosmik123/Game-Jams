@@ -7,7 +7,7 @@ public struct MatchRequest
 {
     [Min(0)]
     public int requestsCount;
-    public TokenType type;
+    public PieceType type;
     [Min(0)]
     public int size;
     [Min(0)]

@@ -3,9 +3,9 @@ using UnityEngine;
 
 namespace Bipolar.Match3
 {
-    public class TokensChain
+    public class PiecesChain
     {
-        public TokenType TokenType { get; set; }
+        public PieceType TokenType { get; set; }
 
         protected readonly HashSet<Vector2Int> tokenCoords = new HashSet<Vector2Int>();
         public IReadOnlyCollection<Vector2Int> TokenCoords => tokenCoords;
@@ -30,7 +30,7 @@ namespace Bipolar.Match3
         }
     }
 
-    public class TriosTokensChain : TokensChain
+    public class TriosTokensChain : PiecesChain
     {
         private readonly HashSet<Vector2Int> horizontalTrios = new HashSet<Vector2Int>();
         private readonly HashSet<Vector2Int> verticalTrios = new HashSet<Vector2Int>();

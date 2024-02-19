@@ -4,22 +4,22 @@ namespace Bipolar.Match3
 {
     public abstract class BoardController : MonoBehaviour
     {
-        public abstract event System.Action OnTokensColapsed;
-        public abstract event TokensSwapEventHandler OnTokensSwapped;
+        public abstract event System.Action OnPiecesColapsed;
+        public abstract event PiecesSwapEventHandler OnTokensSwapped;
 
         public abstract Board Board { get; }
 
         [SerializeField]
-        private TokensSpawner tokensSpawner;
-        public TokensSpawner TokensSpawner
+        private PiecesSpawner tokensSpawner;
+        public PiecesSpawner TokensSpawner
         {
             get => tokensSpawner;
             set => tokensSpawner = value;
         }
 
         [SerializeField]
-        private TokenTypeProvider tokenTypeProvider;
-        public TokenTypeProvider TokenTypeProvider
+        private PieceTypeProvider tokenTypeProvider;
+        public PieceTypeProvider TokenTypeProvider
         {
             get => tokenTypeProvider;
             set => tokenTypeProvider = value;
@@ -27,10 +27,10 @@ namespace Bipolar.Match3
 
         public abstract bool AreTokensMoving { get; }
 
-        protected Token CreateToken(Vector2Int coord)
+        protected Piece CreateToken(Vector2Int coord)
         {
-            var token = TokensSpawner.SpawnToken();
-            token.Type = TokenTypeProvider.GetTokenType(coord.x, coord.y);
+            var token = TokensSpawner.SpawnPiece();
+            token.Type = TokenTypeProvider.GetPieceType(coord.x, coord.y);
             Board[coord] = token;
             return token;
         }

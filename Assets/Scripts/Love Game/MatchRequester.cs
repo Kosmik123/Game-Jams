@@ -26,7 +26,7 @@ public class MatchRequester : MonoBehaviour
 
     private void OnEnable()
     {
-        matchManager.OnTokensMatched += MatchManager_OnTokensMatched;
+        matchManager.OnPiecesMatched += MatchManager_OnTokensMatched;
     }
 
     private void Start()
@@ -40,7 +40,7 @@ public class MatchRequester : MonoBehaviour
         requestsCountDone = 0;
         requestNumber++;
 
-        var randomType = settings.GetTokenTypeExcept(currentRequest.type);
+        var randomType = settings.GetPieceTypeExcept(currentRequest.type);
         currentRequest = new MatchRequest()
         {
             type = randomType,
@@ -52,7 +52,7 @@ public class MatchRequester : MonoBehaviour
         OnNewRequestRequested?.Invoke(currentRequest);
     }
 
-    private void MatchManager_OnTokensMatched(TokensChain chain)
+    private void MatchManager_OnTokensMatched(PiecesChain chain)
     {
         var request = currentRequest;
         if (request.type != null && chain.TokenType != request.type)
@@ -84,6 +84,6 @@ public class MatchRequester : MonoBehaviour
 
     private void OnDisable()
     {
-        matchManager.OnTokensMatched += MatchManager_OnTokensMatched;
+        matchManager.OnPiecesMatched += MatchManager_OnTokensMatched;
     }
 }

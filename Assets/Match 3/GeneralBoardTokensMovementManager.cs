@@ -5,23 +5,23 @@ using UnityEngine;
 namespace Bipolar.Match3
 {
     [RequireComponent(typeof(GeneralBoard))]
-    public class GeneralBoardTokensMovementManager : TokensMovementManager
+    public class GeneralBoardTokensMovementManager : PiecesMovementManager
     {
-        public override event System.Action OnTokensMovementStopped;
+        public override event System.Action OnPiecesMovementStopped;
 
         private GeneralBoard _board;
         public GeneralBoard Board => this.GetCachedComponent(ref _board);
 
-        private readonly Dictionary<Token, Coroutine> tokenMovementCoroutines = new Dictionary<Token, Coroutine>();
-        public override bool AreTokensMoving => tokenMovementCoroutines.Count > 0;
+        private readonly Dictionary<Piece, Coroutine> tokenMovementCoroutines = new Dictionary<Piece, Coroutine>();
+        public override bool ArePiecesMoving => tokenMovementCoroutines.Count > 0;
 
-        public void StartTokenMovement(Token token, GeneralBoard.CoordsLine line, int fromIndex, int cellDistance)
+        public void StartTokenMovement(Piece token, GeneralBoard.CoordsLine line, int fromIndex, int cellDistance)
         {
             var movementCoroutine = StartCoroutine(TokenMovementCo(token, line, fromIndex, cellDistance));
             tokenMovementCoroutines.Add(token, movementCoroutine);
         }
 
-        private IEnumerator TokenMovementCo(Token token, GeneralBoard.CoordsLine line, int fromIndex, int cellDistance)
+        private IEnumerator TokenMovementCo(Piece token, GeneralBoard.CoordsLine line, int fromIndex, int cellDistance)
         {
             var startIndex = fromIndex;
             for (int i = 1; i <= cellDistance; i++)
@@ -47,8 +47,8 @@ namespace Bipolar.Match3
             }
 
             tokenMovementCoroutines.Remove(token);
-            if (AreTokensMoving == false)
-                OnTokensMovementStopped?.Invoke();
+            if (ArePiecesMoving == false)
+                OnPiecesMovementStopped?.Invoke();
         }
     }
 }

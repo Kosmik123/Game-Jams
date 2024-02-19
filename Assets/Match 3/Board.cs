@@ -22,9 +22,9 @@ namespace Bipolar.Match3
 
         }
 
-        public abstract IReadOnlyCollection<Token> Tokens { get; }
+        public abstract IReadOnlyCollection<Piece> Pieces { get; }
 
-        public abstract Token this[Vector2Int coord] { get; set; }
+        public abstract Piece this[Vector2Int coord] { get; set; }
 
         public bool Contains(Vector2Int coord) => Contains(coord.x, coord.y);
         public abstract bool Contains(int x, int y);
@@ -55,17 +55,17 @@ namespace Bipolar.Match3
             return (Vector2Int)coord;
         }
 
-       public Token GetToken(int x, int y) => GetToken(new Vector2Int(x, y));
-        public Token GetToken(Vector2Int coord)
+        public Piece GetPiece(int x, int y) => GetPiece(new Vector2Int(x, y));
+        public Piece GetPiece(Vector2Int coord)
         {
             if (Contains(coord) == false)
                 return null;
 
-            var token = this[coord];
-            if (token == null || token.IsCleared)
+            var piece = this[coord];
+            if (piece == null || piece.IsCleared)
                 return null;
 
-            return token;
+            return piece;
         }
     }
 }

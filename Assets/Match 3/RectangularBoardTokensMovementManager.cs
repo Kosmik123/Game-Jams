@@ -15,19 +15,19 @@ public static class ComponentExtensions
 namespace Bipolar.Match3
 {
     [RequireComponent(typeof(RectangularBoard))]
-    public class RectangularBoardTokensMovementManager : TokensMovementManager
+    public class RectangularBoardTokensMovementManager : PiecesMovementManager
     {
-        public override event System.Action OnTokensMovementStopped;
+        public override event System.Action OnPiecesMovementStopped;
 
         [SerializeField]
         private RectangularBoard board;
         [SerializeField]
         private float defaultMovementDuration;
 
-        private readonly Dictionary<Token, Coroutine> tokenMovementCoroutines = new Dictionary<Token, Coroutine>();
-        public override bool AreTokensMoving => tokenMovementCoroutines.Count > 0;
+        private readonly Dictionary<Piece, Coroutine> tokenMovementCoroutines = new Dictionary<Piece, Coroutine>();
+        public override bool ArePiecesMoving => tokenMovementCoroutines.Count > 0;
 
-        public void StartTokenMovement(Token token, Vector2Int targetCoord, float duration = -1) 
+        public void StartTokenMovement(Piece token, Vector2Int targetCoord, float duration = -1) 
         {
             if (duration < 0)
                 duration = defaultMovementDuration;
@@ -35,7 +35,7 @@ namespace Bipolar.Match3
             tokenMovementCoroutines.Add(token, movementCoroutine);
         }
 
-        private IEnumerator MovementCo(Token token, Vector3 target, float duration)
+        private IEnumerator MovementCo(Piece token, Vector3 target, float duration)
         {
             Vector3 startPosition = token.transform.position;
             Vector3 targetPosition = target;
@@ -50,8 +50,8 @@ namespace Bipolar.Match3
             token.transform.position = targetPosition;
 
             tokenMovementCoroutines.Remove(token);
-            if (AreTokensMoving == false)
-                OnTokensMovementStopped?.Invoke();
+            if (ArePiecesMoving == false)
+                OnPiecesMovementStopped?.Invoke();
         }
     }
 }

@@ -4,13 +4,13 @@ namespace Bipolar.Match3
 {
     public class SwapManager : MonoBehaviour
     {
-        public event TokensSwapEventHandler OnSwapRequested;
+        public event PiecesSwapEventHandler OnSwapRequested;
         public event System.Action<Vector2Int> OnTokenSelected;
 
         [SerializeField]
         private Board board;
         [SerializeField]
-        private TokensClickDetector tokensClickDetector;
+        private PiecesClickDetector tokensClickDetector;
         [SerializeField]
         private SwipeDetector swipeDetector;
 

@@ -71,7 +71,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: 92ba0cfc956868e40a8c733950011a57, type: 3}
+  m_Sprite: {fileID: -2413806693520163455, guid: 4adeaf2d2b1c7417e89f026626d8264f, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -91,11 +91,11 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1648779522968943170}
-  - component: {fileID: 8659477918814487130}
   - component: {fileID: 3543778578307599170}
   - component: {fileID: 3995686044317911266}
+  - component: {fileID: 3718595752069920288}
   m_Layer: 0
-  m_Name: Token
+  m_Name: Piece
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -116,19 +116,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8659477918814487130
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5752366049757682039}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5896f35225085734b942e4d7e8af25d6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  type: {fileID: 0}
 --- !u!114 &3543778578307599170
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -142,7 +129,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   settings: {fileID: 11400000, guid: 6cbd141b186142040832182f9aa5d533, type: 2}
-  token: {fileID: 8659477918814487130}
+  piece: {fileID: 3718595752069920288}
   spriteRenderer: {fileID: 6498957211488724397}
 --- !u!114 &3995686044317911266
 MonoBehaviour:
@@ -158,3 +145,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   shrinkingDuration: 0.2
   resizedVisual: {fileID: 2145013969330228007}
+--- !u!114 &3718595752069920288
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5752366049757682039}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63da036d2a5e25b42a2c9fefcf4ccef7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  type: {fileID: 0}

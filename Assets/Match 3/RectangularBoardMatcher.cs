@@ -8,7 +8,7 @@ namespace Bipolar.Match3
     {
         private readonly Queue<Vector2Int> coordsToCheck = new Queue<Vector2Int>();
 
-        public override void FindAndCreateTokenChains(Board board) => FindAndCreateTokenChains((RectangularBoard) board);
+        public override void FindAndCreatePieceChains(Board board) => FindAndCreateTokenChains((RectangularBoard) board);
         public void FindAndCreateTokenChains(RectangularBoard board)
         {
             tokenChains.Clear();

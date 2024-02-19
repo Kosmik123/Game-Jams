@@ -1,46 +1,46 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using UnityEngine.Serialization;
 
 namespace Bipolar.Match3
 {
-    public interface ITokenTypeProvider
+    public interface IPieceTypeProvider
     {
-        public TokenType GetTokenType();
-
+        public PieceType GetPieceType();
     }
 
     [CreateAssetMenu(menuName = CreateAssetsPath.Root + "Settings")]
-    public class Settings : ScriptableObject, ITokenTypeProvider
+    public class Settings : ScriptableObject, IPieceTypeProvider
     {
         [SerializeField]
-        private TokenType[] possibleTokenTypes;
-        public IReadOnlyList<TokenType> TokenTypes => possibleTokenTypes;
+        private PieceType[] possiblePieceTypes;
+        public IReadOnlyList<PieceType> PieceTypes => possiblePieceTypes;
 
-        public TokenType GetTokenType()
+        public PieceType GetPieceType()
         {
-            return TokenTypes[Random.Range(0, TokenTypes.Count)];
+            return PieceTypes[Random.Range(0, PieceTypes.Count)];
         }
 
-        public TokenType GetTokenTypeExcept(TokenType exception)
+        public PieceType GetPieceTypeExcept(PieceType exception)
         {
-            int index = Random.Range(1, TokenTypes.Count);
-            if (TokenTypes[index] == exception)
-                return TokenTypes[0];
+            int index = Random.Range(1, PieceTypes.Count);
+            if (PieceTypes[index] == exception)
+                return PieceTypes[0];
             
-            return TokenTypes[index];
+            return PieceTypes[index];
         }
 
-        private readonly List<TokenType> tempAvailableTypes = new List<TokenType>();
-        public TokenType GetTokenTypeExcept(IEnumerable<TokenType> exceptions)
+        private readonly List<PieceType> tempAvailableTypes = new List<PieceType>();
+        public PieceType GetPieceTypeExcept(IEnumerable<PieceType> exceptions)
         {
             tempAvailableTypes.Clear();
-            foreach (var type in TokenTypes)
+            foreach (var type in PieceTypes)
                 if (exceptions.Contains(type) == false)
                     tempAvailableTypes.Add(type);
 
             if (tempAvailableTypes.Count <= 0)
-                return GetTokenType();
+                return GetPieceType();
 
             return tempAvailableTypes[Random.Range(0, tempAvailableTypes.Count)];
         }

@@ -7,7 +7,7 @@ using UnityEngine;
 public class EffectsSpawner : MonoBehaviour
 {
     [SerializeField]
-    private TokenVisualSettings settings;
+    private PieceVisualSettings settings;
     [SerializeField]
     private MatchManager matchManager;
     [SerializeField]
@@ -20,13 +20,13 @@ public class EffectsSpawner : MonoBehaviour
 
     private void OnEnable()
     {
-        matchManager.OnTokensMatched += MatchManager_OnTokensMatched;
+        matchManager.OnPiecesMatched += MatchManager_OnTokensMatched;
     }
 
-    private void MatchManager_OnTokensMatched(TokensChain chain)
+    private void MatchManager_OnTokensMatched(PiecesChain chain)
     {
         var type = chain.TokenType;
-        var sprite = settings.GetTokenSprite(type);
+        var sprite = settings.GetPieceSprite(type);
         
         foreach (var tokenCoord in chain.TokenCoords)
         {
@@ -40,6 +40,6 @@ public class EffectsSpawner : MonoBehaviour
 
     private void OnDisable()
     {
-        matchManager.OnTokensMatched -= MatchManager_OnTokensMatched;
+        matchManager.OnPiecesMatched -= MatchManager_OnTokensMatched;
     }
 }

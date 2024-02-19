@@ -5,12 +5,12 @@ namespace Bipolar.Match3
     [RequireComponent(typeof(GeneralBoard))]
     public class GeneralBoardController : BoardController<GeneralBoard>
     {
-        public override event System.Action OnTokensColapsed;
-        public override event TokensSwapEventHandler OnTokensSwapped;
+        public override event System.Action OnPiecesColapsed;
+        public override event PiecesSwapEventHandler OnTokensSwapped;
 
         [SerializeField]
         private GeneralBoardTokensMovementManager tokensMovementManager;
-        public override bool AreTokensMoving => tokensMovementManager.AreTokensMoving;
+        public override bool AreTokensMoving => tokensMovementManager.ArePiecesMoving;
 
         public override void Collapse()
         {
@@ -26,13 +26,13 @@ namespace Bipolar.Match3
             }
 
             if (colapsed)
-                tokensMovementManager.OnTokensMovementStopped += CallCollapseEvent;
+                tokensMovementManager.OnPiecesMovementStopped += CallCollapseEvent;
         }
 
         private void CallCollapseEvent()
         {
-            tokensMovementManager.OnTokensMovementStopped -= CallCollapseEvent;
-            OnTokensColapsed?.Invoke();
+            tokensMovementManager.OnPiecesMovementStopped -= CallCollapseEvent;
+            OnPiecesColapsed?.Invoke();
         }
 
         private int CollapseTokensInLine(GeneralBoard.CoordsLine line)
@@ -41,7 +41,7 @@ namespace Bipolar.Match3
             for (int index = line.Coords.Count - 1; index >= 0; index--)
             {
                 var coord = line.Coords[index];
-                var token = Board.GetToken(coord);
+                var token = Board.GetPiece(coord);
                 if (token == null || token.IsCleared)
                 {
                     nonExistingTokensCount++;
@@ -74,8 +74,8 @@ namespace Bipolar.Match3
         {
             (Board[tokenCoord1], Board[tokenCoord2]) = (Board[tokenCoord2], Board[tokenCoord1]);
             
-            var token1 = Board.GetToken(tokenCoord1);
-            var token2 = Board.GetToken(tokenCoord2);
+            var token1 = Board.GetPiece(tokenCoord1);
+            var token2 = Board.GetPiece(tokenCoord2);
             token2.transform.position = Board.CoordToWorld(tokenCoord1);
             token1.transform.position = Board.CoordToWorld(tokenCoord2);
 

@@ -3,12 +3,12 @@ using UnityEngine;
 
 namespace Bipolar.Match3
 {
-    public delegate void TokensSwapEventHandler(Vector2Int tokenCoord1, Vector2Int tokenCoord2);
+    public delegate void PiecesSwapEventHandler(Vector2Int pieceCoord1, Vector2Int pieceCoord2);
 
     public class MatchManager : MonoBehaviour
     {
         public event System.Action OnMatchingFailed;
-        public event System.Action<TokensChain> OnTokensMatched;
+        public event System.Action<PiecesChain> OnPiecesMatched;
 
         [SerializeField]
         private BoardController boardController;
@@ -24,7 +24,7 @@ namespace Bipolar.Match3
 
         private void OnEnable()
         {
-            boardController.OnTokensColapsed += BoardController_OnTokensColapsed;
+            boardController.OnPiecesColapsed += BoardController_OnPiecesColapsed;
             swapManager.OnSwapRequested += SwapManager_OnSwapRequested;
         }
 
@@ -33,79 +33,79 @@ namespace Bipolar.Match3
             boardController.Collapse();
         }
 
-        private void SwapManager_OnSwapRequested(Vector2Int tokenCoord1, Vector2Int tokenCoord2)
+        private void SwapManager_OnSwapRequested(Vector2Int pieceCoord1, Vector2Int pieceCoord2)
         {
             if (boardController.AreTokensMoving == false && currentlyClearedTokens.Count <= 0)
-                SwapTokens(tokenCoord1, tokenCoord2);
+                SwapTokens(pieceCoord1, pieceCoord2);
         }
 
-        private void SwapTokens(Vector2Int tokenCoord1, Vector2Int tokenCoord2)
+        private void SwapTokens(Vector2Int pieceCoord1, Vector2Int pieceCoord2)
         {
             combo = 0;
             boardController.OnTokensSwapped += BoardController_OnTokensSwapped;
-            boardController.SwapTokens(tokenCoord1, tokenCoord2);
+            boardController.SwapTokens(pieceCoord1, pieceCoord2);
         }
 
-        private void BoardController_OnTokensSwapped(Vector2Int tokenCoord1, Vector2Int tokenCoord2)
+        private void BoardController_OnTokensSwapped(Vector2Int pieceCoord1, Vector2Int pieceCoord2)
         {
             boardController.OnTokensSwapped -= BoardController_OnTokensSwapped;
             FindMatches();
-            bool wasCorrectMove = matcher.TokenChains.Count > 0;
+            bool wasCorrectMove = matcher.PieceChains.Count > 0;
             if (wasCorrectMove == false)
             {
-                boardController.SwapTokens(tokenCoord1, tokenCoord2);
+                boardController.SwapTokens(pieceCoord1, pieceCoord2);
                 OnMatchingFailed?.Invoke();
             }
         }
 
-        private void BoardController_OnTokensColapsed()
+        private void BoardController_OnPiecesColapsed()
         {
             FindMatches();
         }
 
         private void FindMatches()
         {
-            matcher.FindAndCreateTokenChains(boardController.Board);
+            matcher.FindAndCreatePieceChains(boardController.Board);
 
-            combo += matcher.TokenChains.Count;
-            foreach (var chain in matcher.TokenChains)
+            combo += matcher.PieceChains.Count;
+            foreach (var chain in matcher.PieceChains)
             {
-                OnTokensMatched?.Invoke(chain);
-                ClearChainTokens(chain);
+                OnPiecesMatched?.Invoke(chain);
+                ClearChainPieces(chain);
             }
         }
 
-        private readonly List<Token> currentlyClearedTokens = new List<Token>();
-        private void ClearChainTokens(TokensChain chain)
+        private readonly List<Piece> currentlyClearedTokens = new List<Piece>();
+        private void ClearChainPieces(PiecesChain chain)
         {
             foreach (var coord in chain.TokenCoords)
             {
-                var token = boardController.Board.GetToken(coord);
-                currentlyClearedTokens.Add(token);
-                token.OnCleared += Token_OnCleared;
+                var piece = boardController.Board.GetPiece(coord);
+                currentlyClearedTokens.Add(piece);
+                piece.OnCleared += Piece_OnCleared;
                 boardController.Board[coord] = null;
-                if (token.TryGetComponent<TokenClearingBehavior>(out var clearing))
+                if (piece.TryGetComponent<PieceClearingBehavior>(out var clearing))
                 {
-                    clearing.ClearToken();
+                    clearing.ClearPiece();
                 }
                 else
                 {
-                    token.IsCleared = true;
+                    piece.IsCleared = true;
                 }
             }
         }
 
-        private void Token_OnCleared(Token token)
+        private void Piece_OnCleared(Piece piece)
         {
-            token.OnCleared -= Token_OnCleared;
-            currentlyClearedTokens.Remove(token);
+            piece.OnCleared -= Piece_OnCleared;
+            currentlyClearedTokens.Remove(piece);
             if (currentlyClearedTokens.Count <= 0)
                 boardController.Collapse();
         }
 
         private void OnDisable()
         {
-            boardController.OnTokensColapsed -= BoardController_OnTokensColapsed;
+            boardController.OnPiecesColapsed -= BoardController_OnPiecesColapsed;
             swapManager.OnSwapRequested -= SwapManager_OnSwapRequested;
         }
     }

@@ -475,6 +475,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: World To Coord Test
       objectReference: {fileID: 0}
+    - target: {fileID: 2191485264516239419, guid: 510519c35343bb04b8f064fc4b6c90bb, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 2191485265627833553, guid: 510519c35343bb04b8f064fc4b6c90bb, type: 3}
       propertyPath: m_Sprite
       value: 
@@ -499,7 +503,6 @@ GameObject:
   - component: {fileID: 1326609506}
   - component: {fileID: 1326609503}
   - component: {fileID: 1326609507}
-  - component: {fileID: 1326609508}
   - component: {fileID: 1326609509}
   m_Layer: 0
   m_Name: Match-3 Board
@@ -641,11 +644,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 1326609497}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bb5b0b50e4443aa4c956db5c0986a3bf, type: 3}
+  m_Script: {fileID: 11500000, guid: 3aa1fbf9e096c874499165d2e22b44eb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tokenPrototype: {fileID: 8659477918814487130, guid: 99f817c17fef7814f91b2e2618469c76, type: 3}
-  tokensContainer: {fileID: 1326609500}
+  piecePrototype: {fileID: 3718595752069920288, guid: 99f817c17fef7814f91b2e2618469c76, type: 3}
+  piecesContainer: {fileID: 1326609500}
 --- !u!114 &1326609507
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -659,23 +662,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   settings: {fileID: 11400000, guid: bfcf2dc1b16691f419860f7968a3652b, type: 2}
---- !u!114 &1326609508
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1326609497}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 60efbec5b1f9ce24da4ff508d7fb868e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  board: {fileID: 0}
-  grid: {fileID: 1326609499}
-  cursor: {fileID: 0}
-  snappedCursor: {fileID: 0}
-  useGrid: 0
 --- !u!114 &1326609509
 MonoBehaviour:
   m_ObjectHideFlags: 0

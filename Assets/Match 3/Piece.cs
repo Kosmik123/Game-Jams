@@ -2,14 +2,14 @@
 
 namespace Bipolar.Match3
 {
-    public class Token : MonoBehaviour
+    public class Piece : MonoBehaviour
     {
-        public event System.Action<TokenType> OnTypeChanged;
-        public event System.Action<Token> OnCleared;
+        public event System.Action<PieceType> OnTypeChanged;
+        public event System.Action<Piece> OnCleared;
 
         [SerializeField]
-        private TokenType type;
-        public TokenType Type
+        private PieceType type;
+        public PieceType Type
         {
             get => type;
             set

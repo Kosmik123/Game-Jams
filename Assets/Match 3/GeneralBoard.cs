@@ -13,11 +13,11 @@ namespace Bipolar.Match3
         private readonly List<Vector2Int> includedCoords = new List<Vector2Int>();
         public IReadOnlyList<Vector2Int> Coords => includedCoords;
 
-        private readonly Dictionary<Vector2Int, Token> tokensByCoords = new Dictionary<Vector2Int, Token>();
-        public override Token this[Vector2Int coord] 
+        private readonly Dictionary<Vector2Int, Piece> piecesByCoords = new Dictionary<Vector2Int, Piece>();
+        public override Piece this[Vector2Int coord] 
         { 
-            get => tokensByCoords[coord];
-            set => tokensByCoords[coord] = value; 
+            get => piecesByCoords[coord];
+            set => piecesByCoords[coord] = value; 
         }
 
         private readonly Dictionary<Vector2Int, Vector2Int> directions = new Dictionary<Vector2Int, Vector2Int>();
@@ -27,7 +27,7 @@ namespace Bipolar.Match3
         private CoordsLine[] lines;
         public IReadOnlyList<CoordsLine> Lines => lines;
 
-        public override IReadOnlyCollection<Token> Tokens => tokensByCoords.Values;
+        public override IReadOnlyCollection<Piece> Pieces => piecesByCoords.Values;
 
         private void Reset()
         {
@@ -214,7 +214,7 @@ namespace Bipolar.Match3
         public override bool Contains(int x, int y)
         {
             return tilemap.cellBounds.Contains(new Vector3Int(x, y, tilemap.cellBounds.z))
-                && tokensByCoords.ContainsKey(new Vector2Int(x, y));
+                && piecesByCoords.ContainsKey(new Vector2Int(x, y));
         }
 
         public override Vector3 CoordToWorld(Vector2 coord)

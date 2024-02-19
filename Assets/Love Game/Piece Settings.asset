@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 818dce04659b0a84c9972d251495f9c7, type: 3}
-  m_Name: Tokens Settings
+  m_Name: Piece Settings
   m_EditorClassIdentifier: 
   possibleTokenTypes:
   - {fileID: 11400000, guid: 81dc62b5e6618454782b3b9c07b79190, type: 2}

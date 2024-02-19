@@ -42,15 +42,15 @@ namespace Bipolar.Match3
             }
         }
 
-        private Token[,] tokens;
-        public override Token this[Vector2Int coord]
+        private Piece[,] tokens;
+        public override Piece this[Vector2Int coord]
         {
             get => tokens [coord.x, coord.y];
             set => tokens [coord.x, coord.y] = value;
         }
 
         private TokensCollection tokensCollection = null;
-        public override IReadOnlyCollection<Token> Tokens
+        public override IReadOnlyCollection<Piece> Pieces
         {
             get
             {
@@ -62,7 +62,7 @@ namespace Bipolar.Match3
         protected override void Awake()
         {
             base.Awake();
-            tokens = new Token[dimensions.x, dimensions.y];
+            tokens = new Piece[dimensions.x, dimensions.y];
             CalculateOtherDimensions();
         }
 
@@ -137,7 +137,7 @@ namespace Bipolar.Match3
             }
         }
 
-        public class TokensCollection : IReadOnlyCollection<Token>
+        public class TokensCollection : IReadOnlyCollection<Piece>
         {
             private readonly RectangularBoard board;
 
@@ -145,7 +145,7 @@ namespace Bipolar.Match3
 
             public int Count => board.Dimensions.x * board.Dimensions.y;
 
-            public IEnumerator<Token> GetEnumerator()
+            public IEnumerator<Piece> GetEnumerator()
             {
                 foreach (var token in board.tokens)
                     yield return token;
