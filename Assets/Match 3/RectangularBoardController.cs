@@ -88,10 +88,9 @@ namespace Bipolar.Match3
                 coord[collapseAxis] = (startCellIndex + i * refillingDirection + lineSize) % lineSize; // odwrócony znak
 
                 // odtąd inne czynnności
+                var newToken = CreateToken(coord);
                 var spawnCoord = coord + spawnOffset;
-                var newToken = CreateToken(coord.x, coord.y);
                 newToken.transform.position = Board.CoordToWorld(spawnCoord);
-                Board[coord] = newToken;
                 tokensMovementManager.StartTokenMovement(newToken, coord, 0.3f); // to samo
             }
         }

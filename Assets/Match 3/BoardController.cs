@@ -27,10 +27,11 @@ namespace Bipolar.Match3
 
         public abstract bool AreTokensMoving { get; }
 
-        protected Token CreateToken(int x, int y)
+        protected Token CreateToken(Vector2Int coord)
         {
             var token = TokensSpawner.SpawnToken();
-            token.Type = TokenTypeProvider.GetTokenType(x, y);
+            token.Type = TokenTypeProvider.GetTokenType(coord.x, coord.y);
+            Board[coord] = token;
             return token;
         }
 
