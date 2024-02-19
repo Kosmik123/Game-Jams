@@ -1,7 +1,4 @@
 using Bipolar.Match3;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 public class EffectsSpawner : MonoBehaviour
@@ -25,12 +22,12 @@ public class EffectsSpawner : MonoBehaviour
 
     private void MatchManager_OnTokensMatched(PiecesChain chain)
     {
-        var type = chain.TokenType;
+        var type = chain.PieceType;
         var sprite = settings.GetPieceSprite(type);
         
-        foreach (var tokenCoord in chain.TokenCoords)
+        foreach (var coord in chain.PiecesCoords)
         {
-            var position = board.CoordToWorld(tokenCoord);
+            var position = board.CoordToWorld(coord);
             var effect = Instantiate(effectPrototype, position, Quaternion.identity);
             effect.Target = target;
             if (effect.TryGetComponent<SpriteRenderer>(out var renderer))

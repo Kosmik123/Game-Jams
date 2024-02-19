@@ -5,7 +5,7 @@ namespace Bipolar.Match3
 {
     public class PiecesClickDetector : MonoBehaviour, IPointerClickHandler
     {
-        public event System.Action<Vector2Int> OnTokenClicked;
+        public event System.Action<Vector2Int> OnPieceClicked;
 
         [SerializeField]
         private Board board;
@@ -22,7 +22,7 @@ namespace Bipolar.Match3
             if (pressedPieceCoord != pieceCoord)
                 return;
 
-            OnTokenClicked?.Invoke(pieceCoord);
+            OnPieceClicked?.Invoke(pieceCoord);
         }
     }
 }

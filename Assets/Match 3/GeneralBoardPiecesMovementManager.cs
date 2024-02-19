@@ -5,23 +5,23 @@ using UnityEngine;
 namespace Bipolar.Match3
 {
     [RequireComponent(typeof(GeneralBoard))]
-    public class GeneralBoardTokensMovementManager : PiecesMovementManager
+    public class GeneralBoardPiecesMovementManager : PiecesMovementManager
     {
         public override event System.Action OnPiecesMovementStopped;
 
         private GeneralBoard _board;
         public GeneralBoard Board => this.GetCachedComponent(ref _board);
 
-        private readonly Dictionary<Piece, Coroutine> tokenMovementCoroutines = new Dictionary<Piece, Coroutine>();
-        public override bool ArePiecesMoving => tokenMovementCoroutines.Count > 0;
+        private readonly Dictionary<Piece, Coroutine> pieceMovementCoroutines = new Dictionary<Piece, Coroutine>();
+        public override bool ArePiecesMoving => pieceMovementCoroutines.Count > 0;
 
-        public void StartTokenMovement(Piece token, GeneralBoard.CoordsLine line, int fromIndex, int cellDistance)
+        public void StartTokenMovement(Piece piece, GeneralBoard.CoordsLine line, int fromIndex, int cellDistance)
         {
-            var movementCoroutine = StartCoroutine(TokenMovementCo(token, line, fromIndex, cellDistance));
-            tokenMovementCoroutines.Add(token, movementCoroutine);
+            var movementCoroutine = StartCoroutine(MovementCo(piece, line, fromIndex, cellDistance));
+            pieceMovementCoroutines.Add(piece, movementCoroutine);
         }
 
-        private IEnumerator TokenMovementCo(Piece token, GeneralBoard.CoordsLine line, int fromIndex, int cellDistance)
+        private IEnumerator MovementCo(Piece piece, GeneralBoard.CoordsLine line, int fromIndex, int cellDistance)
         {
             var startIndex = fromIndex;
             for (int i = 1; i <= cellDistance; i++)
@@ -29,7 +29,7 @@ namespace Bipolar.Match3
                 int targetIndex = fromIndex + i;
                 var targetCoord = line.Coords[targetIndex];
 
-                var startPosition = startIndex < 0 ? token.transform.position : Board.CoordToWorld(line.Coords[startIndex]);
+                var startPosition = startIndex < 0 ? piece.transform.position : Board.CoordToWorld(line.Coords[startIndex]);
                 var targetPosition = Board.CoordToWorld(targetCoord);
                 float realDistance = Vector3.Distance(startPosition, targetPosition);
 
@@ -38,15 +38,15 @@ namespace Bipolar.Match3
                 float progress = 0;
                 while (progress < 1)
                 {
-                    token.transform.position = Vector3.Lerp(startPosition, targetPosition, progress);
+                    piece.transform.position = Vector3.Lerp(startPosition, targetPosition, progress);
                     yield return waitForFixedUpdate;
                     progress += Time.fixedDeltaTime * progressSpeed;
                 }
-                token.transform.position = targetPosition;
+                piece.transform.position = targetPosition;
                 startIndex = targetIndex;
             }
 
-            tokenMovementCoroutines.Remove(token);
+            pieceMovementCoroutines.Remove(piece);
             if (ArePiecesMoving == false)
                 OnPiecesMovementStopped?.Invoke();
         }

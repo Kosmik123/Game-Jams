@@ -42,27 +42,27 @@ namespace Bipolar.Match3
             }
         }
 
-        private Piece[,] tokens;
+        private Piece[,] pieces;
         public override Piece this[Vector2Int coord]
         {
-            get => tokens [coord.x, coord.y];
-            set => tokens [coord.x, coord.y] = value;
+            get => pieces [coord.x, coord.y];
+            set => pieces [coord.x, coord.y] = value;
         }
 
-        private TokensCollection tokensCollection = null;
+        private PiecesCollection piecesCollection = null;
         public override IReadOnlyCollection<Piece> Pieces
         {
             get
             {
-                tokensCollection ??= new TokensCollection(this);
-                return tokensCollection;
+                piecesCollection ??= new PiecesCollection(this);
+                return piecesCollection;
             }
         }
 
         protected override void Awake()
         {
             base.Awake();
-            tokens = new Piece[dimensions.x, dimensions.y];
+            pieces = new Piece[dimensions.x, dimensions.y];
             CalculateOtherDimensions();
         }
 
@@ -137,18 +137,18 @@ namespace Bipolar.Match3
             }
         }
 
-        public class TokensCollection : IReadOnlyCollection<Piece>
+        public class PiecesCollection : IReadOnlyCollection<Piece>
         {
             private readonly RectangularBoard board;
 
-            public TokensCollection(RectangularBoard board) => this.board = board;
+            public PiecesCollection(RectangularBoard board) => this.board = board;
 
             public int Count => board.Dimensions.x * board.Dimensions.y;
 
             public IEnumerator<Piece> GetEnumerator()
             {
-                foreach (var token in board.tokens)
-                    yield return token;
+                foreach (var piece in board.pieces)
+                    yield return piece;
             }
 
             IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();

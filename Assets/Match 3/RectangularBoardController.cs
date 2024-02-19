@@ -9,7 +9,7 @@ namespace Bipolar.Match3
         public override event PiecesSwapEventHandler OnTokensSwapped;
 
         [SerializeField]
-        private RectangularBoardTokensMovementManager tokensMovementManager;
+        private RectangularBoardPiecesMovementManager tokensMovementManager;
 
         public override bool AreTokensMoving => tokensMovementManager.ArePiecesMoving;
 

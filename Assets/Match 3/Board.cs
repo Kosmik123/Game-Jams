@@ -18,9 +18,7 @@ namespace Bipolar.Match3
         }
 
         protected virtual void Awake()
-        {
-
-        }
+        { }
 
         public abstract IReadOnlyCollection<Piece> Pieces { get; }
 

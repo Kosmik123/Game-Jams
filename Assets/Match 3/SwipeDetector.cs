@@ -5,8 +5,8 @@ namespace Bipolar.Match3
 {
     public class SwipeDetector : MonoBehaviour, IDragHandler, IEndDragHandler
     {
-        public delegate void TokenSwipeEventHandler(Vector2Int tokenCoord, Vector2Int direction);
-        public event TokenSwipeEventHandler OnTokenSwiped;
+        public delegate void TokenSwipeEventHandler(Vector2Int pieceCoord, Vector2Int direction);
+        public event TokenSwipeEventHandler OnPieceSwiped;
 
         [SerializeField]
         private Board board;
@@ -45,8 +45,8 @@ namespace Bipolar.Match3
                 return;
 
             var pressWorldPosition = eventData.pointerPressRaycast.worldPosition;
-            var tokenCoord = board.WorldToCoord(pressWorldPosition);
-            if (board.Contains(tokenCoord) == false)
+            var pieceCoord = board.WorldToCoord(pressWorldPosition);
+            if (board.Contains(pieceCoord) == false)
                 return;
 
             var pointerCurrentRaycast = eventData.pointerCurrentRaycast;
@@ -58,7 +58,7 @@ namespace Bipolar.Match3
             if (delta.sqrMagnitude > sqrDragDetectionDistance)
             {
                 hasDragged = true;
-                OnTokenSwiped?.Invoke(tokenCoord, GetDirectionFromMove(delta));
+                OnPieceSwiped?.Invoke(pieceCoord, GetDirectionFromMove(delta));
             }
         }
 
@@ -71,8 +71,8 @@ namespace Bipolar.Match3
             }
             
             var pressWorldPosition = eventData.pointerPressRaycast.worldPosition;
-            var tokenCoord = board.WorldToCoord(pressWorldPosition);
-            if (board.Contains(tokenCoord) == false)
+            var pieceCoord = board.WorldToCoord(pressWorldPosition);
+            if (board.Contains(pieceCoord) == false)
                 return;
 
             var pointerCurrentRaycast = eventData.pointerCurrentRaycast;
@@ -83,7 +83,7 @@ namespace Bipolar.Match3
             var delta = releaseWorldPosition - pressWorldPosition;
             if (delta.sqrMagnitude > releaseDetectionDistance * releaseDetectionDistance)
             {
-                OnTokenSwiped?.Invoke(tokenCoord, GetDirectionFromMove(delta));
+                OnPieceSwiped?.Invoke(pieceCoord, GetDirectionFromMove(delta));
             }
         }
 

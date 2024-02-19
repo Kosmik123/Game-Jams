@@ -15,7 +15,7 @@ public static class ComponentExtensions
 namespace Bipolar.Match3
 {
     [RequireComponent(typeof(RectangularBoard))]
-    public class RectangularBoardTokensMovementManager : PiecesMovementManager
+    public class RectangularBoardPiecesMovementManager : PiecesMovementManager
     {
         public override event System.Action OnPiecesMovementStopped;
 
@@ -24,32 +24,32 @@ namespace Bipolar.Match3
         [SerializeField]
         private float defaultMovementDuration;
 
-        private readonly Dictionary<Piece, Coroutine> tokenMovementCoroutines = new Dictionary<Piece, Coroutine>();
-        public override bool ArePiecesMoving => tokenMovementCoroutines.Count > 0;
+        private readonly Dictionary<Piece, Coroutine> pieceMovementCoroutines = new Dictionary<Piece, Coroutine>();
+        public override bool ArePiecesMoving => pieceMovementCoroutines.Count > 0;
 
-        public void StartTokenMovement(Piece token, Vector2Int targetCoord, float duration = -1) 
+        public void StartTokenMovement(Piece piece, Vector2Int targetCoord, float duration = -1) 
         {
             if (duration < 0)
                 duration = defaultMovementDuration;
-            var movementCoroutine = StartCoroutine(MovementCo(token, board.CoordToWorld(targetCoord), duration));
-            tokenMovementCoroutines.Add(token, movementCoroutine);
+            var movementCoroutine = StartCoroutine(MovementCo(piece, board.CoordToWorld(targetCoord), duration));
+            pieceMovementCoroutines.Add(piece, movementCoroutine);
         }
 
-        private IEnumerator MovementCo(Piece token, Vector3 target, float duration)
+        private IEnumerator MovementCo(Piece piece, Vector3 target, float duration)
         {
-            Vector3 startPosition = token.transform.position;
+            Vector3 startPosition = piece.transform.position;
             Vector3 targetPosition = target;
             float moveProgress = 0;
             float progressSpeed = 1f / duration;
             while (moveProgress < 1)
             {
                 moveProgress += progressSpeed * Time.deltaTime;
-                token.transform.position = Vector3.Lerp(startPosition, targetPosition, moveProgress);
+                piece.transform.position = Vector3.Lerp(startPosition, targetPosition, moveProgress);
                 yield return null;
             }
-            token.transform.position = targetPosition;
+            piece.transform.position = targetPosition;
 
-            tokenMovementCoroutines.Remove(token);
+            pieceMovementCoroutines.Remove(piece);
             if (ArePiecesMoving == false)
                 OnPiecesMovementStopped?.Invoke();
         }

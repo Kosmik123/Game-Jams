@@ -78,7 +78,7 @@ namespace Bipolar.Match3
         private readonly List<Piece> currentlyClearedTokens = new List<Piece>();
         private void ClearChainPieces(PiecesChain chain)
         {
-            foreach (var coord in chain.TokenCoords)
+            foreach (var coord in chain.PiecesCoords)
             {
                 var piece = boardController.Board.GetPiece(coord);
                 currentlyClearedTokens.Add(piece);

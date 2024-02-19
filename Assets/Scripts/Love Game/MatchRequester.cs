@@ -55,14 +55,14 @@ public class MatchRequester : MonoBehaviour
     private void MatchManager_OnTokensMatched(PiecesChain chain)
     {
         var request = currentRequest;
-        if (request.type != null && chain.TokenType != request.type)
+        if (request.type != null && chain.PieceType != request.type)
             return;
 
         if (chain.Size < request.size)
             return;
 
         int obtainedTokens = chain.Size;
-        if (chain is TriosTokensChain triosTokensChain)
+        if (chain is TriosPiecesChain triosTokensChain)
         {
             if (triosTokensChain.HorizontalTriosCount < request.horizontalCount)
                 return;

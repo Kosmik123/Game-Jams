@@ -23,15 +23,15 @@ namespace Bipolar.Match3
             coordsToCheck ??= new Queue<Vector2Int>();
             coordsToCheck.Clear();
             coordsToCheck.Enqueue(coord);
-            var chain = new TriosTokensChain();
-            chain.TokenType = board.GetPiece(coord).Type;
+            var chain = new TriosPiecesChain();
+            chain.PieceType = board.GetPiece(coord).Type;
             FindMatches(board, chain, coordsToCheck);
 
             if (chain.IsMatchFound)
                 tokenChains.Add(chain);
         }
 
-        public static void FindMatches(Board board, TriosTokensChain chain, Queue<Vector2Int> coordsToCheck)
+        public static void FindMatches(Board board, TriosPiecesChain chain, Queue<Vector2Int> coordsToCheck)
         {
             while (coordsToCheck.Count > 0)
             {
@@ -44,16 +44,16 @@ namespace Bipolar.Match3
             }
         }
 
-        public static bool TryAddLineToChain(Board board, TriosTokensChain chain, Vector2Int tokenCoord, Vector2Int direction, Queue<Vector2Int> coordsToCheck)
+        public static bool TryAddLineToChain(Board board, TriosPiecesChain chain, Vector2Int tokenCoord, Vector2Int direction, Queue<Vector2Int> coordsToCheck)
         {
             var nearCoord = tokenCoord + direction;
             var nearToken = board.GetPiece(nearCoord);
-            if (nearToken == null || chain.TokenType != nearToken.Type)
+            if (nearToken == null || chain.PieceType != nearToken.Type)
                 return false;
 
             var backCoord = tokenCoord - direction;
             var backToken = board.GetPiece(backCoord);
-            if (backToken && chain.TokenType == backToken.Type)
+            if (backToken && chain.PieceType == backToken.Type)
             {
                 chain.IsMatchFound = true;
                 TryEnqueueCoord(chain, coordsToCheck, nearCoord);
@@ -64,7 +64,7 @@ namespace Bipolar.Match3
 
             var furtherCoord = nearCoord + direction;
             var furtherToken = board.GetPiece(furtherCoord);
-            if (furtherToken && chain.TokenType == furtherToken.Type)
+            if (furtherToken && chain.PieceType == furtherToken.Type)
             {
                 chain.IsMatchFound = true;
                 TryEnqueueCoord(chain, coordsToCheck, nearCoord);
@@ -76,7 +76,7 @@ namespace Bipolar.Match3
             return false;
         }
 
-        public static void AddLineToChain(TriosTokensChain chain, Vector2Int centerCoord, Vector2Int direction)
+        public static void AddLineToChain(TriosPiecesChain chain, Vector2Int centerCoord, Vector2Int direction)
         {
             if (direction.x != 0)
                 chain.AddHorizontal(centerCoord);
