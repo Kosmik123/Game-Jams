@@ -2,16 +2,16 @@
 
 namespace Bipolar.Match3
 {
-    [RequireComponent(typeof(RectangularBoard))]
-    public class RectangularBoardController : BoardController<RectangularBoard>
+    [RequireComponent(typeof(RectangularBoard), typeof(RectangularBoardCollapsing))]
+    public class RectangularBoardController : BoardController<RectangularBoard, RectangularBoardCollapsing>
     {
         public override event System.Action OnPiecesColapsed;
-        public override event PiecesSwapEventHandler OnTokensSwapped;
+        public override event PiecesSwapEventHandler OnPiecesSwapped;
 
         [SerializeField]
-        private RectangularBoardPiecesMovementManager tokensMovementManager;
+        private RectangularBoardPiecesMovementManager piecesMovementManager;
 
-        public override bool AreTokensMoving => tokensMovementManager.ArePiecesMoving;
+        public override bool ArePiecesMoving => piecesMovementManager.ArePiecesMoving;
 
         public override void Collapse()
         {
@@ -28,12 +28,12 @@ namespace Bipolar.Match3
             }
 
             if (colapsed)
-                tokensMovementManager.OnPiecesMovementStopped += CallCollapseEvent;
+                piecesMovementManager.OnPiecesMovementStopped += CallCollapseEvent;
         }
 
         private void CallCollapseEvent()
         {
-            tokensMovementManager.OnPiecesMovementStopped -= CallCollapseEvent;
+            piecesMovementManager.OnPiecesMovementStopped -= CallCollapseEvent;
             OnPiecesColapsed?.Invoke();
         }
 
@@ -53,8 +53,8 @@ namespace Bipolar.Match3
                 coord[collapseAxis] = (startCellIndex + i * lineCollapseDirection + lineSize) % lineSize; // odwrócony znak
 
                 // odtąd są inne czynnności
-                var token = Board.GetPiece(coord);
-                if (token == null || token.IsCleared)
+                var piece = Board.GetPiece(coord);
+                if (piece == null || piece.IsCleared)
                 {
                     nonExistingTokensCount++;
                 }
@@ -63,8 +63,8 @@ namespace Bipolar.Match3
                     var offsetToMove = board.CollapseDirection * nonExistingTokensCount;
                     var targetCoord = coord + offsetToMove;
                     Board[coord] = null;
-                    Board[targetCoord] = token;
-                    tokensMovementManager.StartTokenMovement(token, targetCoord, 0.3f); // to samo
+                    Board[targetCoord] = piece;
+                    piecesMovementManager.StartPieceMovement(piece, targetCoord, 0.3f); // to samo
                 }
             }
 
@@ -88,35 +88,35 @@ namespace Bipolar.Match3
                 coord[collapseAxis] = (startCellIndex + i * refillingDirection + lineSize) % lineSize; // odwrócony znak
 
                 // odtąd inne czynnności
-                var newToken = CreateToken(coord);
+                var newPiece = CreatePiece(coord);
                 var spawnCoord = coord + spawnOffset;
-                newToken.transform.position = Board.CoordToWorld(spawnCoord);
-                tokensMovementManager.StartTokenMovement(newToken, coord, 0.3f); // to samo
+                newPiece.transform.position = Board.CoordToWorld(spawnCoord);
+                piecesMovementManager.StartPieceMovement(newPiece, coord, 0.3f); // to samo
             }
         }
 
         private System.Action swapEndedCallback;
-        public override void SwapTokens(Vector2Int tokenCoord1, Vector2Int tokenCoord2)
+        public override void SwapTokens(Vector2Int pieceCoord1, Vector2Int pieceCoord2)
         {
-            var token1 = Board.GetPiece(tokenCoord1);
-            var token2 = Board.GetPiece(tokenCoord2);
+            var piece1 = Board.GetPiece(pieceCoord1);
+            var piece2 = Board.GetPiece(pieceCoord2);
 
-            tokensMovementManager.StartTokenMovement(token2, tokenCoord1);
-            tokensMovementManager.StartTokenMovement(token1, tokenCoord2);
+            piecesMovementManager.StartPieceMovement(piece2, pieceCoord1);
+            piecesMovementManager.StartPieceMovement(piece1, pieceCoord2);
 
-            (Board[tokenCoord1], Board[tokenCoord2]) = (Board[tokenCoord2], Board[tokenCoord1]);
+            (Board[pieceCoord1], Board[pieceCoord2]) = (Board[pieceCoord2], Board[pieceCoord1]);
 
-            tokensMovementManager.OnPiecesMovementStopped += BoardController_OnTokensMovementStopped;
+            piecesMovementManager.OnPiecesMovementStopped += BoardController_OnPiecesMovementStopped;
             swapEndedCallback = () =>
             {
                 swapEndedCallback = null;
-                OnTokensSwapped?.Invoke(tokenCoord1, tokenCoord2);
+                OnPiecesSwapped?.Invoke(pieceCoord1, pieceCoord2);
             };
         }
 
-        private void BoardController_OnTokensMovementStopped()
+        private void BoardController_OnPiecesMovementStopped()
         {
-            tokensMovementManager.OnPiecesMovementStopped -= BoardController_OnTokensMovementStopped;
+            piecesMovementManager.OnPiecesMovementStopped -= BoardController_OnPiecesMovementStopped;
             swapEndedCallback.Invoke();
         }
     }

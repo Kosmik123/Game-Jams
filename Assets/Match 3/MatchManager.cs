@@ -35,20 +35,20 @@ namespace Bipolar.Match3
 
         private void SwapManager_OnSwapRequested(Vector2Int pieceCoord1, Vector2Int pieceCoord2)
         {
-            if (boardController.AreTokensMoving == false && currentlyClearedTokens.Count <= 0)
+            if (boardController.ArePiecesMoving == false && currentlyClearedTokens.Count <= 0)
                 SwapTokens(pieceCoord1, pieceCoord2);
         }
 
         private void SwapTokens(Vector2Int pieceCoord1, Vector2Int pieceCoord2)
         {
             combo = 0;
-            boardController.OnTokensSwapped += BoardController_OnTokensSwapped;
+            boardController.OnPiecesSwapped += BoardController_OnPiecesSwapped;
             boardController.SwapTokens(pieceCoord1, pieceCoord2);
         }
 
-        private void BoardController_OnTokensSwapped(Vector2Int pieceCoord1, Vector2Int pieceCoord2)
+        private void BoardController_OnPiecesSwapped(Vector2Int pieceCoord1, Vector2Int pieceCoord2)
         {
-            boardController.OnTokensSwapped -= BoardController_OnTokensSwapped;
+            boardController.OnPiecesSwapped -= BoardController_OnPiecesSwapped;
             FindMatches();
             bool wasCorrectMove = matcher.PieceChains.Count > 0;
             if (wasCorrectMove == false)

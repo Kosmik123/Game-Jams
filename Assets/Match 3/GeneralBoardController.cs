@@ -2,15 +2,23 @@
 
 namespace Bipolar.Match3
 {
+    public class GeneralBoardCollapsing : BoardCollapsing<GeneralBoard>
+    {
+        public override void Collapse()
+        {
+            throw new System.NotImplementedException();
+        }
+    }
+
     [RequireComponent(typeof(GeneralBoard))]
-    public class GeneralBoardController : BoardController<GeneralBoard>
+    public class GeneralBoardController : BoardController<GeneralBoard, GeneralBoardCollapsing>
     {
         public override event System.Action OnPiecesColapsed;
-        public override event PiecesSwapEventHandler OnTokensSwapped;
+        public override event PiecesSwapEventHandler OnPiecesSwapped;
 
         [SerializeField]
-        private GeneralBoardPiecesMovementManager tokensMovementManager;
-        public override bool AreTokensMoving => tokensMovementManager.ArePiecesMoving;
+        private GeneralBoardPiecesMovementManager piecesMovementManager;
+        public override bool ArePiecesMoving => piecesMovementManager.ArePiecesMoving;
 
         public override void Collapse()
         {
@@ -26,12 +34,12 @@ namespace Bipolar.Match3
             }
 
             if (colapsed)
-                tokensMovementManager.OnPiecesMovementStopped += CallCollapseEvent;
+                piecesMovementManager.OnPiecesMovementStopped += CallCollapseEvent;
         }
 
         private void CallCollapseEvent()
         {
-            tokensMovementManager.OnPiecesMovementStopped -= CallCollapseEvent;
+            piecesMovementManager.OnPiecesMovementStopped -= CallCollapseEvent;
             OnPiecesColapsed?.Invoke();
         }
 
@@ -48,7 +56,7 @@ namespace Bipolar.Match3
                 }
                 else if (nonExistingTokensCount > 0)
                 {
-                    tokensMovementManager.StartTokenMovement(token, line, index, nonExistingTokensCount);
+                    piecesMovementManager.StartPieceMovement(token, line, index, nonExistingTokensCount);
                 }
             }
             return nonExistingTokensCount;
@@ -62,11 +70,11 @@ namespace Bipolar.Match3
             for (int i = 0; i < count; i++)
             {
                 var coord = line.Coords[i];
-                var newToken = CreateToken(coord);
+                var newToken = CreatePiece(coord);
 
                 var spawningPosition = firstCellPosition + (Vector3)(creatingDirection * (count - i));
                 newToken.transform.position = spawningPosition;
-                tokensMovementManager.StartTokenMovement(newToken, line, -1, i + 1);
+                piecesMovementManager.StartPieceMovement(newToken, line, -1, i + 1);
             }
         }
 
@@ -79,7 +87,7 @@ namespace Bipolar.Match3
             token2.transform.position = Board.CoordToWorld(tokenCoord1);
             token1.transform.position = Board.CoordToWorld(tokenCoord2);
 
-            OnTokensSwapped(tokenCoord1, tokenCoord2);
+            OnPiecesSwapped(tokenCoord1, tokenCoord2);
         }
     }
 }

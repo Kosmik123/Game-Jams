@@ -2,48 +2,94 @@
 
 namespace Bipolar.Match3
 {
+    [DisallowMultipleComponent, RequireComponent(typeof(Board), typeof(BoardCollapsing<>))]
     public abstract class BoardController : MonoBehaviour
     {
         public abstract event System.Action OnPiecesColapsed;
-        public abstract event PiecesSwapEventHandler OnTokensSwapped;
+        public abstract event PiecesSwapEventHandler OnPiecesSwapped;
 
         public abstract Board Board { get; }
 
         [SerializeField]
-        private PiecesSpawner tokensSpawner;
-        public PiecesSpawner TokensSpawner
+        private PiecesSpawner piecesSpawner;
+        public PiecesSpawner PiecesSpawner
         {
-            get => tokensSpawner;
-            set => tokensSpawner = value;
+            get => piecesSpawner;
+            set => piecesSpawner = value;
         }
 
         [SerializeField]
-        private PieceTypeProvider tokenTypeProvider;
-        public PieceTypeProvider TokenTypeProvider
+        private PieceTypeProvider pieceTypeProvider;
+        public PieceTypeProvider PieceTypeProvider
         {
-            get => tokenTypeProvider;
-            set => tokenTypeProvider = value;
+            get => pieceTypeProvider;
+            set => pieceTypeProvider = value;
         }
 
-        public abstract bool AreTokensMoving { get; }
+        public abstract bool ArePiecesMoving { get; }
 
-        protected Piece CreateToken(Vector2Int coord)
+        protected Piece CreatePiece(Vector2Int coord)
         {
-            var token = TokensSpawner.SpawnPiece();
-            token.Type = TokenTypeProvider.GetPieceType(coord.x, coord.y);
-            Board[coord] = token;
-            return token;
+            var piece = PiecesSpawner.SpawnPiece();
+            piece.Type = PieceTypeProvider.GetPieceType(coord.x, coord.y);
+            Board[coord] = piece;
+            return piece;
         }
 
         public abstract void Collapse();
 
-        public abstract void SwapTokens(Vector2Int tokenCoord1, Vector2Int tokenCoord2);
+        public abstract void SwapTokens(Vector2Int pieceCoord1, Vector2Int pieceCoord2);
     }
 
-    public abstract class BoardController<T> : BoardController where T : Board
+    public abstract class BoardController<TBoard, TCollapsing> : BoardController
+        where TBoard : Board
+        where TCollapsing : BoardCollapsing<TBoard>
     {
-        [SerializeField]
-        protected T board;
-        public override Board Board => board;
+        protected TBoard board;
+        public override Board Board
+        {
+            get
+            {
+                if (board == null)
+                    board = GetComponent<TBoard>(); 
+                return board;
+            }
+        }
+
+        protected TCollapsing collapsing;
+        public TCollapsing Collapsing
+        {
+            get
+            {
+                if (collapsing == null)
+                    collapsing = GetComponent<TCollapsing>();
+                return collapsing;
+            }
+        }
+
+        private void Awake()
+        {
+            board = GetComponent<TBoard>();
+        }
+
+        public override void Collapse() => Collapsing.Collapse();
+    }
+
+    [RequireComponent(typeof(Board)), DisallowMultipleComponent]
+    public abstract class BoardCollapsing<TBoard>: MonoBehaviour
+        where TBoard : Board
+    {
+        private TBoard board;
+        public TBoard Board
+        {
+            get
+            {
+                if (board == null)
+                    board = GetComponent<TBoard>();
+                return board;
+            }
+        }
+
+        public abstract void Collapse();
     }
 }

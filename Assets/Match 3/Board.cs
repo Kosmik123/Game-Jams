@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Bipolar.Match3
 {
-    [RequireComponent(typeof(Grid))]
+    [RequireComponent(typeof(Grid)), DisallowMultipleComponent]
     public abstract class Board : MonoBehaviour
     {
         private Grid _grid;

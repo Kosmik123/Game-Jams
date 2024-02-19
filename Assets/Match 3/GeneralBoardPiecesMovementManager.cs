@@ -15,7 +15,7 @@ namespace Bipolar.Match3
         private readonly Dictionary<Piece, Coroutine> pieceMovementCoroutines = new Dictionary<Piece, Coroutine>();
         public override bool ArePiecesMoving => pieceMovementCoroutines.Count > 0;
 
-        public void StartTokenMovement(Piece piece, GeneralBoard.CoordsLine line, int fromIndex, int cellDistance)
+        public void StartPieceMovement(Piece piece, GeneralBoard.CoordsLine line, int fromIndex, int cellDistance)
         {
             var movementCoroutine = StartCoroutine(MovementCo(piece, line, fromIndex, cellDistance));
             pieceMovementCoroutines.Add(piece, movementCoroutine);
