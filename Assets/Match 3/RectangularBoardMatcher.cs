@@ -4,21 +4,11 @@ using UnityEngine;
 
 namespace Bipolar.Match3
 {
-    public class RectangularBoardMatcher : MonoBehaviour
+    public class RectangularBoardMatcher : Matcher
     {
-        private static readonly Vector2Int[] chainsDirections =
-        {
-            Vector2Int.right,
-            Vector2Int.up,
-            Vector2Int.left,
-            Vector2Int.down
-        };
-
-        private readonly List<TokensChain> tokenChains = new List<TokensChain>();
-        public IReadOnlyList<TokensChain> TokenChains => tokenChains;
-
         private readonly Queue<Vector2Int> coordsToCheck = new Queue<Vector2Int>();
 
+        public override void FindAndCreateTokenChains(Board board) => FindAndCreateTokenChains((RectangularBoard) board);
         public void FindAndCreateTokenChains(RectangularBoard board)
         {
             tokenChains.Clear();
@@ -33,84 +23,6 @@ namespace Bipolar.Match3
                     CreateTokensChain(board, coord, coordsToCheck);
                 }
             }
-        }
-
-        private void CreateTokensChain(RectangularBoard board, Vector2Int coord, Queue<Vector2Int> coordsToCheck = null)
-        {
-            coordsToCheck ??= new Queue<Vector2Int>();
-            coordsToCheck.Clear();
-            coordsToCheck.Enqueue(coord);
-            var chain = new TriosTokensChain();
-            chain.TokenType = board.GetToken(coord).Type;
-            FindMatches(board, chain, coordsToCheck);
-
-            if (chain.IsMatchFound)
-                tokenChains.Add(chain);
-        }
-
-        private static void FindMatches(RectangularBoard board, TriosTokensChain chain, Queue<Vector2Int> coordsToCheck)
-        {
-            while (coordsToCheck.Count > 0)
-            {
-                var tokenCoord = coordsToCheck.Dequeue();
-                chain.Add(tokenCoord);
-                foreach (var direction in chainsDirections)
-                {
-                    TryAddLineToChain(board, chain, tokenCoord, direction, coordsToCheck);
-                }
-            }
-        }
-
-        private static bool TryAddLineToChain(RectangularBoard board, TriosTokensChain chain, Vector2Int tokenCoord, Vector2Int direction, Queue<Vector2Int> coordsToCheck)
-        {
-            var nearCoord = tokenCoord + direction;
-            var nearToken = board.GetToken(nearCoord);
-            if (nearToken == null || chain.TokenType != nearToken.Type)
-                return false;
-
-            var backCoord = tokenCoord - direction;
-            var backToken = board.GetToken(backCoord);
-            if (backToken && chain.TokenType == backToken.Type)
-            {
-                chain.IsMatchFound = true;
-                TryEnqueueCoord(chain, coordsToCheck, nearCoord);
-                TryEnqueueCoord(chain, coordsToCheck, backCoord);
-                AddLineToChain(chain, tokenCoord, direction);
-                return true;
-            }
-
-            var furtherCoord = nearCoord + direction;
-            var furtherToken = board.GetToken(furtherCoord);
-            if (furtherToken && chain.TokenType == furtherToken.Type)
-            {
-                chain.IsMatchFound = true;
-                TryEnqueueCoord(chain, coordsToCheck, nearCoord);
-                TryEnqueueCoord(chain, coordsToCheck, furtherCoord);
-                AddLineToChain(chain, nearCoord, direction);
-                return true;
-            }
-
-            return false;
-        }
-
-        private static void AddLineToChain(TriosTokensChain chain, Vector2Int centerCoord, Vector2Int direction)
-        {
-            if (direction.x != 0)
-                chain.AddHorizontal(centerCoord);
-            else if (direction.y != 0)
-                chain.AddVertical(centerCoord);
-        }
-
-        private static bool TryEnqueueCoord(TokensChain chain, Queue<Vector2Int> coordsToCheck, Vector2Int coord)
-        {
-            if (chain.Contains(coord))
-                return false;
-
-            if (coordsToCheck.Contains(coord))
-                return false;
-
-            coordsToCheck.Enqueue(coord);
-            return true;
         }
     }
 }

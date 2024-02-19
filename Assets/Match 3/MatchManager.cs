@@ -16,7 +16,7 @@ namespace Bipolar.Match3
         private SwapManager swapManager;
 
         [SerializeField]
-        private RectangularBoardMatcher matcher;
+        private Matcher matcher;
 
         [SerializeField]
         private int combo;
@@ -65,7 +65,7 @@ namespace Bipolar.Match3
 
         private void FindMatches()
         {
-            matcher.FindAndCreateTokenChains((RectangularBoard)boardController.Board);
+            matcher.FindAndCreateTokenChains(boardController.Board);
 
             combo += matcher.TokenChains.Count;
             foreach (var chain in matcher.TokenChains)
