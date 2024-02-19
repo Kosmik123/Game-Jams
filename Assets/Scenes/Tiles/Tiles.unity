@@ -1063,10 +1063,11 @@ GameObject:
   - component: {fileID: 675987279}
   - component: {fileID: 675987278}
   - component: {fileID: 675987277}
-  - component: {fileID: 675987280}
   - component: {fileID: 675987281}
   - component: {fileID: 675987282}
   - component: {fileID: 675987284}
+  - component: {fileID: 675987283}
+  - component: {fileID: 675987280}
   m_Layer: 0
   m_Name: General Board
   m_TagString: Untagged
@@ -1125,13 +1126,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 675987276}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: abbde8c0b88dc8a4a994a2f3a6a9c515, type: 3}
+  m_Script: {fileID: 11500000, guid: c575867b5e663ae4b8fa50bcf59e035a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tokensSpawner: {fileID: 675987281}
-  tokenTypeProvider: {fileID: 675987282}
-  board: {fileID: 675987277}
-  tokensMovementManager: {fileID: 675987284}
+  piecesSpawner: {fileID: 675987281}
+  pieceTypeProvider: {fileID: 675987282}
 --- !u!114 &675987281
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1144,8 +1143,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bb5b0b50e4443aa4c956db5c0986a3bf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tokenPrototype: {fileID: 8659477918814487130, guid: 99f817c17fef7814f91b2e2618469c76, type: 3}
-  tokensContainer: {fileID: 372769027}
+  piecePrototype: {fileID: 3718595752069920288, guid: 99f817c17fef7814f91b2e2618469c76, type: 3}
+  piecesContainter: {fileID: 372769027}
 --- !u!114 &675987282
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1159,6 +1158,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   settings: {fileID: 11400000, guid: bfcf2dc1b16691f419860f7968a3652b, type: 2}
+--- !u!114 &675987283
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 675987276}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: abbde8c0b88dc8a4a994a2f3a6a9c515, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  tokensMovementManager: {fileID: 675987284}
 --- !u!114 &675987284
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1201,7 +1213,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 21c02f4b810770947bb7534b24e5d33f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  boardController: {fileID: 675987280}
+  boardController: {fileID: 675987283}
   swapManager: {fileID: 0}
   matcher: {fileID: 834524619}
   combo: 0

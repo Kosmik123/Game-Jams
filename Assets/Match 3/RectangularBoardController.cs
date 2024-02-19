@@ -3,7 +3,7 @@
 namespace Bipolar.Match3
 {
     [RequireComponent(typeof(RectangularBoard), typeof(RectangularBoardCollapsing))]
-    public class RectangularBoardController : BoardController<RectangularBoard, RectangularBoardCollapsing>
+    public class RectangularBoardController : BoardController<RectangularBoard>
     {
         public override event PiecesSwapEventHandler OnPiecesSwapped;
 
@@ -14,7 +14,7 @@ namespace Bipolar.Match3
         protected override void Awake()
         {
             base.Awake();
-            Collapsing.Init(piecesMovementManager);
+            (Collapsing as RectangularBoardCollapsing).Init(piecesMovementManager);
         }
 
         private System.Action swapEndedCallback;
