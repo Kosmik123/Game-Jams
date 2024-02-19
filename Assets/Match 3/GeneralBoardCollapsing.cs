@@ -33,21 +33,24 @@ namespace Bipolar.Match3
 
         private int CollapseTokensInLine(GeneralBoard.CoordsLine line)
         {
-            int nonExistingTokensCount = 0;
+            int nonExistingPiecesCount = 0;
             for (int index = line.Coords.Count - 1; index >= 0; index--)
             {
                 var coord = line.Coords[index];
-                var token = Board.GetPiece(coord);
-                if (token == null || token.IsCleared)
+                var piece = Board.GetPiece(coord);
+                if (piece == null || piece.IsCleared)
                 {
-                    nonExistingTokensCount++;
+                    nonExistingPiecesCount++;
                 }
-                else if (nonExistingTokensCount > 0)
+                else if (nonExistingPiecesCount > 0)
                 {
-                    piecesMovementManager.StartPieceMovement(token, line, index, nonExistingTokensCount);
+                    var targetCoord = line.Coords[index + nonExistingPiecesCount];
+                    Board[coord] = null;
+                    Board[targetCoord] = piece;
+                    piecesMovementManager.StartPieceMovement(piece, line, index, nonExistingPiecesCount);
                 }
             }
-            return nonExistingTokensCount;
+            return nonExistingPiecesCount;
         }
 
         private void RefillLine(GeneralBoard.CoordsLine line, int count)
@@ -59,7 +62,6 @@ namespace Bipolar.Match3
             {
                 var coord = line.Coords[i];
                 var newPiece = CreatePiece(coord);
-
                 var spawningPosition = firstCellPosition + (Vector3)(creatingDirection * (count - i));
                 newPiece.transform.position = spawningPosition;
                 piecesMovementManager.StartPieceMovement(newPiece, line, -1, i + 1);

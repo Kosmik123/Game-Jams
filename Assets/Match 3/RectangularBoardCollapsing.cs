@@ -58,7 +58,7 @@ namespace Bipolar.Match3
             int startCellIndex = CollapseDirection[collapseAxis] > 0 ? -1 : 0; // odwrócony warunek
             int lineCollapseDirection = CollapseDirection[collapseAxis] == 0 ? 1 : -CollapseDirection[collapseAxis];
 
-            int nonExistingTokensCount = 0; // inna rzecz
+            int nonExistingPiecesCount = 0; // inna rzecz
             for (int i = 0; i < lineSize; i++) // troszkę inne
             {
                 var coord = Vector2Int.zero; // to samo
@@ -69,11 +69,11 @@ namespace Bipolar.Match3
                 var piece = Board.GetPiece(coord);
                 if (piece == null || piece.IsCleared)
                 {
-                    nonExistingTokensCount++;
+                    nonExistingPiecesCount++;
                 }
-                else if (nonExistingTokensCount > 0)
+                else if (nonExistingPiecesCount > 0)
                 {
-                    var offsetToMove = CollapseDirection * nonExistingTokensCount;
+                    var offsetToMove = CollapseDirection * nonExistingPiecesCount;
                     var targetCoord = coord + offsetToMove;
                     Board[coord] = null;
                     Board[targetCoord] = piece;
@@ -81,7 +81,7 @@ namespace Bipolar.Match3
                 }
             }
 
-            return nonExistingTokensCount;
+            return nonExistingPiecesCount;
         }
 
         private void CallCollapseEvent()
