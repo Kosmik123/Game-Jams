@@ -9,11 +9,9 @@ namespace Bipolar.Match3
         public abstract event System.Action OnPiecesColapsed;
 
         public abstract Board Board { get; }
-
         public abstract bool ArePiecesMoving { get; }
 
         public abstract void Collapse();
-
         public abstract void SwapTokens(Vector2Int pieceCoord1, Vector2Int pieceCoord2);
     }
 

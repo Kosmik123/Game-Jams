@@ -516,27 +516,27 @@ Tilemap:
   m_TileMatrixArray:
   - m_RefCount: 0
     m_Data:
-      e00: 0.0044564977
-      e01: 0.025507927
-      e02: 2.0575027
-      e03: -1.6290193e+10
+      e00: -0.0000000035365595
+      e01: -0.00000002071738
+      e02: 1.109214e-19
+      e03: -13.515358
       e10: 4.5904e-41
       e11: 4.5904e-41
-      e12: 6.6e-43
-      e13: 6.57e-43
-      e20: 0.00007119842
-      e21: -3452362
-      e22: -3452132
-      e23: -3452132
+      e12: 5.31e-43
+      e13: 5.28e-43
+      e20: -5.6005298e-11
+      e21: -0.00000034407117
+      e22: -0.00000034404502
+      e23: -0.00000034404502
       e30: 4.5904e-41
-      e31: 1.18e-43
-      e32: 1.18e-43
-      e33: 1.18e-43
+      e31: 1e-43
+      e32: 1e-43
+      e33: 1e-43
   m_TileColorArray:
   - m_RefCount: 0
     m_Data: {r: 2.055828, g: 2.055828, b: 2.055828, a: 2.055828}
   - m_RefCount: 0
-    m_Data: {r: 2.0575027, g: 2.0575027, b: 2.0575027, a: 2.0575027}
+    m_Data: {r: 1.109214e-19, g: 1.109214e-19, b: 1.109214e-19, a: 1.109214e-19}
   m_TileObjectToInstantiateArray: []
   m_AnimationFrameRate: 1
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -607,6 +607,7 @@ GameObject:
   - component: {fileID: 916716448}
   - component: {fileID: 916716447}
   - component: {fileID: 916716450}
+  - component: {fileID: 916716451}
   m_Layer: 0
   m_Name: Grid
   m_TagString: Untagged
@@ -638,7 +639,7 @@ Grid:
   m_CellSize: {x: 1.04, y: 1.2, z: 1}
   m_CellGap: {x: 0, y: 0, z: 0}
   m_CellLayout: 1
-  m_CellSwizzle: 2
+  m_CellSwizzle: 0
 --- !u!4 &916716446
 Transform:
   m_ObjectHideFlags: 0
@@ -680,8 +681,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bb5b0b50e4443aa4c956db5c0986a3bf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tokenPrototype: {fileID: 8659477918814487130, guid: 99f817c17fef7814f91b2e2618469c76, type: 3}
-  tokensContainer: {fileID: 386991088}
+  piecePrototype: {fileID: 0}
+  piecesContainter: {fileID: 0}
 --- !u!114 &916716449
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -694,10 +695,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: abbde8c0b88dc8a4a994a2f3a6a9c515, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tokensSpawner: {fileID: 916716448}
-  tokenTypeProvider: {fileID: 916716447}
-  board: {fileID: 916716444}
-  tokensMovementManager: {fileID: 916716450}
+  piecesMovementManager: {fileID: 0}
 --- !u!114 &916716450
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -710,6 +708,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b5749d51da1d2844cab8fb7eb4dc355b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &916716451
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 916716443}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c575867b5e663ae4b8fa50bcf59e035a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  piecesSpawner: {fileID: 0}
+  pieceTypeProvider: {fileID: 0}
+  directionsTilemaps: []
 --- !u!1 &1982034483
 GameObject:
   m_ObjectHideFlags: 0

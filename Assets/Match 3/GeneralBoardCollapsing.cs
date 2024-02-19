@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.Tilemaps;
 
 namespace Bipolar.Match3
 {
@@ -7,7 +9,22 @@ namespace Bipolar.Match3
     {
         public override event System.Action OnPiecesColapsed;
 
+        [SerializeField]
+        private Tilemap[] directionsTilemaps;
+
         private GeneralBoardPiecesMovementManager piecesMovementManager;
+
+        private readonly Dictionary<Vector2Int, Vector2Int> directions = new Dictionary<Vector2Int, Vector2Int>();
+
+        private void Awake()
+        {
+            CreateCollapseDirections();
+        }
+
+        private void CreateCollapseDirections()
+        {
+            var tilemap = directionsTilemaps[0];
+        }
 
         public void Init (GeneralBoardPiecesMovementManager movementManager)
         {
@@ -16,20 +33,27 @@ namespace Bipolar.Match3
 
         public override void Collapse()
         {
-            bool colapsed = false;
+            bool collapsed = false;
             foreach (var line in Board.Lines)
             {
                 int emptyCellsCount = CollapseTokensInLine(line);
                 if (emptyCellsCount > 0)
                 {
-                    colapsed = true;
+                    collapsed = true;
                     RefillLine(line, emptyCellsCount);
                 }
             }
 
-            if (colapsed)
+            if (collapsed)
                 piecesMovementManager.OnPiecesMovementStopped += CallCollapseEvent;
         }
+
+        private bool TryGetTile(Vector2Int coord, Tilemap tilemap, out GeneralBoardTile tile)
+        {
+            tile = tilemap.GetTile<GeneralBoardTile>((Vector3Int)coord);
+            return tile != null;
+        }
+
 
         private int CollapseTokensInLine(GeneralBoard.CoordsLine line)
         {

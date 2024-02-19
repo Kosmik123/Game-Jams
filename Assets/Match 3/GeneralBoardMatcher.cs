@@ -21,6 +21,4 @@ namespace Bipolar.Match3
             }
         }
     }
-
-
 }

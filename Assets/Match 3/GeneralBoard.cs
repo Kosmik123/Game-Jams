@@ -7,7 +7,7 @@ namespace Bipolar.Match3
 {
     public class GeneralBoard : Board
     {
-        [SerializeField]
+        [SerializeField, Tooltip("Provides board shape")]
         private Tilemap tilemap;
 
         private readonly List<Vector2Int> includedCoords = new List<Vector2Int>();
@@ -19,15 +19,16 @@ namespace Bipolar.Match3
             get => piecesByCoords[coord];
             set => piecesByCoords[coord] = value; 
         }
+        public override IReadOnlyCollection<Piece> Pieces => piecesByCoords.Values;
 
+
+        // TO PRZENIEŚĆ DO COLLAPSING
         private readonly Dictionary<Vector2Int, Vector2Int> directions = new Dictionary<Vector2Int, Vector2Int>();
-
-        public Vector2Int GetCoordFromIndex(int index) => includedCoords[index];
 
         private CoordsLine[] lines;
         public IReadOnlyList<CoordsLine> Lines => lines;
+        // Aż DOTĄD
 
-        public override IReadOnlyCollection<Piece> Pieces => piecesByCoords.Values;
 
         private void Reset()
         {
@@ -36,11 +37,27 @@ namespace Bipolar.Match3
 
         protected override void Awake()
         {
-            RefreshBoard();
+            CreateBoardShape();
+        }
+
+        public void CreateBoardShape()
+        {
+            includedCoords.Clear();
+            var coordBounds = tilemap.cellBounds;
+            for (int y = coordBounds.yMin; y <= coordBounds.yMax; y++)
+            {
+                for (int x = coordBounds.xMin; x <= coordBounds.xMax; x++)
+                {
+                    var coord = new Vector2Int(x, y);
+                    var tile = tilemap.GetTile((Vector3Int)coord);
+                    if (tile != null)
+                        includedCoords.Add(coord);
+                }
+            }
         }
 
         [ContextMenu("Refresh")]
-        public void RefreshBoard()
+        public void RefreshBoardOLD()
         {
             includedCoords.Clear();
             var coordBounds = tilemap.cellBounds;
@@ -90,9 +107,8 @@ namespace Bipolar.Match3
                 var targetCoord = coord + direction;
                 if (tile.Jump)
                 {
-                    Debug.Log("Jump");
                     bool hasJumpTarget = false;
-                    while (TilemapContainsCoord(targetCoord))
+                    while (TilemapContainsCoord(tilemap, targetCoord))
                     {
                         if (TryGetTile(targetCoord, out _))
                         {
@@ -149,7 +165,7 @@ namespace Bipolar.Match3
             }
         }
 
-        private bool TilemapContainsCoord(Vector2Int coord)
+        public static bool TilemapContainsCoord(Tilemap tilemap, Vector2Int coord)
         {
             var bounds = tilemap.cellBounds;
             return coord.y >= bounds.yMin && coord.y < bounds.yMax && coord.x >= bounds.xMin && coord.x < bounds.xMax;
@@ -244,6 +260,12 @@ namespace Bipolar.Match3
 
         private void OnDrawGizmosSelected()
         {
+            Gizmos.color = new Color(0, 1, 1, 0.5f);
+            foreach (var coord in includedCoords)
+            {
+                Gizmos.DrawSphere(CoordToWorld(coord), 0.4f);
+            }
+
             if (Lines != null && includedCoords.Count > 0)
             {
                 foreach (var line in Lines)

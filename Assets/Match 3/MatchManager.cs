@@ -35,7 +35,7 @@ namespace Bipolar.Match3
 
         private void SwapManager_OnSwapRequested(Vector2Int pieceCoord1, Vector2Int pieceCoord2)
         {
-            if (boardController.ArePiecesMoving == false && currentlyClearedTokens.Count <= 0)
+            if (boardController.ArePiecesMoving == false && currentlyClearedPieces.Count <= 0)
                 SwapTokens(pieceCoord1, pieceCoord2);
         }
 
@@ -75,13 +75,13 @@ namespace Bipolar.Match3
             }
         }
 
-        private readonly List<Piece> currentlyClearedTokens = new List<Piece>();
+        private readonly List<Piece> currentlyClearedPieces = new List<Piece>();
         private void ClearChainPieces(PiecesChain chain)
         {
             foreach (var coord in chain.PiecesCoords)
             {
                 var piece = boardController.Board.GetPiece(coord);
-                currentlyClearedTokens.Add(piece);
+                currentlyClearedPieces.Add(piece);
                 piece.OnCleared += Piece_OnCleared;
                 boardController.Board[coord] = null;
                 if (piece.TryGetComponent<PieceClearingBehavior>(out var clearing))
@@ -98,8 +98,8 @@ namespace Bipolar.Match3
         private void Piece_OnCleared(Piece piece)
         {
             piece.OnCleared -= Piece_OnCleared;
-            currentlyClearedTokens.Remove(piece);
-            if (currentlyClearedTokens.Count <= 0)
+            currentlyClearedPieces.Remove(piece);
+            if (currentlyClearedPieces.Count <= 0)
                 boardController.Collapse();
         }
 

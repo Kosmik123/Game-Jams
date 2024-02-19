@@ -8,13 +8,13 @@ namespace Bipolar.Match3
         public override event PiecesSwapEventHandler OnPiecesSwapped;
 
         [SerializeField]
-        private GeneralBoardPiecesMovementManager tokensMovementManager;
-        public override bool ArePiecesMoving => tokensMovementManager.ArePiecesMoving;
+        private GeneralBoardPiecesMovementManager piecesMovementManager;
+        public override bool ArePiecesMoving => piecesMovementManager.ArePiecesMoving;
 
         protected override void Awake()
         {
             base.Awake();
-            (Collapsing as GeneralBoardCollapsing).Init(tokensMovementManager);
+            (Collapsing as GeneralBoardCollapsing).Init(piecesMovementManager);
         }
 
         public override void SwapTokens(Vector2Int pieceCoord1, Vector2Int pieceCoord2)
@@ -25,7 +25,6 @@ namespace Bipolar.Match3
             piece1.transform.position = Board.CoordToWorld(pieceCoord2);
             
             (Board[pieceCoord1], Board[pieceCoord2]) = (Board[pieceCoord2], Board[pieceCoord1]);
-
             OnPiecesSwapped?.Invoke(pieceCoord1, pieceCoord2);
         }
     }

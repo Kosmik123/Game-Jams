@@ -2,8 +2,6 @@
 {
     public static class CreateAssetsPath
     {
-        public const string Root = "Bipolar/Match 3/";
+        public const string Root = "Bipolar/Match-3/";
     }
 }
-
-
