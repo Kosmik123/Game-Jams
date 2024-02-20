@@ -23,11 +23,11 @@ namespace Bipolar.Match3
 
         private void Awake()
         {
-             CreateCollapseDirections();
+            CreateLines();
         }
 
         [ContextMenu("Refresh")]
-        private void CreateCollapseDirections()
+        private void CreateLines()
         {
             directions.Clear();
             jumpTiles.Clear();
@@ -44,32 +44,8 @@ namespace Bipolar.Match3
             for (int coordIndex = 0; coordIndex < Board.Coords.Count; coordIndex++)
             {
                 var coord = Board.Coords[coordIndex];
-                if (TryGetTile(coord, out var tile) == false)
-                    continue;
-
-                var direction = DirectionTile.GetTileDirection(coord, tile, isBoardHexagonal);
-                directions.Add(coord, direction);
-
-                startingCoords.Add(coord);
-                if (direction == Vector2Int.zero)
-                {
-                    endingCoords.Add(coord);
-                    continue;
-                }
-
-                var targetCoord = coord + direction;
-                if (Board.Coords.Contains(targetCoord) == false)
-                {
-                    endingCoords.Add(coord);
-                    continue;
-                }
-
-                notEndingCoords.Add(coord);
-                endingCoords.Add(targetCoord);
-                notStartingCoords.Add(targetCoord);
-
-                if (tempSourceCoordsDict.ContainsKey(targetCoord) == false)
-                    tempSourceCoordsDict.Add(targetCoord, coord);
+                HandleCoordCreation(coord, isBoardHexagonal, startingCoords, endingCoords,
+                    notStartingCoords, notEndingCoords, tempSourceCoordsDict);
             }
 
             startingCoords.ExceptWith(notStartingCoords);
@@ -85,7 +61,39 @@ namespace Bipolar.Match3
                 lines[lineIndex] = CreateCoordsLine(coord, tempTargetCoordsDict);
                 lineIndex++;
             }
-            Debug.Log(lines.Length);
+        }
+
+        private void HandleCoordCreation(Vector2Int coord, bool isBoardHexagonal, 
+            HashSet<Vector2Int> startingCoords, HashSet<Vector2Int> endingCoords,
+            HashSet<Vector2Int> notStartingCoords, HashSet<Vector2Int> notEndingCoords,
+            Dictionary<Vector2Int, Vector2Int> targetToSourceDictionary)
+        {
+            if (TryGetTile(coord, out var tile) == false)
+                return;
+
+            var direction = DirectionTile.GetTileDirection(coord, tile, isBoardHexagonal);
+            directions.Add(coord, direction);
+
+            startingCoords.Add(coord);
+            if (direction == Vector2Int.zero)
+            {
+                endingCoords.Add(coord);
+                return;
+            }
+
+            var targetCoord = coord + direction;
+            if (Board.Coords.Contains(targetCoord) == false)
+            {
+                endingCoords.Add(coord);
+                return;
+            }
+
+            notEndingCoords.Add(coord);
+            endingCoords.Add(targetCoord);
+            notStartingCoords.Add(targetCoord);
+
+            if (targetToSourceDictionary.ContainsKey(targetCoord) == false)
+                targetToSourceDictionary.Add(targetCoord, coord);
         }
 
         private CoordsLine CreateCoordsLine(Vector2Int startingCoord, IReadOnlyDictionary<Vector2Int, Vector2Int> targetCoordsDict)
