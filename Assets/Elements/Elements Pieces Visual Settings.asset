@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 88ee220fe9c037448b28e6a4e1137e77, type: 3}
+  m_Name: Elements Pieces Visual Settings
+  m_EditorClassIdentifier: 
+  pieceVisualMappings:
+  - type: {fileID: 11400000, guid: e3a00bc9fa373e34a8be4fe3aab07ed7, type: 2}
+    color: {r: 1, g: 1, b: 1, a: 1}
+    sprite: {fileID: -5391307981071726051, guid: 69696ad852491464d9998c550362b8ca, type: 3}
+  - type: {fileID: 11400000, guid: 074ff03ef5942ed46be89adbfecfb20f, type: 2}
+    color: {r: 1, g: 1, b: 1, a: 1}
+    sprite: {fileID: 869762779325548650, guid: 69696ad852491464d9998c550362b8ca, type: 3}
+  - type: {fileID: 11400000, guid: 6d2984aae7089e4409e4b1c3881b82f4, type: 2}
+    color: {r: 1, g: 1, b: 1, a: 1}
+    sprite: {fileID: -3293433503042108997, guid: 69696ad852491464d9998c550362b8ca, type: 3}
+  - type: {fileID: 11400000, guid: a3380cf0eb6bc3448b3acdb0ba7739d8, type: 2}
+    color: {r: 1, g: 1, b: 1, a: 1}
+    sprite: {fileID: -8115037194750826008, guid: 69696ad852491464d9998c550362b8ca, type: 3}
