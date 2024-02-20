@@ -77,11 +77,12 @@ namespace Bipolar.Match3
 
         private void OnDrawGizmosSelected()
         {
-            Gizmos.color = new Color(0, 1, 1, 0.5f);
+            if (includedCoords == null)
+                return;
+
+            Gizmos.color = 0.7f * Color.white;
             foreach (var coord in includedCoords)
-            {
-                Gizmos.DrawSphere(CoordToWorld(coord), 0.4f);
-            }
+                Gizmos.DrawSphere(CoordToWorld(coord), 0.3f);
         }
     }
 }

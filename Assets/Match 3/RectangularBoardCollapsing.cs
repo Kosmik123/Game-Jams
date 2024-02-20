@@ -7,7 +7,7 @@ namespace Bipolar.Match3
     {
         public override event System.Action OnPiecesColapsed;
 
-        protected RectangularBoardPiecesMovementManager piecesMovementManager;
+        protected DefaultPiecesMovementManager piecesMovementManager;
 
         [SerializeField]
         private MoveDirection collapseDirection;
@@ -27,7 +27,7 @@ namespace Bipolar.Match3
             }
         }
 
-        public void Init(RectangularBoardPiecesMovementManager piecesMovementManager)
+        public void Init(DefaultPiecesMovementManager piecesMovementManager)
         {
             this.piecesMovementManager = piecesMovementManager;
         }

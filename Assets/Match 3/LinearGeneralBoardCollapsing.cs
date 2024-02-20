@@ -10,7 +10,8 @@ namespace Bipolar.Match3
     {
         public override event System.Action OnPiecesColapsed;
 
-        private GeneralBoardPiecesMovementManager piecesMovementManager;
+        [SerializeField]
+        private LinearGeneralBoardPiecesMovementManager piecesMovementManager;
 
         private readonly Dictionary<Vector2Int, Vector2Int> directions = new Dictionary<Vector2Int, Vector2Int>();
         private readonly HashSet<Vector2Int> jumpTiles = new HashSet<Vector2Int>();
@@ -24,11 +25,6 @@ namespace Bipolar.Match3
         private void Awake()
         {
              CreateCollapseDirections();
-        }
-
-        public void Init(GeneralBoardPiecesMovementManager movementManager)
-        {
-            piecesMovementManager = movementManager;
         }
 
         [ContextMenu("Refresh")]

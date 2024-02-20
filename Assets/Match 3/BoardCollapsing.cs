@@ -2,7 +2,7 @@
 
 namespace Bipolar.Match3
 {
-    [RequireComponent(typeof(Board)), DisallowMultipleComponent]
+    [DisallowMultipleComponent, RequireComponent(typeof(Board))]
     public abstract class BoardCollapsing<TBoard>: MonoBehaviour
         where TBoard : Board
     {
@@ -33,6 +33,20 @@ namespace Bipolar.Match3
         {
             get => pieceTypeProvider;
             set => pieceTypeProvider = value;
+        }
+
+        [SerializeField]
+        private bool collapseOnStart;
+        public bool CollapseOnStart
+        {
+            get => collapseOnStart;
+            set => collapseOnStart = value;
+        }
+
+        protected virtual void Start()
+        {
+            if (collapseOnStart)
+                Collapse();
         }
 
         public abstract void Collapse();

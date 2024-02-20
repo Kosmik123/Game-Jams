@@ -8,7 +8,7 @@ namespace Bipolar.Match3
         public override event PiecesSwapEventHandler OnPiecesSwapped;
 
         [SerializeField]
-        private RectangularBoardPiecesMovementManager piecesMovementManager;
+        private DefaultPiecesMovementManager piecesMovementManager;
 
         public override bool ArePiecesMoving => piecesMovementManager.ArePiecesMoving;
         protected override void Awake()
@@ -28,7 +28,7 @@ namespace Bipolar.Match3
 
             (Board[pieceCoord1], Board[pieceCoord2]) = (Board[pieceCoord2], Board[pieceCoord1]);
 
-            piecesMovementManager.OnPiecesMovementStopped += BoardController_OnPiecesMovementStopped;
+            piecesMovementManager.OnPiecesMovementStopped += PiecesMovementManager_OnPiecesMovementStopped;
             swapEndedCallback = () =>
             {
                 swapEndedCallback = null;
@@ -36,9 +36,9 @@ namespace Bipolar.Match3
             };
         }
 
-        private void BoardController_OnPiecesMovementStopped()
+        private void PiecesMovementManager_OnPiecesMovementStopped()
         {
-            piecesMovementManager.OnPiecesMovementStopped -= BoardController_OnPiecesMovementStopped;
+            piecesMovementManager.OnPiecesMovementStopped -= PiecesMovementManager_OnPiecesMovementStopped;
             swapEndedCallback.Invoke();
         }
     }

@@ -8,24 +8,33 @@ namespace Bipolar.Match3
         public override event PiecesSwapEventHandler OnPiecesSwapped;
 
         [SerializeField]
-        private GeneralBoardPiecesMovementManager piecesMovementManager;
+        private DefaultPiecesMovementManager piecesMovementManager;
+
         public override bool ArePiecesMoving => piecesMovementManager.ArePiecesMoving;
 
-        protected override void Awake()
-        {
-            base.Awake();
-            (Collapsing as LinearGeneralBoardCollapsing).Init(piecesMovementManager);
-        }
-
+        private System.Action swapEndedCallback;
         public override void SwapTokens(Vector2Int pieceCoord1, Vector2Int pieceCoord2)
         {
             var piece1 = Board.GetPiece(pieceCoord1);
             var piece2 = Board.GetPiece(pieceCoord2);
-            piece2.transform.position = Board.CoordToWorld(pieceCoord1);
-            piece1.transform.position = Board.CoordToWorld(pieceCoord2);
-            
+
+            piecesMovementManager.StartPieceMovement(piece1, pieceCoord2);
+            piecesMovementManager.StartPieceMovement(piece2, pieceCoord1);
+
             (Board[pieceCoord1], Board[pieceCoord2]) = (Board[pieceCoord2], Board[pieceCoord1]);
-            OnPiecesSwapped?.Invoke(pieceCoord1, pieceCoord2);
+            piecesMovementManager.OnPiecesMovementStopped += PiecesMovementManager_OnPiecesMovementStopped;
+            swapEndedCallback = () =>
+            {
+                swapEndedCallback = null;
+                OnPiecesSwapped?.Invoke(pieceCoord1, pieceCoord2);
+            };
+        }
+
+        private void PiecesMovementManager_OnPiecesMovementStopped()
+        {
+            piecesMovementManager.OnPiecesMovementStopped -= PiecesMovementManager_OnPiecesMovementStopped;
+            swapEndedCallback.Invoke();
+            swapEndedCallback = null;
         }
     }
 }
