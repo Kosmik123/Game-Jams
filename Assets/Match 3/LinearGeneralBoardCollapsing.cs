@@ -1,9 +1,7 @@
-﻿using ICSharpCode.NRefactory.Ast;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Tilemaps;
-using UnityEngine.WSA;
 
 namespace Bipolar.Match3
 {
@@ -33,6 +31,7 @@ namespace Bipolar.Match3
             piecesMovementManager = movementManager;
         }
 
+        [ContextMenu("Refresh")]
         private void CreateCollapseDirections()
         {
             directions.Clear();
@@ -229,13 +228,11 @@ namespace Bipolar.Match3
                         }
 
                         if (i == 0)
-                        {
                             GizmosDrawLineStart(coord);
-                        }
-                        else if (i == line.Coords.Count - 1)
-                        {
+                        
+                        if (i == line.Coords.Count - 1)
                             GizmosDrawLineEnd(coord);
-                        }
+                        
                     }
                 }
             }
@@ -259,5 +256,16 @@ namespace Bipolar.Match3
                 Gizmos.DrawSphere(Board.CoordToWorld(coord) + (Vector3)(offset * (Vector2)tile.Direction), 0.1f);
             }
         }
+    }
+}
+
+public class CoordsLine
+{
+    private Vector2Int[] coords;
+    public IReadOnlyList<Vector2Int> Coords => coords;
+
+    public CoordsLine(IEnumerable<Vector2Int> coords)
+    {
+        this.coords = coords.ToArray();
     }
 }
