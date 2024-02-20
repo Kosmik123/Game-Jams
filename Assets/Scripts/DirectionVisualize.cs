@@ -1,4 +1,4 @@
-using Bipolar.Match3;
+using Bipolar.PuzzleBoard.General;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 

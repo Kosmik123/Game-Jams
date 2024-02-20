@@ -1,4 +1,4 @@
-﻿using Bipolar.Match3;
+﻿using Bipolar.PuzzleBoard;
 using UnityEngine;
 
 public class WorldToCoordTest : MonoBehaviour
