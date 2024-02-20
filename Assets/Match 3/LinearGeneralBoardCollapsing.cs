@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using ICSharpCode.NRefactory.Ast;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -42,7 +43,9 @@ namespace Bipolar.Match3
             var notStartingCoords = new HashSet<Vector2Int>();
             var notEndingCoords = new HashSet<Vector2Int>();
 
-            var tempSourceCoordsIndexesDict = new Dictionary<Vector2Int, Vector2Int>();
+            var tempTargetCoordsDict = new Dictionary<Vector2Int, Vector2Int>();
+            var tempSourceCoordsDict = new Dictionary<Vector2Int, Vector2Int>();
+
             bool isBoardHexagonal = Board.Grid.cellLayout == GridLayout.CellLayout.Hexagon;
             for (int coordIndex = 0; coordIndex < Board.Coords.Count; coordIndex++)
             {
@@ -71,57 +74,62 @@ namespace Bipolar.Match3
                 endingCoords.Add(targetCoord);
                 notStartingCoords.Add(targetCoord);
 
-                if (tempSourceCoordsIndexesDict.ContainsKey(targetCoord) == false)
-                    tempSourceCoordsIndexesDict.Add(targetCoord, coord);
+                if (tempSourceCoordsDict.ContainsKey(targetCoord) == false)
+                    tempSourceCoordsDict.Add(targetCoord, coord);
             }
 
             startingCoords.ExceptWith(notStartingCoords);
             endingCoords.ExceptWith(notEndingCoords);
 
+            foreach (var kvp in tempSourceCoordsDict)
+                tempTargetCoordsDict[kvp.Value] = kvp.Key;
 
             lines = new CoordsLine[startingCoords.Count];
-
-
+            int lineIndex = 0;
+            foreach (var coord in startingCoords)
+            {
+                lines[lineIndex] = CreateCoordsLine(coord, tempTargetCoordsDict);
+                lineIndex++;
+            }
+            Debug.Log(lines.Length);
         }
 
-
-        private CoordsLine CreateCoordsLine(int startingIndex, IReadOnlyList<int> targetCoordsIndexes)
+        private CoordsLine CreateCoordsLine(Vector2Int startingCoord, IReadOnlyDictionary<Vector2Int, Vector2Int> targetCoordsDict)
         {
             var coordsList = new List<Vector2Int>();
 
-            int index = startingIndex;
-            while (index >= 0)
+            var coord = startingCoord;
+            while (IndexOfCoordInBoard(coord) >= 0)
             {
-                var coord = Board.Coords[index];
                 coordsList.Add(coord);
-                if (index >= targetCoordsIndexes.Count)
+                if (targetCoordsDict.TryGetValue(coord, out var target) == false)
                     break;
 
-                index = targetCoordsIndexes[index];
+                coord = target;
             }
 
             return new CoordsLine(coordsList);
         }
 
-        private int[] CreateCoordsIndexesArray(IReadOnlyCollection<int> countCollection)
-        {
-            int count = 0;
-            if (countCollection.Count > 0)
-                count = countCollection.Max() + 1;
+        //private int[] CreateCoordsIndexesArray(IReadOnlyCollection<Vector2Int> countCollection)
+        //{
+        //    int count = 0;
+        //    if (countCollection.Count > 0)
+        //        count = countCollection.Max() + 1;
 
-            var array = new int[count];
-            for (int i = 0; i < count; i++)
-                array[i] = -1;
+        //    var array = new int[count];
+        //    for (int i = 0; i < count; i++)
+        //        array[i] = -1;
 
-            return array;
-        }
+        //    return array;
+        //}
 
         private bool TryGetTile(Vector2Int coord, out DirectionTile tile) => TryGetTile(coord, Board.Tilemap, out tile);
 
         public override void Collapse()
         {
             bool collapsed = false;
-            foreach (var line in Board.Lines)
+            foreach (var line in Lines)
             {
                 int emptyCellsCount = CollapseTokensInLine(line);
                 if (emptyCellsCount > 0)
@@ -149,6 +157,7 @@ namespace Bipolar.Match3
 
             return -1;
         }
+
         private int CollapseTokensInLine(CoordsLine line)
         {
             int nonExistingPiecesCount = 0;
@@ -174,7 +183,7 @@ namespace Bipolar.Match3
         private void RefillLine(CoordsLine line, int count)
         {
             var startCoord = line.Coords[0];
-            var creatingDirection = -Board.GetRealDirection(startCoord);
+            var creatingDirection = -GetRealDirection(startCoord);
             var firstCellPosition = Board.CoordToWorld(startCoord);
             for (int i = 0; i < count; i++)
             {
@@ -185,6 +194,18 @@ namespace Bipolar.Match3
                 piecesMovementManager.StartPieceMovement(newPiece, line, -1, i + 1);
             }
         }
+        public Vector2Int GetDirection(Vector2Int coord) => directions[coord];
+
+        public Vector2 GetRealDirection(Vector2Int coord)
+        {
+            var direction = GetDirection(coord);
+            var nextCoord = coord + direction;
+
+            var worldPos = Board.CoordToWorld(coord);
+            var nextWorldPos = Board.CoordToWorld(nextCoord);
+
+            return nextWorldPos - worldPos;
+        }
 
         private void CallCollapseEvent()
         {
@@ -194,11 +215,38 @@ namespace Bipolar.Match3
 
         private void OnDrawGizmosSelected()
         {
-            foreach (var coord in startingCoords)
-                GizmosDrawLineStart(coord);
+            if (Lines != null && Board.Coords.Count > 0)
+            {
+                foreach (var line in Lines)
+                {
+                    for (int i = 0; i < line.Coords.Count; i++)
+                    {
+                        var coord = line.Coords[i];
+                        if (i > 0)
+                        {
+                            var sourceCoord = line.Coords[i - 1];
+                            GizmosDrawLineSegment(sourceCoord, coord);
+                        }
 
-            foreach (var coord in endingCoords)
-                GizmosDrawLineEnd(coord);
+                        if (i == 0)
+                        {
+                            GizmosDrawLineStart(coord);
+                        }
+                        else if (i == line.Coords.Count - 1)
+                        {
+                            GizmosDrawLineEnd(coord);
+                        }
+                    }
+                }
+            }
+        }
+
+        private void GizmosDrawLineSegment(Vector2Int start, Vector2Int end)
+        {
+            var startPos = Board.CoordToWorld(start);
+            var target = Board.CoordToWorld(end);
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawLine(startPos, target);
         }
 
         private void GizmosDrawLineStart(Vector2Int coord) => GizmosDrawLineTip(coord, Color.green, -0.1f);

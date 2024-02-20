@@ -708,6 +708,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b5749d51da1d2844cab8fb7eb4dc355b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  piecesMovementSpeed: 8
 --- !u!114 &916716451
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -722,7 +723,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   piecesSpawner: {fileID: 0}
   pieceTypeProvider: {fileID: 0}
-  directionsTilemaps: []
+  directionsTilemap: {fileID: 0}
 --- !u!1 &1982034483
 GameObject:
   m_ObjectHideFlags: 0
