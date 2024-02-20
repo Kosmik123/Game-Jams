@@ -26,11 +26,11 @@ public class DirectionVisualize : MonoBehaviour
                 for (int z = 0; z < Tilemap.size.z; z++)
                 {
                     var coord = new Vector3Int(x, y, z);
-                    var tile = Tilemap.GetTile<GeneralBoardTile>(coord);
+                    var tile = Tilemap.GetTile<DirectionTile>(coord);
                     if (tile != null)
                     {
                         var position = Tilemap.CellToWorld(coord);
-                        var direction = GeneralBoard.GetTileDirection((Vector2Int)coord, tile, true);
+                        var direction = DirectionTile.GetTileDirection((Vector2Int)coord, tile, true);
                         var target = coord + (Vector3Int)direction;
                         var targetPosition = Tilemap.CellToWorld(target);
                         Gizmos.DrawLine(position, targetPosition);

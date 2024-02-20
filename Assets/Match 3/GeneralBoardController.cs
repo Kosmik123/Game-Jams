@@ -2,7 +2,7 @@
 
 namespace Bipolar.Match3
 {
-    [RequireComponent(typeof(GeneralBoard), typeof(GeneralBoardCollapsing))]
+    [RequireComponent(typeof(GeneralBoard), typeof(LinearGeneralBoardCollapsing))]
     public class GeneralBoardController : BoardController<GeneralBoard>
     {
         public override event PiecesSwapEventHandler OnPiecesSwapped;
@@ -14,7 +14,7 @@ namespace Bipolar.Match3
         protected override void Awake()
         {
             base.Awake();
-            (Collapsing as GeneralBoardCollapsing).Init(piecesMovementManager);
+            (Collapsing as LinearGeneralBoardCollapsing).Init(piecesMovementManager);
         }
 
         public override void SwapTokens(Vector2Int pieceCoord1, Vector2Int pieceCoord2)

@@ -30,12 +30,13 @@ namespace Bipolar.Match3
             set => pieces [coord.x, coord.y] = value;
         }
 
-        private PiecesCollection piecesCollection = null;
+        private PiecesCollection piecesCollection;
         public override IReadOnlyCollection<Piece> Pieces
         {
             get
             {
-                piecesCollection ??= new PiecesCollection(this);
+                if (piecesCollection.IsValid == false)
+                    piecesCollection = new PiecesCollection(this);
                 return piecesCollection;
             }
         }
@@ -118,13 +119,14 @@ namespace Bipolar.Match3
             }
         }
 
-        public class PiecesCollection : IReadOnlyCollection<Piece>
+        public struct PiecesCollection : IReadOnlyCollection<Piece>
         {
             private readonly RectangularBoard board;
 
-            public PiecesCollection(RectangularBoard board) => this.board = board;
-
+            public bool IsValid => board != null;
             public int Count => board.Dimensions.x * board.Dimensions.y;
+
+            public PiecesCollection(RectangularBoard board) => this.board = board;
 
             public IEnumerator<Piece> GetEnumerator()
             {

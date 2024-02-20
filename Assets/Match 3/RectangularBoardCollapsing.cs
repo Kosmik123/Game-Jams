@@ -113,7 +113,5 @@ namespace Bipolar.Match3
                 piecesMovementManager.StartPieceMovement(newPiece, coord, 0.3f); // to samo
             }
         }
-
-
     }
 }

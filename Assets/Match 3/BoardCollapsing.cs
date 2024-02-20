@@ -8,14 +8,14 @@ namespace Bipolar.Match3
     {
         public abstract event System.Action OnPiecesColapsed;
 
-        private TBoard board;
+        private TBoard _board;
         public TBoard Board
         {
             get
             {
-                if (board == null)
-                    board = GetComponent<TBoard>();
-                return board;
+                if (_board == null)
+                    _board = GetComponent<TBoard>();
+                return _board;
             }
         }
 

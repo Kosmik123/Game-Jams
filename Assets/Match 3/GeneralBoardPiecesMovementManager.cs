@@ -9,19 +9,22 @@ namespace Bipolar.Match3
     {
         public override event System.Action OnPiecesMovementStopped;
 
+        [SerializeField]
+        private float piecesMovementSpeed = 8f;
+
         private GeneralBoard _board;
         public GeneralBoard Board => this.GetCachedComponent(ref _board);
 
         private readonly Dictionary<Piece, Coroutine> pieceMovementCoroutines = new Dictionary<Piece, Coroutine>();
         public override bool ArePiecesMoving => pieceMovementCoroutines.Count > 0;
 
-        public void StartPieceMovement(Piece piece, GeneralBoard.CoordsLine line, int fromIndex, int cellDistance)
+        public void StartPieceMovement(Piece piece, CoordsLine line, int fromIndex, int cellDistance)
         {
             var movementCoroutine = StartCoroutine(MovementCo(piece, line, fromIndex, cellDistance));
             pieceMovementCoroutines.Add(piece, movementCoroutine);
         }
 
-        private IEnumerator MovementCo(Piece piece, GeneralBoard.CoordsLine line, int fromIndex, int cellDistance)
+        private IEnumerator MovementCo(Piece piece, CoordsLine line, int fromIndex, int cellDistance)
         {
             var startIndex = fromIndex;
             for (int i = 1; i <= cellDistance; i++)
@@ -33,7 +36,7 @@ namespace Bipolar.Match3
                 var targetPosition = Board.CoordToWorld(targetCoord);
                 float realDistance = Vector3.Distance(startPosition, targetPosition);
 
-                float progressSpeed = 8f / realDistance;
+                float progressSpeed = piecesMovementSpeed / realDistance;
 
                 float progress = 0;
                 while (progress < 1)

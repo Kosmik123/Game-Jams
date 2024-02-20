@@ -9,9 +9,18 @@ namespace Bipolar.Match3
     {
         [SerializeField, Tooltip("Provides board shape")]
         private Tilemap tilemap;
+        public Tilemap Tilemap => tilemap;
 
-        private readonly List<Vector2Int> includedCoords = new List<Vector2Int>();
-        public IReadOnlyList<Vector2Int> Coords => includedCoords;
+        private List<Vector2Int> includedCoords;
+        public IReadOnlyList<Vector2Int> Coords
+        {
+            get
+            {
+                if (includedCoords == null) 
+                    CreateBoardShape();
+                return includedCoords;
+            }
+        }
 
         private readonly Dictionary<Vector2Int, Piece> piecesByCoords = new Dictionary<Vector2Int, Piece>();
         public override Piece this[Vector2Int coord] 
@@ -20,7 +29,6 @@ namespace Bipolar.Match3
             set => piecesByCoords[coord] = value; 
         }
         public override IReadOnlyCollection<Piece> Pieces => piecesByCoords.Values;
-
 
         // TO PRZENIEŚĆ DO COLLAPSING
         private readonly Dictionary<Vector2Int, Vector2Int> directions = new Dictionary<Vector2Int, Vector2Int>();
@@ -37,12 +45,13 @@ namespace Bipolar.Match3
 
         protected override void Awake()
         {
-            CreateBoardShape();
+            if (includedCoords == null)
+                CreateBoardShape();
         }
 
         public void CreateBoardShape()
         {
-            includedCoords.Clear();
+            includedCoords = new List<Vector2Int>();
             var coordBounds = tilemap.cellBounds;
             for (int y = coordBounds.yMin; y <= coordBounds.yMax; y++)
             {
@@ -88,8 +97,9 @@ namespace Bipolar.Match3
                 if (TryGetTile(coord, out var tile) == false)
                     continue;
 
-                var direction = GetTileDirection(coord, tile, Grid.cellLayout == GridLayout.CellLayout.Hexagon);
+                var direction = DirectionTile.GetTileDirection(coord, tile, Grid.cellLayout == GridLayout.CellLayout.Hexagon);
                 directions.Add(coord, direction);
+
                 int coordIndex = includedCoords.IndexOf(coord);
                 if (coordIndex < 0)
                 {
@@ -115,7 +125,7 @@ namespace Bipolar.Match3
                             hasJumpTarget = true;
                             break;
                         }
-                        targetCoord += GetTileDirection(targetCoord, tile, Grid.cellLayout == GridLayout.CellLayout.Hexagon);
+                        targetCoord += DirectionTile.GetTileDirection(targetCoord, tile, Grid.cellLayout == GridLayout.CellLayout.Hexagon);
                     }
 
                     if (hasJumpTarget == false)
@@ -171,24 +181,6 @@ namespace Bipolar.Match3
             return coord.y >= bounds.yMin && coord.y < bounds.yMax && coord.x >= bounds.xMin && coord.x < bounds.xMax;
         }
 
-        public static Vector2Int GetTileDirection(Vector2Int coord, GeneralBoardTile tile, bool isHexagonal)
-        {
-            var direction = tile.Direction;
-            if (isHexagonal && direction.y != 0)
-            {
-                if (coord.y % 2 == 0)
-                {
-                    if (direction.x > 0)
-                        direction.x = 0;
-                }
-                else
-                {
-                    if (direction.x <= 0)
-                        direction.x += 1;
-                }
-            }
-            return direction;
-        }
 
         private int[] CreateCoordsIndexesArray(IReadOnlyCollection<int> countCollection)
         {
@@ -203,9 +195,9 @@ namespace Bipolar.Match3
             return array;
         }
 
-        private bool TryGetTile(Vector2Int coord, out GeneralBoardTile tile)
+        private bool TryGetTile(Vector2Int coord, out DirectionTile tile)
         {
-            tile = tilemap.GetTile<GeneralBoardTile>((Vector3Int)coord);
+            tile = tilemap.GetTile<DirectionTile>((Vector3Int)coord);
             return tile != null;
         }
 
@@ -311,16 +303,16 @@ namespace Bipolar.Match3
                 Gizmos.DrawSphere(CoordToWorld(coord) + (Vector3)(offset * (Vector2)tile.Direction), 0.1f);
             }
         }
+    }
 
-        public class CoordsLine
+    public class CoordsLine
+    {
+        private Vector2Int[] coords;
+        public IReadOnlyList<Vector2Int> Coords => coords;
+
+        public CoordsLine(IEnumerable<Vector2Int> coords)
         {
-            private Vector2Int[] coords;
-            public IReadOnlyList<Vector2Int> Coords => coords;
-
-            public CoordsLine(IEnumerable<Vector2Int> coords)
-            {
-                this.coords = coords.ToArray();
-            }
+            this.coords = coords.ToArray();
         }
     }
 }
