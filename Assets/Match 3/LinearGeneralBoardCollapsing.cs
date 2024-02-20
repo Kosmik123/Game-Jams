@@ -110,19 +110,6 @@ namespace Bipolar.Match3
             return new CoordsLine(coordsList);
         }
 
-        //private int[] CreateCoordsIndexesArray(IReadOnlyCollection<Vector2Int> countCollection)
-        //{
-        //    int count = 0;
-        //    if (countCollection.Count > 0)
-        //        count = countCollection.Max() + 1;
-
-        //    var array = new int[count];
-        //    for (int i = 0; i < count; i++)
-        //        array[i] = -1;
-
-        //    return array;
-        //}
-
         private bool TryGetTile(Vector2Int coord, out DirectionTile tile) => TryGetTile(coord, Board.Tilemap, out tile);
 
         public override void Collapse()
@@ -193,6 +180,7 @@ namespace Bipolar.Match3
                 piecesMovementManager.StartPieceMovement(newPiece, line, -1, i + 1);
             }
         }
+
         public Vector2Int GetDirection(Vector2Int coord) => directions[coord];
 
         public Vector2 GetRealDirection(Vector2Int coord)
@@ -215,45 +203,45 @@ namespace Bipolar.Match3
         private void OnDrawGizmosSelected()
         {
             if (Lines != null && Board.Coords.Count > 0)
-            {
                 foreach (var line in Lines)
-                {
-                    for (int i = 0; i < line.Coords.Count; i++)
-                    {
-                        var coord = line.Coords[i];
-                        if (i > 0)
-                        {
-                            var sourceCoord = line.Coords[i - 1];
-                            GizmosDrawLineSegment(sourceCoord, coord);
-                        }
+                    GizmosDrawLine(line);
 
-                        if (i == 0)
-                            GizmosDrawLineStart(coord);
-                        
-                        if (i == line.Coords.Count - 1)
-                            GizmosDrawLineEnd(coord);
-                        
+            void GizmosDrawLine(CoordsLine line)
+            {
+                for (int i = 0; i < line.Coords.Count; i++)
+                {
+                    var coord = line.Coords[i];
+                    if (i > 0)
+                    {
+                        var sourceCoord = line.Coords[i - 1];
+                        GizmosDrawLineSegment(sourceCoord, coord);
                     }
+
+                    if (i == 0)
+                        GizmosDrawLineStart(coord);
+
+                    if (i == line.Coords.Count - 1)
+                        GizmosDrawLineEnd(coord);
                 }
             }
-        }
 
-        private void GizmosDrawLineSegment(Vector2Int start, Vector2Int end)
-        {
-            var startPos = Board.CoordToWorld(start);
-            var target = Board.CoordToWorld(end);
-            Gizmos.color = Color.yellow;
-            Gizmos.DrawLine(startPos, target);
-        }
-
-        private void GizmosDrawLineStart(Vector2Int coord) => GizmosDrawLineTip(coord, Color.green, -0.1f);
-        private void GizmosDrawLineEnd(Vector2Int coord) => GizmosDrawLineTip(coord, Color.red, 0.1f);
-        private void GizmosDrawLineTip(Vector2Int coord, Color color, float offset)
-        {
-            if (TryGetTile(coord, out var tile))
+            void GizmosDrawLineSegment(Vector2Int start, Vector2Int end)
             {
-                Gizmos.color = color;
-                Gizmos.DrawSphere(Board.CoordToWorld(coord) + (Vector3)(offset * (Vector2)tile.Direction), 0.1f);
+                var startPos = Board.CoordToWorld(start);
+                var target = Board.CoordToWorld(end);
+                Gizmos.color = Color.yellow;
+                Gizmos.DrawLine(startPos, target);
+            }
+
+            void GizmosDrawLineStart(Vector2Int coord) => GizmosDrawLineTip(coord, Color.green, -0.1f);
+            void GizmosDrawLineEnd(Vector2Int coord) => GizmosDrawLineTip(coord, Color.red, 0.1f);
+            void GizmosDrawLineTip(Vector2Int coord, Color color, float offset)
+            {
+                if (TryGetTile(coord, out var tile))
+                {
+                    Gizmos.color = color;
+                    Gizmos.DrawSphere(Board.CoordToWorld(coord) + (Vector3)(offset * (Vector2)tile.Direction), 0.1f);
+                }
             }
         }
     }
@@ -261,7 +249,7 @@ namespace Bipolar.Match3
 
 public class CoordsLine
 {
-    private Vector2Int[] coords;
+    private readonly Vector2Int[] coords;
     public IReadOnlyList<Vector2Int> Coords => coords;
 
     public CoordsLine(IEnumerable<Vector2Int> coords)
