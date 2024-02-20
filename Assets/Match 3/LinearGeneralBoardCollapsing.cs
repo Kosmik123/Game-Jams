@@ -19,8 +19,7 @@ namespace Bipolar.Match3
         private CoordsLine[] lines;
         public IReadOnlyList<CoordsLine> Lines => lines;
 
-        private HashSet<Vector2Int> startingCoords = new HashSet<Vector2Int>();
-        private HashSet<Vector2Int> endingCoords = new HashSet<Vector2Int>();
+        public override bool IsCollapsing => piecesMovementManager.ArePiecesMoving;
 
         private void Awake()
         {
@@ -33,8 +32,8 @@ namespace Bipolar.Match3
             directions.Clear();
             jumpTiles.Clear();
 
-            startingCoords = new HashSet<Vector2Int>();
-            endingCoords = new HashSet<Vector2Int>();
+            var startingCoords = new HashSet<Vector2Int>();
+            var endingCoords = new HashSet<Vector2Int>();
             var notStartingCoords = new HashSet<Vector2Int>();
             var notEndingCoords = new HashSet<Vector2Int>();
 

@@ -49,6 +49,8 @@ namespace Bipolar.Match3
                 Collapse();
         }
 
+        public abstract bool IsCollapsing { get; }
+
         public abstract void Collapse();
 
         protected Piece CreatePiece(Vector2Int coord)

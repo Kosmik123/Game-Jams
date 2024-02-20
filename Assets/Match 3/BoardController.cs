@@ -10,6 +10,7 @@ namespace Bipolar.Match3
 
         public abstract Board Board { get; }
         public abstract bool ArePiecesMoving { get; }
+        public abstract bool IsCollapsing { get; }
 
         public abstract void Collapse();
         public abstract void SwapTokens(Vector2Int pieceCoord1, Vector2Int pieceCoord2);
@@ -49,6 +50,8 @@ namespace Bipolar.Match3
                 return collapsing;
             }
         }
+
+        public sealed override bool IsCollapsing => Collapsing.IsCollapsing;
 
         protected virtual void Awake()
         {

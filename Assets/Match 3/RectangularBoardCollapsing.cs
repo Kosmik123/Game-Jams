@@ -27,6 +27,8 @@ namespace Bipolar.Match3
             }
         }
 
+        public override bool IsCollapsing => piecesMovementManager.ArePiecesMoving;
+
         public void Init(DefaultPiecesMovementManager piecesMovementManager)
         {
             this.piecesMovementManager = piecesMovementManager;
