@@ -29,8 +29,13 @@ namespace Bipolar.Match3
             {
                 isCleared = value;
                 if (isCleared)
-                    OnCleared?.Invoke(this);
+                    Invoke(nameof(CallClearedEvent), 0);            
             }
+        }
+
+        private void CallClearedEvent()
+        {
+            OnCleared?.Invoke(this);
         }
 
         private void OnValidate()

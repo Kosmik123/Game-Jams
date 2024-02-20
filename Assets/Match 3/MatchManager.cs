@@ -82,8 +82,12 @@ namespace Bipolar.Match3
             {
                 var piece = boardController.Board.GetPiece(coord);
                 currentlyClearedPieces.Add(piece);
-                piece.OnCleared += Piece_OnCleared;
                 boardController.Board[coord] = null;
+            }
+
+            foreach (var piece in currentlyClearedPieces)
+            {
+                piece.OnCleared += Piece_OnCleared;
                 if (piece.TryGetComponent<PieceClearingBehavior>(out var clearing))
                 {
                     clearing.ClearPiece();
@@ -102,6 +106,9 @@ namespace Bipolar.Match3
             if (currentlyClearedPieces.Count <= 0)
                 boardController.Collapse();
         }
+
+
+
 
         private void OnDisable()
         {

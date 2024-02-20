@@ -34,7 +34,6 @@ namespace Bipolar.Match3
         {
             piecesMovementManager.OnPiecesMovementStopped -= PiecesMovementManager_OnPiecesMovementStopped;
             swapEndedCallback.Invoke();
-            swapEndedCallback = null;
         }
     }
 }
