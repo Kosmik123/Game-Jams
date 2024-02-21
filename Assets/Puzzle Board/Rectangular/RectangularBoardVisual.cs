@@ -11,8 +11,11 @@ namespace Bipolar.PuzzleBoard.Rectangular
 
         private void OnEnable()
         {
-            RefreshGraphic(board.Dimensions);
-            board.OnDimensionsChanged += RefreshGraphic;
+            if (board)
+            {
+                RefreshGraphic(board.Dimensions);
+                board.OnDimensionsChanged += RefreshGraphic;
+            }
         }
 
         private void RefreshGraphic(Vector2Int dimensions)
@@ -23,17 +26,20 @@ namespace Bipolar.PuzzleBoard.Rectangular
 
         private void OnDisable()
         {
-            board.OnDimensionsChanged -= RefreshGraphic;
+            if (board)
+                board.OnDimensionsChanged -= RefreshGraphic;
         }
 
         private void OnValidate()
         {
-            RefreshGraphic(board.Dimensions);
+            if (board)
+                RefreshGraphic(board.Dimensions);
         }
 
         private void OnDrawGizmos()
         {
-            RefreshGraphic(board.Dimensions);
+            if (board)
+                RefreshGraphic(board.Dimensions);
         }
     }
 }

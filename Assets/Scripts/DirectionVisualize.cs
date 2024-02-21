@@ -30,14 +30,13 @@ public class DirectionVisualize : MonoBehaviour
                     if (tile != null)
                     {
                         var position = Tilemap.CellToWorld(coord);
-                        var direction = DirectionTile.GetTileDirection((Vector2Int)coord, tile, true);
+                        var direction = DirectionTileHelper.GetTileDirection((Vector2Int)coord, tile, true);
                         var target = coord + (Vector3Int)direction;
                         var targetPosition = Tilemap.CellToWorld(target);
                         Gizmos.DrawLine(position, targetPosition);
                     }
                 }
             }
-
         }
     }
 }

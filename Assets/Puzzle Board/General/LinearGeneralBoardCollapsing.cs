@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.Tilemaps;
 
 namespace Bipolar.PuzzleBoard.General
 {
@@ -63,7 +62,7 @@ namespace Bipolar.PuzzleBoard.General
             }
         }
 
-        private void HandleCoordCreation(Vector2Int coord, bool isBoardHexagonal, 
+        private void HandleCoordCreation(Vector2Int coord, bool isBoardHexagonal,
             HashSet<Vector2Int> startingCoords, HashSet<Vector2Int> endingCoords,
             HashSet<Vector2Int> notStartingCoords, HashSet<Vector2Int> notEndingCoords,
             Dictionary<Vector2Int, Vector2Int> targetToSourceDictionary)
@@ -71,7 +70,7 @@ namespace Bipolar.PuzzleBoard.General
             if (TryGetTile(coord, out var tile) == false)
                 return;
 
-            var direction = DirectionTile.GetTileDirection(coord, tile, isBoardHexagonal);
+            var direction = DirectionTileHelper.GetTileDirection(coord, tile, isBoardHexagonal);
             directions.Add(coord, direction);
 
             startingCoords.Add(coord);
@@ -113,7 +112,7 @@ namespace Bipolar.PuzzleBoard.General
             return new CoordsLine(coordsList);
         }
 
-        private bool TryGetTile(Vector2Int coord, out DirectionTile tile) => TryGetTile(coord, Board.Tilemap, out tile);
+        private bool TryGetTile(Vector2Int coord, out DirectionTile tile) => DirectionTileHelper.TryGetTile(coord, Board.Tilemap, out tile);
 
         public override void Collapse()
         {
@@ -130,12 +129,6 @@ namespace Bipolar.PuzzleBoard.General
 
             if (collapsed)
                 piecesMovementManager.OnAllPiecesMovementStopped += CallCollapseEvent;
-        }
-
-        private static bool TryGetTile(Vector2Int coord, Tilemap tilemap, out DirectionTile tile)
-        {
-            tile = tilemap.GetTile<DirectionTile>((Vector3Int)coord);
-            return tile != null;
         }
 
         private int IndexOfCoordInBoard(Vector2Int coord)
@@ -248,15 +241,15 @@ namespace Bipolar.PuzzleBoard.General
             }
         }
     }
-}
 
-public class CoordsLine
-{
-    private readonly Vector2Int[] coords;
-    public IReadOnlyList<Vector2Int> Coords => coords;
-
-    public CoordsLine(IEnumerable<Vector2Int> coords)
+    public class CoordsLine
     {
-        this.coords = coords.ToArray();
+        private readonly Vector2Int[] coords;
+        public IReadOnlyList<Vector2Int> Coords => coords;
+
+        public CoordsLine(IEnumerable<Vector2Int> coords)
+        {
+            this.coords = coords.ToArray();
+        }
     }
 }
