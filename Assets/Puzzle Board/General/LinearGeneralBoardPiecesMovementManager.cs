@@ -7,7 +7,7 @@ namespace Bipolar.PuzzleBoard.General
     [RequireComponent(typeof(GeneralBoard))]
     public class LinearGeneralBoardPiecesMovementManager : PiecesMovementManager
     {
-        public override event System.Action OnPiecesMovementStopped;
+        public override event System.Action OnAllPiecesMovementStopped;
 
         [SerializeField]
         private float piecesMovementSpeed = 8f;
@@ -59,7 +59,7 @@ namespace Bipolar.PuzzleBoard.General
 
             pieceMovementCoroutines.Remove(piece);
             if (ArePiecesMoving == false)
-                OnPiecesMovementStopped?.Invoke();
+                OnAllPiecesMovementStopped?.Invoke();
         }
     }
 }

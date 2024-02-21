@@ -129,7 +129,7 @@ namespace Bipolar.PuzzleBoard.General
             }
 
             if (collapsed)
-                piecesMovementManager.OnPiecesMovementStopped += CallCollapseEvent;
+                piecesMovementManager.OnAllPiecesMovementStopped += CallCollapseEvent;
         }
 
         private static bool TryGetTile(Vector2Int coord, Tilemap tilemap, out DirectionTile tile)
@@ -199,7 +199,7 @@ namespace Bipolar.PuzzleBoard.General
 
         private void CallCollapseEvent()
         {
-            piecesMovementManager.OnPiecesMovementStopped -= CallCollapseEvent;
+            piecesMovementManager.OnAllPiecesMovementStopped -= CallCollapseEvent;
             OnPiecesColapsed?.Invoke();
         }
 

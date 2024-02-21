@@ -2,9 +2,15 @@
 
 namespace Bipolar.PuzzleBoard
 {
-    public abstract class PiecesMovementManager : MonoBehaviour
+    public interface IPiecesMovementManager
     {
-        public abstract event System.Action OnPiecesMovementStopped;
+        event System.Action OnAllPiecesMovementStopped;
+        bool ArePiecesMoving { get; }
+    }
+
+    public abstract class PiecesMovementManager : MonoBehaviour, IPiecesMovementManager
+    {
+        public abstract event System.Action OnAllPiecesMovementStopped;
         public abstract bool ArePiecesMoving { get; }
 
         protected readonly WaitForFixedUpdate waitForFixedUpdate = new WaitForFixedUpdate();

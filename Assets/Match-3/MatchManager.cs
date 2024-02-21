@@ -45,23 +45,30 @@ namespace Bipolar.Match3
             SwapTokens(pieceCoord1, pieceCoord2);
         }
 
+        private System.Action swapEndedCallback;
         private void SwapTokens(Vector2Int pieceCoord1, Vector2Int pieceCoord2)
         {
             combo = 0;
-            boardController.OnPiecesSwapped += BoardController_OnPiecesSwapped;
-            boardController.SwapTokens(pieceCoord1, pieceCoord2);
+            boardController.PiecesMovementManager.OnAllPiecesMovementStopped += PiecesMovementManager_OnAllPiecesMovementStopped;
+            swapEndedCallback = () =>
+            {
+                swapEndedCallback = null;
+                FindMatches();
+                bool wasCorrectMove = matcher.PieceChains.Count > 0;
+                if (wasCorrectMove == false)
+                {
+                    (boardController[pieceCoord1], boardController[pieceCoord2]) = (boardController[pieceCoord2], boardController[pieceCoord1]);
+                    OnMatchingFailed?.Invoke();
+                }
+            };
+
+            (boardController[pieceCoord2], boardController[pieceCoord1]) = (boardController[pieceCoord1], boardController[pieceCoord2]);
         }
 
-        private void BoardController_OnPiecesSwapped(Vector2Int pieceCoord1, Vector2Int pieceCoord2)
+        private void PiecesMovementManager_OnAllPiecesMovementStopped()
         {
-            boardController.OnPiecesSwapped -= BoardController_OnPiecesSwapped;
-            FindMatches();
-            bool wasCorrectMove = matcher.PieceChains.Count > 0;
-            if (wasCorrectMove == false)
-            {
-                boardController.SwapTokens(pieceCoord1, pieceCoord2);
-                OnMatchingFailed?.Invoke();
-            }
+            boardController.PiecesMovementManager.OnAllPiecesMovementStopped -= PiecesMovementManager_OnAllPiecesMovementStopped;
+            swapEndedCallback?.Invoke();
         }
 
         private void BoardController_OnPiecesColapsed()
@@ -112,9 +119,6 @@ namespace Bipolar.Match3
             if (currentlyClearedPieces.Count <= 0)
                 boardController.Collapse();
         }
-
-
-
 
         private void OnDisable()
         {

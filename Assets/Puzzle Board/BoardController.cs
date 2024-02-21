@@ -2,18 +2,23 @@
 
 namespace Bipolar.PuzzleBoard
 {
+    public delegate void PieceCoordChangeEventHandler(Piece piece, Vector2Int newCoord);
+
     [DisallowMultipleComponent, RequireComponent(typeof(Board), typeof(BoardCollapsing<>))]
     public abstract class BoardController : MonoBehaviour
     {
-        public abstract event Match3.PiecesSwapEventHandler OnPiecesSwapped; // TODO remove match-3 dependency
         public abstract event System.Action OnPiecesColapsed;
+
+        [SerializeField]
+        protected DefaultPiecesMovementManager piecesMovementManager;
+        public PiecesMovementManager PiecesMovementManager => piecesMovementManager;
 
         public abstract Board Board { get; }
         public abstract bool ArePiecesMoving { get; }
         public abstract bool IsCollapsing { get; }
+        public abstract Piece this[Vector2Int coord] { get; set; }
 
         public abstract void Collapse();
-        public abstract void SwapTokens(Vector2Int pieceCoord1, Vector2Int pieceCoord2);
     }
 
     public abstract class BoardController<TBoard> : BoardController
@@ -59,5 +64,15 @@ namespace Bipolar.PuzzleBoard
         }
 
         public sealed override void Collapse() => Collapsing.Collapse();
+
+        public override Piece this[Vector2Int coord]
+        {
+            get => Board[coord];
+            set
+            {
+                piecesMovementManager.StartPieceMovement(value, coord);
+                Board[coord] = value;
+            }
+        }
     }
 }

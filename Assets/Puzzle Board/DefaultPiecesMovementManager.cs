@@ -7,7 +7,8 @@ namespace Bipolar.PuzzleBoard
     [RequireComponent(typeof(Board))]
     public class DefaultPiecesMovementManager : PiecesMovementManager
     {
-        public override event System.Action OnPiecesMovementStopped;
+        public override event System.Action OnAllPiecesMovementStopped;
+        public event System.Action<Piece> OnPieceMovementEnded;
 
         [SerializeField]
         private Board board;
@@ -40,8 +41,9 @@ namespace Bipolar.PuzzleBoard
             piece.transform.position = targetPosition;
 
             pieceMovementCoroutines.Remove(piece);
+            OnPieceMovementEnded?.Invoke(piece);
             if (ArePiecesMoving == false)
-                OnPiecesMovementStopped?.Invoke();
+                OnAllPiecesMovementStopped?.Invoke();
         }
     }
 }

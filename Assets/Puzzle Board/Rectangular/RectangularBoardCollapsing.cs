@@ -49,7 +49,7 @@ namespace Bipolar.PuzzleBoard.Rectangular
             }
 
             if (colapsed)
-                piecesMovementManager.OnPiecesMovementStopped += CallCollapseEvent;
+                piecesMovementManager.OnAllPiecesMovementStopped += CallCollapseEvent;
         }
 
         private int CollapseTokensInLine(int lineIndex, int iterationAxis)
@@ -88,7 +88,7 @@ namespace Bipolar.PuzzleBoard.Rectangular
 
         private void CallCollapseEvent()
         {
-            piecesMovementManager.OnPiecesMovementStopped -= CallCollapseEvent;
+            piecesMovementManager.OnAllPiecesMovementStopped -= CallCollapseEvent;
             OnPiecesColapsed?.Invoke();
         }
 
