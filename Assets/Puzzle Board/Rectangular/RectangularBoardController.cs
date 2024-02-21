@@ -1,5 +1,4 @@
-﻿using Bipolar.Match3;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Bipolar.PuzzleBoard.Rectangular
 {
@@ -7,7 +6,6 @@ namespace Bipolar.PuzzleBoard.Rectangular
     public class RectangularBoardController : BoardController<RectangularBoard>
     {
         public override bool ArePiecesMoving => piecesMovementManager.ArePiecesMoving;
-
 
         protected override void Awake()
         {
