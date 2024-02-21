@@ -1,5 +1,6 @@
 ﻿using Bipolar.PuzzleBoard;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 namespace Bipolar.Match3
@@ -26,6 +27,13 @@ namespace Bipolar.Match3
         }
 
         public override string ToString() => $"Pieces Chain ({PieceType.name}): {Size}";
+
+        public virtual void DrawGizmo(Board board)
+        {
+            foreach (var coord in PiecesCoords)
+                Gizmos.DrawSphere(board.CoordToWorld(coord), 0.3f);
+        }
+
     }
 
     public class TriosPiecesChain : PiecesChain

@@ -93,7 +93,8 @@ namespace Bipolar.Match3
         {
             foreach (var coord in chain.PiecesCoords)
             {
-                var piece = boardController.Pieces[coord];
+                var piece = boardController.Board.GetPiece(coord);
+
                 currentlyClearedPieces.Add(piece);
                 boardController.Pieces[coord] = null;
             }

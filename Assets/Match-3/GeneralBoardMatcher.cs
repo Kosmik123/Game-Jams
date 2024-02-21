@@ -13,10 +13,10 @@ namespace Bipolar.Match3
         public override void FindAndCreatePieceChains(Board board) => FindAndCreateTokenChains((GeneralBoard)board);
         public void FindAndCreateTokenChains(GeneralBoard board)
         {
-            tokenChains.Clear();
+            pieceChains.Clear();
             foreach (var coord in board.Coords)
             {
-                if (tokenChains.FirstOrDefault(chain => chain.Contains(coord)) != null)
+                if (pieceChains.FirstOrDefault(chain => chain.Contains(coord)) != null)
                     continue;
 
                 CreateTokensChain(board, coord, coordsToCheck);

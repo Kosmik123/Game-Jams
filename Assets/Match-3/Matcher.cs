@@ -14,8 +14,8 @@ namespace Bipolar.Match3
             Vector2Int.down
         };
 
-        protected readonly List<PiecesChain> tokenChains = new List<PiecesChain>();
-        public IReadOnlyList<PiecesChain> PieceChains => tokenChains;
+        protected readonly List<PiecesChain> pieceChains = new List<PiecesChain>();
+        public IReadOnlyList<PiecesChain> PieceChains => pieceChains;
 
         public abstract void FindAndCreatePieceChains(Board board);
 
@@ -29,43 +29,43 @@ namespace Bipolar.Match3
             FindMatches(board, chain, coordsToCheck);
 
             if (chain.IsMatchFound)
-                tokenChains.Add(chain);
+                pieceChains.Add(chain);
         }
 
         public static void FindMatches(Board board, TriosPiecesChain chain, Queue<Vector2Int> coordsToCheck)
         {
             while (coordsToCheck.Count > 0)
             {
-                var tokenCoord = coordsToCheck.Dequeue();
-                chain.Add(tokenCoord);
+                var pieceCoord = coordsToCheck.Dequeue();
+                chain.Add(pieceCoord);
                 foreach (var direction in chainsDirections)
                 {
-                    TryAddLineToChain(board, chain, tokenCoord, direction, coordsToCheck);
+                    TryAddLineToChain(board, chain, pieceCoord, direction, coordsToCheck);
                 }
             }
         }
 
-        public static bool TryAddLineToChain(Board board, TriosPiecesChain chain, Vector2Int tokenCoord, Vector2Int direction, Queue<Vector2Int> coordsToCheck)
+        public static bool TryAddLineToChain(Board board, TriosPiecesChain chain, Vector2Int pieceCoord, Vector2Int direction, Queue<Vector2Int> coordsToCheck)
         {
-            var nearCoord = tokenCoord + direction;
-            var nearToken = board[nearCoord];
+            var nearCoord = pieceCoord + direction;
+            var nearToken = board.GetPiece(nearCoord);
             if (nearToken == null || chain.PieceType != nearToken.Type)
                 return false;
 
-            var backCoord = tokenCoord - direction;
-            var backToken = board.GetPiece(backCoord);
-            if (backToken && chain.PieceType == backToken.Type)
+            var backCoord = pieceCoord - direction;
+            var backPiece = board.GetPiece(backCoord);
+            if (backPiece && chain.PieceType == backPiece.Type)
             {
                 chain.IsMatchFound = true;
                 TryEnqueueCoord(chain, coordsToCheck, nearCoord);
                 TryEnqueueCoord(chain, coordsToCheck, backCoord);
-                AddLineToChain(chain, tokenCoord, direction);
+                AddLineToChain(chain, pieceCoord, direction);
                 return true;
             }
 
             var furtherCoord = nearCoord + direction;
-            var furtherToken = board.GetPiece(furtherCoord);
-            if (furtherToken && chain.PieceType == furtherToken.Type)
+            var furtherPiece = board.GetPiece(furtherCoord);
+            if (furtherPiece && chain.PieceType == furtherPiece.Type)
             {
                 chain.IsMatchFound = true;
                 TryEnqueueCoord(chain, coordsToCheck, nearCoord);
@@ -95,6 +95,21 @@ namespace Bipolar.Match3
 
             coordsToCheck.Enqueue(coord);
             return true;
+        }
+
+
+        private void OnDrawGizmos()
+        {
+            var board = FindObjectOfType<Board>();
+            var random = new System.Random(PieceChains.Count);
+            foreach (var chain in PieceChains)
+            {
+                random.Next();
+                var color = Color.HSVToRGB((float)random.NextDouble(), 1, 1);
+                color.a = 0.5f;
+                Gizmos.color = color;
+                chain.DrawGizmo(board);
+            }
         }
     }
 }
