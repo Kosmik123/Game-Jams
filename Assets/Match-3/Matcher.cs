@@ -48,7 +48,7 @@ namespace Bipolar.Match3
         public static bool TryAddLineToChain(Board board, TriosPiecesChain chain, Vector2Int tokenCoord, Vector2Int direction, Queue<Vector2Int> coordsToCheck)
         {
             var nearCoord = tokenCoord + direction;
-            var nearToken = board.GetPiece(nearCoord);
+            var nearToken = board[nearCoord];
             if (nearToken == null || chain.PieceType != nearToken.Type)
                 return false;
 

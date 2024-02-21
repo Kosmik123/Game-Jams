@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace Bipolar.PuzzleBoard
 {
@@ -16,7 +17,8 @@ namespace Bipolar.PuzzleBoard
         public abstract Board Board { get; }
         public abstract bool ArePiecesMoving { get; }
         public abstract bool IsCollapsing { get; }
-        public abstract Piece this[Vector2Int coord] { get; set; }
+        public abstract IPiecesIndexable Pieces { get; }
+
 
         public abstract void Collapse();
     }
@@ -65,13 +67,39 @@ namespace Bipolar.PuzzleBoard
 
         public sealed override void Collapse() => Collapsing.Collapse();
 
-        public override Piece this[Vector2Int coord]
+
+        private BoardControllerPiecesIndexable piecesIndexable;
+        public override IPiecesIndexable Pieces
         {
-            get => Board[coord];
-            set
+            get
             {
-                piecesMovementManager.StartPieceMovement(value, coord);
-                Board[coord] = value;
+                piecesIndexable ??= new BoardControllerPiecesIndexable(
+                    (coord) => Board[coord],
+                    (coord, piece) =>
+                    {
+                        if (piece)
+                            piecesMovementManager.StartPieceMovement(piece, coord);
+                        Board[coord] = piece;
+                    });
+                return piecesIndexable;
+            }
+        }
+
+        public class BoardControllerPiecesIndexable : IPiecesIndexable
+        {
+            private readonly Func<Vector2Int, Piece> getFunction;
+            private readonly Action<Vector2Int, Piece> setFunction;
+
+            public BoardControllerPiecesIndexable(Func<Vector2Int, Piece> getFunction, Action<Vector2Int, Piece> setFunction)
+            {
+                this.getFunction = getFunction;
+                this.setFunction = setFunction;
+            }
+
+            public Piece this[Vector2Int coord] 
+            { 
+                get => getFunction(coord); 
+                set => setFunction(coord, value);
             }
         }
     }

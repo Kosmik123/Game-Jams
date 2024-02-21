@@ -3,6 +3,11 @@ using UnityEngine;
 
 namespace Bipolar.PuzzleBoard
 {
+    public interface IPiecesIndexable
+    {
+        Piece this[Vector2Int coord] { get; set; }
+    }
+
     [DisallowMultipleComponent, RequireComponent(typeof(Grid))]
     public abstract class Board : MonoBehaviour
     {
@@ -22,7 +27,7 @@ namespace Bipolar.PuzzleBoard
 
         public abstract IReadOnlyCollection<Piece> Pieces { get; }
 
-        public abstract Piece this[Vector2Int coord] { get; set; }
+        public abstract Piece this[Vector2Int coord] { get; internal set; }
 
         public bool Contains(Vector2Int coord) => Contains(coord.x, coord.y);
         public abstract bool Contains(int x, int y);

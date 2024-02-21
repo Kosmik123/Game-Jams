@@ -57,12 +57,12 @@ namespace Bipolar.Match3
                 bool wasCorrectMove = matcher.PieceChains.Count > 0;
                 if (wasCorrectMove == false)
                 {
-                    (boardController[pieceCoord1], boardController[pieceCoord2]) = (boardController[pieceCoord2], boardController[pieceCoord1]);
+                    (boardController.Pieces[pieceCoord1], boardController.Pieces[pieceCoord2]) = (boardController.Pieces[pieceCoord2], boardController.Pieces[pieceCoord1]);
                     OnMatchingFailed?.Invoke();
                 }
             };
 
-            (boardController[pieceCoord2], boardController[pieceCoord1]) = (boardController[pieceCoord1], boardController[pieceCoord2]);
+            (boardController.Pieces[pieceCoord2], boardController.Pieces[pieceCoord1]) = (boardController.Pieces[pieceCoord1], boardController.Pieces[pieceCoord2]);
         }
 
         private void PiecesMovementManager_OnAllPiecesMovementStopped()
@@ -93,9 +93,9 @@ namespace Bipolar.Match3
         {
             foreach (var coord in chain.PiecesCoords)
             {
-                var piece = boardController.Board.GetPiece(coord);
+                var piece = boardController.Pieces[coord];
                 currentlyClearedPieces.Add(piece);
-                boardController.Board[coord] = null;
+                boardController.Pieces[coord] = null;
             }
 
             foreach (var piece in currentlyClearedPieces)

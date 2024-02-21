@@ -25,7 +25,7 @@ namespace Bipolar.PuzzleBoard.General
         public override Piece this[Vector2Int coord] 
         { 
             get => piecesByCoords[coord];
-            set => piecesByCoords[coord] = value; 
+            internal set => piecesByCoords[coord] = value; 
         }
         public override IReadOnlyCollection<Piece> Pieces => piecesByCoords.Values;
 
