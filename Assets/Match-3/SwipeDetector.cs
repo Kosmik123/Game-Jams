@@ -1,4 +1,5 @@
 ﻿using Bipolar.PuzzleBoard;
+using System.Diagnostics.SymbolStore;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -32,6 +33,9 @@ namespace Bipolar.Match3
             }
         }
         private float sqrDragDetectionDistance;
+
+        [SerializeField]
+        private bool disallowDiagonalSwipes = true;
 
         private bool hasDragged = false;
 
@@ -91,6 +95,14 @@ namespace Bipolar.Match3
 
         private Vector2Int GetDirectionFromMove(Vector2Int startCoord, Vector2 moveDelta)
         {
+            if (disallowDiagonalSwipes)
+            {
+                if (Mathf.Abs(moveDelta.x) > Mathf.Abs(moveDelta.y))
+                    moveDelta.y = 0;
+                else
+                    moveDelta.x = 0;
+            }
+
             moveDelta.Normalize();
             moveDelta.Scale(board.Grid.cellSize + board.Grid.cellGap);
 

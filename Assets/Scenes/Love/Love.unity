@@ -1322,6 +1322,7 @@ MonoBehaviour:
   board: {fileID: 1326609498}
   releaseDetectionDistance: 0.5
   dragDetectionDistance: 1
+  disallowDiagonalSwipes: 1
 --- !u!114 &1326609506
 MonoBehaviour:
   m_ObjectHideFlags: 0
