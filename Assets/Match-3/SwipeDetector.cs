@@ -60,7 +60,7 @@ namespace Bipolar.Match3
             if (delta.sqrMagnitude > sqrDragDetectionDistance)
             {
                 hasDragged = true;
-                OnPieceSwiped?.Invoke(pieceCoord, GetDirectionFromMove(delta));
+                OnPieceSwiped?.Invoke(pieceCoord, GetDirectionFromMove(pieceCoord, delta));
             }
         }
 
@@ -85,20 +85,21 @@ namespace Bipolar.Match3
             var delta = releaseWorldPosition - pressWorldPosition;
             if (delta.sqrMagnitude > releaseDetectionDistance * releaseDetectionDistance)
             {
-                OnPieceSwiped?.Invoke(pieceCoord, GetDirectionFromMove(delta));
+                OnPieceSwiped?.Invoke(pieceCoord, GetDirectionFromMove(pieceCoord, delta));
             }
         }
 
-        private Vector2Int GetDirectionFromMove(Vector2 moveDelta)
+        private Vector2Int GetDirectionFromMove(Vector2Int startCoord, Vector2 moveDelta)
         {
-            // TODO wziąć pod uwagę różne kształty grida
-            Vector2Int swipeDirection;
-            if (Mathf.Abs(moveDelta.x) > Mathf.Abs(moveDelta.y))
-                swipeDirection = moveDelta.x < 0 ? Vector2Int.left : Vector2Int.right;
-            else
-                swipeDirection = moveDelta.y < 0 ? Vector2Int.down : Vector2Int.up;
+            moveDelta.Normalize();
+            moveDelta.Scale(board.Grid.cellSize + board.Grid.cellGap);
 
-            return Vector2Int.RoundToInt(Grid.Swizzle(board.Grid.cellSwizzle, (Vector2)swipeDirection));
+            var startPosition = board.CoordToWorld(startCoord);
+            var endPosition = startPosition + (Vector3)moveDelta;
+            var endCoord = board.WorldToCoord(endPosition);
+           
+            var direction = endCoord - startCoord;
+            return direction;
         }
 
         private void OnValidate()

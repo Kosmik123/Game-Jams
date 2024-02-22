@@ -67,7 +67,6 @@ namespace Bipolar.PuzzleBoard
             var piece = this[coord];
             if (piece == null || piece.IsCleared)
                 return null;
-
             return piece;
         }
     }
