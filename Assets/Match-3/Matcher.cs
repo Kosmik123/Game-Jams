@@ -6,12 +6,22 @@ namespace Bipolar.Match3
 {
     public abstract class Matcher : MonoBehaviour
     {
-        private static readonly Vector2Int[] chainsDirections =
+        private static readonly Vector2Int[] defaultChainsDirections =
         {
             Vector2Int.right,
             Vector2Int.up,
             Vector2Int.left,
             Vector2Int.down
+        };
+
+        private static readonly Vector2Int[] hexagonalChainsDirections =
+        {
+            Vector2Int.up + Vector2Int.right,
+            Vector2Int.right,
+            Vector2Int.up + Vector2Int.left,
+            Vector2Int.down + Vector2Int.right,
+            Vector2Int.left,
+            Vector2Int.down + Vector2Int.left,
         };
 
         protected readonly List<PiecesChain> pieceChains = new List<PiecesChain>();
@@ -34,25 +44,30 @@ namespace Bipolar.Match3
 
         public static void FindMatches(Board board, TriosPiecesChain chain, Queue<Vector2Int> coordsToCheck)
         {
+            bool isHexagonal = board.Grid.cellLayout == GridLayout.CellLayout.Hexagon;
             while (coordsToCheck.Count > 0)
             {
                 var pieceCoord = coordsToCheck.Dequeue();
                 chain.Add(pieceCoord);
-                foreach (var direction in chainsDirections)
+                foreach (var direction in GetLinesDirections(board.Grid.cellLayout))
                 {
-                    TryAddLineToChain(board, chain, pieceCoord, direction, coordsToCheck);
+                    TryAddLineToChain(board, chain, pieceCoord, direction, coordsToCheck, isHexagonal);
                 }
             }
         }
 
-        public static bool TryAddLineToChain(Board board, TriosPiecesChain chain, Vector2Int pieceCoord, Vector2Int direction, Queue<Vector2Int> coordsToCheck)
+        public static IReadOnlyList<Vector2Int> GetLinesDirections(GridLayout.CellLayout layout) => layout == GridLayout.CellLayout.Hexagon
+            ? (IReadOnlyList<Vector2Int>)hexagonalChainsDirections
+            : defaultChainsDirections;
+
+        public static bool TryAddLineToChain(Board board, TriosPiecesChain chain, Vector2Int pieceCoord, Vector2Int direction, Queue<Vector2Int> coordsToCheck, bool isHexagonal)
         {
-            var nearCoord = pieceCoord + direction;
+            var nearCoord = pieceCoord + Board.GetFixedDirection(pieceCoord, direction, isHexagonal);
             var nearToken = board.GetPiece(nearCoord);
             if (nearToken == null || chain.PieceType != nearToken.Type)
                 return false;
 
-            var backCoord = pieceCoord - direction;
+            var backCoord = pieceCoord + Board.GetFixedDirection(pieceCoord, -direction, isHexagonal);
             var backPiece = board.GetPiece(backCoord);
             if (backPiece && chain.PieceType == backPiece.Type)
             {
@@ -63,7 +78,7 @@ namespace Bipolar.Match3
                 return true;
             }
 
-            var furtherCoord = nearCoord + direction;
+            var furtherCoord = nearCoord + Board.GetFixedDirection(nearCoord, direction, isHexagonal);
             var furtherPiece = board.GetPiece(furtherCoord);
             if (furtherPiece && chain.PieceType == furtherPiece.Type)
             {
@@ -96,7 +111,6 @@ namespace Bipolar.Match3
             coordsToCheck.Enqueue(coord);
             return true;
         }
-
 
         private void OnDrawGizmos()
         {
