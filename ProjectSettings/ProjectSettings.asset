@@ -566,6 +566,8 @@ PlayerSettings:
   webGLDecompressionFallback: 0
   scriptingDefineSymbols:
     1: NAUGHTY_ATTRIBUTES
+    7: NAUGHTY_ATTRIBUTES
+    13: NAUGHTY_ATTRIBUTES
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend: {}
