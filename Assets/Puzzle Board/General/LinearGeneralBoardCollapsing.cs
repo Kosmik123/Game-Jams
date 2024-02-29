@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 namespace Bipolar.PuzzleBoard.General
 {
@@ -81,7 +82,26 @@ namespace Bipolar.PuzzleBoard.General
             }
 
             var targetCoord = coord + direction;
-            if (Board.Coords.Contains(targetCoord) == false)
+            if (tile.Jump)
+            {
+                bool hasJumpTarget = gameObject;
+                while (TilemapContainsCoord(Board.ShapeTilemap, targetCoord))
+                {
+                    if (Board.Contains(targetCoord))
+                    {
+                        hasJumpTarget = true;
+                        break;
+                    }
+                    targetCoord += DirectionTileHelper.GetTileDirection(targetCoord, tile, isBoardHexagonal);
+                }
+
+                if (hasJumpTarget == false)
+                {
+                    endingCoords.Add(coord);
+                    return;
+                }
+            }
+            else if (Board.Coords.Contains(targetCoord) == false)
             {
                 endingCoords.Add(coord);
                 return;
@@ -93,6 +113,12 @@ namespace Bipolar.PuzzleBoard.General
 
             if (targetToSourceDictionary.ContainsKey(targetCoord) == false)
                 targetToSourceDictionary.Add(targetCoord, coord);
+        }
+
+        public static bool TilemapContainsCoord(Tilemap tilemap, Vector2Int coord)
+        {
+            var bounds = tilemap.cellBounds;
+            return coord.y >= bounds.yMin && coord.y < bounds.yMax && coord.x >= bounds.xMin && coord.x < bounds.xMax;
         }
 
         private CoordsLine CreateCoordsLine(Vector2Int startingCoord, IReadOnlyDictionary<Vector2Int, Vector2Int> targetCoordsDict)
@@ -112,7 +138,7 @@ namespace Bipolar.PuzzleBoard.General
             return new CoordsLine(coordsList);
         }
 
-        private bool TryGetTile(Vector2Int coord, out DirectionTile tile) => DirectionTileHelper.TryGetTile(coord, Board.Tilemap, out tile);
+        private bool TryGetTile(Vector2Int coord, out DirectionTile tile) => DirectionTileHelper.TryGetTile(coord, Board.ShapeTilemap, out tile);
 
         public override void Collapse()
         {
