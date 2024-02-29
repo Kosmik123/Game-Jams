@@ -1,14 +1,21 @@
-using Bipolar.Core;
+using Bipolar;
 using Bipolar.Input;
 using NaughtyAttributes;
 using UnityEngine;
 
+[RequireComponent(typeof(Rigidbody2D))]
 public class PlayerMovement : MonoBehaviour
 {
-    [Header("To Link")]
-    [SerializeField]
     private Rigidbody2D _rigidbody2D;
-    public Rigidbody2D Rigidbody => _rigidbody2D;
+    public Rigidbody2D Rigidbody
+    {
+        get
+        {
+            if (_rigidbody2D == null)
+                _rigidbody2D = GetComponent<Rigidbody2D>();
+            return _rigidbody2D;
+        }
+    }
     
     [Header("Movement")]
     [SerializeField, RequireInterface(typeof(IAxisInputProvider))]
@@ -65,11 +72,11 @@ public class PlayerMovement : MonoBehaviour
     {
         UpdateGrounded();
 
-        Vector3 velocity = _rigidbody2D.velocity;
+        Vector3 velocity = Rigidbody.velocity;
         float horizontal = InputProvider.GetAxis();
 
         float modifier = isGrounded ? 1 : (midAirModifier * Time.deltaTime);
-        velocity.x = Mathf.Lerp(_rigidbody2D.velocity.x, horizontal * moveSpeed, modifier);
+        velocity.x = Mathf.Lerp(Rigidbody.velocity.x, horizontal * moveSpeed, modifier);
 
 
         if (jump)
@@ -80,8 +87,8 @@ public class PlayerMovement : MonoBehaviour
         }
         jumpIntervalTimer -= Time.deltaTime;
 
-        _rigidbody2D.gravityScale = velocity.y < 0 ? downGravity : upGravity;
-        _rigidbody2D.velocity = velocity;
+        Rigidbody.gravityScale = velocity.y < 0 ? downGravity : upGravity;
+        Rigidbody.velocity = velocity;
     }
 
     private void UpdateGrounded()
