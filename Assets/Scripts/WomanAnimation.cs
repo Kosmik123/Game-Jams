@@ -31,6 +31,13 @@ public class WomanAnimation : MonoBehaviour
     {
         if (timer <= unchangabilityInterval)
             timer += Time.deltaTime;
+
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            spriteRenderer.sprite = sprites[0];
+            enabled = false;
+        }
+
     }
 
     private void OnDisable()

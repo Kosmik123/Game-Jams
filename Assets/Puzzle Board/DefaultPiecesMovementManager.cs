@@ -4,16 +4,18 @@ using UnityEngine;
 
 namespace Bipolar.PuzzleBoard
 {
+    public delegate void PieceMovementEndEventHandler(Piece piece);
+
     [RequireComponent(typeof(Board))]
     public class DefaultPiecesMovementManager : PiecesMovementManager
     {
         public override event System.Action OnAllPiecesMovementStopped;
-        public event System.Action<Piece> OnPieceMovementEnded;
+        public event PieceMovementEndEventHandler OnPieceMovementEnded;
 
         [SerializeField]
         private Board board;
         [SerializeField]
-        private float defaultMovementDuration;
+        private float defaultMovementDuration = 0.2f;
 
         private readonly Dictionary<Piece, Coroutine> pieceMovementCoroutines = new Dictionary<Piece, Coroutine>();
         public override bool ArePiecesMoving => pieceMovementCoroutines.Count > 0;

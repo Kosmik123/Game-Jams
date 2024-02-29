@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.Tilemaps;
 
 namespace Bipolar.PuzzleBoard.General
@@ -7,8 +8,9 @@ namespace Bipolar.PuzzleBoard.General
     public class GeneralBoard : Board
     {
         [SerializeField, Tooltip("Provides board shape")]
-        private Tilemap tilemap;
-        public Tilemap Tilemap => tilemap;
+        [FormerlySerializedAs("tilemap")]
+        private Tilemap shapeTilemap;
+        public Tilemap ShapeTilemap => shapeTilemap;
 
         private List<Vector2Int> includedCoords;
         public IReadOnlyList<Vector2Int> Coords
@@ -31,7 +33,7 @@ namespace Bipolar.PuzzleBoard.General
 
         private void Reset()
         {
-            tilemap = GetComponentInChildren<Tilemap>();
+            shapeTilemap = GetComponentInChildren<Tilemap>();
         }
 
         protected override void Awake()
@@ -44,34 +46,39 @@ namespace Bipolar.PuzzleBoard.General
         public void CreateBoardShape()
         {
             includedCoords = new List<Vector2Int>();
-            var coordBounds = tilemap.cellBounds;
+            var coordBounds = shapeTilemap.cellBounds;
             for (int y = coordBounds.yMin; y <= coordBounds.yMax; y++)
             {
                 for (int x = coordBounds.xMin; x <= coordBounds.xMax; x++)
                 {
                     var coord = new Vector2Int(x, y);
-                    var tile = tilemap.GetTile((Vector3Int)coord);
+                    var tile = shapeTilemap.GetTile((Vector3Int)coord);
                     if (tile != null)
+                    {
                         includedCoords.Add(coord);
+                        piecesByCoords.Add(coord, null);
+                    }
                 }
             }
+
+
         }
 
         public override bool Contains(int x, int y)
         {
-            return tilemap.cellBounds.Contains(new Vector3Int(x, y, tilemap.cellBounds.z))
+            return shapeTilemap.cellBounds.Contains(new Vector3Int(x, y, shapeTilemap.cellBounds.z))
                 && piecesByCoords.ContainsKey(new Vector2Int(x, y));
         }
 
         public override Vector3 CoordToWorld(Vector2 coord)
         {
             Vector3 cellPosition = base.CoordToWorld(coord);
-            return cellPosition + Grid.Swizzle(Grid.cellSwizzle, tilemap.tileAnchor);
+            return cellPosition + Grid.Swizzle(Grid.cellSwizzle, shapeTilemap.tileAnchor);
         }
 
         public override Vector2Int WorldToCoord(Vector3 worldPosition)
         {
-            worldPosition -= tilemap.tileAnchor;
+            worldPosition -= shapeTilemap.tileAnchor;
             return base.WorldToCoord(worldPosition);
         }
 

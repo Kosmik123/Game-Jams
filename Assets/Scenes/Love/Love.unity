@@ -467,7 +467,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 10, y: 10}
+  m_Size: {x: 11, y: 11}
   m_EdgeRadius: 0
 --- !u!1001 &1089557700
 PrefabInstance:
@@ -1221,7 +1221,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bd55eb4c3ca85264aa37bed35e1f862a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tilemap: {fileID: 1154399541}
+  shapeTilemap: {fileID: 1154399541}
 --- !u!156049354 &1326609499
 Grid:
   m_ObjectHideFlags: 0
