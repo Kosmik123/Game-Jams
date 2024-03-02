@@ -1,5 +1,4 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Bipolar.PuzzleBoard
 {
@@ -18,7 +17,6 @@ namespace Bipolar.PuzzleBoard
         public abstract bool ArePiecesMoving { get; }
         public abstract bool IsCollapsing { get; }
         public abstract IPiecesIndexable Pieces { get; }
-
 
         public abstract void Collapse();
     }
@@ -87,10 +85,10 @@ namespace Bipolar.PuzzleBoard
 
         public class BoardControllerPiecesIndexable : IPiecesIndexable
         {
-            private readonly Func<Vector2Int, Piece> getFunction;
-            private readonly Action<Vector2Int, Piece> setFunction;
+            private readonly System.Func<Vector2Int, Piece> getFunction;
+            private readonly System.Action<Vector2Int, Piece> setFunction;
 
-            public BoardControllerPiecesIndexable(Func<Vector2Int, Piece> getFunction, Action<Vector2Int, Piece> setFunction)
+            public BoardControllerPiecesIndexable(System.Func<Vector2Int, Piece> getFunction, System.Action<Vector2Int, Piece> setFunction)
             {
                 this.getFunction = getFunction;
                 this.setFunction = setFunction;

@@ -7,6 +7,8 @@ namespace Bipolar.PuzzleBoard
     {
         [SerializeField]
         private float shrinkingDuration = 0.2f;
+        [SerializeField, Range(0, 1)]
+        private float clearingMoment;
         [SerializeField]
         private Transform resizedVisual;
 

@@ -42,5 +42,11 @@ namespace Bipolar.PuzzleBoard
         {
             Type = type;
         }
+
+        private void OnDestroy()
+        {
+            OnCleared = null;
+            OnTypeChanged = null;
+        }
     }
 }

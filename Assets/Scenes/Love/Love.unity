@@ -1457,7 +1457,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   settings: {fileID: 11400000, guid: 6cbd141b186142040832182f9aa5d533, type: 2}
   matchManager: {fileID: 1547492757}
-  board: {fileID: 1326609498}
+  boardController: {fileID: 1326609501}
+  spawner: {fileID: 1326609506}
   target: {fileID: 396547439}
   effectPrototype: {fileID: 8538214134004474236, guid: 1cf8fa697b8253e47987000e1342558f, type: 3}
 --- !u!114 &1547492760
@@ -1840,6 +1841,10 @@ PrefabInstance:
       propertyPath: matchRequester
       value: 
       objectReference: {fileID: 491232955}
+    - target: {fileID: 9070372006745918619, guid: 69f84fa3e5df950458ae61ff57657d6b, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -367.46997
+      objectReference: {fileID: 0}
     - target: {fileID: 9070372006745918619, guid: 69f84fa3e5df950458ae61ff57657d6b, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: -224.26996

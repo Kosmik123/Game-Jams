@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace Bipolar.PuzzleBoard
 {
@@ -9,7 +10,7 @@ namespace Bipolar.PuzzleBoard
         [SerializeField]
         private Transform piecesContainter;
 
-        public override Piece SpawnPiece()
+        protected override Piece Spawn()
         {
             var spawnedPiece = Instantiate(piecePrototype, piecesContainter);
             spawnedPiece.IsCleared = false;
