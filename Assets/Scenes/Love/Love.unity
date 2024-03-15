@@ -410,7 +410,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 4
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &696590159
 GameObject:
@@ -523,7 +523,7 @@ PrefabInstance:
     - target: {fileID: 2191485264516239418, guid: 510519c35343bb04b8f064fc4b6c90bb, type: 3}
       propertyPath: grid
       value: 
-      objectReference: {fileID: 1326609499}
+      objectReference: {fileID: 0}
     - target: {fileID: 2191485264516239418, guid: 510519c35343bb04b8f064fc4b6c90bb, type: 3}
       propertyPath: board
       value: 
@@ -1229,7 +1229,7 @@ Grid:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1326609497}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CellSize: {x: 1, y: 1, z: 1}
   m_CellGap: {x: 0.1, y: 0.1, z: 0}
   m_CellLayout: 0
@@ -1249,7 +1249,7 @@ Transform:
   - {fileID: 696590160}
   - {fileID: 103448169}
   m_Father: {fileID: 0}
-  m_RootOrder: 3
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1326609501
 MonoBehaviour:
@@ -1278,7 +1278,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   piecesSpawner: {fileID: 1326609506}
   pieceTypeProvider: {fileID: 1326609503}
-  collapseOnStart: 0
+  collapseOnStart: 1
   piecesMovementManager: {fileID: 1326609508}
 --- !u!114 &1326609503
 MonoBehaviour:
@@ -1362,7 +1362,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b5749d51da1d2844cab8fb7eb4dc355b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  piecesMovementSpeed: 8
+  piecesMovementSpeed: 6
 --- !u!114 &1326609509
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1376,7 +1376,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   board: {fileID: 1326609498}
-  defaultMovementDuration: 0.2
+  defaultMovementDuration: 0.25
 --- !u!1 &1547492755
 GameObject:
   m_ObjectHideFlags: 0
@@ -1704,7 +1704,7 @@ Transform:
   - {fileID: 63916613}
   - {fileID: 396547439}
   m_Father: {fileID: 0}
-  m_RootOrder: 5
+  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2145911924
 MonoBehaviour:
@@ -1751,7 +1751,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1531642693621559512, guid: 69f84fa3e5df950458ae61ff57657d6b, type: 3}
       propertyPath: m_RootOrder
-      value: 6
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 1531642693621559512, guid: 69f84fa3e5df950458ae61ff57657d6b, type: 3}
       propertyPath: m_AnchorMax.x

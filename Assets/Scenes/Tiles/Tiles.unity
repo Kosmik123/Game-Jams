@@ -178,7 +178,7 @@ Camera:
   far clip plane: 20
   field of view: 60
   orthographic: 1
-  orthographic size: 6
+  orthographic size: 7.83
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -1235,7 +1235,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bd55eb4c3ca85264aa37bed35e1f862a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tilemap: {fileID: 309857551}
+  shapeTilemap: {fileID: 309857551}
 --- !u!156049354 &675987278
 Grid:
   m_ObjectHideFlags: 0
@@ -1453,6 +1453,7 @@ MonoBehaviour:
   board: {fileID: 675987277}
   releaseDetectionDistance: 0.5
   dragDetectionDistance: 1
+  disallowDiagonalSwipes: 1
 --- !u!114 &834524623
 MonoBehaviour:
   m_ObjectHideFlags: 0
