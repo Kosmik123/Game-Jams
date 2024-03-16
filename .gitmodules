@@ -1,3 +1,6 @@
 [submodule "Assets/Bipolar Core"]
 	path = Assets/Bipolar Core
 	url = https://github.com/Kosmik123/Bipolar-Core.git
+[submodule "Assets/Scene Management"]
+	path = Assets/Scene Management
+	url = https://github.com/Kosmik123/Scenes-Loading.git
