@@ -4,3 +4,6 @@
 [submodule "Assets/Board Puzzle"]
 	path = Assets/Board Puzzle
 	url = https://github.com/Kosmik123/Puzzle-Board
+[submodule "Assets/Match-3"]
+	path = Assets/Match-3
+	url = https://github.com/Kosmik123/Match-3.git
