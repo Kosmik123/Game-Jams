@@ -7,7 +7,7 @@ public class EffectsSpawner : MonoBehaviour
     [SerializeField]
     private PieceVisualSettings settings;
     [SerializeField]
-    private MatchManager matchManager;
+    private MatchController matchController;
     [SerializeField]
     private BoardController boardController;
     [SerializeField]
@@ -21,18 +21,18 @@ public class EffectsSpawner : MonoBehaviour
     private void OnEnable()
     {
         spawner.OnPieceSpawned += Spawner_OnPieceSpawned;
-        matchManager.OnPiecesMatched += MatchManager_OnPiecesMatched;
+        matchController.OnPiecesMatched += MatchManager_OnPiecesMatched;
     }
 
-    private void Spawner_OnPieceSpawned(Piece piece)
+    private void Spawner_OnPieceSpawned(PieceComponent piece)
     {
         piece.OnCleared += Piece_OnCleared;
     }
 
-    private void Piece_OnCleared(Piece piece)
+    private void Piece_OnCleared(PieceComponent piece)
     {
         piece.OnCleared -= Piece_OnCleared;
-        var sprite = settings.GetPieceSprite(piece.Type);
+        var sprite = settings.GetPieceSprite(piece.Color);
         SpawnEffect(sprite, piece.transform.position);
     }
 
@@ -43,7 +43,7 @@ public class EffectsSpawner : MonoBehaviour
         
         foreach (var coord in chain.PiecesCoords)
         {
-            var position = boardController.Board.CoordToWorld(coord);
+            var position = boardController.BoardComponent.CoordToWorld(coord);
             //SpawnEffect(sprite, position);
         }
     }
@@ -58,6 +58,6 @@ public class EffectsSpawner : MonoBehaviour
 
     private void OnDisable()
     {
-        matchManager.OnPiecesMatched -= MatchManager_OnPiecesMatched;
+        matchController.OnPiecesMatched -= MatchManager_OnPiecesMatched;
     }
 }

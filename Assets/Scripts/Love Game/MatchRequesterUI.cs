@@ -7,7 +7,7 @@ public class MatchRequesterUI : MonoBehaviour
     [System.Serializable]
     public struct TokenTypeToSpriteAssetMapping
     {
-        public PieceType tokenType;
+        public PieceColor tokenType;
         public string spriteAssetName;
     }
 

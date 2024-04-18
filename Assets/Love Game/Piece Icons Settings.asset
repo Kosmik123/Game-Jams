@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 88ee220fe9c037448b28e6a4e1137e77, type: 3}
   m_Name: Piece Icons Settings
   m_EditorClassIdentifier: 
-  tokenVisualMappings:
+  pieceVisualMappings:
   - type: {fileID: 11400000, guid: 81dc62b5e6618454782b3b9c07b79190, type: 2}
     color: {r: 1, g: 1, b: 1, a: 1}
     sprite: {fileID: -2978653956524333172, guid: b4234d101ed96654d99d370a1e6cab87, type: 3}
@@ -28,3 +28,4 @@ MonoBehaviour:
   - type: {fileID: 11400000, guid: c94f1101479b35342adeb3bf967e487e, type: 2}
     color: {r: 1, g: 1, b: 1, a: 1}
     sprite: {fileID: -2696506250795634678, guid: b4234d101ed96654d99d370a1e6cab87, type: 3}
+  defaultSprite: {fileID: 0}

@@ -9,11 +9,13 @@ public class MatchRequester : MonoBehaviour
     public event System.Action<int> OnRequestUpdated;
 
     [SerializeField]
-    private MatchManager matchManager;
-    //[SerializeField]
-    //private MatchRequest[] requests;
+    private MatchController matchManager;
     [SerializeField]
-    private Settings settings;
+    private MatchingManager matchingManager;
+    [SerializeField]
+    private MatchRequest[] requests;
+    [SerializeField]
+    private PieceColorProvider settings;
 
     [Header("States")]
     [SerializeField, ReadOnly]
@@ -25,9 +27,11 @@ public class MatchRequester : MonoBehaviour
 
     private int previousTypeIndex = 0;
 
+    private System.Random rng = new System.Random();
+
     private void OnEnable()
     {
-        matchManager.OnPiecesMatched += MatchManager_OnTokensMatched;
+        //  matchManager.OnPiecesMatched += MatchManager_OnTokensMatched;
     }
 
     private void Start()
@@ -41,7 +45,7 @@ public class MatchRequester : MonoBehaviour
         requestsCountDone = 0;
         requestNumber++;
 
-        var randomType = settings.GetPieceTypeExcept(currentRequest.type);
+        var randomType = settings.GetPieceColor(rng.Next(), rng.Next());
         currentRequest = new MatchRequest()
         {
             type = randomType,
@@ -70,11 +74,11 @@ public class MatchRequester : MonoBehaviour
 
             if (triosTokensChain.VerticalTriosCount < request.verticalCount)
                 return;
-            
+
             obtainedTokens += triosTokensChain.HorizontalTriosCount + triosTokensChain.VerticalTriosCount - 1;
         }
 
-        obtainedTokens += matchManager.Combo - 1;
+        obtainedTokens += matchingManager.Combo - 1;
         requestsCountDone += obtainedTokens;
         int remaining = currentRequest.requestsCount - requestsCountDone;
         if (remaining > 0)
