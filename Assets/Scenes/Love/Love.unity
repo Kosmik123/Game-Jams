@@ -1205,6 +1205,7 @@ GameObject:
   - component: {fileID: 1326609508}
   - component: {fileID: 1326609510}
   - component: {fileID: 1326609501}
+  - component: {fileID: 1326609511}
   m_Layer: 0
   m_Name: Board
   m_TagString: Untagged
@@ -1282,7 +1283,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   pieceFactory: {fileID: 1326609510}
   _boardComponent: {fileID: 1326609498}
-  mover: {fileID: 0}
+  mover: {fileID: 1326609511}
   directionsMap: {fileID: 1154399541}
   piecesMovementManager: {fileID: 1326609508}
 --- !u!114 &1326609503
@@ -1341,8 +1342,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3aa1fbf9e096c874499165d2e22b44eb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetBoard: {fileID: 0}
-  piecePrototype: {fileID: 3718595752069920288, guid: 99f817c17fef7814f91b2e2618469c76, type: 3}
+  targetBoard: {fileID: 1326609498}
+  piecePrototype: {fileID: 8247989708242854595, guid: 99f817c17fef7814f91b2e2618469c76, type: 3}
   piecesContainer: {fileID: 1326609500}
 --- !u!114 &1326609507
 MonoBehaviour:
@@ -1353,10 +1354,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 1326609497}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dd5cc66134acf8241aa8c19c13e4224f, type: 3}
+  m_Script: {fileID: 11500000, guid: 99e97b419bad43d4a8fc5033ef021880, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   pieceColorsList: {fileID: 11400000, guid: bfcf2dc1b16691f419860f7968a3652b, type: 2}
+  <Time>k__BackingField: 0
+  <Seed>k__BackingField: 1
 --- !u!114 &1326609508
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1396,7 +1399,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eb9284e0c923d3945b8f3090d1e10810, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  pieceColorProvider: {fileID: 1326609503}
+  pieceColorProvider: {fileID: 1326609507}
+--- !u!114 &1326609511
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1326609497}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2f9de91b08304c64fa762d002fd10b5c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  piecesSpawner: {fileID: 1326609506}
+  piecesMovementManager: {fileID: 1326609508}
+  dontRefillEmptySpaces: 0
 --- !u!1 &1547492755
 GameObject:
   m_ObjectHideFlags: 0
@@ -1884,7 +1902,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1531642693621559516, guid: 69f84fa3e5df950458ae61ff57657d6b, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1531642693621559519, guid: 69f84fa3e5df950458ae61ff57657d6b, type: 3}
       propertyPath: m_Camera
