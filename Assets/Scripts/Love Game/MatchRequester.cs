@@ -15,7 +15,7 @@ public class MatchRequester : MonoBehaviour
     [SerializeField]
     private MatchRequest[] requests;
     [SerializeField]
-    private PieceColorProvider settings;
+    private PieceColorsList settings;
 
     [Header("States")]
     [SerializeField, ReadOnly]
@@ -45,7 +45,7 @@ public class MatchRequester : MonoBehaviour
         requestsCountDone = 0;
         requestNumber++;
 
-        var randomType = settings.GetPieceColor(rng.Next(), rng.Next());
+        var randomType = settings[rng.Next(settings.Count)];
         currentRequest = new MatchRequest()
         {
             type = randomType,

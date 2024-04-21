@@ -299,7 +299,7 @@ Transform:
   m_GameObject: {fileID: 103448166}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.1, y: 1.1, z: 1}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1326609500}
   m_RootOrder: 2
@@ -392,7 +392,7 @@ MonoBehaviour:
   matchManager: {fileID: 1547492760}
   matchingManager: {fileID: 1547492757}
   requests: []
-  settings: {fileID: 1326609503}
+  settings: {fileID: 11400000, guid: bfcf2dc1b16691f419860f7968a3652b, type: 2}
   requestNumber: 0
   currentRequest:
     requestsCount: 0
@@ -1206,6 +1206,7 @@ GameObject:
   - component: {fileID: 1326609510}
   - component: {fileID: 1326609501}
   - component: {fileID: 1326609511}
+  - component: {fileID: 1326609512}
   m_Layer: 0
   m_Name: Board
   m_TagString: Untagged
@@ -1235,7 +1236,7 @@ Grid:
   m_GameObject: {fileID: 1326609497}
   m_Enabled: 0
   m_CellSize: {x: 1, y: 1, z: 1}
-  m_CellGap: {x: 0.1, y: 0.1, z: 0}
+  m_CellGap: {x: 0, y: 0, z: 0}
   m_CellLayout: 0
   m_CellSwizzle: 0
 --- !u!4 &1326609500
@@ -1246,7 +1247,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1326609497}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: -4, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1154399539}
@@ -1267,8 +1268,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 15c9ae32075a38e46bb55486154eaf39, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  piecesMovementManager: {fileID: 1326609509}
   collapseOnStart: 0
+  collapseConstantly: 0
 --- !u!114 &1326609502
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1281,8 +1282,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c575867b5e663ae4b8fa50bcf59e035a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  boardController: {fileID: 1326609501}
   pieceFactory: {fileID: 1326609510}
-  _boardComponent: {fileID: 1326609498}
   mover: {fileID: 1326609511}
   directionsMap: {fileID: 1154399541}
   piecesMovementManager: {fileID: 1326609508}
@@ -1299,7 +1300,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   pieceColorsList: {fileID: 11400000, guid: bfcf2dc1b16691f419860f7968a3652b, type: 2}
-  board: {fileID: 1326609498}
+  boardComponent: {fileID: 1326609498}
   avoidAdjacentPieceColors: 1
 --- !u!114 &1326609504
 MonoBehaviour:
@@ -1339,12 +1340,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 1326609497}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3aa1fbf9e096c874499165d2e22b44eb, type: 3}
+  m_Script: {fileID: 11500000, guid: bb5b0b50e4443aa4c956db5c0986a3bf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   targetBoard: {fileID: 1326609498}
   piecePrototype: {fileID: 8247989708242854595, guid: 99f817c17fef7814f91b2e2618469c76, type: 3}
-  piecesContainer: {fileID: 1326609500}
+  piecesContainter: {fileID: 1326609500}
 --- !u!114 &1326609507
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1386,7 +1387,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   board: {fileID: 1326609498}
-  defaultMovementDuration: 0.25
+  defaultMovementDuration: 5
 --- !u!114 &1326609510
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1399,7 +1400,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eb9284e0c923d3945b8f3090d1e10810, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  pieceColorProvider: {fileID: 1326609507}
+  pieceColorProvider: {fileID: 1326609512}
 --- !u!114 &1326609511
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1415,6 +1416,19 @@ MonoBehaviour:
   piecesSpawner: {fileID: 1326609506}
   piecesMovementManager: {fileID: 1326609508}
   dontRefillEmptySpaces: 0
+--- !u!114 &1326609512
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1326609497}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd5cc66134acf8241aa8c19c13e4224f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  pieceColorsList: {fileID: 11400000, guid: bfcf2dc1b16691f419860f7968a3652b, type: 2}
 --- !u!1 &1547492755
 GameObject:
   m_ObjectHideFlags: 0
@@ -1430,6 +1444,7 @@ GameObject:
   - component: {fileID: 1547492760}
   - component: {fileID: 1547492761}
   - component: {fileID: 1547492762}
+  - component: {fileID: 1547492763}
   m_Layer: 0
   m_Name: Match Manager
   m_TagString: Untagged
@@ -1466,7 +1481,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   boardController: {fileID: 1326609501}
-  swapManager: {fileID: 1547492756}
+  swapRequester: {fileID: 1547492756}
   matchController: {fileID: 1547492760}
   piecesClearManager: {fileID: 1547492762}
   combo: 0
@@ -1515,7 +1530,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ab40d14054578d746bc54ecb498de314, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  boardController: {fileID: 1326609501}
   matcher: {fileID: 1547492761}
 --- !u!114 &1547492761
 MonoBehaviour:
@@ -1529,7 +1543,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2327b87f74a85c42b26a20ec8b22350, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  board: {fileID: 1326609498}
+  boardComponent: {fileID: 1326609498}
   matchingStrategy: {fileID: 11400000, guid: e1d539e9d8a803441a76a05db9753c7d, type: 2}
 --- !u!114 &1547492762
 MonoBehaviour:
@@ -1543,6 +1557,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cf8523ee804b77f49b8d0c4e0ddd60ed, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  boardController: {fileID: 1326609501}
+--- !u!114 &1547492763
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1547492755}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 813f4d5163d76f043a5b6895fb7bffea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  matchingManager: {fileID: 1547492757}
   boardController: {fileID: 1326609501}
 --- !u!1 &1728875260
 GameObject:
@@ -1698,7 +1726,7 @@ Camera:
   far clip plane: 100
   field of view: 60
   orthographic: 1
-  orthographic size: 9.2
+  orthographic size: 8.7
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -1722,7 +1750,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2041099555}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -10}
+  m_LocalPosition: {x: 0, y: 4, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -1769,7 +1797,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2145911922}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.4, y: 0.1, z: 0}
+  m_LocalPosition: {x: -2.4, y: 4.1, z: 0}
   m_LocalScale: {x: 1.1, y: 1.1, z: 1}
   m_Children:
   - {fileID: 63916613}
