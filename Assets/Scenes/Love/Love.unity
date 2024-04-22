@@ -1268,8 +1268,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 15c9ae32075a38e46bb55486154eaf39, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  collapseOnStart: 0
-  collapseConstantly: 0
 --- !u!114 &1326609502
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1400,7 +1398,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eb9284e0c923d3945b8f3090d1e10810, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  pieceColorProvider: {fileID: 1326609512}
+  pieceColorProvider: {fileID: 1326609503}
 --- !u!114 &1326609511
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1415,7 +1413,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   piecesSpawner: {fileID: 1326609506}
   piecesMovementManager: {fileID: 1326609508}
-  dontRefillEmptySpaces: 0
 --- !u!114 &1326609512
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1425,10 +1422,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1326609497}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dd5cc66134acf8241aa8c19c13e4224f, type: 3}
+  m_Script: {fileID: 11500000, guid: 61f15e572586d9e46a5ba235a51d6cef, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  pieceColorsList: {fileID: 11400000, guid: bfcf2dc1b16691f419860f7968a3652b, type: 2}
+  boardComponent: {fileID: 1326609498}
 --- !u!1 &1547492755
 GameObject:
   m_ObjectHideFlags: 0
@@ -1444,7 +1441,6 @@ GameObject:
   - component: {fileID: 1547492760}
   - component: {fileID: 1547492761}
   - component: {fileID: 1547492762}
-  - component: {fileID: 1547492763}
   m_Layer: 0
   m_Name: Match Manager
   m_TagString: Untagged
@@ -1484,6 +1480,9 @@ MonoBehaviour:
   swapRequester: {fileID: 1547492756}
   matchController: {fileID: 1547492760}
   piecesClearManager: {fileID: 1547492762}
+  boardCollapseController: {fileID: 1326609502}
+  boardComponent: {fileID: 1326609498}
+  piecesSwapManager: {fileID: 1326609512}
   combo: 0
   testMatchPredictor: {fileID: 0}
 --- !u!4 &1547492758
@@ -1514,8 +1513,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   settings: {fileID: 11400000, guid: 6cbd141b186142040832182f9aa5d533, type: 2}
   matchController: {fileID: 1547492760}
-  boardController: {fileID: 1326609501}
   spawner: {fileID: 1326609506}
+  boardComponent: {fileID: 1326609498}
   target: {fileID: 396547439}
   effectPrototype: {fileID: 8538214134004474236, guid: 1cf8fa697b8253e47987000e1342558f, type: 3}
 --- !u!114 &1547492760
@@ -1557,21 +1556,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cf8523ee804b77f49b8d0c4e0ddd60ed, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  boardController: {fileID: 1326609501}
---- !u!114 &1547492763
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1547492755}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 813f4d5163d76f043a5b6895fb7bffea, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  matchingManager: {fileID: 1547492757}
-  boardController: {fileID: 1326609501}
+  boardComponent: {fileID: 1326609498}
 --- !u!1 &1728875260
 GameObject:
   m_ObjectHideFlags: 0

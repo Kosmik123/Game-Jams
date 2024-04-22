@@ -1,6 +1,6 @@
 using Bipolar.Match3;
 using Bipolar.PuzzleBoard;
-using Bipolar.PuzzleBoard.Components;
+using System.Collections;
 using UnityEngine;
 
 public class EffectsSpawner : MonoBehaviour
@@ -10,9 +10,9 @@ public class EffectsSpawner : MonoBehaviour
     [SerializeField]
     private MatchController matchController;
     [SerializeField]
-    private BoardController boardController;
-    [SerializeField]
     private PiecesSpawner spawner;
+    [SerializeField]
+    private BoardComponent boardComponent;
 
     [SerializeField]
     private Transform target;
@@ -27,12 +27,21 @@ public class EffectsSpawner : MonoBehaviour
 
     private void Spawner_OnPieceSpawned(PieceComponent piece)
     {
-        piece.OnCleared += Piece_OnCleared;
+        if(piece.TryGetComponent<PieceClearingBehavior>(out var pieceClearing))
+        {
+            pieceClearing.OnClearing += Piece_OnStartedClearing;
+        }
     }
 
-    private void Piece_OnCleared(PieceComponent piece)
+    private void Piece_OnStartedClearing(PieceClearingBehavior clearingBehavior)
     {
-        piece.OnCleared -= Piece_OnCleared;
+        clearingBehavior.OnClearing -= Piece_OnStartedClearing;
+        StartCoroutine(SpawnEffectAfterDelay(clearingBehavior.PieceComponent));
+    }
+
+    private IEnumerator SpawnEffectAfterDelay(PieceComponent piece)
+    {
+        yield return new WaitForSeconds(0.01f);
         var sprite = settings.GetPieceSprite(piece.Color);
         SpawnEffect(sprite, piece.transform.position);
     }
@@ -44,7 +53,7 @@ public class EffectsSpawner : MonoBehaviour
         
         foreach (var coord in chain.PiecesCoords)
         {
-            var position = boardController.BoardComponent.CoordToWorld(coord);
+            var position = boardComponent.CoordToWorld(coord);
             //SpawnEffect(sprite, position);
         }
     }
