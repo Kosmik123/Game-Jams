@@ -23,7 +23,7 @@ public class PlayAnimation : MonoBehaviour {
     {
        
         Ani.enabled = true;
-        Ani.ForceStateNormalizedTime(0.0f);
+        //Ani.ForceStateNormalizedTime(0.0f);
         Ani.Play(str);
 
     }
@@ -39,7 +39,7 @@ public class PlayAnimation : MonoBehaviour {
         }
         else {
            
-            Ani.ForceStateNormalizedTime(0.0f);
+            //Ani.ForceStateNormalizedTime(0.0f);
             Ani.enabled = false;           
         }
 
