@@ -43,7 +43,7 @@ How to Setup:
 How to Use:
 Code Assist is always active while you are coding. The following samples will give you a glimpse of Code Assist.
 * Code Completion: In a class which derives MonoBehaviour, type "CompareTag(". When you press double quotes("), code completion popup should appear with the available tags of the scene.
-* Inline Visuals: Type a color in hex code with quotation marks, like "#FF8800". A box with the matching color should appear left of the color code.
+* Inline Visuals: Type a color in hex code with quotation marks, like "#FF8800". A box with the matching color should appear left of the color code. "#FF8896"
 * Code Analyzers: Define a Vector3 (let's say vec3). When used like "if (vec3.magnitude < 10)", a warning will appear on that line. Press Alt+Enter to convert it to "if (vec3.sqrMagnitude < 10 * 10)", which has better performance.
 
 

@@ -48,7 +48,7 @@ public class EffectsSpawner : MonoBehaviour
 
     private void MatchManager_OnPiecesMatched(PiecesChain chain)
     {
-        var type = chain.PieceType;
+        var type = chain.PieceColor;
         var sprite = settings.GetPieceSprite(type);
         
         foreach (var coord in chain.PiecesCoords)

@@ -60,7 +60,7 @@ public class MatchRequester : MonoBehaviour
     private void MatchManager_OnTokensMatched(PiecesChain chain)
     {
         var request = currentRequest;
-        if (request.type != null && chain.PieceType != request.type)
+        if (request.type != null && chain.PieceColor != request.type)
             return;
 
         if (chain.Size < request.size)

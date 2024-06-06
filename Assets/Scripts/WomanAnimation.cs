@@ -37,7 +37,6 @@ public class WomanAnimation : MonoBehaviour
             spriteRenderer.sprite = sprites[0];
             enabled = false;
         }
-
     }
 
     private void OnDisable()
