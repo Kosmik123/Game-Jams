@@ -1,3 +1,12 @@
 [submodule "Assets/Bipolar Core"]
 	path = Assets/Bipolar Core
 	url = https://github.com/Kosmik123/Bipolar-Core.git
+[submodule "Assets/Humanoid3D"]
+	path = Assets/Humanoid3D
+	url = https://github.com/Kosmik123/Humanoid3D.git
+[submodule "Assets/Raycast System"]
+	path = Assets/Raycast System
+	url = https://github.com/Kosmik123/Raycast-System.git
+[submodule "Assets/Interaction System"]
+	path = Assets/Interaction System
+	url = https://github.com/Kosmik123/Interaction-System.git
