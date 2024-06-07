@@ -1,0 +1,18 @@
+{
+    "name": "NewHumanoid",
+    "rootNamespace": "",
+    "references": [
+        "GUID:49b49c76ee64f6b41bf28ef951cb0e50",
+        "GUID:292248af89a2d004cb50155e91e8c71f",
+        "GUID:2ecd41d6ad0cd0748ab7fbaa1a919610"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
