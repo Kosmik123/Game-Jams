@@ -1,4 +1,3 @@
-using NaughtyAttributes;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -12,9 +11,27 @@ public class ThreadPhysics : MonoBehaviour
 
     [SerializeField, Min(0.01f)]
     private float thickness = 0.1f;
+    public float Thickness
+    {
+        get => thickness;
+        set => thickness = value;
+    }
 
     [SerializeField]
     private LayerMask detectedLayers = -5;
+
+    [SerializeField, NaughtyAttributes.ReadOnly]
+    private float length;
+    private bool isLengthCalculated;
+    public float Length
+    {
+        get
+        {
+            if (isLengthCalculated == false)
+                CalculateLength();
+            return length;
+        }
+    }
 
     private void OnEnable()
     {
@@ -33,6 +50,24 @@ public class ThreadPhysics : MonoBehaviour
 
         DetectCollisionExit(points.Count - 1, -1);
         DetectCollisionExit(0, +1);
+        isLengthCalculated = false;
+
+#if UNITY_EDITOR
+        CalculateLength();
+#endif
+    }
+
+    private void CalculateLength()
+    {
+        float distanceSum = 0;
+        for (int i = 1; i < points.Count; i++)
+        {
+            var start = points[i - 1];
+            var end = points[i];
+            distanceSum += (start - end).magnitude; 
+        }
+        length = distanceSum;
+        isLengthCalculated = true;
     }
 
     private void DetectCollisionExit(int tipIndex, int direction)
@@ -114,7 +149,7 @@ public class ThreadPhysics : MonoBehaviour
                 }
 
                 if (wasSafeHit == false)
-                    Debug.LogError("NIEMO¯LIWE RACZEJ W METODZIE");
+                    Debug.LogError("NIEMO¯LIWE");
 
                 break;
             }
@@ -126,6 +161,12 @@ public class ThreadPhysics : MonoBehaviour
         bool fromPoint1 = Physics.Linecast(point1, point2, out fromPoint1Info, layerMask);
         bool fromPoint2 = Physics.Linecast(point2, point1, out fromPoint2Info, layerMask);
         return fromPoint1 || fromPoint2;
+    }
+
+    private void OnDisable()
+    {
+        points.Clear();
+        length = 0;
     }
 
     private void OnDrawGizmos()
