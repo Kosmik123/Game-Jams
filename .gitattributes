@@ -10,7 +10,7 @@
 *.prefab merge=unityyamlmerge eol=lf
 *.physicsMaterial2D merge=unityyamlmerge eol=lf
 *.physicMaterial merge=unityyamlmerge eol=lf
-*.asset merge=unityyamlmerge eol=lf
+*.asset merge=unityyamlmerge eol=crlf
 *.meta merge=unityyamlmerge eol=lf
 *.controller merge=unityyamlmerge eol=lf
 
@@ -24,6 +24,7 @@
 *.gif filter=lfs diff=lfs merge=lfs -text
 *.psd filter=lfs diff=lfs merge=lfs -text
 *.ai filter=lfs diff=lfs merge=lfs -text
+*.tif filter=lfs diff=lfs merge=lfs -text
 
 #Audio
 *.mp3 filter=lfs diff=lfs merge=lfs -text
@@ -53,3 +54,10 @@
 *.rns filter=lfs diff=lfs merge=lfs -text
 *.reason filter=lfs diff=lfs merge=lfs -text
 *.lxo filter=lfs diff=lfs merge=lfs -text
+
+#Unity Terrain
+*terrain.asset filter=lfs diff=lfs merge=lfs -text
+TerrainData*.asset filter=lfs diff=lfs merge=lfs -text
+
+#Unity Lighting
+*LightingData*.asset
