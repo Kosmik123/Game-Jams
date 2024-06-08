@@ -39,62 +39,7 @@ public class ThreadPhysics : MonoBehaviour
         DetectCollisionEnter(lastIndex, lastIndex - 1, transform);
         DetectCollisionEnter(0, 1, origin);
 
-        //if (transform.position == previousPosition)
-        //    return;
-
-        //Vector3 reversedPositionDeltaa = previousPosition - transform.position;
-        //var reversedPositionDeltaRayy = new Ray(transform.position, reversedPositionDeltaa);
-        //float movedDistancee = reversedPositionDeltaa.magnitude;
-
-        //int checksResolutionn = 1 + Mathf.Max(1, Mathf.CeilToInt(movedDistancee / preferredChecksDistance));
-        //float checkBaseDistancee = movedDistancee / checksResolutionn;
-
-        //var lastPoint = points[points.Count - 1];
-
-        //for (int j = checksResolutionn - 1; j >= 0; j--)
-        //{
-        //    var checkedPoint = reversedPositionDeltaRayy.GetPoint(j * checkBaseDistancee);
-        //    if (DoubleLinecast(checkedPoint, lastPoint, out var hit1, out var hit2, detectedLayers))
-        //    {
-        //        bool hit1Valid = hit1.collider;
-        //        bool hit2Valid = hit2.collider;
-
-        //        var hitPoint1 = hit1Valid ? hit1.point : hit2.point;
-        //        var hitPoint2 = hit2Valid ? hit2.point : hit1.point;
-
-        //        var hitNormal1 = hit1Valid ? hit1.normal : hit2.normal;
-        //        var hitNormal2 = hit2Valid ? hit2.normal : hit1.normal;
-
-        //        hitCenter = (hitPoint1 + hitPoint2) / 2f;
-        //        hitNormal = (hitNormal1 + hitNormal2) / 2f;
-        //        if (hitNormal.sqrMagnitude < 0.001f)
-        //            hitNormal = reversedPositionDeltaa;
-        //        hitNormal.Normalize();
-
-        //        bool wasSafeHit = false;
-        //        for (int i = 1; i < 10; i++)
-        //        {
-        //            var safePointDetectionLineStart = hitCenter + i * thickness * hitNormal;
-        //            if (Physics.Linecast(safePointDetectionLineStart, hitCenter, out var safePointDetectionHit, detectedLayers) == false)
-        //                continue;
-
-        //            safePoint = safePointDetectionHit.point + safePointDetectionHit.normal * thickness;
-        //            points.Add(safePoint);
-        //            wasSafeHit = true;
-        //            break;
-        //        }
-
-        //        if (wasSafeHit == false)
-        //            Debug.LogError("NIEMO¯LIWE RACZEJ");
-
-        //        break;
-        //    }
-        //}
-
-        //DetectCollisionEnter(transform.position);
         //DetectCollisionExit();
-
-        //previousPosition = transform.position;
     }
 
     private void DetectCollisionEnter(int tipPointIndex, int neighbourPointIndex, Transform tipTransform)
@@ -154,36 +99,6 @@ public class ThreadPhysics : MonoBehaviour
                 break;
             }
         }
-    }
-
-    private void DetectCollisionEnter(Vector3 originPosition)
-    {
-        var lastPoint = points[points.Count - 1];
-        if (DoubleLinecast(originPosition, lastPoint, out var hitFromOrigin, out var hitToOrigin, Physics.DefaultRaycastLayers) == false)
-            return;
-
-        var hitPoint1 = hitFromOrigin.collider ? hitFromOrigin.point : hitToOrigin.point;
-        var hitPoint2 = hitToOrigin.collider ? hitToOrigin.point : hitFromOrigin.point;
-        var collider = hitFromOrigin.collider ? hitFromOrigin.collider : hitToOrigin.collider;
-
-        var hitNormal1 = hitFromOrigin.collider ? hitFromOrigin.normal : hitToOrigin.normal;
-        var hitNormal2 = hitToOrigin.collider ? hitToOrigin.normal : hitFromOrigin.normal;
-
-        hitCenter = (hitPoint1 + hitPoint2) / 2f;
-        hitNormal = hitNormal1 + hitNormal2;
-        if (hitNormal.sqrMagnitude < 1)
-            hitNormal = previousPosition - transform.position;
-
-        var safePointRay = new Ray(hitCenter + 2 * thickness * hitNormal.normalized , -hitNormal);
-        if (Physics.Raycast(safePointRay, out var hitInfo, 2 * thickness) == false)
-        {
-            //Debug.DrawRay(safePointRay.origin, safePointRay.direction, Color.red, 50f);
-            Debug.LogError($"NIEMO¯LIWE {(transform.position - previousPosition).magnitude}");
-            return;
-        }
-
-        safePoint = safePointRay.GetPoint(hitInfo.distance - 1.5f * thickness);
-        points.Add(safePoint);
     }
 
     private void DetectCollisionExit()
