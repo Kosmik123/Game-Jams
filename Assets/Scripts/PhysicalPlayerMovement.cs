@@ -1,9 +1,6 @@
 ﻿using Bipolar;
 using Bipolar.Input;
-using Bipolar.PuzzleBoard;
 using NaughtyAttributes;
-using System;
-using System.Diagnostics.SymbolStore;
 using UnityEngine;
 
 public class PhysicalPlayerMovement : MonoBehaviour
