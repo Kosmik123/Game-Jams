@@ -17,13 +17,6 @@ public class ThreadPhysics : MonoBehaviour
     [SerializeField]
     private LayerMask detectedLayers = -5;
 
-    public Vector3 hitCenter;
-    public Vector3 hitNormal;
-    public Vector3 safePoint;
-
-    private Vector3 previousPosition;
-    private Vector3 previousOriginPosition;
-
     private void Awake()
     {
         points.Clear();
@@ -39,12 +32,40 @@ public class ThreadPhysics : MonoBehaviour
         DetectCollisionEnter(lastIndex, lastIndex - 1, transform);
         DetectCollisionEnter(0, 1, origin);
 
-        //DetectCollisionExit();
+        DetectCollisionExit(points.Count - 1, -1);
+        DetectCollisionExit(0, +1);
+    }
+
+    private void DetectCollisionExit(int tipIndex, int direction)
+    {
+        if (points.Count > 2)
+        {
+            var secondNeighbour = points[tipIndex + 2 * direction];
+            var tipPoint = points[tipIndex];
+
+            if (DoubleLinecast(tipPoint, secondNeighbour, out _, out _, detectedLayers) == false)
+            {
+                float distance = (tipPoint - secondNeighbour).magnitude;
+                var hypotenuseRay = new Ray(tipPoint, secondNeighbour - tipPoint);
+                int triangleChecksResolution = 1 + Mathf.CeilToInt(distance * 5);
+                float rayStartBaseDistance = distance / triangleChecksResolution;
+                int neighbourIndex = tipIndex + direction;
+                var neighbourPoint = points[neighbourIndex];
+                for (int i = 1; i <= triangleChecksResolution; i++)
+                {
+                    var lineEnd = hypotenuseRay.GetPoint(rayStartBaseDistance * i);
+                    if (Physics.Linecast(neighbourPoint, lineEnd))
+                        return;
+                }
+
+                points.RemoveAt(neighbourIndex);
+            }
+        }
     }
 
     private void DetectCollisionEnter(int tipPointIndex, int neighbourPointIndex, Transform tipTransform)
     {
-        previousPosition = points[tipPointIndex];
+        var previousPosition = points[tipPointIndex];
         points[tipPointIndex] = tipTransform.position;
 
         var previousTipPosition = previousPosition;
@@ -74,8 +95,8 @@ public class ThreadPhysics : MonoBehaviour
                 var hitNormal1 = hit1Valid ? hit1.normal : hit2.normal;
                 var hitNormal2 = hit2Valid ? hit2.normal : hit1.normal;
 
-                hitCenter = (hitPoint1 + hitPoint2) / 2f;
-                hitNormal = (hitNormal1 + hitNormal2) / 2f;
+                var hitCenter = (hitPoint1 + hitPoint2) / 2f;
+                var hitNormal = (hitNormal1 + hitNormal2) / 2f;
                 if (hitNormal.sqrMagnitude < 0.001f)
                     hitNormal = reversedPositionDelta;
                 hitNormal.Normalize();
@@ -87,7 +108,7 @@ public class ThreadPhysics : MonoBehaviour
                     if (Physics.Linecast(safePointDetectionLineStart, hitCenter, out var safePointDetectionHit, detectedLayers) == false)
                         continue;
 
-                    safePoint = safePointDetectionHit.point + safePointDetectionHit.normal * thickness;
+                    var safePoint = safePointDetectionHit.point + safePointDetectionHit.normal * thickness;
                     points.Insert(Mathf.Max(neighbourPointIndex, tipPointIndex), safePoint);
                     wasSafeHit = true;
                     break;
@@ -103,11 +124,11 @@ public class ThreadPhysics : MonoBehaviour
 
     private void DetectCollisionExit()
     {
-        if (points.Count <= 1)
+        if (points.Count <= 2)
             return;
 
         var preLastPoint = points[points.Count - 2];
-        if (DoubleLinecast(transform.position, preLastPoint, out var hitFromOrigin, out var hitToOrigin, Physics.DefaultRaycastLayers) == false)
+        if (DoubleLinecast(transform.position, preLastPoint, out _, out _, detectedLayers) == false)
         {
             float distance = (transform.position - preLastPoint).magnitude;
             var hypotenuseRay = new Ray(transform.position, preLastPoint - transform.position);
@@ -120,11 +141,6 @@ public class ThreadPhysics : MonoBehaviour
                     return;
             }
 
-            for (int i = 0; i <= triangleCheckRaysCount; i++)
-            {
-                var lineEnd = hypotenuseRay.GetPoint(rayStartsDistance * i);
-                Debug.DrawLine(points[points.Count - 1], lineEnd, Color.green, 2f);
-            }
 
             points.RemoveAt(points.Count - 1);
         }
@@ -139,15 +155,6 @@ public class ThreadPhysics : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        Gizmos.color = Color.blue;
-        Gizmos.DrawSphere(hitCenter, 0.05f);
-
-        Gizmos.color = Color.magenta;
-        Gizmos.DrawSphere(safePoint, 0.05f);
-
-        Gizmos.color = Color.green;
-        Gizmos.DrawLine(hitCenter, hitCenter + hitNormal);
-
         if (points == null || points.Count <= 0)
             return;
 
