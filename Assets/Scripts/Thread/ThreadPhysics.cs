@@ -7,7 +7,12 @@ public class ThreadPhysics : MonoBehaviour
     public IReadOnlyList<Vector3> Points => points;
 
     [SerializeField]
-    private Transform origin; 
+    private Transform origin;
+    public Transform Origin => origin;
+
+    [SerializeField]
+    private Transform ending;
+    public Transform Ending => ending;
 
     [SerializeField, Min(0.01f)]
     private float thickness = 0.1f;
@@ -37,15 +42,15 @@ public class ThreadPhysics : MonoBehaviour
     {
         points.Clear();
         points.Add(origin.position);
-        points.Add(transform.position);
+        points.Add(ending.position);
     }
 
-    private const float preferredChecksDistance = 0.05f;
+    private const float preferredChecksDistance = 0.1f;
 
     private void FixedUpdate()
     {
         int lastIndex = points.Count - 1;
-        DetectCollisionEnter(lastIndex, lastIndex - 1, transform);
+        DetectCollisionEnter(lastIndex, lastIndex - 1, ending);
         DetectCollisionEnter(0, 1, origin);
 
         DetectCollisionExit(points.Count - 1, -1);
@@ -68,33 +73,6 @@ public class ThreadPhysics : MonoBehaviour
         }
         length = distanceSum;
         isLengthCalculated = true;
-    }
-
-    private void DetectCollisionExit(int tipIndex, int direction)
-    {
-        if (points.Count > 2)
-        {
-            var secondNeighbour = points[tipIndex + 2 * direction];
-            var tipPoint = points[tipIndex];
-
-            if (DoubleLinecast(tipPoint, secondNeighbour, out _, out _, detectedLayers) == false)
-            {
-                float distance = (tipPoint - secondNeighbour).magnitude;
-                var hypotenuseRay = new Ray(tipPoint, secondNeighbour - tipPoint);
-                int triangleChecksResolution = 1 + Mathf.CeilToInt(distance * 5);
-                float rayStartBaseDistance = distance / triangleChecksResolution;
-                int neighbourIndex = tipIndex + direction;
-                var neighbourPoint = points[neighbourIndex];
-                for (int i = 1; i <= triangleChecksResolution; i++)
-                {
-                    var lineEnd = hypotenuseRay.GetPoint(rayStartBaseDistance * i);
-                    if (Physics.Linecast(neighbourPoint, lineEnd))
-                        return;
-                }
-
-                points.RemoveAt(neighbourIndex);
-            }
-        }
     }
 
     private void DetectCollisionEnter(int tipPointIndex, int neighbourPointIndex, Transform tipTransform)
@@ -156,11 +134,40 @@ public class ThreadPhysics : MonoBehaviour
         }
     }
 
+    private void DetectCollisionExit(int tipIndex, int direction)
+    {
+        if (points.Count > 2)
+        {
+            var secondNeighbour = points[tipIndex + 2 * direction];
+            var tipPoint = points[tipIndex];
+
+            if (DoubleLinecast(tipPoint, secondNeighbour, out _, out _, detectedLayers) == false)
+            {
+                float distance = (tipPoint - secondNeighbour).magnitude;
+                var hypotenuseRay = new Ray(tipPoint, secondNeighbour - tipPoint);
+                int triangleChecksResolution = 1 + Mathf.CeilToInt(distance * 5);
+                float rayStartBaseDistance = distance / triangleChecksResolution;
+                int neighbourIndex = tipIndex + direction;
+                var neighbourPoint = points[neighbourIndex];
+                for (int i = 1; i <= triangleChecksResolution; i++)
+                {
+                    Debug.DrawLine(tipPoint, secondNeighbour, new Color(0.1f, 0.1f, 0.3f, 0.3f), 1f);
+                    var lineEnd = hypotenuseRay.GetPoint(rayStartBaseDistance * i);
+                    if (Physics.Linecast(neighbourPoint, lineEnd))
+                        return;
+                }
+
+                points.RemoveAt(neighbourIndex);
+            }
+        }
+    }
+
     private static bool DoubleLinecast(Vector3 point1, Vector3 point2, out RaycastHit fromPoint1Info, out RaycastHit fromPoint2Info, LayerMask layerMask)
     {
         bool fromPoint1 = Physics.Linecast(point1, point2, out fromPoint1Info, layerMask);
         bool fromPoint2 = Physics.Linecast(point2, point1, out fromPoint2Info, layerMask);
-        return fromPoint1 || fromPoint2;
+        bool wasHit = fromPoint1 || fromPoint2;
+        return wasHit;
     }
 
     private void OnDisable()
