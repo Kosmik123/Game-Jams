@@ -10,7 +10,7 @@ public class ThreadRenderer : MonoBehaviour
 
     private void Update()
     {
-        var middlePoints = threadPhysics.MiddlePoints;
+        var middlePoints = threadPhysics.Points;
         lineRenderer.positionCount = middlePoints.Count + 1;
         for (int i = 0; i < middlePoints.Count; i++) 
             lineRenderer.SetPosition(i, middlePoints[i]);

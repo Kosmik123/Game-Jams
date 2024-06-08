@@ -468,7 +468,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 468289631}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 14.64, y: 0, z: 6.67}
+  m_LocalPosition: {x: 0, y: 1, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -691,7 +691,7 @@ LineRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 856542872}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -806,7 +806,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3250eb84826eeb94e8ccee59f4dfea84, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  middlePoints: []
+  points: []
+  origin: {fileID: 468289632}
   thickness: 0.1
   detectedLayers:
     serializedVersion: 2
@@ -821,7 +822,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 856542872}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ba422184b23b30f44894adfcd2784215, type: 3}
   m_Name: 
