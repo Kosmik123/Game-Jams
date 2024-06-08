@@ -4,12 +4,11 @@ using UnityEngine;
 
 public class ThreadPhysics : MonoBehaviour
 {
-    [SerializeField, ReadOnly]
-    private List<Vector3> points;
+    private readonly List<Vector3> points = new List<Vector3>();
     public IReadOnlyList<Vector3> Points => points;
 
     [SerializeField]
-    private Transform origin;
+    private Transform origin; 
 
     [SerializeField, Min(0.01f)]
     private float thickness = 0.1f;
@@ -17,7 +16,7 @@ public class ThreadPhysics : MonoBehaviour
     [SerializeField]
     private LayerMask detectedLayers = -5;
 
-    private void Awake()
+    private void OnEnable()
     {
         points.Clear();
         points.Add(origin.position);
@@ -25,8 +24,8 @@ public class ThreadPhysics : MonoBehaviour
     }
 
     private const float preferredChecksDistance = 0.05f;
-    
-    private void Update()
+
+    private void FixedUpdate()
     {
         int lastIndex = points.Count - 1;
         DetectCollisionEnter(lastIndex, lastIndex - 1, transform);
@@ -119,30 +118,6 @@ public class ThreadPhysics : MonoBehaviour
 
                 break;
             }
-        }
-    }
-
-    private void DetectCollisionExit()
-    {
-        if (points.Count <= 2)
-            return;
-
-        var preLastPoint = points[points.Count - 2];
-        if (DoubleLinecast(transform.position, preLastPoint, out _, out _, detectedLayers) == false)
-        {
-            float distance = (transform.position - preLastPoint).magnitude;
-            var hypotenuseRay = new Ray(transform.position, preLastPoint - transform.position);
-            int triangleCheckRaysCount = Mathf.CeilToInt(distance * 5 + 1);
-            float rayStartsDistance = distance / triangleCheckRaysCount;
-            for (int i = 0; i <= triangleCheckRaysCount; i++)
-            {
-                var lineEnd = hypotenuseRay.GetPoint(rayStartsDistance * i);
-                if (Physics.Linecast(points[points.Count - 1], lineEnd))
-                    return;
-            }
-
-
-            points.RemoveAt(points.Count - 1);
         }
     }
 

@@ -25,7 +25,7 @@ public class PlayerMovement : CharacterComponent
     [SerializeField]
     private Transform forwardProvider;
 
-    private void Update()
+    private void FixedUpdate()
     {
         var direction = InputProvider.GetMotion();
         if (direction.sqrMagnitude > 1)
@@ -33,6 +33,6 @@ public class PlayerMovement : CharacterComponent
 
         var forwardProvider = this.forwardProvider ? this.forwardProvider : transform;
         var direction3D = forwardProvider.forward * direction.y + forwardProvider.right * direction.x;
-        characterController.Move(moveSpeed * Time.deltaTime * direction3D);
+        characterController.Move(moveSpeed * Time.fixedDeltaTime * direction3D);
     }
 }
