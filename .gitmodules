@@ -10,6 +10,3 @@
 [submodule "Assets/Interaction System"]
 	path = Assets/Interaction System
 	url = https://github.com/Kosmik123/Interaction-System.git
-[submodule "Assets/Scenes Loading"]
-	path = Assets/Scenes Loading
-	url = https://github.com/Kosmik123/Scenes-Loading.git

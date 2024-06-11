@@ -29,12 +29,15 @@ public class PhysicalPlayerMovement : MonoBehaviour
     private bool isGrounded;
     public bool IsGrounded => isGrounded;
 
+    [SerializeField]
+    private float sprintMultiplier = 1.5f;
+
     private void Awake()
     {
         body = GetComponent<Rigidbody>();
     }
 
-    private void FixedUpdate()
+    private void Update()
     {
         CalculateGrounded();
         if (isGrounded == false)
@@ -49,7 +52,11 @@ public class PhysicalPlayerMovement : MonoBehaviour
 
         var forwardProvider = this.forwardProvider ? this.forwardProvider : transform;
         var direction3D = forwardProvider.forward * direction.y + forwardProvider.right * direction.x;
-        var velocity = direction3D * moveSpeed;
+        float speed = moveSpeed;
+        if (Input.GetKey(KeyCode.LeftShift))
+            speed *= sprintMultiplier;
+
+        var velocity = direction3D * speed;
         velocity.y = body.velocity.y;
         body.velocity = velocity;
     }

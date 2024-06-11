@@ -8,11 +8,25 @@ public class ThreadPhysics : MonoBehaviour
 
     [SerializeField]
     private Transform origin;
-    public Transform Origin => origin;
+    public Transform Origin
+    {
+        get => origin;
+        set
+        {
+            origin = value;
+        }
+    }
 
     [SerializeField]
     private Transform ending;
-    public Transform Ending => ending;
+    public Transform Ending
+    {
+        get => ending;
+        set
+        {
+            ending = value;
+        }
+    }
 
     [SerializeField, Min(0.01f)]
     private float thickness = 0.1f;
@@ -40,6 +54,17 @@ public class ThreadPhysics : MonoBehaviour
 
     private void OnEnable()
     {
+        PopulateList();
+    }
+
+    private void PopulateList()
+    {
+        if (origin == null || ending == null)
+        {
+            enabled = false;
+            return;
+        }
+
         points.Clear();
         points.Add(origin.position);
         points.Add(ending.position);
@@ -69,7 +94,7 @@ public class ThreadPhysics : MonoBehaviour
         {
             var start = points[i - 1];
             var end = points[i];
-            distanceSum += (start - end).magnitude; 
+            distanceSum += (start - end).magnitude;
         }
         length = distanceSum;
         isLengthCalculated = true;
@@ -85,7 +110,7 @@ public class ThreadPhysics : MonoBehaviour
 
         if (currentTipPosition == previousTipPosition)
             return;
-        
+
         Vector3 reversedPositionDelta = previousTipPosition - currentTipPosition;
         var reversedPositionDeltaRay = new Ray(currentTipPosition, reversedPositionDelta);
         float movedDistance = reversedPositionDelta.magnitude;
@@ -153,7 +178,7 @@ public class ThreadPhysics : MonoBehaviour
                 {
                     Debug.DrawLine(tipPoint, secondNeighbour, new Color(0.1f, 0.1f, 0.3f, 0.3f), 1f);
                     var lineEnd = hypotenuseRay.GetPoint(rayStartBaseDistance * i);
-                    if (Physics.Linecast(neighbourPoint, lineEnd))
+                    if (Physics.Linecast(neighbourPoint, lineEnd, detectedLayers))
                         return;
                 }
 
@@ -168,12 +193,6 @@ public class ThreadPhysics : MonoBehaviour
         bool fromPoint2 = Physics.Linecast(point2, point1, out fromPoint2Info, layerMask);
         bool wasHit = fromPoint1 || fromPoint2;
         return wasHit;
-    }
-
-    private void OnDisable()
-    {
-        points.Clear();
-        length = 0;
     }
 
     private void OnDrawGizmos()

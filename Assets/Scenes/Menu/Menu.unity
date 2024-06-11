@@ -708,6 +708,34 @@ PrefabInstance:
       propertyPath: m_Color.r
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 74386478512954799, guid: e57263b5b9ac1894d9338795f57e187c, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 74386478512954799, guid: e57263b5b9ac1894d9338795f57e187c, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 74386478512954799, guid: e57263b5b9ac1894d9338795f57e187c, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 11400000, guid: 555915f764517b94d9eeeeafb5d1d196, type: 2}
+    - target: {fileID: 74386478512954799, guid: e57263b5b9ac1894d9338795f57e187c, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 74386478512954799, guid: e57263b5b9ac1894d9338795f57e187c, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: Quit
+      objectReference: {fileID: 0}
+    - target: {fileID: 74386478512954799, guid: e57263b5b9ac1894d9338795f57e187c, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: Bipolar.Game, BipolarCore
+      objectReference: {fileID: 0}
+    - target: {fileID: 74386478512954799, guid: e57263b5b9ac1894d9338795f57e187c, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
+      objectReference: {fileID: 0}
     - target: {fileID: 74386478618564661, guid: e57263b5b9ac1894d9338795f57e187c, type: 3}
       propertyPath: m_text
       value: exit
@@ -4125,6 +4153,10 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 74386478512954799, guid: e57263b5b9ac1894d9338795f57e187c, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[3].m_Mode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 74386478512954799, guid: e57263b5b9ac1894d9338795f57e187c, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 126898383}
@@ -4137,6 +4169,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1919058146}
     - target: {fileID: 74386478512954799, guid: e57263b5b9ac1894d9338795f57e187c, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[3].m_Target
+      value: 
+      objectReference: {fileID: 11400000, guid: 555915f764517b94d9eeeeafb5d1d196, type: 2}
+    - target: {fileID: 74386478512954799, guid: e57263b5b9ac1894d9338795f57e187c, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
       value: 2
       objectReference: {fileID: 0}
@@ -4146,6 +4182,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 74386478512954799, guid: e57263b5b9ac1894d9338795f57e187c, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[2].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 74386478512954799, guid: e57263b5b9ac1894d9338795f57e187c, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[3].m_CallState
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 74386478512954799, guid: e57263b5b9ac1894d9338795f57e187c, type: 3}
@@ -4161,6 +4201,10 @@ PrefabInstance:
       value: StartLoadingGameScene
       objectReference: {fileID: 0}
     - target: {fileID: 74386478512954799, guid: e57263b5b9ac1894d9338795f57e187c, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[3].m_MethodName
+      value: Quit
+      objectReference: {fileID: 0}
+    - target: {fileID: 74386478512954799, guid: e57263b5b9ac1894d9338795f57e187c, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
       value: TransitionValue, Assembly-CSharp
       objectReference: {fileID: 0}
@@ -4173,6 +4217,10 @@ PrefabInstance:
       value: GameSceneLoader, Assembly-CSharp
       objectReference: {fileID: 0}
     - target: {fileID: 74386478512954799, guid: e57263b5b9ac1894d9338795f57e187c, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[3].m_TargetAssemblyTypeName
+      value: Bipolar.Game, BipolarCore
+      objectReference: {fileID: 0}
+    - target: {fileID: 74386478512954799, guid: e57263b5b9ac1894d9338795f57e187c, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
       value: UnityEngine.Object, UnityEngine
       objectReference: {fileID: 0}
@@ -4182,6 +4230,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 74386478512954799, guid: e57263b5b9ac1894d9338795f57e187c, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[2].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
+      objectReference: {fileID: 0}
+    - target: {fileID: 74386478512954799, guid: e57263b5b9ac1894d9338795f57e187c, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[3].m_Arguments.m_ObjectArgumentAssemblyTypeName
       value: UnityEngine.Object, UnityEngine
       objectReference: {fileID: 0}
     - target: {fileID: 74386478618564661, guid: e57263b5b9ac1894d9338795f57e187c, type: 3}
