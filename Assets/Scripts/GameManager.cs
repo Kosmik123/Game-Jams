@@ -1,63 +1,58 @@
-﻿using System.Collections.Generic;
-using Unity.Netcode;
+﻿using Unity.Netcode;
 using UnityEngine;
 
 namespace UniMakao
 {
+    [RequireComponent(typeof(NetworkManager))]
     public class GameManager : MonoBehaviour
     {
-        [SerializeField]
-        private List<Player> playersInGame = new List<Player>();
+        private NetworkManager networkManager;
 
         [SerializeField]
-        private int aiPlayersCount = 2;
+        private CardGameManager cardGameManager;
+
         [SerializeField]
         private Player aiPlayerPrototype;
 
-        private void Start()
+        private void Awake()
         {
-            NetworkManager.Singleton.OnClientConnectedCallback += Singleton_OnClientConnectedCallback;
-            for (int i = 0; i < aiPlayersCount; i++)
-            {
-                var aiPlayer = Instantiate(aiPlayerPrototype);
-                AddPlayer(aiPlayer);
-            }
+            networkManager = GetComponent<NetworkManager>();
         }
 
-        private void Singleton_OnClientConnectedCallback(ulong clientID)
+        private void OnEnable()
+        {
+            networkManager.OnClientConnectedCallback += NetworkManager_OnClientConnectedCallback;
+        }
+
+        public void Host()
+        {
+            networkManager.StartHost();
+        }
+
+        public void Join()
+        {
+            networkManager.StartClient();
+        }
+
+        public void AddAIClient()
+        {
+            var aiPlayer = Instantiate(aiPlayerPrototype);
+            aiPlayer.NetworkObject.Spawn();
+            cardGameManager.AddPlayer(aiPlayer);
+        }
+
+        private void NetworkManager_OnClientConnectedCallback(ulong clientID)
         {
             if (NetworkManager.Singleton.ConnectedClients.TryGetValue(clientID, out var playerClient))
             {
                 if (playerClient.PlayerObject.TryGetComponent<Player>(out var player))
-                    AddPlayer(player);
+                    cardGameManager.AddPlayer(player);
             }
         }
 
-        public void AddPlayer(Player player)
+        private void OnDisable()
         {
-            playersInGame.Add(player);
-            player.OnReady += Player_OnReady;
-        }
-
-        private void Player_OnReady(Player readyPlayer)
-        {
-            readyPlayer.OnReady -= Player_OnReady;
-            foreach (var player in playersInGame)
-                if (player.IsReady == false)
-                    return;
-
-            StartGame();
-        }
-
-        private void StartGame()
-        {
-            Debug.Log("All Players Ready");
-        }
-
-        private void OnDestroy()
-        {
-            if (NetworkManager.Singleton)
-                NetworkManager.Singleton.OnClientConnectedCallback -= Singleton_OnClientConnectedCallback;
+            networkManager.OnClientConnectedCallback -= NetworkManager_OnClientConnectedCallback;
         }
     }
 }

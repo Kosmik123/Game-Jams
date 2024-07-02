@@ -1,10 +1,10 @@
-using NaughtyAttributes;
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace UniMakao
 {
-    public class Player : MonoBehaviour
+    public class Player : NetworkBehaviour
     {
         public event System.Action<Player> OnReady;
 
@@ -13,21 +13,16 @@ namespace UniMakao
         public bool IsReady => isReady;
 
         [SerializeField]
-        private List<Card> cards;
+        private List<Card> hand;
 
-        [Button]
+#if NAUGHTY_ATTRIBUTES
+        [NaughtyAttributes.Button]
+#endif
         private void Ready()
         {
             isReady = true;
             OnReady?.Invoke(this);
         }
     }
-
-    public class Card
-    {
-        [SerializeField]
-        private CardSuit suit;
-        [SerializeField]
-        private CardValue value;
-    }
 }
+
