@@ -6,7 +6,6 @@ using UnityEngine.UI;
 using UnityEditor.AnimatedValues;
 using UnityEditor;
 using UnityEngine;
-using Bipolar.UI;
 
 namespace PolyAndCode.UI
 {

@@ -1,8 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
-using PolyAndCode.UI;
 
-namespace Bipolar.UI
+namespace PolyAndCode.UI
 {
     public class RecyclableScrollRect : ScrollRect
     {
@@ -11,7 +10,7 @@ namespace Bipolar.UI
         public bool SelfInitialize = true;
 
         [SerializeField]
-        public ScrollDirection direction;
+        private ScrollDirection direction;
 
         [SerializeField]
         private int segments;

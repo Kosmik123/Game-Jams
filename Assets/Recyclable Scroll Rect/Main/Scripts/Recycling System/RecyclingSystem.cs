@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using PolyAndCode.UI;
 
-namespace Bipolar.UI
+namespace PolyAndCode.UI
 {
     public enum ScrollDirection
     {
