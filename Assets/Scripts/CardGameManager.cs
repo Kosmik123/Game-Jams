@@ -11,8 +11,20 @@ namespace UniMakao
 
         public void AddPlayer(Player player)
         {
-            playersInGame.Add(player);
             player.OnReady += Player_OnReady;
+            AddPlayerInClient(player.NetworkObject);
+        }
+
+        [ClientRpc]
+        private void AddPlayerInClient(NetworkObjectReference playerNetworkObject)
+        {
+            if (playerNetworkObject.TryGet(out var networkObject))
+            {
+                if (networkObject.TryGetComponent<Player>(out var player))
+                {
+                    playersInGame.Add(player);
+                }
+            }
         }
 
         private void Player_OnReady(Player readyPlayer)

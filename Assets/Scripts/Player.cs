@@ -1,3 +1,4 @@
+using NaughtyAttributes;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
@@ -8,20 +9,32 @@ namespace UniMakao
     {
         public event System.Action<Player> OnReady;
 
-        [SerializeField] 
+        [SerializeField, ReadOnly]
         private bool isReady;
         public bool IsReady => isReady;
 
         [SerializeField]
         private List<Card> hand;
 
-#if NAUGHTY_ATTRIBUTES
-        [NaughtyAttributes.Button]
-#endif
+        [Button]
         private void Ready()
         {
+            SetReadyServerRpc();
+        }
+
+        [ServerRpc]
+        private void SetReadyServerRpc()
+        {
             isReady = true;
-            OnReady?.Invoke(this);
+            SetReadyClientRpc();
+            if (IsServer)
+                OnReady?.Invoke(this);
+        }
+
+        [ClientRpc]
+        private void SetReadyClientRpc()
+        {
+            isReady = true;
         }
     }
 }
