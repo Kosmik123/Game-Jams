@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 49f3376d70a17354d84c1a495098b4ae, type: 3}
   m_Name: Valute Krater
   m_EditorClassIdentifier: 
-  color: {r: 1, g: 0.5833334, b: 0, a: 1}
+  color: {r: 0.55, g: 0.275, b: 0, a: 1}

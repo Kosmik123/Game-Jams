@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 49f3376d70a17354d84c1a495098b4ae, type: 3}
   m_Name: Hydria
   m_EditorClassIdentifier: 
-  color: {r: 0.83333325, g: 1, b: 0, a: 1}
+  color: {r: 0.4571429, g: 0.5, b: 0, a: 1}

@@ -104,8 +104,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 0.6, g: 0.6, b: 0.6, a: 1}
-      key1: {r: 0.6, g: 0.6, b: 0.6, a: 1}
+      key0: {r: 0.3, g: 0.3, b: 0.3, a: 1}
+      key1: {r: 0.3, g: 0.3, b: 0.3, a: 1}
       key2: {r: 1, g: 0, b: 1, a: 0}
       key3: {r: 1, g: 0, b: 1, a: 0}
       key4: {r: 1, g: 0, b: 1, a: 0}
@@ -148,7 +148,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 4886139355859184631}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3250eb84826eeb94e8ccee59f4dfea84, type: 3}
+  m_Script: {fileID: 11500000, guid: cee142e074192d84fa3ec0f3717638b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   origin: {fileID: 0}
@@ -170,8 +170,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ba422184b23b30f44894adfcd2784215, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lineRenderer: {fileID: 4886139355859184630}
-  threadPhysics: {fileID: 4886139355859184628}
+  cable: {fileID: 4886139355859184628}
 --- !u!1 &5405470132530225756
 GameObject:
   m_ObjectHideFlags: 0

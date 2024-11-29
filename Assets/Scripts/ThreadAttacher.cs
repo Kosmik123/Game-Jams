@@ -1,13 +1,16 @@
+using Bipolar.CablePhysics;
 using NaughtyAttributes;
 using System.Collections;
 using UnityEngine;
 
 public class ThreadAttacher : MonoBehaviour
 {
+    public static readonly Color defaultThreadColor = 0.3f * Color.white;
+
     [SerializeField]
-    private ThreadPhysics threadPrefab;
+    private Cable3D threadPrefab;
     [SerializeField]
-    private ThreadPhysics thread;
+    private Cable3D currentThread;
 
     [SerializeField]
     private Transform threadOrigin;
@@ -31,8 +34,8 @@ public class ThreadAttacher : MonoBehaviour
 
     private void DetachThread()
     {
-        if (thread != null) 
-            thread.gameObject.SetActive(false);
+        if (currentThread != null) 
+            currentThread.gameObject.SetActive(false);
         currentlyAttachedVase = null;
     }
 
@@ -41,22 +44,22 @@ public class ThreadAttacher : MonoBehaviour
         var ray = new Ray(transform.position, transform.forward);
         if (Physics.Raycast(ray, out var hitInfo, maxDistance, attachableLayers))
         {
-            if (thread == null)
+            if (currentThread == null)
             {
-                thread = Instantiate(threadPrefab, Vector3.zero, Quaternion.identity);
-                thread.gameObject.SetActive(false);
-                thread.Origin = threadOrigin;
+                currentThread = Instantiate(threadPrefab, Vector3.zero, Quaternion.identity);
+                currentThread.gameObject.SetActive(false);
+                currentThread.Origin = threadOrigin;
             }
 
-            if (thread.gameObject.activeSelf == false)
+            if (currentThread.gameObject.activeSelf == false)
             {
-                thread.Ending.position = ray.GetPoint(hitInfo.distance - thread.Thickness);
-                thread.gameObject.SetActive(true);
+                currentThread.Ending.position = ray.GetPoint(hitInfo.distance - currentThread.Thickness);
+                currentThread.gameObject.SetActive(true);
 
                 if (hitInfo.collider.TryGetComponent<Vase>(out var vase))
                 {
                     currentlyAttachedVase = vase;
-                    var lineRenderer = thread.GetComponent<LineRenderer>();
+                    var lineRenderer = currentThread.GetComponent<LineRenderer>();
                     lineRenderer.endColor = lineRenderer.startColor = vase.VaseType.Color;
                 }
                 else
@@ -69,7 +72,7 @@ public class ThreadAttacher : MonoBehaviour
                 bool hitVase = hitInfo.collider.TryGetComponent<Vase>(out var vase);
                 if (hitVase)
                 {
-                    thread.GetComponent<LineRenderer>().startColor = vase.VaseType.Color;
+                    currentThread.GetComponent<LineRenderer>().startColor = vase.VaseType.Color;
                 }
 
                 if (currentlyAttachedVase)
@@ -83,21 +86,21 @@ public class ThreadAttacher : MonoBehaviour
                         }
                         else
                         {
-                            Destroy(thread);
+                            Destroy(currentThread);
                         }
                     }
                     else
                     {
-                        thread.GetComponent<LineRenderer>().startColor = Color.gray;
+                        currentThread.GetComponent<LineRenderer>().startColor = defaultThreadColor;
                     }
                 }
 
                 var newOrigin = new GameObject().transform;
                 newOrigin.parent = hitInfo.transform;
                 newOrigin.position = hitInfo.point;
-                thread.Origin = newOrigin;
-                StartCoroutine(DelayedDisable(thread));
-                thread = null;
+                currentThread.Origin = newOrigin;
+                StartCoroutine(DelayedDisable(currentThread));
+                currentThread = null;
                 currentlyAttachedVase = null;
             }
         }
