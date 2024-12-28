@@ -17,6 +17,8 @@ namespace Bipolar.Pong
 		private BallController ball;
 		[SerializeField]
 		private BatController[] bats;
+		[SerializeField]
+		private float batsOffsetFromBorder;
 		
 		[Header("States")]
 		private int nextStartingPlayer;
@@ -27,6 +29,16 @@ namespace Bipolar.Pong
 		private void Awake()
 		{
 			playerScores = new int[bats.Length];
+			SetBatPosition(0, SceneSettings.LeftBorder + batsOffsetFromBorder);
+			SetBatPosition(1, SceneSettings.RightBorder - batsOffsetFromBorder);
+		}
+
+		private void SetBatPosition(int batIndex, float xPosition)
+		{
+			var bat = bats[batIndex];
+			var position = bat.transform.position;
+			position.x = xPosition;
+			bat.transform.position = position;
 		}
 
 		private void OnEnable()
@@ -94,7 +106,7 @@ namespace Bipolar.Pong
 
 		private IEnumerator RestartGameAfterAnyKey()
 		{
-			yield return new WaitForSeconds(2);
+			yield return new WaitForSeconds(3);
 			yield return new WaitUntil(() => UnityEngine.Input.anyKey);
 			RestartGame();
 		}
