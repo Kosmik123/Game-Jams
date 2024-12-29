@@ -1,0 +1,17 @@
+{
+    "name": "Bipolar.ChangableValues",
+    "rootNamespace": "Bipolar.ChangableValues",
+    "references": [
+        "GUID:2ecd41d6ad0cd0748ab7fbaa1a919610",
+        "GUID:6055be8ebefd69e48b49212b09b47b2f"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
