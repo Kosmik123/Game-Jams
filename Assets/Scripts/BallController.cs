@@ -3,6 +3,7 @@ using UnityEngine;
 
 namespace Bipolar.Pong
 {
+
 	[RequireComponent(typeof(Rigidbody2D))]
 	public class BallController : MonoBehaviour
 	{
@@ -14,6 +15,7 @@ namespace Bipolar.Pong
 		private float startingSpeed;
 		[SerializeField]
 		private float radius;
+		public float Radius => radius;
 
 		[SerializeField, Tag]
 		private string batTag;

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Bipolar.Pong
 {
@@ -15,8 +16,8 @@ namespace Bipolar.Pong
 		[Header("Settings")]
 		[SerializeField]
 		private BallController ball;
-		[SerializeField]
-		private BatController[] bats;
+		[SerializeField, FormerlySerializedAs("bats")]
+		private BatController[] paddles;
 		[SerializeField]
 		private float batsOffsetFromBorder;
 		
@@ -28,14 +29,14 @@ namespace Bipolar.Pong
 
 		private void Awake()
 		{
-			playerScores = new int[bats.Length];
-			SetBatPosition(0, SceneSettings.LeftBorder + batsOffsetFromBorder);
-			SetBatPosition(1, SceneSettings.RightBorder - batsOffsetFromBorder);
+			playerScores = new int[paddles.Length];
+			//SetBatPosition(0, SceneSettings.LeftBorder + batsOffsetFromBorder);
+			//SetBatPosition(1, SceneSettings.RightBorder - batsOffsetFromBorder);
 		}
 
 		private void SetBatPosition(int batIndex, float xPosition)
 		{
-			var bat = bats[batIndex];
+			var bat = paddles[batIndex];
 			var position = bat.transform.position;
 			position.x = xPosition;
 			bat.transform.position = position;
