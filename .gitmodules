@@ -4,3 +4,6 @@
 [submodule "Assets/Spriteset Animation"]
 	path = Assets/Spriteset Animation
 	url = https://github.com/Kosmik123/Spriteset-Animation.git
+[submodule "Assets/Scenes Loading"]
+	path = Assets/Scenes Loading
+	url = https://github.com/Kosmik123/Scenes-Loading

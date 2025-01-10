@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Bipolar/Chunk System/Examples/Terrain/Terrains Example.unity
-    guid: 05c41cac415b3b24cb1e3e980457bec0
+    path: Assets/Scenes/Main.unity
+    guid: 369d6879d3fc1604b89a31535945af57
+  - enabled: 1
+    path: Assets/Scenes/Game/Game.unity
+    guid: e33096c4db9fc8241acaa8b8e3fe59a3
   m_configObjects: {}
