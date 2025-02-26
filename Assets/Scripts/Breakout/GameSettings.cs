@@ -8,6 +8,10 @@ namespace Bipolar.Breakout
     {
         [SerializeField, Tag]
         private string ballTag;
-        public static string BallTag => Instance.ballTag;
+        public static string BallTag => Instance.ballTag;     
+       
+        [SerializeField]
+        private float ballSpeed;
+        public static float BallSpeed => Instance.ballSpeed;
     }
 }

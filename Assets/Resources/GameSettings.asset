@@ -10,6 +10,6 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: eeb1f9f491c44bf46be6ce6188656d14, type: 3}
-  m_Name: Game Settings
+  m_Name: GameSettings
   m_EditorClassIdentifier: 
   ballTag: Ball

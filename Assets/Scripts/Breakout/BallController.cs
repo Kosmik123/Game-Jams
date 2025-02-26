@@ -1,3 +1,4 @@
+using NaughtyAttributes;
 using System.Collections;
 using UnityEngine;
 
@@ -11,7 +12,7 @@ namespace Bipolar.Breakout
     [RequireComponent(typeof(Rigidbody2D))]
     public class BallController : MonoBehaviour, IBall
     {
-        [SerializeField]
+        [SerializeField, ReadOnly]
         private float moveSpeed;
         public float MoveSpeed
         {
@@ -23,7 +24,7 @@ namespace Bipolar.Breakout
             }
         }
 
-        [SerializeField, NaughtyAttributes.ReadOnly]
+        [SerializeField, ReadOnly]
         private Vector2 currentVelocity;
         public Vector2 Velocity => currentVelocity;
 
@@ -50,7 +51,8 @@ namespace Bipolar.Breakout
             Vector2 direction = collision.gameObject.TryGetComponent<IBallReflector>(out var reflector)
                 ? reflector.GetBounceDirection(this, collision)
                 : (Vector2)Vector3.Reflect(currentVelocity, collision.GetContact(0).normal);
-            
+
+            moveSpeed *= 1.01f;
             SetMovement(direction);
         }
 

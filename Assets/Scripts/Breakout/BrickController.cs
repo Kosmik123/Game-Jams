@@ -9,6 +9,8 @@ namespace Bipolar.Breakout
 
         private void OnCollisionEnter2D(Collision2D collision)
         {
+            Debug.Log("Pi³ka ma tag: " + collision.gameObject.tag);
+            Debug.Log("Tag w ustawieniach: " + GameSettings.BallTag);
             if (collision.gameObject.CompareTag(GameSettings.BallTag))
             {
                 if (customBehavior)
