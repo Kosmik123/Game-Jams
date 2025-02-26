@@ -3,7 +3,10 @@
     "rootNamespace": "Bipolar.Breakout",
     "references": [
         "GUID:2ecd41d6ad0cd0748ab7fbaa1a919610",
-        "GUID:776d03a35f1b52c4a9aed9f56d7b4229"
+        "GUID:776d03a35f1b52c4a9aed9f56d7b4229",
+        "GUID:67f23d2aabb5d9c40b65d255a91e493b",
+        "GUID:f15f1bd6373976940afc9cb47227de81",
+        "GUID:8f3f4f8c24649894fae2f5d59990eb59"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
