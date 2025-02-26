@@ -1,6 +1,5 @@
 using UnityEngine;
 using Bipolar.Input;
-using Mono.Cecil.Cil;
 
 namespace Bipolar.Breakout
 {
@@ -16,6 +15,8 @@ namespace Bipolar.Breakout
         private float moveSpeed = 10;
         [SerializeField, Min(0)]
         private float xExtents = 10;
+        [SerializeField]
+        private float width;
 
         private float moveDirection;
 
@@ -28,17 +29,20 @@ namespace Bipolar.Breakout
         private void ClampPosition()
         {
             bool clamped = false;
+            float halfWidth = width / 2;
             var position = transform.position;
-            if (position.x <= -xExtents)
+            float xMax = xExtents - halfWidth;
+            float xMin = -xExtents + halfWidth;
+            if (position.x < xMin)
             {
                 clamped = true;
-                position.x = -xExtents;
+                position.x = xMin;
                 moveDirection = Mathf.Max(0, moveDirection);
             }
-            else if (position.x >= xExtents)
+            else if (position.x > xMax)
             {
                 clamped = true;
-                position.x = xExtents;
+                position.x = xMax;
                 moveDirection = Mathf.Min(0, moveDirection);
             }
             if (clamped)

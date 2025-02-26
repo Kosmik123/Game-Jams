@@ -194,7 +194,8 @@ MonoBehaviour:
   inputProvider:
     serializedObject: {fileID: 4360336151365037394}
   moveSpeed: 10
-  xExtents: 16
+  xExtents: 13.7
+  width: 4
 --- !u!114 &5626703434748596934
 MonoBehaviour:
   m_ObjectHideFlags: 0
