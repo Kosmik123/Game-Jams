@@ -7,3 +7,6 @@
 [submodule "Assets/Scenes Loading"]
 	path = Assets/Scenes Loading
 	url = https://github.com/Kosmik123/Scenes-Loading
+[submodule "Assets/Cable Physics"]
+	path = Assets/Cable Physics
+	url = https://github.com/Bipolar-Games/Cable-Physics.git
