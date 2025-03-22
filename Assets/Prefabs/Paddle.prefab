@@ -191,10 +191,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ea400dc7b030a0b4ca1e7d7a242a4276, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  inputProvider:
-    serializedObject: {fileID: 4360336151365037394}
-  moveSpeed: 10
-  xExtents: 16
+  xExtents: 11.65
 --- !u!114 &5626703434748596934
 MonoBehaviour:
   m_ObjectHideFlags: 0

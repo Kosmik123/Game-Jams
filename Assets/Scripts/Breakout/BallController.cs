@@ -52,7 +52,7 @@ namespace Bipolar.Breakout
                 ? reflector.GetBounceDirection(this, collision)
                 : (Vector2)Vector3.Reflect(currentVelocity, collision.GetContact(0).normal);
 
-            moveSpeed *= 1.01f;
+            moveSpeed *= 1.05f;
             SetMovement(direction);
         }
 
