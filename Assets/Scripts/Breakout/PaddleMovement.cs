@@ -1,5 +1,4 @@
 using UnityEngine;
-using Bipolar.Input;
 
 namespace Bipolar.Breakout
 {
