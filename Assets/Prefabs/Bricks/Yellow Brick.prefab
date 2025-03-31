@@ -55,6 +55,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Yellow Brick
       objectReference: {fileID: 0}
+    - target: {fileID: 6635323564638269996, guid: 0719fb50bbc143745a87293698e381e5, type: 3}
+      propertyPath: pointsValue
+      value: 4
+      objectReference: {fileID: 0}
     - target: {fileID: 7522654540700851330, guid: 0719fb50bbc143745a87293698e381e5, type: 3}
       propertyPath: m_Color.b
       value: 0

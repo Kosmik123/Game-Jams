@@ -8,7 +8,17 @@ namespace Bipolar.Breakout
 		[SerializeField, Min(0)]
 		private float xExtents = 10;
 
+		private void OnEnable()
+		{
+			UpdatePosition();
+		}
+
 		private void Update()
+		{
+			UpdatePosition();
+		}
+
+		private void UpdatePosition()
 		{
 			var mouseScreenPosition = Camera.main.ScreenToWorldPoint(UnityEngine.Input.mousePosition);
 			var position = transform.position;

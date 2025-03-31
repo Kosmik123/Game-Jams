@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace Bipolar.Breakout
 {
-    public class PaddleController : MonoBehaviour
+    public class Paddle : MonoBehaviour
     {
         [field: SerializeField]
         public PaddleMovement Movement { get; private set; }

@@ -4,15 +4,17 @@ using UnityEngine;
 
 namespace Bipolar.Breakout
 {
-
 	public class GameController : MonoBehaviour
     {
         public event System.Action OnGameOver;
+        public event System.Action OnGameStarted;
+
+        private const string highscoreKey = "HighScore";
 
         [SerializeField]
         private BallController ballPrototype;
         [SerializeField]
-        private PaddleController paddle;
+        private Paddle paddle;
         [SerializeField]
         private GameObject level;
         [SerializeField]
@@ -32,19 +34,37 @@ namespace Bipolar.Breakout
         private GameObject currentLevel;
         [SerializeField, ReadOnly]
         private BallController currentBall;
+        [SerializeField, ReadOnly]
+        private int score;
+        [SerializeField, ReadOnly]
+        private int highScore;
 
-		private void Start() => RestartGame();
+		private void Start()
+		{
+            highScore = PlayerPrefs.GetInt(highscoreKey, 0);
+			RestartGame();
+		}
 
 		private void StartGame()
 		{
+            score = 0;
             currentLevel = Instantiate(level, levelHolder);
 
+            paddle.Movement.enabled = true;
 			currentBall = Instantiate(ballPrototype, paddle.BallOrigin);
 			currentBall.OnBounced += IncreaseBallSpeed;
+			BrickController.OnBrickBroke += BrickController_OnBrickBroke;
+
 			StartCoroutine(LaunchBallOnPlayerInput());
+            OnGameStarted?.Invoke();
 		}
 
-        private void RestartGame()
+		private void BrickController_OnBrickBroke(int points)
+		{
+            score += points;
+		}
+
+		public void RestartGame()
         {
             DisposeGame();
             StartGame();
@@ -54,8 +74,8 @@ namespace Bipolar.Breakout
 		{
 			isPlaying = false;
 			StopAllCoroutines();
-			currentBall.Destroy();
-			currentLevel.Destroy();
+			currentBall.DestroyObject();
+			currentLevel.DestroyObject();
 		}
 
 		private void IncreaseBallSpeed()
@@ -74,14 +94,25 @@ namespace Bipolar.Breakout
 
 		private void Update()
 		{
+            if (isPlaying == false)
+                return;
+
             if (currentBall.transform.position.y < losingHeight.position.y)
                 GameOver();
 		}
 
 		private void GameOver()
 		{
-            currentBall.OnBounced -= IncreaseBallSpeed;
+			paddle.Movement.enabled = false;
+			currentBall.OnBounced -= IncreaseBallSpeed;
             currentBall.MoveSpeed = 0;
+
+            if (score > highScore)
+            {
+                highScore = score;
+                PlayerPrefs.SetInt(highscoreKey, highScore);
+            }
+
             OnGameOver?.Invoke();
 		}
 	}
@@ -89,11 +120,11 @@ namespace Bipolar.Breakout
 
 public static class DestroyExtensions
 {
-    public static void Destroy(this Object @object)
+    public static void DestroyObject(this Object @object)
     {
         if (@object is GameObject gameObject)
-            Destroy(gameObject);
+			Object.Destroy(gameObject);
         else if (@object is Component component)
-			Destroy(component.gameObject);
+			Object.Destroy(component.gameObject);
     }
 }
