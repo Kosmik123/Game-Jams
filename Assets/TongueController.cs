@@ -128,7 +128,6 @@ public class TongueController : MonoBehaviour
 			float3 point = gizmosCorrectPoints[i];
 			Gizmos.DrawSphere(point, 0.05f);
 		}
-
 	}
 
 	private bool AvoidCollisionsWithBody()
@@ -164,11 +163,7 @@ public class TongueController : MonoBehaviour
 				localMiddlePoint,
 				-localSegmentTangent,
 				localSegmentTangent);
-
-
 		}
-
-
 
 		return collidedWithBody;
 	}
