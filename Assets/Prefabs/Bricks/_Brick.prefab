@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 1342693646698264257}
   m_Layer: 0
   m_Name: _Brick
-  m_TagString: Untagged
+  m_TagString: Brick
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -46,6 +46,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   customBehavior: {fileID: 0}
+  pointsValue: 0
 --- !u!50 &1342693646698264257
 Rigidbody2D:
   serializedVersion: 4

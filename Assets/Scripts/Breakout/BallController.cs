@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Bipolar.Breakout
 {
-    public interface IBall
+	public interface IBall
     {
         Vector2 Velocity { get; }
     }
@@ -11,7 +11,7 @@ namespace Bipolar.Breakout
     [RequireComponent(typeof(Rigidbody2D))]
     public class BallController : MonoBehaviour, IBall
     {
-        public event System.Action OnBounced;
+        public event System.Action<Collision2D> OnBounced;
 
         [SerializeField, ReadOnly]
         private float moveSpeed;
@@ -48,7 +48,7 @@ namespace Bipolar.Breakout
                 : (Vector2)Vector3.Reflect(currentVelocity, collision.GetContact(0).normal);
 
             SetMovement(direction);
-            OnBounced?.Invoke();
+            OnBounced?.Invoke(collision);
         }
 
         private void OnDrawGizmosSelected()

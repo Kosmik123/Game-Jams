@@ -154,7 +154,7 @@ GameObject:
   - component: {fileID: 4367027081281038549}
   m_Layer: 0
   m_Name: Paddle
-  m_TagString: Untagged
+  m_TagString: Paddle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -208,7 +208,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ea400dc7b030a0b4ca1e7d7a242a4276, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  xExtents: 11.65
+  xExtents: 13
 --- !u!114 &5626703434748596934
 MonoBehaviour:
   m_ObjectHideFlags: 0

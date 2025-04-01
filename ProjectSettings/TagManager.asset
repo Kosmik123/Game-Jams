@@ -5,6 +5,9 @@ TagManager:
   serializedVersion: 2
   tags:
   - Ball
+  - Brick
+  - Wall
+  - Paddle
   layers:
   - Default
   - TransparentFX
@@ -12,7 +15,7 @@ TagManager:
   - Player
   - Water
   - UI
-  - 
+  - Ignore Collision
   - 
   - Ground
   - 
