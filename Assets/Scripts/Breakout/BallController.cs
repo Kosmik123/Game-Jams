@@ -1,10 +1,9 @@
 using NaughtyAttributes;
-using System.Collections;
 using UnityEngine;
 
 namespace Bipolar.Breakout
 {
-    public interface IBall
+	public interface IBall
     {
         Vector2 Velocity { get; }
     }
@@ -12,6 +11,8 @@ namespace Bipolar.Breakout
     [RequireComponent(typeof(Rigidbody2D))]
     public class BallController : MonoBehaviour, IBall
     {
+        public event System.Action<Collision2D> OnBounced;
+
         [SerializeField, ReadOnly]
         private float moveSpeed;
         public float MoveSpeed
@@ -20,25 +21,19 @@ namespace Bipolar.Breakout
             set
             {
                 moveSpeed = value;
-                SetMovement(currentVelocity);
+                SetMovement(Velocity);
             }
         }
 
         [SerializeField, ReadOnly]
         private Vector2 currentVelocity;
-        public Vector2 Velocity => currentVelocity;
+        public Vector2 Velocity => rigidBody.velocity;
 
         private Rigidbody2D rigidBody;
 
         private void Awake()
         {
             rigidBody = GetComponent<Rigidbody2D>();
-        }
-
-        private IEnumerator Start()
-        {
-            yield return new WaitUntil(() => UnityEngine.Input.GetKeyDown(KeyCode.Space));
-            SetMovement(Random.insideUnitCircle);
         }
 
         private void Update()
@@ -52,8 +47,8 @@ namespace Bipolar.Breakout
                 ? reflector.GetBounceDirection(this, collision)
                 : (Vector2)Vector3.Reflect(currentVelocity, collision.GetContact(0).normal);
 
-            moveSpeed *= 1.01f;
             SetMovement(direction);
+            OnBounced?.Invoke(collision);
         }
 
         private void OnDrawGizmosSelected()

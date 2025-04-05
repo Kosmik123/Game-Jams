@@ -2,10 +2,16 @@ using UnityEngine;
 
 namespace Bipolar.Breakout
 {
+    public delegate void BrickBreakEventHandler(int points);
+
     public class BrickController : MonoBehaviour
     {
+        public static event BrickBreakEventHandler OnBrickBroke;
+
         [SerializeField]
         private BrickHitBehavior customBehavior;
+        [SerializeField]
+        private int pointsValue;
 
         private void OnCollisionEnter2D(Collision2D collision)
         {
@@ -20,6 +26,7 @@ namespace Bipolar.Breakout
                 else
                 {
                     Destroy(gameObject);
+                    OnBrickBroke?.Invoke(pointsValue);
                 }
             }
         }

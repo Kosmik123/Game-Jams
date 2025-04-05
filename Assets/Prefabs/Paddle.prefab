@@ -1,5 +1,35 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &3577496276575465288
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9185159444336974124}
+  m_Layer: 0
+  m_Name: Ball Origin
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9185159444336974124
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3577496276575465288}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 4360336151365037399}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &4360336151291760689
 GameObject:
   m_ObjectHideFlags: 0
@@ -118,13 +148,13 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4360336151365037399}
-  - component: {fileID: 4360336151365037394}
   - component: {fileID: 4360336151365037397}
   - component: {fileID: 4360336151365037396}
   - component: {fileID: 5626703434748596934}
+  - component: {fileID: 4367027081281038549}
   m_Layer: 0
   m_Name: Paddle
-  m_TagString: Untagged
+  m_TagString: Paddle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -141,23 +171,10 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4360336151291760687}
+  - {fileID: 9185159444336974124}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &4360336151365037394
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4360336151365037398}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bc065f0837b9b8c4c8f6906c15c7933a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  axis: Horizontal
-  rawInput: 0
 --- !u!50 &4360336151365037397
 Rigidbody2D:
   serializedVersion: 4
@@ -191,11 +208,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ea400dc7b030a0b4ca1e7d7a242a4276, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  inputProvider:
-    serializedObject: {fileID: 4360336151365037394}
-  moveSpeed: 10
-  xExtents: 13.7
-  width: 4
+  xExtents: 13
 --- !u!114 &5626703434748596934
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -234,3 +247,18 @@ MonoBehaviour:
     m_RotationOrder: 4
   angleMultiplier: 60
   width: 4
+--- !u!114 &4367027081281038549
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4360336151365037398}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82d9312fc40c5664f8acd564157f6c6d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  <Movement>k__BackingField: {fileID: 4360336151365037396}
+  <Collision>k__BackingField: {fileID: 5626703434748596934}
+  <BallOrigin>k__BackingField: {fileID: 9185159444336974124}
