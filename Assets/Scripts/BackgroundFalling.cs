@@ -10,7 +10,7 @@ public class BackgroundFalling : MonoBehaviour
     [SerializeField]
     private float tileHeight = 24;
 
-    private void Update()
+    private void FixedUpdate()
     {
         foreach (var tile in tiles)
         {
