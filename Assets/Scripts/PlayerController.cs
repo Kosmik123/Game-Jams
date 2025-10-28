@@ -4,7 +4,9 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     [SerializeField]
-    private float moveSpeed;
+	private float moveSpeed = 4;
+	[SerializeField]
+    private float descentSpeed = 1;
 
     private float horizontalInput, verticalInput;
 
@@ -20,7 +22,7 @@ public class PlayerController : MonoBehaviour
         horizontalInput = Input.GetAxis("Horizontal");
         verticalInput = Input.GetAxis("Vertical");
         
-        rb.velocity = new Vector2(horizontalInput * moveSpeed, verticalInput * moveSpeed);
+        rb.velocity = new Vector2(horizontalInput * moveSpeed, verticalInput * moveSpeed - descentSpeed);
     }
 
     private void OnCollisionEnter2D(Collision2D collision)

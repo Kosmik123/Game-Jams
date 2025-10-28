@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 2053064669662139563}
   - component: {fileID: 6967973144392184837}
   - component: {fileID: 5713358578696240555}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Sprite
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -74,7 +74,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: 2a4876c63257de44382adff84354b14e, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 09832e9d0e1485949a54b790966005ac, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -115,7 +115,7 @@ GameObject:
   - component: {fileID: 3219369668509494421}
   - component: {fileID: 4861158400743487628}
   - component: {fileID: 5252972201608273096}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Player
   m_TagString: Player
   m_Icon: {fileID: 0}
@@ -151,6 +151,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   moveSpeed: 5
+  descentSpeed: 0.15
 --- !u!50 &4861158400743487628
 Rigidbody2D:
   serializedVersion: 4
@@ -173,7 +174,7 @@ Rigidbody2D:
     m_Bits: 0
   m_ExcludeLayers:
     serializedVersion: 2
-    m_Bits: 128
+    m_Bits: 0
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 1
