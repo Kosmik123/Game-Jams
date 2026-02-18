@@ -1,3 +1,6 @@
 [submodule "Assets/Bipolar/Interface Serialization"]
 	path = Assets/Bipolar/Interface Serialization
 	url = https://github.com/Bipolar-Games/Interface-Serialization
+[submodule "Assets/Bipolar/Component Events"]
+	path = Assets/Bipolar/Component Events
+	url = https://github.com/Bipolar-Games/Component-Events.git
