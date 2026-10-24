@@ -76,3 +76,6 @@ crashlytics-build.properties
 # Other
 *.dwlt
 .editorconfig
+
+# Local script config (itch target, Unity path)
+/Scripts/config.ps1
