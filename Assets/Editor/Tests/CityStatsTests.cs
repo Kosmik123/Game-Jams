@@ -10,6 +10,9 @@ public class CityStatsTests
     private static readonly FloorType P = FloorType.All.First(t => t.Name == "Power");
     private static readonly FloorType Park = FloorType.All.First(t => t.Name == "Park");
 
+    // These post-jam towers have one residential-office pair: +0.3 $/s commute income (see NeighborTests).
+    private const float Commute = 0.3f;
+
     private static CityStats PostJam(params FloorType[] floors)
     {
         var stats = new PostJamRuleset().CreateEconomy();
@@ -32,7 +35,7 @@ public class CityStatsTests
         Assert.AreEqual(0, stats.Happiness);
         Assert.AreEqual(20, stats.Population);
         Assert.AreEqual(1f, stats.PowerRatio);
-        Assert.AreEqual(4f, stats.Income, 1e-4f);
+        Assert.AreEqual(4f + Commute, stats.Income, 1e-4f);
         Assert.IsNull(stats.PowerWarning);
     }
 
@@ -54,7 +57,7 @@ public class CityStatsTests
         Assert.AreEqual(4f / 6f, stats.PowerRatio, 1e-4f);
         Assert.AreEqual(-6, stats.Happiness);
         Assert.AreEqual(10, stats.Population);
-        Assert.AreEqual(10 * 0.2f * 4f / 6f, stats.Income, 1e-4f);
+        Assert.AreEqual((10 * 0.2f + Commute) * 4f / 6f, stats.Income, 1e-4f);
         Assert.AreEqual("Power 67%", stats.PowerWarning);
 
         // 6 consumers, 4 powered: the four lowest are lit, the two offices on top are dark, the plant is lit.
@@ -69,7 +72,7 @@ public class CityStatsTests
         var stats = PostJam(R, O, P, Park, Park);
         Assert.AreEqual(5, stats.Happiness);
         Assert.AreEqual(1f, stats.PowerRatio);
-        Assert.AreEqual(2.5f, stats.Income, 1e-4f);
+        Assert.AreEqual((2f + Commute) * 1.25f, stats.Income, 1e-4f);
     }
 
     [Test]
@@ -77,7 +80,7 @@ public class CityStatsTests
     {
         var stats = PostJam(R, O, P, P, Park, Park, Park, Park, Park, Park);
         Assert.Greater(stats.Happiness, 10);
-        Assert.AreEqual(10 * 0.2f * 1.5f, stats.Income, 1e-4f);
+        Assert.AreEqual((10 * 0.2f + Commute) * 1.5f, stats.Income, 1e-4f);
     }
 
     [Test]

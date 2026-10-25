@@ -54,8 +54,8 @@ public class ComboTests
     public void Combo_MultipliesWithHappinessBonus()
     {
         var stats = Land(new PostJamRuleset().CreateEconomy(), true, true, true);
-        stats.Recalculate((IReadOnlyList<FloorType>)new[] { R, O, P, Park, Park }); // 2.5 $/s without combo
-        Assert.AreEqual(2.5f * 3f, stats.Income, 1e-4f);
+        stats.Recalculate((IReadOnlyList<FloorType>)new[] { R, O, P, Park, Park }); // (2 + 0.3 commute) * 1.25 without combo
+        Assert.AreEqual(2.3f * 1.25f * 3f, stats.Income, 1e-4f);
     }
 
     [Test]
