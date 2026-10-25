@@ -35,6 +35,7 @@ namespace ZeroHour.Tower
         private TowerGame game;
         private TowerSway sway;
         private RelativeDrag drag;
+        private float platformWidth;
         private float localTop;
         private float instability;
         private bool hasSeenTouch;
@@ -48,7 +49,10 @@ namespace ZeroHour.Tower
         // Height of the tower top above the platform.
         public float LocalTop => localTop;
 
-        public float TopX => transform.position.x + (floors.Count > 0 ? floors[floors.Count - 1].TowerPosition.x : 0f);
+        public float TopX => transform.position.x + TopOffset;
+
+        // Roof X relative to the platform, from the logical floor positions (without the visual sway).
+        public float TopOffset => floors.Count > 0 ? floors[floors.Count - 1].TowerPosition.x : 0f;
 
         // 1 = rock solid, 0 = about to collapse.
         public float Stability => 1f - instability / MaxInstability;
@@ -56,6 +60,7 @@ namespace ZeroHour.Tower
         public void Init(TowerGame game, Sprite sprite, float width)
         {
             this.game = game;
+            platformWidth = width;
             sway = game.Ruleset.CreateSway();
             if (game.Ruleset.RelativeControl)
                 drag = new RelativeDrag(game.Ruleset.DragSensitivity);
@@ -75,12 +80,17 @@ namespace ZeroHour.Tower
             float halfRange = game.PlayWidth / 2f;
             if (drag != null)
             {
-                // Touch drags the platform; the mouse places it under the cursor like in the jam.
+                // The range keeps the roof (where floors land) within the play width, even when the tower leans.
+                float topOffset = TopOffset;
+                float screenHalfWidth = game.Camera.orthographicSize * game.Camera.aspect;
+                PlatformRange.Get(topOffset, halfRange, screenHalfWidth, platformWidth / 2f, out float minX, out float maxX);
+
+                // Touch drags the platform; the mouse puts the roof under the cursor.
                 bool isTouching = TryGetTouch(out Vector2 touchPosition, out int touchId);
                 float touchX = isTouching ? game.Camera.ScreenToWorldPoint(touchPosition).x : 0f;
-                position.x = drag.Update(isTouching, touchId, touchX, position.x, halfRange);
+                position.x = drag.Update(isTouching, touchId, touchX, position.x, minX, maxX);
                 if (!isTouching && TryGetMouseWorldX(out float mouseX))
-                    position.x = Mathf.Clamp(mouseX, -halfRange, halfRange);
+                    position.x = Mathf.Clamp(mouseX - topOffset, minX, maxX);
             }
             else if (TryGetPointerWorldX(out float pointerX))
             {
