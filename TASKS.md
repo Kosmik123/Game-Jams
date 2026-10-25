@@ -128,6 +128,25 @@ Po każdym tasku: kompilacja/testy → commit (mały, z opisem). Build WebGL + d
   - Jam bez zmian.
   - EditMode testy: R,Park → Joy −1+4+1 = +4; R,P → energia +3, Joy −1−2−1 = −4; R,O → dochód (min(10,10)×0,2 + 0,3) × mnożniki przy pełnym zasilaniu; Park,R,Park → +2 Joy z synergii; kolejność R,O,R,O vs R,R,O,O → różna liczba par R–O (3 vs 1).
 
+- [ ] **24. [post-jam] Dźwięk i muzyka.** Pliki gotowe: `Assets/_Project/Resources/Audio/*.wav` (mono 16-bit 22050 Hz, generator `Tools/sound_gen.py` — zmiany brzmienia robi designer). Bez `.meta` — powstaną przy imporcie.
+  - `AudioManager` (tworzony w kodzie jak reszta; jeden na grę, przeżywa zmianę sceny — `DontDestroyOnLoad`), ładuje klipy przez `Resources.Load<AudioClip>("Audio/<nazwa>")`. Pula 4–6 `AudioSource` na SFX + jeden na muzykę (loop).
+  - **Zdarzenia → dźwięki (tylko post-jam):**
+    - złapane piętro → `land_<residential|office|power|park>` (+ lekka losowa zmiana wysokości ±5%),
+    - PERFECT → `perfect_<N>`, N = mnożnik combo 1…5 (pojedynczy PERFECT = 1),
+    - zawalenie → `collapse`,
+    - „+$” z dachu → `coin` (głośność ~0,4 — gra co sekundę, nie może męczyć),
+    - synergia → `synergy_good` (+Joy, +$) / `synergy_bad` (−Joy),
+    - premia czasu → `time_bonus`, kara → `time_penalty`,
+    - ostatnie 5 s rundy → `tick` raz na pełną sekundę,
+    - TIME'S UP → `time_up`; „NEW BEST!” → `new_best` (~0,5 s po `time_up`),
+    - kliknięcia w menu wyboru wersji i „Menu” → `ui_click` (to też w menu przed wyborem wersji).
+  - **Muzyka:** `music_game` w pętli podczas rundy post-jam, głośność ~0,5; na ekranie końca ściszona do ~0,2; w menu wyboru wersji cisza (na razie).
+  - **Wersja jamowa: bez dźwięku** (poza `ui_click` w menu wyboru wersji).
+  - **Przycisk wyciszenia** w post-jam: mała ikonka/napis „♪” / „♪ off” w prawym dolnym rogu ekranu gry (nie koliduje z HUD, timerem, „Menu”), przełącza wszystko (SFX + muzyka), stan w `PlayerPrefs` (`Muted`). Tap w przycisk nie może przesunąć platformy ani zrestartować gry.
+  - **WebGL:** przeglądarka odblokowuje audio dopiero po interakcji — pierwszy klik w menu wyboru wersji to załatwia; muzyka startuje z rundą, więc problemu nie powinno być. Sprawdź w buildzie, że muzyka gra po wejściu do post-jam.
+  - **Import** (`AudioImporter`, np. w `Assets/Editor/`, dla `Resources/Audio/`): SFX — Decompress On Load, PCM/ADPCM, mono; `music_game` — Compressed In Memory (Vorbis, quality ~0,5), Load In Background. Zacommituj `.meta`.
+  - Sprawdzenie: build WebGL, wszystkie zdarzenia słychać, mute działa i przeżywa przeładowanie, jam cichy, konsola czysta.
+
 ## Zrobione (jam, do `39a94ec` na itch.io)
 
 - [x] Input na telefonie (platforma zostaje w miejscu bez dotyku).

@@ -60,6 +60,8 @@ Budynek jako „miasto w pionie”, każde piętro wpływa na statystyki (warto�
 
 - **[DECYZJA post-jam, 25.10]** Synergie sąsiednich pięter (pary bezpośrednio nad sobą): Mieszkalne+Park +1 Joy, Mieszkalne+Elektrownia −1 Joy, Mieszkalne+Biuro +0,3 $/s. Każda nowa para pokazuje popup przy styku — gracz uczy się zasad z gry.
 
+- **[DECYZJA post-jam, 25.10]** Dźwięk: proceduralne 8-bit SFX i pętla chiptune (C–Am–F–G, 120 BPM, 16 s) z `Tools/sound_gen.py` → `Resources/Audio/`. Na razie wersja generowana; w razie potrzeby podmienimy na ręcznie robione assety. Wersja jamowa bez dźwięku. Przycisk wyciszenia zapamiętywany.
+
 ## HUD [DECYZJA]
 - Legacy `UI.Text` (`TowerHud.cs`), referencja 1080×1920, czcionka ≥ 60.
 - Lewy górny róg: jedna statystyka na linijkę — Height, Money (+dochód/s), Pop, Jobs, Energy, Joy, Stability. Prawy górny róg: pozostały czas rundy.
