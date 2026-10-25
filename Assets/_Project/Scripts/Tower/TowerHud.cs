@@ -9,6 +9,8 @@ namespace ZeroHour.Tower
     {
         private const string WarningColor = "#ff5555";
         private const string NewBestLabel = "NEW BEST!";
+        private const float TopLayoutBottom = 0.62f;
+        private const float TopLayoutPanelAlpha = 0.35f;
         private const float NewBestPulseScale = 1.1f;
         private const float NewBestPulseFrequency = 2f;
         private static readonly Color NewBestColor = new Color(1f, 0.85f, 0.2f);
@@ -38,6 +40,8 @@ namespace ZeroHour.Tower
         private RectTransform menuButton;
         private Text tutorialText;
         private Text newBestText;
+        private Canvas hudCanvas;
+        private bool isTopLayout;
 
         // HUD label of the population stat; the version can rename it.
         public string PopulationLabel { get; set; } = "Pop";
@@ -50,6 +54,7 @@ namespace ZeroHour.Tower
             canvasObject.transform.SetParent(transform, false);
 
             var canvas = canvasObject.GetComponent<Canvas>();
+            hudCanvas = canvas;
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = 50;
 
@@ -105,7 +110,7 @@ namespace ZeroHour.Tower
         // Text that follows a world position (positioned by the caller), drawn below the HUD panels.
         public Text CreateWorldText(string name, int size)
         {
-            Text text = CreateText(name, statsText.canvas.transform, size, TextAnchor.MiddleCenter);
+            Text text = CreateText(name, hudCanvas.transform, size, TextAnchor.MiddleCenter);
             text.rectTransform.SetAsFirstSibling();
             text.rectTransform.sizeDelta = new Vector2(600f, size * 1.5f);
             return text;
@@ -140,7 +145,7 @@ namespace ZeroHour.Tower
         {
             if (tutorialText == null)
             {
-                tutorialText = CreateText("Tutorial", statsText.canvas.transform, tutorialFontSize, TextAnchor.MiddleCenter);
+                tutorialText = CreateText("Tutorial", hudCanvas.transform, tutorialFontSize, TextAnchor.MiddleCenter);
                 tutorialText.rectTransform.SetSiblingIndex(gameOverPanel.transform.GetSiblingIndex());
                 tutorialText.rectTransform.sizeDelta = new Vector2(1000f, tutorialFontSize * 1.5f);
                 tutorialOutlineColor = tutorialText.GetComponent<Outline>().effectColor;
@@ -225,14 +230,30 @@ namespace ZeroHour.Tower
             return value < 0 ? $"<color={WarningColor}>{text}</color>" : text;
         }
 
+        // End screen text in the top third over a lighter panel, leaving the rest of the screen to the tower.
+        public void UseTopLayout()
+        {
+            isTopLayout = true;
+            gameOverPanel.GetComponent<Image>().color = new Color(0f, 0f, 0f, TopLayoutPanelAlpha);
+            var resultRect = gameOverText.rectTransform;
+            resultRect.anchorMin = new Vector2(0f, TopLayoutBottom);
+            resultRect.anchorMax = Vector2.one;
+            resultRect.offsetMin = new Vector2(30f, 0f);
+            resultRect.offsetMax = new Vector2(-30f, -40f);
+            gameOverText.alignment = TextAnchor.UpperCenter;
+        }
+
         // bestScore is null when the version doesn't track records.
         public void ShowGameOver(int height, float money, int score, int? bestScore = null, bool isNewBest = false)
         {
-            string text =
-                "TIME'S UP!\n\n" +
-                $"Height  {height}\n" +
-                $"Money  $ {money:0}\n\n" +
-                $"<size={gameOverFontSize + 20}>Score  {score}</size>";
+            string text = isTopLayout
+                ? "TIME'S UP!\n" +
+                  $"Height  {height}    Money  $ {money:0}\n" +
+                  $"<size={gameOverFontSize + 20}>Score  {score}</size>"
+                : "TIME'S UP!\n\n" +
+                  $"Height  {height}\n" +
+                  $"Money  $ {money:0}\n\n" +
+                  $"<size={gameOverFontSize + 20}>Score  {score}</size>";
             int bestLineIndex = -1;
             if (bestScore.HasValue)
             {
@@ -241,9 +262,12 @@ namespace ZeroHour.Tower
                 // A new record gets its own pulsing text; an invisible copy keeps the line's space.
                 text += isNewBest ? $"<color=#00000000>{NewBestLabel}</color>" : $"Best  {bestScore.Value}";
             }
-            text += $"\n\n<size={gameOverFontSize * 3 / 4}>Tap to play again</size>";
+            text += (isTopLayout ? "\n" : "\n\n") + $"<size={gameOverFontSize * 3 / 4}>Tap to play again</size>";
             gameOverText.text = text;
             gameOverPanel.SetActive(true);
+            // The summary repeats the stats; the panel and the timer would sit under the top-layout text.
+            if (isTopLayout)
+                SetGameplayHudVisible(false);
 
             if (newBestText != null)
                 newBestText.gameObject.SetActive(false);
@@ -274,6 +298,16 @@ namespace ZeroHour.Tower
             newBestText.gameObject.SetActive(true);
         }
 
-        public void HideGameOver() => gameOverPanel.SetActive(false);
+        public void HideGameOver()
+        {
+            gameOverPanel.SetActive(false);
+            SetGameplayHudVisible(true);
+        }
+
+        private void SetGameplayHudVisible(bool visible)
+        {
+            statsText.transform.parent.gameObject.SetActive(visible);
+            timerText.gameObject.SetActive(visible);
+        }
     }
 }
