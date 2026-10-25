@@ -192,7 +192,7 @@ namespace ZeroHour.Tower
                 $"{Label("Energy", 2)} {Signed(stats.Energy)}\n" +
                 $"{Label("Joy", 3)} {Signed(stats.Happiness)}\n" +
                 $"<color={stabilityColor}>Stability {stability * 100f:0}%</color>" +
-                (stats.IsPowered ? "" : $"\n<color={WarningColor}>BLACKOUT!</color>");
+                (stats.PowerWarning == null ? "" : $"\n<color={WarningColor}>{stats.PowerWarning}</color>");
 
             int seconds = Mathf.CeilToInt(Mathf.Max(0f, timeLeft));
             timerText.text = seconds <= 10 ? $"<color={WarningColor}>{seconds}s</color>" : $"{seconds}s";

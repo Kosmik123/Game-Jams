@@ -124,7 +124,7 @@ namespace ZeroHour.Tower
             if (ruleset.ShowPerfectPopup)
                 Tower.PerfectLanding += floor => PerfectPopup.Show(hud, Camera, floor.transform);
 
-            stats = new CityStats();
+            stats = ruleset.CreateEconomy();
             timeLeft = ruleset.RoundDuration;
             spawnTimer = 0f;
             lastSpawnX = null;
@@ -163,8 +163,8 @@ namespace ZeroHour.Tower
 
             stats.Recalculate(Tower.Floors);
             stats.Tick(Time.deltaTime);
-            foreach (var floor in Tower.Floors)
-                floor.SetPowered(stats.IsPowered);
+            for (int i = 0; i < Tower.Floors.Count; i++)
+                Tower.Floors[i].SetPowered(stats.IsFloorPowered(i));
 
             timeLeft -= Time.deltaTime;
             if (ruleset.ShowTutorial && (Tower.Floors.Count > 0 || ruleset.RoundDuration - timeLeft >= tutorialDuration))

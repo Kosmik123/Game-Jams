@@ -16,6 +16,8 @@ namespace ZeroHour.Tower
         // Seconds until the next floor, measured when the tower has the given height.
         public abstract float SpawnInterval(int towerHeight);
 
+        public abstract CityStats CreateEconomy();
+
         public abstract bool ShowPerfectPopup { get; }
 
         public abstract bool ShowTutorial { get; }
@@ -31,6 +33,7 @@ namespace ZeroHour.Tower
         public override float RoundDuration => 90f;
         public override float FallSpeed(int towerHeight) => 3f;
         public override float SpawnInterval(int towerHeight) => 0.7f;
+        public override CityStats CreateEconomy() => new CityStats();
         public override bool ShowPerfectPopup => false;
         public override bool ShowTutorial => false;
         public override bool ShowMenuButton => false;
@@ -52,6 +55,7 @@ namespace ZeroHour.Tower
             Mathf.Min(BaseFallSpeed + FallSpeedPerFloor * towerHeight, MaxFallSpeed);
         public override float SpawnInterval(int towerHeight) =>
             Mathf.Max(BaseSpawnInterval - SpawnIntervalPerFloor * towerHeight, MinSpawnInterval);
+        public override CityStats CreateEconomy() => new PostJamCityStats();
         public override bool ShowPerfectPopup => true;
         public override bool ShowTutorial => true;
         public override bool ShowMenuButton => true;
