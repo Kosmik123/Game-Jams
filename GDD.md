@@ -15,29 +15,23 @@ Sekcje oznaczone **[DECYZJA]** są ustalone, **[PROPOZYCJA]** czekają na akcept
 - Piętro, które spadnie na szczyt wieży (przetnie jego wysokość nad wieżą), dokleja się do budynku z zachowaniem przesunięcia w X. Chybione piętro spada dalej i znika.
 - **Kamera** jedzie w górę razem z budynkiem: szczyt wieży trzyma się na ~40% wysokości ekranu, widać tylko kilka górnych pięter, a nad budynkiem zostaje wolna przestrzeń na sterowanie i decyzje gracza.
 
-## Typy pięter (obecne w kodzie)
-| Typ | Kolor |
-|---|---|
-| Residential (mieszkania) | pomarańczowy |
-| Office (biura) | niebieski |
-| Power (elektrownia) | żółty |
-| Park | zielony |
+## Statystyki [DECYZJA — zaimplementowane]
+Budynek jako „miasto w pionie”, każde piętro wpływa na statystyki (wartości w `FloorType.cs`):
+| Typ | Kolor | Mieszkańcy | Miejsca pracy | Energia | Szczęście |
+|---|---|---|---|---|---|
+| Residential | pomarańczowy | +10 | 0 | −1 | −1 (tłok) |
+| Office | niebieski | 0 | +10 | −1 | 0 |
+| Power | żółty | 0 | 0 | +4 | −2 (smog) |
+| Park | zielony | 0 | 0 | 0 | +3 |
 
-## Statystyki [PROPOZYCJA — do akceptacji]
-Budynek jako „miasto w pionie”, każde piętro wpływa na statystyki:
-| Typ | Daje | Kosztuje |
-|---|---|---|
-| Residential | +Mieszkańcy | −Energia, −Szczęście (tłok) |
-| Office | +Pieniądze (wymaga mieszkańców do pracy) | −Energia |
-| Power | +Energia | −Szczęście (smog) |
-| Park | +Szczęście | nic nie produkuje |
-
-- **Energia < 0** → piętra gasną (nie produkują).
-- **Szczęście < 0** → mieszkańcy się wyprowadzają.
-- **Stabilność**: przesunięcie piętra względem niższego chwieje wieżą; zbyt duże → zawalenie górnych pięter (ryzyko vs nagroda).
-- Wynik: wysokość + pieniądze; ewentualnie cele wysokości jako poziomy.
+- **Pieniądze**: dochód = min(mieszkańcy, miejsca pracy) × 0.2 $/s, tylko przy zasilaniu (`CityStats.cs`).
+- **Energia < 0** → BLACKOUT: piętra (poza elektrowniami) ciemnieją, dochód = 0.
+- **Szczęście < 0** → każdy punkt poniżej zera wyprowadza 5 mieszkańców.
+- **Stabilność** (`TowerController.cs`): niestabilność += (przesunięcie/szerokość)² × 120 przy każdym piętrze; idealne trafienie (< 12% szerokości) uspokaja o 15. Przy 100% górne 3 piętra się zawalają, niestabilność spada do 40. Wieża kołysze się wizualnie proporcjonalnie do niestabilności.
+- **HUD** u góry ekranu (`TowerHud.cs`, legacy `UI.Text`): wysokość, pieniądze i dochód, mieszkańcy/praca, energia, szczęście, stabilność.
+- Wynik: wysokość + pieniądze; ewentualnie cele wysokości jako poziomy (otwarte).
 
 ## Kod
-- `Assets/_Project/Scripts/Tower/` (namespace `ZeroHour.Tower`): `TowerGame` (bootstrap, kamera, spawner), `TowerController` (platforma + piętra), `FallingFloor`, `FloorType`.
+- `Assets/_Project/Scripts/Tower/` (namespace `ZeroHour.Tower`): `TowerGame` (bootstrap, kamera, spawner), `TowerController` (platforma, piętra, stabilność), `FallingFloor`, `FloorType`, `CityStats`, `TowerHud`.
 - `Assets/_Project/Scripts/Controls/`: `GameControls` (akcja Move), `MobileJoystick` (wyłączony flagą `isEnabled`).
 - Build/deploy: `.\Scripts\build.ps1 -Targets WebGL`, potem `.\Scripts\deploy.ps1 -SkipBuild -Targets WebGL` (w trakcie jamu bez pytania). Edytor Unity musi być zamknięty; budujemy na 6000.3.27f1.
