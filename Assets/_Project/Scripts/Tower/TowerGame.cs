@@ -22,14 +22,7 @@ namespace ZeroHour.Tower
         [SerializeField]
         private float floorSize = 1f;
 
-        [SerializeField]
-        private float fallSpeed = 3f;
-
         [Header("Spawning")]
-        [Tooltip("Seconds between falling floors.")]
-        [SerializeField]
-        private float spawnInterval = 0.7f;
-
         [Tooltip("Minimum horizontal distance from the previous floor, in floor widths.")]
         [SerializeField]
         private float spawnSpacing = 1.5f;
@@ -43,9 +36,6 @@ namespace ZeroHour.Tower
 
         [Header("Round")]
         [SerializeField]
-        private float roundDuration = 40f;
-
-        [SerializeField]
         private int scorePerFloor = 10;
 
         [Tooltip("Seconds after the round ends before a tap restarts, so a held finger doesn't skip the end screen.")]
@@ -53,6 +43,7 @@ namespace ZeroHour.Tower
         private float restartDelay = 0.7f;
 
         private readonly List<FallingFloor> spawnedFloors = new List<FallingFloor>();
+        private TowerRuleset ruleset;
         private CityStats stats;
         private TowerHud hud;
         private Sprite squareSprite;
@@ -71,11 +62,23 @@ namespace ZeroHour.Tower
         public float BottomY => Camera.transform.position.y - Camera.orthographicSize;
         public float TopY => Camera.transform.position.y + Camera.orthographicSize;
         public float BaseY => baseY;
+        public TowerRuleset Ruleset => ruleset;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void CreateInstance()
         {
-            new GameObject(nameof(TowerGame)).AddComponent<TowerGame>();
+            Create(new PostJamRuleset());
+        }
+
+        public static TowerGame Create(TowerRuleset ruleset)
+        {
+            // Inactive until the ruleset is set, so Awake already sees it.
+            var gameObject = new GameObject(nameof(TowerGame));
+            gameObject.SetActive(false);
+            var game = gameObject.AddComponent<TowerGame>();
+            game.ruleset = ruleset;
+            gameObject.SetActive(true);
+            return game;
         }
 
         private void Awake()
@@ -118,7 +121,7 @@ namespace ZeroHour.Tower
             Tower.Init(this, squareSprite, platformWidth);
 
             stats = new CityStats();
-            timeLeft = roundDuration;
+            timeLeft = ruleset.RoundDuration;
             spawnTimer = 0f;
             lastSpawnX = null;
             lastSpawnType = null;
@@ -161,7 +164,7 @@ namespace ZeroHour.Tower
             spawnTimer -= Time.deltaTime;
             if (spawnTimer <= 0f)
             {
-                spawnTimer = spawnInterval;
+                spawnTimer = ruleset.SpawnInterval(stats.Height);
                 SpawnNextFloor();
             }
         }
@@ -204,7 +207,7 @@ namespace ZeroHour.Tower
         {
             var floor = new GameObject("Floor").AddComponent<FallingFloor>();
             floor.transform.position = position;
-            floor.Init(this, type, squareSprite, floorSize, fallSpeed);
+            floor.Init(this, type, squareSprite, floorSize, ruleset.FallSpeed(stats.Height));
             spawnedFloors.Add(floor);
         }
 

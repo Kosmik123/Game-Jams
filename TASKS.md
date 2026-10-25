@@ -10,7 +10,7 @@ Po każdym tasku: kompilacja/testy → commit (mały, z opisem). Build WebGL + d
 
 ### Do zrobienia (kolejność = priorytet)
 
-- [ ] **1. Rozdzielenie wersji: jam / post-jam (fundament, bez zmian w rozgrywce).**
+- [x] **1. Rozdzielenie wersji: jam / post-jam (fundament, bez zmian w rozgrywce).**
   Wersja jamowa ma zostać **dokładnie taka, jaka poszła na itch.io w commicie `39a94ec`** (runda 90 s, bez PERFECT, bez trudności, bez samouczka). Wszystkie nowe funkcje trafiają tylko do post-jam.
   - Wprowadź abstrakcję zestawu zasad, np. `abstract class TowerRuleset` (namespace `ZeroHour.Tower`) z implementacjami `JamRuleset` i `PostJamRuleset`. Ruleset dostarcza parametry (`RoundDuration`, `FallSpeed(height)`, `SpawnInterval(height)`, …) i flagi/hooki funkcji (`ShowPerfectPopup`, `ShowTutorial`, …). Na start obie implementacje dają identyczną rozgrywkę jak teraz, poza: Jam → `roundDuration = 90`, PostJam → `40` (zmiana z `bbd8628`).
   - Wartości, które dziś są `[SerializeField]` w `TowerGame`/`TowerController` i różnią się między wersjami, przenieś do rulesetu. Wspólne mogą zostać.
