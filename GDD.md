@@ -6,7 +6,7 @@ Sekcje oznaczone **[DECYZJA]** są ustalone, **[PROPOZYCJA]** czekają na akcept
 
 ## Wersje gry: jam / post-jam [DECYZJA, 25.10.2026]
 - Gra startuje od **sceny wyboru wersji** (`VersionSelect`, scena nr 0): przyciski **„Jam version”** i **„Post-jam version”**. Jeden build WebGL na itch.io zawiera obie wersje.
-- **Jam version** = rozgrywka jak w buildzie z jamu (`39a94ec`), ale z rundą **40 s** jak w poprawce `bbd8628` (decyzja autora 25.10, 18:10), stała prędkość/interwał, bez PERFECT i samouczka. **Zamrożona na zawsze** — żadnych zmian rozgrywki ani UI, także poprawek błędów; cały rozwój tylko w post-jam.
+- **Jam version** = rozgrywka jak w buildzie z jamu (`39a94ec`), ale z rundą **40 s** jak w poprawce `bbd8628` (decyzja autora 25.10, 18:10), stała prędkość/interwał, bez PERFECT i samouczka. **Zamrożona na zawsze** — żadnych zmian rozgrywki ani UI, także poprawek błędów; cały rozwój tylko w post-jam. Wyjątek (decyzja autora 25.10, 21:15): przycisk „Menu” na ekranie końca.
 - **Post-jam version** = dalszy rozwój: runda 40 s, PERFECT!, rosnąca trudność, samouczek i kolejne funkcje.
 - Różnice między wersjami żyją w `TowerRuleset` (`JamRuleset`, `PostJamRuleset`); wspólny kod nie sprawdza wersji „ifami” rozsianymi po logice.
 - Poniższe sekcje opisują wersję post-jam, chyba że zaznaczono inaczej.
@@ -57,6 +57,8 @@ Budynek jako „miasto w pionie”, każde piętro wpływa na statystyki (warto�
 - Tap/klik restartuje grę bez przeładowania sceny (bootstrap `AfterSceneLoad` nie odpala się ponownie po `LoadScene`).
 
 - **[DECYZJA post-jam, 25.10 — wstępna, do strojenia]** Czas rundy zależny od gry: start 25 s, +1,5 s × max(0,3; 1 − H/40) za piętro, +1 s za PERFECT, −3 s za zawalenie, limit 30 s. Dobry gracz gra dłużej; rosnąca trudność i malejąca premia w końcu go doganiają.
+
+- **[DECYZJA post-jam, 25.10]** Synergie sąsiednich pięter (pary bezpośrednio nad sobą): Mieszkalne+Park +1 Joy, Mieszkalne+Elektrownia −1 Joy, Mieszkalne+Biuro +0,3 $/s. Każda nowa para pokazuje popup przy styku — gracz uczy się zasad z gry.
 
 ## HUD [DECYZJA]
 - Legacy `UI.Text` (`TowerHud.cs`), referencja 1080×1920, czcionka ≥ 60.

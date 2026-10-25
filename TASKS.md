@@ -116,6 +116,18 @@ Po każdym tasku: kompilacja/testy → commit (mały, z opisem). Build WebGL + d
   - Jam bez zmian.
   - Sprawdzenie (EditMode na funkcji przycinania): offset +1 → zakres platformy [−4, 2] przy `playWidth = 6`; offset 0 → jak dotąd; skrajny offset → platforma na krawędzi ekranu. Play Mode: krzywa wieża, dach dosięga obu krawędzi `playWidth`.
 
+- [ ] **22. [JAM — wyjątek od zamrożenia, decyzja autora] Przycisk „Menu” na ekranie końca wersji jamowej.** `JamRuleset.ShowMenuButton = true` — ten sam przycisk co w post-jam (lewy dolny róg ekranu końca), wraca do wyboru wersji. Nic poza tym w jamie się nie zmienia (rozgrywka, układ ekranu końca, HUD — 1:1). Sprawdź w buildzie: jam → koniec rundy → „Menu” → menu wyboru wersji; tap poza przyciskiem dalej restartuje.
+- [ ] **23. [post-jam] Synergie sąsiednich pięter.** Kolejność pięter w wieży zaczyna mieć znaczenie. Sąsiedzi = piętra bezpośrednio nad sobą (`Tower.Floors[i]` i `[i+1]`). Każda **para sąsiadów** liczona raz:
+  - **Mieszkalne + Park** → **+1 Joy** („widok na park”),
+  - **Mieszkalne + Elektrownia** → **−1 Joy** („smog pod oknem”; dodatkowo do −2 elektrowni),
+  - **Mieszkalne + Biuro** → **+0,3 $/s** dochodu bazowego („krótki dojazd”; mnożony przez PowerRatio, szczęście i combo jak reszta dochodu).
+  - Pozostałe pary: brak efektu.
+  - Liczone w `PostJamCityStats.Recalculate` z listy pięter w kolejności od dołu; stałe (`ParkNeighborJoy`, `PowerNeighborJoy`, `CommuteIncome`) w `PostJamCityStats`. Zawalenie usuwa pary razem z piętrami (i tak przeliczane co klatkę).
+  - **Feedback (ważne — gracz musi się tego nauczyć z gry):** gdy złapane piętro tworzy parę z piętrem pod spodem, nad stykiem pojawia się `WorldPopup`: **„+1 Joy”** zielony, **„−1 Joy”** czerwony, **„+$”** żółty (ok. 40 px, krótko, nie koliduje z PERFECT — np. lekko z boku/niżej). 
+  - HUD bez nowych linijek (efekty widać w Joy i dochodzie).
+  - Jam bez zmian.
+  - EditMode testy: R,Park → Joy −1+4+1 = +4; R,P → energia +3, Joy −1−2−1 = −4; R,O → dochód (min(10,10)×0,2 + 0,3) × mnożniki przy pełnym zasilaniu; Park,R,Park → +2 Joy z synergii; kolejność R,O,R,O vs R,R,O,O → różna liczba par R–O (3 vs 1).
+
 ## Zrobione (jam, do `39a94ec` na itch.io)
 
 - [x] Input na telefonie (platforma zostaje w miejscu bez dotyku).
