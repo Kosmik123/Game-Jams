@@ -21,36 +21,39 @@ namespace ZeroHour.Tower
         private float squashTime = float.MaxValue;
 
         public FloorType Type { get; private set; }
-        public float Size { get; private set; }
+        public float Width { get; private set; }
+        public float Height { get; private set; }
         public bool IsAttached { get; private set; }
 
         // Position in the tower, without the visual wobble.
         public Vector2 TowerPosition { get; private set; }
 
-        public void Init(TowerGame game, FloorType type, Sprite sprite, float size, float fallSpeed)
+        public void Init(TowerGame game, FloorType type, Sprite sprite, float width, float height, string artFolder, float fallSpeed)
         {
             this.game = game;
             this.fallSpeed = fallSpeed;
             Type = type;
-            Size = size;
+            Width = width;
+            Height = height;
 
             spriteRenderer = gameObject.AddComponent<SpriteRenderer>();
 
-            // Floor art from Resources/Floors/<type name>; the tinted square is the fallback.
-            Sprite art = Resources.Load<Sprite>($"Floors/{type.Name}");
+            // Floor art from Resources/<artFolder>/<type name>; the tinted rectangle is the fallback.
+            Sprite art = Resources.Load<Sprite>($"{artFolder}/{type.Name}");
             hasArt = art != null;
             if (hasArt)
             {
                 spriteRenderer.sprite = art;
                 spriteRenderer.drawMode = SpriteDrawMode.Simple;
-                transform.localScale = Vector3.one * (size / art.bounds.size.x);
+                float scaleX = width / art.bounds.size.x;
+                transform.localScale = new Vector3(scaleX, height / art.bounds.size.y, scaleX);
                 baseScale = transform.localScale;
             }
             else
             {
                 spriteRenderer.sprite = sprite;
                 spriteRenderer.drawMode = SpriteDrawMode.Sliced;
-                spriteRenderer.size = new Vector2(size, size);
+                spriteRenderer.size = new Vector2(width, height);
             }
             SetPowered(true);
         }
@@ -61,22 +64,22 @@ namespace ZeroHour.Tower
                 return;
 
             Vector3 position = transform.position;
-            float previousBottom = position.y - Size / 2f;
+            float previousBottom = position.y - Height / 2f;
             position.y -= fallSpeed * Time.deltaTime;
             transform.position = position;
             transform.Rotate(0f, 0f, spin * Time.deltaTime);
 
             TowerController tower = game.Tower;
-            float bottom = position.y - Size / 2f;
+            float bottom = position.y - Height / 2f;
             bool crossedTop = previousBottom >= tower.TopY && bottom < tower.TopY;
-            if (!isDebris && !tower.IsFrozen && crossedTop && Mathf.Abs(position.x - tower.TopX) < Size)
+            if (!isDebris && !tower.IsFrozen && crossedTop && Mathf.Abs(position.x - tower.TopX) < Width)
             {
                 IsAttached = true;
                 tower.Attach(this);
                 return;
             }
 
-            if (position.y < game.BottomY - Size)
+            if (position.y < game.BottomY - Height)
                 Destroy(gameObject);
         }
 
@@ -110,7 +113,7 @@ namespace ZeroHour.Tower
                 squashY = scale.y;
                 transform.localScale = new Vector3(baseScale.x * scale.x, baseScale.y * scale.y, baseScale.z);
             }
-            transform.localPosition = new Vector3(TowerPosition.x + offsetX + slide, TowerPosition.y - (1f - squashY) * Size / 2f, 0f);
+            transform.localPosition = new Vector3(TowerPosition.x + offsetX + slide, TowerPosition.y - (1f - squashY) * Height / 2f, 0f);
         }
 
         public void SetPowered(bool isPowered)

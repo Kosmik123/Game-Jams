@@ -66,8 +66,8 @@ namespace ZeroHour.Tower
             maxX = x + platformWidth / 2f;
             foreach (FallingFloor floor in floors)
             {
-                minX = Mathf.Min(minX, x + floor.TowerPosition.x - floor.Size / 2f);
-                maxX = Mathf.Max(maxX, x + floor.TowerPosition.x + floor.Size / 2f);
+                minX = Mathf.Min(minX, x + floor.TowerPosition.x - floor.Width / 2f);
+                maxX = Mathf.Max(maxX, x + floor.TowerPosition.x + floor.Width / 2f);
             }
             bottomY = transform.position.y - platformHeight / 2f;
             topY = TopY;
@@ -133,14 +133,14 @@ namespace ZeroHour.Tower
         {
             float previousX = floors.Count > 0 ? floors[floors.Count - 1].TowerPosition.x : 0f;
             float offsetX = floor.transform.position.x - transform.position.x;
-            float placeX = Landing.PlaceX(offsetX, previousX, floor.Size, perfectOffset, game.Ruleset.SnapPerfectLandings, out bool isPerfect);
+            float placeX = Landing.PlaceX(offsetX, previousX, floor.Width, perfectOffset, game.Ruleset.SnapPerfectLandings, out bool isPerfect);
 
             floor.transform.SetParent(transform, true);
-            floor.PlaceInTower(new Vector2(placeX, localTop + floor.Size / 2f), offsetX - placeX, game.Ruleset.ShowJuice);
-            localTop += floor.Size;
+            floor.PlaceInTower(new Vector2(placeX, localTop + floor.Height / 2f), offsetX - placeX, game.Ruleset.ShowJuice);
+            localTop += floor.Height;
             floors.Add(floor);
 
-            float offset = Mathf.Abs(placeX - previousX) / floor.Size;
+            float offset = Mathf.Abs(placeX - previousX) / floor.Width;
             if (isPerfect)
                 instability = Mathf.Max(0f, instability - perfectCalm);
             else
@@ -159,7 +159,7 @@ namespace ZeroHour.Tower
             {
                 FallingFloor floor = floors[floors.Count - 1];
                 floors.RemoveAt(floors.Count - 1);
-                localTop -= floor.Size;
+                localTop -= floor.Height;
                 floor.Collapse();
             }
             instability = instabilityAfterCollapse;

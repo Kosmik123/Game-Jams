@@ -33,7 +33,7 @@ namespace ZeroHour.Tower
         private float platformWidth = 1.6f;
 
         [SerializeField]
-        private float floorSize = 1f;
+        private float floorWidth = 1f;
 
         [Header("Spawning")]
         [Tooltip("Minimum horizontal distance from the previous floor, in floor widths.")]
@@ -400,8 +400,8 @@ namespace ZeroHour.Tower
         // so a few floors at different heights are in the air for the player to choose from.
         private void SpawnNextFloor()
         {
-            float halfRange = (playWidth - floorSize) / 2f;
-            float minDistance = spawnSpacing * floorSize;
+            float halfRange = (playWidth - floorWidth) / 2f;
+            float minDistance = spawnSpacing * floorWidth;
             float x = Random.Range(-halfRange, halfRange);
             for (int attempt = 0; attempt < 30 && lastSpawnX.HasValue && Mathf.Abs(x - lastSpawnX.Value) < minDistance; attempt++)
                 x = Random.Range(-halfRange, halfRange);
@@ -413,14 +413,14 @@ namespace ZeroHour.Tower
 
             lastSpawnX = x;
             lastSpawnType = type;
-            SpawnFloor(new Vector3(x, TopY + floorSize, 0f), type);
+            SpawnFloor(new Vector3(x, TopY + ruleset.FloorHeight, 0f), type);
         }
 
         private void SpawnFloor(Vector3 position, FloorType type)
         {
             var floor = new GameObject("Floor").AddComponent<FallingFloor>();
             floor.transform.position = position;
-            floor.Init(this, type, squareSprite, floorSize, ruleset.FallSpeed(stats.Height));
+            floor.Init(this, type, squareSprite, floorWidth, ruleset.FloorHeight, ruleset.FloorArtFolder, ruleset.FallSpeed(stats.Height));
             spawnedFloors.Add(floor);
         }
 
