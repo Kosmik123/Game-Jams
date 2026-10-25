@@ -35,6 +35,7 @@ namespace ZeroHour.Tower
         private TowerGame game;
         private TowerSway sway;
         private RelativeDrag drag;
+        private float platformWidth;
         private float localTop;
         private float instability;
         private bool hasSeenTouch;
@@ -48,6 +49,24 @@ namespace ZeroHour.Tower
         // Height of the tower top above the platform.
         public float LocalTop => localTop;
 
+        // Calms the visual sway to zero (end-of-round shot).
+        public bool SuppressSway { get; set; }
+
+        // World bounds of the platform and the stacked floors, from their logical positions.
+        public void GetBounds(out float minX, out float maxX, out float bottomY, out float topY)
+        {
+            float x = transform.position.x;
+            minX = x - platformWidth / 2f;
+            maxX = x + platformWidth / 2f;
+            foreach (FallingFloor floor in floors)
+            {
+                minX = Mathf.Min(minX, x + floor.TowerPosition.x - floor.Size / 2f);
+                maxX = Mathf.Max(maxX, x + floor.TowerPosition.x + floor.Size / 2f);
+            }
+            bottomY = transform.position.y - platformHeight / 2f;
+            topY = TopY;
+        }
+
         public float TopX => transform.position.x + TopOffset;
 
         // Roof X relative to the platform, from the logical floor positions (without the visual sway).
@@ -59,6 +78,7 @@ namespace ZeroHour.Tower
         public void Init(TowerGame game, Sprite sprite, float width)
         {
             this.game = game;
+            platformWidth = width;
             sway = game.Ruleset.CreateSway();
             if (game.Ruleset.RelativeControl)
                 drag = new RelativeDrag(game.Ruleset.DragSensitivity);
@@ -98,7 +118,7 @@ namespace ZeroHour.Tower
 
         private void LateUpdate()
         {
-            sway.Advance(Time.time, Time.deltaTime, instability / MaxInstability, floors.Count);
+            sway.Advance(Time.time, Time.deltaTime, SuppressSway ? 0f : instability / MaxInstability, floors.Count);
             for (int i = 0; i < floors.Count; i++)
                 floors[i].SetVisualOffset(sway.Offset(i, floors.Count));
         }

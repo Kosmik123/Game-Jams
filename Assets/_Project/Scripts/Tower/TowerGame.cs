@@ -49,6 +49,18 @@ namespace ZeroHour.Tower
         [SerializeField]
         private float tutorialDuration = 5f;
 
+        [Tooltip("End-of-round shot of the whole tower (versions with ShowTowerShot).")]
+        [SerializeField]
+        private float towerShotDuration = 1.5f;
+
+        [Tooltip("Share of the screen height (from the bottom) the tower may take in the end shot.")]
+        [SerializeField]
+        private float towerShotScreenShare = 2f / 3f;
+
+        [Tooltip("Margin around the tower in the end shot, as a share of its size (split between both sides).")]
+        [SerializeField]
+        private float towerShotMargin = 0.1f;
+
         [Tooltip("Seconds after the round ends before a tap restarts, so a held finger doesn't skip the end screen.")]
         [SerializeField]
         private float restartDelay = 0.7f;
@@ -64,6 +76,10 @@ namespace ZeroHour.Tower
         private float baseY;
         private float startBaseY;
         private float startCameraY;
+        private float startCameraX;
+        private float towerShotTime = -1f;
+        private Vector3 towerShotStartPosition;
+        private float towerShotStartSize;
         private float timeLeft;
         private bool isGameOver;
         private float gameOverTime;
@@ -94,11 +110,14 @@ namespace ZeroHour.Tower
             Camera.backgroundColor = SkyColor;
             FitCamera();
             startCameraY = Camera.transform.position.y;
+            startCameraX = Camera.transform.position.x;
             startBaseY = BottomY + baseMargin;
             baseY = startBaseY;
 
             squareSprite = CreateSquareSprite(32, 3);
             hud = gameObject.AddComponent<TowerHud>();
+            if (ruleset.ShowTowerShot)
+                hud.UseTopLayout();
             hud.PopulationLabel = ruleset.PopulationLabel;
             if (ruleset.ShowMenuButton)
                 hud.AddMenuButton();
@@ -123,8 +142,10 @@ namespace ZeroHour.Tower
 
             Vector3 cameraPosition = Camera.transform.position;
             cameraPosition.y = startCameraY;
+            cameraPosition.x = startCameraX;
             Camera.transform.position = cameraPosition;
             baseY = startBaseY;
+            towerShotTime = -1f;
 
             Tower = new GameObject("Tower").AddComponent<TowerController>();
             Tower.transform.position = new Vector3(0f, BaseY, 0f);
@@ -148,6 +169,13 @@ namespace ZeroHour.Tower
             isGameOver = true;
             gameOverTime = Time.time;
             hud.HideTutorial();
+            if (ruleset.ShowTowerShot)
+            {
+                towerShotTime = 0f;
+                towerShotStartPosition = Camera.transform.position;
+                towerShotStartSize = Camera.orthographicSize;
+                Tower.SuppressSway = true;
+            }
             int score = stats.Height * scorePerFloor + Mathf.FloorToInt(stats.Money);
             string bestKey = ruleset.BestScoreKey;
             if (bestKey == null)
@@ -168,11 +196,16 @@ namespace ZeroHour.Tower
 
         private void Update()
         {
-            FitCamera();
+            if (towerShotTime >= 0f)
+                UpdateTowerShot();
+            else
+                FitCamera();
 
             if (isGameOver)
             {
-                if (Time.time - gameOverTime >= restartDelay && TryGetTap(out Vector2 tapPosition))
+                // Taps wait for the end shot to finish.
+                float delay = towerShotTime >= 0f ? Mathf.Max(restartDelay, towerShotDuration) : restartDelay;
+                if (Time.time - gameOverTime >= delay && TryGetTap(out Vector2 tapPosition))
                 {
                     // Checked on press like the restart, so the restart can't hide the button first.
                     if (hud.IsOverMenuButton(tapPosition))
@@ -228,6 +261,40 @@ namespace ZeroHour.Tower
             Vector3 cameraPosition = Camera.transform.position;
             cameraPosition.y = Mathf.Lerp(cameraPosition.y, targetY, 1f - Mathf.Exp(-cameraFollowSpeed * Time.deltaTime));
             Camera.transform.position = cameraPosition;
+        }
+
+        // Zooms out until the whole building, from the platform to the roof, fills the lower part of the
+        // screen. The target is recomputed every frame, as floors still in the air may land.
+        private void UpdateTowerShot()
+        {
+            towerShotTime += Time.deltaTime;
+            float t = Mathf.Clamp01(towerShotTime / towerShotDuration);
+            float eased = t * t * (3f - 2f * t);
+
+            Tower.GetBounds(out float minX, out float maxX, out float bottomY, out float topY);
+            float height = topY - bottomY;
+            float marginY = height * towerShotMargin / 2f;
+            float width = maxX - minX;
+            float marginX = width * towerShotMargin / 2f;
+            float aspect = Camera.aspect;
+
+            float size = Mathf.Max(towerShotStartSize,
+                (height + 2f * marginY) / (2f * towerShotScreenShare),
+                (width + 2f * marginX) / 2f / aspect);
+
+            // Move only as much as needed: the tower within the lower share of the screen, the start camera
+            // spot kept when it already fits (no jump for a short tower).
+            float upperY = bottomY - marginY + size;
+            float lowerY = topY + marginY - size + 2f * size * towerShotScreenShare;
+            float targetY = lowerY > upperY ? upperY : Mathf.Clamp(towerShotStartPosition.y, lowerY, upperY);
+            float halfWidth = size * aspect;
+            float lowerX = maxX + marginX - halfWidth;
+            float upperX = minX - marginX + halfWidth;
+            float targetX = lowerX > upperX ? (minX + maxX) / 2f : Mathf.Clamp(towerShotStartPosition.x, lowerX, upperX);
+
+            Vector3 target = new Vector3(targetX, targetY, towerShotStartPosition.z);
+            Camera.transform.position = Vector3.Lerp(towerShotStartPosition, target, eased);
+            Camera.orthographicSize = Mathf.Lerp(towerShotStartSize, size, eased);
         }
 
         // One floor at a time, away from the previous one and of a different type,

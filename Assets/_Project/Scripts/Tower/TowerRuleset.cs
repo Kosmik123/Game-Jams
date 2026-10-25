@@ -38,6 +38,9 @@ namespace ZeroHour.Tower
         // A perfect landing places the floor exactly on top of the previous one.
         public abstract bool SnapPerfectLandings { get; }
 
+        // At the end of the round the camera zooms out to show the whole building.
+        public abstract bool ShowTowerShot { get; }
+
         public abstract bool ShowPerfectPopup { get; }
 
         public abstract bool ShowTutorial { get; }
@@ -60,6 +63,7 @@ namespace ZeroHour.Tower
         public override string BestScoreKey => null;
         public override string PopulationLabel => "Pop";
         public override bool SnapPerfectLandings => false;
+        public override bool ShowTowerShot => false;
         public override float DragSensitivity => 0f;
         public override bool ShowPerfectPopup => false;
         public override bool ShowTutorial => false;
@@ -89,6 +93,7 @@ namespace ZeroHour.Tower
         public override string BestScoreKey => "BestScore_PostJam";
         public override string PopulationLabel => "Popul";
         public override bool SnapPerfectLandings => true;
+        public override bool ShowTowerShot => true;
         public override float DragSensitivity => 1f;
         public override bool ShowPerfectPopup => true;
         public override bool ShowTutorial => true;
