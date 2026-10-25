@@ -18,6 +18,8 @@ namespace ZeroHour.Tower
 
         public abstract CityStats CreateEconomy();
 
+        public abstract TowerSway CreateSway();
+
         public abstract bool ShowPerfectPopup { get; }
 
         public abstract bool ShowTutorial { get; }
@@ -34,6 +36,7 @@ namespace ZeroHour.Tower
         public override float FallSpeed(int towerHeight) => 3f;
         public override float SpawnInterval(int towerHeight) => 0.7f;
         public override CityStats CreateEconomy() => new CityStats();
+        public override TowerSway CreateSway() => new JamTowerSway();
         public override bool ShowPerfectPopup => false;
         public override bool ShowTutorial => false;
         public override bool ShowMenuButton => false;
@@ -56,6 +59,7 @@ namespace ZeroHour.Tower
         public override float SpawnInterval(int towerHeight) =>
             Mathf.Max(BaseSpawnInterval - SpawnIntervalPerFloor * towerHeight, MinSpawnInterval);
         public override CityStats CreateEconomy() => new PostJamCityStats();
+        public override TowerSway CreateSway() => new PostJamTowerSway();
         public override bool ShowPerfectPopup => true;
         public override bool ShowTutorial => true;
         public override bool ShowMenuButton => true;

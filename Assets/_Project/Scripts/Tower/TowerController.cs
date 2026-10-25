@@ -31,11 +31,9 @@ namespace ZeroHour.Tower
         [SerializeField]
         private float instabilityAfterCollapse = 40f;
 
-        [SerializeField]
-        private float maxWobble = 0.6f;
-
         private readonly List<FallingFloor> floors = new List<FallingFloor>();
         private TowerGame game;
+        private TowerSway sway;
         private float localTop;
         private float instability;
         private bool hasSeenTouch;
@@ -54,6 +52,7 @@ namespace ZeroHour.Tower
         public void Init(TowerGame game, Sprite sprite, float width)
         {
             this.game = game;
+            sway = game.Ruleset.CreateSway();
             localTop = platformHeight / 2f;
 
             var spriteRenderer = gameObject.AddComponent<SpriteRenderer>();
@@ -77,10 +76,9 @@ namespace ZeroHour.Tower
 
         private void LateUpdate()
         {
-            // Visual sway grows with instability and height.
-            float sway = Mathf.Sin(Time.time * 3f) * instability / MaxInstability;
+            sway.Advance(Time.time, Time.deltaTime, instability / MaxInstability, floors.Count);
             for (int i = 0; i < floors.Count; i++)
-                floors[i].SetVisualOffset(Mathf.Clamp(sway * 0.06f * (i + 1), -maxWobble, maxWobble));
+                floors[i].SetVisualOffset(sway.Offset(i, floors.Count));
         }
 
         public void Attach(FallingFloor floor)
