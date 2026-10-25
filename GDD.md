@@ -46,6 +46,8 @@ Budynek jako „miasto w pionie”, każde piętro wpływa na statystyki (warto�
   - Szczęście > 0 daje +5% dochodu za punkt (maks. +50%), więc park ma sens także powyżej zera. Park +4 (było +3).
   - Wzorcowy „blok”: 2 mieszkalne + 2 biura + 1 elektrownia + 1 park = energia 0, szczęście 0, 4 $/s.
 - **[DECYZJA post-jam, 25.10]** Kołysanie: wychylenie szczytu maleje z wysokością (`1 / (1 + H/15)`), wygina się głównie góra (`((i+1)/H)^1,5`), wysoka wieża kołysze się wolniej (`ω = 3/√(1 + H/15)`). Tylko efekt wizualny.
+- **[DECYZJA post-jam, 25.10]** Rekord (`PlayerPrefs`, „NEW BEST!”), combo za serię PERFECT (mnożnik dochodu x2–x5, zerowany nieidealnym lądowaniem) i juice (wstrząs przy zawaleniu, „+$N” z wieży co sekundę, sprężyste lądowanie).
+- **[DECYZJA post-jam, 25.10]** Piętra 4:3: szerokość 1 j., wysokość 0,75 j., grafiki 32×24 (×4 = 128×96) w `Resources/FloorsWide/`, generowane `Tools/floor_sprites.py --wide`. Kwadraty 32×32 w `Resources/Floors/` zostają dla wersji jamowej.
 - Cele wysokości jako poziomy — otwarte, na razie nie robimy.
 
 ## Runda i wynik [DECYZJA]

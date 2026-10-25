@@ -1,4 +1,8 @@
-"""Pixel-art floor sprites (32x32, upscaled x4) written as PNG with pure Python."""
+"""Pixel-art floor sprites written as PNG with pure Python, upscaled x4.
+
+Square 32x32 set (jam version, Resources/Floors):      python floor_sprites.py <out>
+Wide 32x24 (4:3) set (post-jam, Resources/FloorsWide): python floor_sprites.py <out> --wide
+"""
 import os
 import struct
 import sys
@@ -14,11 +18,12 @@ def hexc(h, a=255):
 
 
 class Canvas:
-    def __init__(self, fill=(0, 0, 0, 0)):
-        self.p = [[fill for _ in range(N)] for _ in range(N)]
+    def __init__(self, fill=(0, 0, 0, 0), w=N, h=N):
+        self.w, self.h = w, h
+        self.p = [[fill for _ in range(w)] for _ in range(h)]
 
     def px(self, x, y, c):
-        if 0 <= x < N and 0 <= y < N:
+        if 0 <= x < self.w and 0 <= y < self.h:
             self.p[y][x] = c
 
     def rect(self, x, y, w, h, c):
@@ -27,25 +32,25 @@ class Canvas:
                 self.px(xx, yy, c)
 
     def circle(self, cx, cy, r, c):
-        for yy in range(N):
-            for xx in range(N):
+        for yy in range(self.h):
+            for xx in range(self.w):
                 if (xx + 0.5 - cx) ** 2 + (yy + 0.5 - cy) ** 2 <= r * r:
                     self.px(xx, yy, c)
 
     def save(self, path):
-        size = N * SCALE
+        width, height = self.w * SCALE, self.h * SCALE
         raw = bytearray()
-        for y in range(size):
+        for y in range(height):
             raw.append(0)
             row = self.p[y // SCALE]
-            for x in range(size):
+            for x in range(width):
                 raw.extend(row[x // SCALE])
 
         def chunk(tag, data):
             return struct.pack('>I', len(data)) + tag + data + struct.pack('>I', zlib.crc32(tag + data) & 0xffffffff)
 
         png = b'\x89PNG\r\n\x1a\n'
-        png += chunk(b'IHDR', struct.pack('>IIBBBBB', size, size, 8, 6, 0, 0, 0))
+        png += chunk(b'IHDR', struct.pack('>IIBBBBB', width, height, 8, 6, 0, 0, 0))
         png += chunk(b'IDAT', zlib.compress(bytes(raw), 9))
         png += chunk(b'IEND', b'')
         with open(path, 'wb') as f:
@@ -61,12 +66,13 @@ WHITE = hexc('#ffffff')
 
 def frame(c, wall, wall_dark, wall_light):
     """Common floor shell: wall fill, side pillars, bottom slab, top highlight (y=0 is top)."""
-    c.rect(0, 0, N, N, wall)
-    c.rect(0, 0, 2, N, wall_dark)
-    c.rect(N - 2, 0, 2, N, wall_dark)
-    c.rect(0, 0, N, 1, wall_light)
-    c.rect(0, N - 3, N, 3, SLAB)
-    c.rect(0, N - 3, N, 1, SLAB_LIGHT)
+    w, h = c.w, c.h
+    c.rect(0, 0, w, h, wall)
+    c.rect(0, 0, 2, h, wall_dark)
+    c.rect(w - 2, 0, 2, h, wall_dark)
+    c.rect(0, 0, w, 1, wall_light)
+    c.rect(0, h - 3, w, 3, SLAB)
+    c.rect(0, h - 3, w, 1, SLAB_LIGHT)
 
 
 def window(c, x, y, w, h, frame_color):
@@ -189,9 +195,110 @@ def park():
     return c
 
 
+# --- Wide 32x24 (4:3) set for the post-jam version. Same palette and shell, layouts squeezed vertically.
+WW, WH = 32, 24
+
+
+def residential_wide():
+    wall, dark, light = hexc('#e88c59'), hexc('#b8613a'), hexc('#ffb48a')
+    brick, rail = hexc('#d67a4a'), hexc('#5a3a2a')
+    c = Canvas(w=WW, h=WH)
+    frame(c, wall, dark, light)
+    for y in range(3, WH - 4, 4):
+        c.rect(2, y, WW - 4, 1, brick)
+        off = 2 if (y // 4) % 2 else 6
+        for x in range(off, WW - 2, 8):
+            c.rect(x, y - 3, 1, 3, brick)
+    curtain = hexc('#f2e2a0')
+    for wx in (5, 19):
+        window(c, wx, 4, 8, 8, hexc('#fff1e0'))
+        c.rect(wx, 4, 2, 8, curtain)
+        c.rect(wx + 6, 4, 2, 8, curtain)
+        # balcony rail with flowers
+        c.rect(wx - 2, 14, 12, 1, rail)
+        for i in range(wx - 2, wx + 10, 2):
+            c.px(i, 15, rail)
+            c.px(i, 16, rail)
+        c.rect(wx - 2, 17, 12, 1, rail)
+        c.px(wx, 13, hexc('#ff4f6d'))
+        c.px(wx + 5, 13, hexc('#ffd84f'))
+        c.px(wx + 8, 13, hexc('#ff4f6d'))
+    return c
+
+
+def office_wide():
+    wall, dark, light = hexc('#3d6f9e'), hexc('#2a4f73'), hexc('#7fb0de')
+    c = Canvas(w=WW, h=WH)
+    frame(c, wall, dark, light)
+    glass_a, glass_b, mullion, shine = hexc('#8fd0ff'), hexc('#5aa7e6'), hexc('#2a4f73'), hexc('#d8f0ff')
+    c.rect(3, 3, WW - 6, WH - 7, mullion)
+    for col in range(4):
+        for row in range(2):
+            x, y = 4 + col * 6, 4 + row * 8
+            c.rect(x, y, 5, 7, glass_b)
+            c.rect(x, y, 5, 3, glass_a)
+    for i in range(12):
+        for t in (0, 1):
+            x, y = 7 + i + t, 18 - i
+            if 4 <= y < 19 and 4 <= x < 28 and c.p[y][x] != mullion:
+                c.px(x, y, shine)
+    for i in range(5):
+        x, y = 21 + i, 10 - i
+        if c.p[y][x] != mullion:
+            c.px(x, y, shine)
+    return c
+
+
+def power_wide():
+    wall, dark, light = hexc('#f2c230'), hexc('#c29318'), hexc('#ffe27a')
+    c = Canvas(w=WW, h=WH)
+    frame(c, wall, dark, light)
+    for x in range(2, WW - 2):
+        c.px(x, WH - 5, hexc('#222222') if (x // 2) % 2 else hexc('#ffd000'))
+        c.px(x, WH - 4, hexc('#222222') if ((x + 1) // 2) % 2 else hexc('#ffd000'))
+    c.rect(9, 3, 14, 15, hexc('#333340'))
+    c.rect(10, 4, 12, 13, hexc('#46465a'))
+    bolt = hexc('#ffe23a')
+    c.rect(16, 5, 3, 2, bolt)
+    c.rect(14, 7, 4, 2, bolt)
+    c.rect(12, 9, 9, 2, bolt)
+    c.rect(16, 11, 4, 2, bolt)
+    c.rect(14, 13, 4, 2, bolt)
+    c.rect(13, 15, 3, 1, bolt)
+    for y in range(5, 17, 3):
+        c.rect(3, y, 4, 1, dark)
+        c.rect(WW - 7, y, 4, 1, dark)
+    return c
+
+
+def park_wide():
+    wall, dark, light = hexc('#a8e6ff'), hexc('#4f9a5a'), hexc('#d6f4ff')
+    c = Canvas(w=WW, h=WH)
+    frame(c, wall, dark, light)
+    c.rect(2, 1, WW - 4, 6, hexc('#bdecff'))
+    c.rect(2, WH - 8, WW - 4, 5, hexc('#57b85f'))
+    c.rect(2, WH - 8, WW - 4, 1, hexc('#7fd685'))
+    for x in range(3, WW - 3, 3):
+        c.px(x, WH - 9, hexc('#7fd685'))
+    for cx, r in ((9, 5), (22, 4)):
+        c.rect(cx - 1, 11, 2, WH - 8 - 11, hexc('#7a4f2a'))
+        c.circle(cx, 8, r, hexc('#2f8f3e'))
+        c.circle(cx - 1, 7, r - 2, hexc('#45b052'))
+        c.px(cx - 2, 5, hexc('#7fd685'))
+    c.px(15, WH - 7, hexc('#ff6fa0'))
+    c.px(5, WH - 6, hexc('#ffd84f'))
+    c.px(27, WH - 6, hexc('#ff6fa0'))
+    c.rect(14, WH - 11, 5, 1, hexc('#8a5a32'))
+    c.px(14, WH - 10, hexc('#5a3a2a'))
+    c.px(18, WH - 10, hexc('#5a3a2a'))
+    return c
+
+
 if __name__ == '__main__':
     out = sys.argv[1]
+    wide_set = '--wide' in sys.argv[2:]
     os.makedirs(out, exist_ok=True)
-    for name, fn in (('Residential', residential), ('Office', office), ('Power', power), ('Park', park)):
+    sprites = (('Residential', residential_wide), ('Office', office_wide), ('Power', power_wide), ('Park', park_wide))         if wide_set else (('Residential', residential), ('Office', office), ('Power', power), ('Park', park))
+    for name, fn in sprites:
         fn().save(os.path.join(out, name + '.png'))
         print('wrote', name)

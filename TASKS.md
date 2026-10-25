@@ -57,6 +57,19 @@ Po każdym tasku: kompilacja/testy → commit (mały, z opisem). Build WebGL + d
   - Wersja jamowa bez zmian (absolutne podążanie za palcem/myszą). Np. w rulesecie `bool RelativeControl` albo osobna strategia sterowania.
   - Sprawdzenie: przyłożenie palca w dowolnym miejscu nie rusza platformy; przesunięcie palca o 1 j. przesuwa platformę o 1 j.; przy krawędzi platforma się zatrzymuje i od razu reaguje na ruch w drugą stronę.
 
+- [ ] **10. [post-jam] Najlepszy wynik.** Po rundzie zapisz rekord w `PlayerPrefs` (klucz np. `BestScore_PostJam`, `PlayerPrefs.Save()` od razu — w WebGL to trafia do IndexedDB). Ekran końca: pod „Score” linijka **„Best: N”**; gdy rekord pobity — **„NEW BEST!”** na żółto, lekko pulsujący (skala 1↔1,1, ~2 Hz). Pierwsza rozegrana runda też jest rekordem. Sprawdzenie: dwie rundy, rekord przeżywa restart i przeładowanie strony (w buildzie WebGL).
+- [ ] **11. [post-jam] Combo za idealne lądowania.** Licznik `PerfectStreak`: +1 przy PERFECT, zero przy nieidealnym lądowaniu (zawalenie też zeruje). **Mnożnik dochodu** = `streak ≥ 2 ? min(streak, 5) : 1` (x2…x5), działa razem z premią za szczęście (mnożą się). Napis PERFECT przy serii ≥ 2: **„PERFECT! x3”**. HUD: przy linijce Money, gdy mnożnik > 1, dopisek **„COMBO x3”** w kolorze żółtym. Stałe w `PostJamCityStats`/rulesecie. EditMode test: seria 3 PERFECT → x3, potem zwykłe lądowanie → x1; maks. x5.
+- [ ] **12. [post-jam] Juice.**
+  - **Wstrząs ekranu przy zawaleniu:** kamera drga wokół swojej stałej pozycji ~0,3 s, amplituda ~0,15 j., wygasająca. Po wstrząsie kamera wraca dokładnie na miejsce (kamera w post-jam stoi — task 8).
+  - **„+$” z wieży:** co 1 s, gdy dochód > 0, nad szczytem wieży wylatuje mały napis **„+$N”** (N = zarobione w tej sekundzie, zaokrąglone; ~48 px, zielony z obrysem), unosi się ~0,8 j. i znika w ~0,7 s. Można użyć mechaniki z `PerfectPopup`.
+  - **Sprężyste lądowanie:** złapane piętro na chwilę się spłaszcza (skala ×1,15 w X, ×0,85 w Y) i wraca do 1 w ~0,15 s. Tylko wizualnie — nie zmieniaj pozycji kolizyjnych ani wysokości wieży.
+- [ ] **13. [post-jam] Piętra 4:3 (poziomy prostokąt).** Nowe grafiki są gotowe: `Assets/_Project/Resources/FloorsWide/<Name>.png`, **128×96** (pixel art 32×24 ×4, generator `Tools/floor_sprites.py --wide`). Kwadratowe `Resources/Floors/` zostają dla jamu — nie ruszać.
+  - Wymiary w post-jam: **szerokość 1 j. (jak dotąd), wysokość 0,75 j.** Trafianie zostaje tak samo trudne; wieża rośnie wolniej na ekranie.
+  - `FallingFloor.Size` rozbij na `Width` i `Height` (wszędzie, gdzie jest użyte: dół piętra przy łapaniu, `localTop += Height`, warunek X `< Width`, `perfectOffset` i niestabilność względem `Width`, spawn `TopY + Height`, znikanie pod ekranem, kołysanie, zawalanie, PERFECT/„+$” nad piętrem). Skala sprite'a: X = `Width / bounds.x`, Y = `Height / bounds.y`. Fallback (brak sprite'a) — prostokąt `Width × Height`.
+  - Ruleset: `FloorHeight` (Jam 1, PostJam 0,75) i folder grafik (`Floors` / `FloorsWide`). Jam ma wyglądać i działać 1:1 jak dotąd.
+  - **Import grafik:** nowe PNG dostaną domyślne ustawienia (rozmyte, skompresowane). Dodaj `Assets/Editor/FloorSpriteImporter.cs` (`AssetPostprocessor.OnPreprocessTexture`) dla ścieżek `Resources/Floors/` i `Resources/FloorsWide/`: Sprite, **Single**, **Point**, bez kompresji, bez mipmap, PPU 100. Po dodaniu wymuś reimport folderu `FloorsWide` (batchmode `AssetDatabase.ImportAsset(..., ForceUpdate)`), sprawdź w `.meta`: `spriteMode: 1`, `filterMode: 0`, `textureCompression: 0`, i zacommituj PNG + `.meta`. Nie zgaduj GUID-ów. Kwadratowe `.meta` nie mogą się zmienić (sprawdź `git diff`).
+  - Sprawdzenie: testy przechodzą (poprawione pod Width/Height); Play Mode post-jam: piętro 4:3 ląduje równo na poprzednim (brak szpar/nakładania), PERFECT działa; jam: kwadraty jak dotąd.
+
 ## Zrobione (jam, do `39a94ec` na itch.io)
 
 - [x] Input na telefonie (platforma zostaje w miejscu bez dotyku).
