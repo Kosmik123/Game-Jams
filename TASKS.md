@@ -49,6 +49,13 @@ Po każdym tasku: kompilacja/testy → commit (mały, z opisem). Build WebGL + d
   - Restart rundy: `baseY = startBaseY`.
   - Sprawdzenie: piętro spadające obok wieży w chwili łapania innego piętra ma stałą prędkość na ekranie (np. log `screenY` co klatkę — różnice równe); konsola czysta.
   - Tylko post-jam (jam zostaje z ruchomą kamerą, w rulesecie np. `bool FixedCamera`).
+- [ ] **9. [post-jam] Sterowanie względne (przeciąganie).** Dziś platforma skacze pod palec (`TowerController.TryGetPointerWorldX` → `position.x = pointerX`). Nowe: platforma przesuwa się **o tyle, o ile przesunął się palec**, niezależnie od tego, gdzie palec leży na ekranie.
+  - Co klatkę, gdy palec jest wciśnięty: `deltaX = worldX(teraz) − worldX(poprzednia klatka)`, `x = clamp(x + deltaX × dragSensitivity, −playWidth/2, playWidth/2)`. `dragSensitivity = 1` (1:1 w jednostkach świata), w `PostJamRuleset`.
+  - Przyrost per klatka (nie „pozycja startowa + przesunięcie”), żeby po dociśnięciu do krawędzi ruch w drugą stronę działał od razu, bez martwej strefy.
+  - Przyłożenie palca **nie przesuwa** platformy (pierwsza klatka dotyku tylko zapamiętuje pozycję). Puszczenie — platforma stoi. Zmiana palca / nowy dotyk = nowy punkt odniesienia, bez skoku.
+  - Komputer: to samo przy **wciśniętym lewym przycisku myszy** (przeciąganie). Ruch myszy bez przycisku nic nie robi. Na telefonie mysz dalej ignorowana (logika `hasSeenTouch`/`isMobilePlatform` zostaje).
+  - Wersja jamowa bez zmian (absolutne podążanie za palcem/myszą). Np. w rulesecie `bool RelativeControl` albo osobna strategia sterowania.
+  - Sprawdzenie: przyłożenie palca w dowolnym miejscu nie rusza platformy; przesunięcie palca o 1 j. przesuwa platformę o 1 j.; przy krawędzi platforma się zatrzymuje i od razu reaguje na ruch w drugą stronę.
 
 ## Zrobione (jam, do `39a94ec` na itch.io)
 
