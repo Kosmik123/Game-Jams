@@ -87,7 +87,7 @@ Po każdym tasku: kompilacja/testy → commit (mały, z opisem). Build WebGL + d
   - Sprawdzenie: testy przechodzą (poprawione pod Width/Height); Play Mode post-jam: piętro 4:3 ląduje równo na poprzednim (brak szpar/nakładania), PERFECT działa; jam: kwadraty jak dotąd.
 
 - [ ] **16. [post-jam] Etykieta „Pop” → „Popul”.** W HUD (`TowerHud`, linijka populacji) post-jam pokazuje **„Popul”** zamiast „Pop”. Jam bez zmian (np. etykieta z rulesetu albo flaga). Sprawdź, czy dłuższa etykieta mieści się w panelu HUD przy 540×720.
-- [ ] **17. [post-jam] Zakres ruchu liczony dla dachu, nie dla platformy.** Gdy wieża jest krzywa, szczyt (`TowerController.TopX`) jest przesunięty względem platformy o `topOffset = TopX − platformX`. Dziś przycinamy X **platformy** do `±playWidth/2`, więc dach raz nie sięga brzegu (nie da się złapać pięter przy krawędzi), a raz wyjeżdża poza ekran.
+- [x] **17. [post-jam] Zakres ruchu liczony dla dachu, nie dla platformy.** Gdy wieża jest krzywa, szczyt (`TowerController.TopX`) jest przesunięty względem platformy o `topOffset = TopX − platformX`. Dziś przycinamy X **platformy** do `±playWidth/2`, więc dach raz nie sięga brzegu (nie da się złapać pięter przy krawędzi), a raz wyjeżdża poza ekran.
   - Nowe: przycinaj tak, żeby **dach** był w `±playWidth/2` (tam spawnują się piętra): `platformX ∈ [−playWidth/2 − topOffset, playWidth/2 − topOffset]`.
   - Dodatkowo platforma nie może całkiem zniknąć z ekranu: `platformX` w granicach widocznej szerokości kamery minus pół szerokości platformy. Gdy oba warunki się wykluczają (bardzo krzywa wieża), wygrywa warunek ekranu.
   - **Mysz (PC, task 15):** pod kursorem ma być **dach**, nie platforma (`platformX = mouseX − topOffset`, potem przycięcie) — gracz celuje tym, na co spadają piętra.
