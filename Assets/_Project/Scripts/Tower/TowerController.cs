@@ -75,9 +75,12 @@ namespace ZeroHour.Tower
             float halfRange = game.PlayWidth / 2f;
             if (drag != null)
             {
-                bool isPressed = TryGetDragPointer(out Vector2 screenPosition, out int pointerId);
-                float pointerX = isPressed ? game.Camera.ScreenToWorldPoint(screenPosition).x : 0f;
-                position.x = drag.Update(isPressed, pointerId, pointerX, position.x, halfRange);
+                // Touch drags the platform; the mouse places it under the cursor like in the jam.
+                bool isTouching = TryGetTouch(out Vector2 touchPosition, out int touchId);
+                float touchX = isTouching ? game.Camera.ScreenToWorldPoint(touchPosition).x : 0f;
+                position.x = drag.Update(isTouching, touchId, touchX, position.x, halfRange);
+                if (!isTouching && TryGetMouseWorldX(out float mouseX))
+                    position.x = Mathf.Clamp(mouseX, -halfRange, halfRange);
             }
             else if (TryGetPointerWorldX(out float pointerX))
             {
@@ -133,47 +136,37 @@ namespace ZeroHour.Tower
         // where its position is (0,0) when nothing is touching.
         private bool TryGetPointerWorldX(out float worldX)
         {
-            worldX = 0f;
-            Vector2 screenPosition;
-            var touchscreen = Touchscreen.current;
-            bool isTouching = touchscreen != null && touchscreen.primaryTouch.press.isPressed;
-            if (isTouching)
-                hasSeenTouch = true;
-
-            if (isTouching)
-                screenPosition = touchscreen.primaryTouch.position.ReadValue();
-            else if (Mouse.current != null && !hasSeenTouch && !Application.isMobilePlatform)
-                screenPosition = Mouse.current.position.ReadValue();
-            else
-                return false;
-
-            worldX = game.Camera.ScreenToWorldPoint(screenPosition).x;
-            return true;
+            if (TryGetTouch(out Vector2 touchPosition, out _))
+            {
+                worldX = game.Camera.ScreenToWorldPoint(touchPosition).x;
+                return true;
+            }
+            return TryGetMouseWorldX(out worldX);
         }
 
-        // Relative control: a finger on the screen, or the left mouse button held on desktop.
-        private bool TryGetDragPointer(out Vector2 screenPosition, out int pointerId)
+        private bool TryGetTouch(out Vector2 screenPosition, out int touchId)
         {
             var touchscreen = Touchscreen.current;
             if (touchscreen != null && touchscreen.primaryTouch.press.isPressed)
             {
                 hasSeenTouch = true;
                 screenPosition = touchscreen.primaryTouch.position.ReadValue();
-                pointerId = touchscreen.primaryTouch.touchId.ReadValue();
+                touchId = touchscreen.primaryTouch.touchId.ReadValue();
                 return true;
             }
-
-            var mouse = Mouse.current;
-            if (mouse != null && mouse.leftButton.isPressed && !hasSeenTouch && !Application.isMobilePlatform)
-            {
-                screenPosition = mouse.position.ReadValue();
-                pointerId = -1;
-                return true;
-            }
-
             screenPosition = default;
-            pointerId = 0;
+            touchId = 0;
             return false;
+        }
+
+        // Mouse position, followed without any button. Ignored once a touch was seen and on phones.
+        private bool TryGetMouseWorldX(out float worldX)
+        {
+            worldX = 0f;
+            if (Mouse.current == null || hasSeenTouch || Application.isMobilePlatform)
+                return false;
+            worldX = game.Camera.ScreenToWorldPoint(Mouse.current.position.ReadValue()).x;
+            return true;
         }
     }
 }
