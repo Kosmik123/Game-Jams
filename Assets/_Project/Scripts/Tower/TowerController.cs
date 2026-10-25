@@ -35,7 +35,6 @@ namespace ZeroHour.Tower
         private TowerGame game;
         private TowerSway sway;
         private RelativeDrag drag;
-        private float platformWidth;
         private float localTop;
         private float instability;
         private bool hasSeenTouch;
@@ -60,7 +59,6 @@ namespace ZeroHour.Tower
         public void Init(TowerGame game, Sprite sprite, float width)
         {
             this.game = game;
-            platformWidth = width;
             sway = game.Ruleset.CreateSway();
             if (game.Ruleset.RelativeControl)
                 drag = new RelativeDrag(game.Ruleset.DragSensitivity);
@@ -82,8 +80,7 @@ namespace ZeroHour.Tower
             {
                 // The range keeps the roof (where floors land) within the play width, even when the tower leans.
                 float topOffset = TopOffset;
-                float screenHalfWidth = game.Camera.orthographicSize * game.Camera.aspect;
-                PlatformRange.Get(topOffset, halfRange, screenHalfWidth, platformWidth / 2f, out float minX, out float maxX);
+                PlatformRange.Get(topOffset, halfRange, out float minX, out float maxX);
 
                 // Touch drags the platform; the mouse puts the roof under the cursor.
                 bool isTouching = TryGetTouch(out Vector2 touchPosition, out int touchId);
@@ -110,14 +107,15 @@ namespace ZeroHour.Tower
         {
             float previousX = floors.Count > 0 ? floors[floors.Count - 1].TowerPosition.x : 0f;
             float offsetX = floor.transform.position.x - transform.position.x;
+            float placeX = Landing.PlaceX(offsetX, previousX, floor.Size, perfectOffset, game.Ruleset.SnapPerfectLandings, out bool isPerfect);
 
             floor.transform.SetParent(transform, true);
-            floor.PlaceInTower(new Vector2(offsetX, localTop + floor.Size / 2f));
+            floor.PlaceInTower(new Vector2(placeX, localTop + floor.Size / 2f), offsetX - placeX);
             localTop += floor.Size;
             floors.Add(floor);
 
-            float offset = Mathf.Abs(offsetX - previousX) / floor.Size;
-            if (offset < perfectOffset)
+            float offset = Mathf.Abs(placeX - previousX) / floor.Size;
+            if (isPerfect)
             {
                 instability = Mathf.Max(0f, instability - perfectCalm);
                 PerfectLanding?.Invoke(floor);

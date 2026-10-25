@@ -5,6 +5,7 @@ namespace ZeroHour.Tower
     public class FallingFloor : MonoBehaviour
     {
         private static readonly Color UnpoweredTint = new Color(0.45f, 0.45f, 0.5f);
+        private const float SlideDuration = 0.08f;
 
         private TowerGame game;
         private float fallSpeed;
@@ -12,6 +13,8 @@ namespace ZeroHour.Tower
         private bool isDebris;
         private float spin;
         private bool hasArt;
+        private float slideFromX;
+        private float slideTime;
 
         public FloorType Type { get; private set; }
         public float Size { get; private set; }
@@ -72,16 +75,25 @@ namespace ZeroHour.Tower
                 Destroy(gameObject);
         }
 
-        public void PlaceInTower(Vector2 towerPosition)
+        // slideFromX: visual offset at the moment of landing that eases to zero (a snapped floor slides into place).
+        public void PlaceInTower(Vector2 towerPosition, float slideFromX = 0f)
         {
             TowerPosition = towerPosition;
-            transform.localPosition = towerPosition;
+            this.slideFromX = slideFromX;
+            slideTime = 0f;
+            transform.localPosition = new Vector3(towerPosition.x + slideFromX, towerPosition.y, 0f);
             transform.localRotation = Quaternion.identity;
         }
 
         public void SetVisualOffset(float offsetX)
         {
-            transform.localPosition = new Vector3(TowerPosition.x + offsetX, TowerPosition.y, 0f);
+            float slide = 0f;
+            if (slideFromX != 0f && slideTime < SlideDuration)
+            {
+                slideTime += Time.deltaTime;
+                slide = slideFromX * (1f - Mathf.Clamp01(slideTime / SlideDuration));
+            }
+            transform.localPosition = new Vector3(TowerPosition.x + offsetX + slide, TowerPosition.y, 0f);
         }
 
         public void SetPowered(bool isPowered)

@@ -38,6 +38,9 @@ namespace ZeroHour.Tower
         private RectTransform menuButton;
         private Text tutorialText;
         private Text newBestText;
+
+        // HUD label of the population stat; the version can rename it.
+        public string PopulationLabel { get; set; } = "Pop";
         private Color tutorialOutlineColor;
         private bool isTutorialFading;
 
@@ -198,7 +201,7 @@ namespace ZeroHour.Tower
             statsText.text =
                 $"Height {stats.Height}\n" +
                 $"$ {stats.Money:0} (+{stats.Income:0.0}/s)\n" +
-                $"{Label("Pop", 0)} {stats.Population}\n" +
+                $"{Label(PopulationLabel, 0)} {stats.Population}\n" +
                 $"{Label("Jobs", 1)} {stats.Jobs}\n" +
                 $"{Label("Energy", 2)} {Signed(stats.Energy)}\n" +
                 $"{Label("Joy", 3)} {Signed(stats.Happiness)}\n" +
