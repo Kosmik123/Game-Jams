@@ -42,6 +42,11 @@ namespace ZeroHour.Tower
 
         public event Action<FallingFloor> PerfectLanding;
 
+        // A floor joined the tower (raised before a collapse it may cause).
+        public event Action<FallingFloor, bool> FloorLanded;
+
+        public event Action Collapsed;
+
         public IReadOnlyList<FallingFloor> Floors => floors;
 
         public float TopY => transform.position.y + localTop;
@@ -51,6 +56,9 @@ namespace ZeroHour.Tower
 
         // Calms the visual sway to zero (end-of-round shot).
         public bool SuppressSway { get; set; }
+
+        // No more floors join the tower, so it matches the frozen end-of-round stats.
+        public bool IsFrozen { get; set; }
 
         // World bounds of the platform and the stacked floors, from their logical positions.
         public void GetBounds(out float minX, out float maxX, out float bottomY, out float topY)
@@ -143,6 +151,8 @@ namespace ZeroHour.Tower
             else
                 instability += offset * offset * instabilityPerOffset;
 
+            FloorLanded?.Invoke(floor, isPerfect);
+
             if (instability >= MaxInstability)
                 CollapseTop();
         }
@@ -158,6 +168,7 @@ namespace ZeroHour.Tower
                 floor.Collapse();
             }
             instability = instabilityAfterCollapse;
+            Collapsed?.Invoke();
         }
 
         // Without a finger on the screen the platform stays put. The mouse is ignored on phones,
