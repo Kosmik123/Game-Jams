@@ -56,6 +56,8 @@ Budynek jako „miasto w pionie”, każde piętro wpływa na statystyki (warto�
 - Runda trwa **40 s** w post-jam (skrócone z 90 s — było za długo); wersja jamowa też 40 s (decyzja autora 25.10). Po czasie spawn się zatrzymuje i pojawia się ekran końca: Height, Money, **Score = Height × 10 + Money**, napis „Tap to play again”.
 - Tap/klik restartuje grę bez przeładowania sceny (bootstrap `AfterSceneLoad` nie odpala się ponownie po `LoadScene`).
 
+- **[DECYZJA post-jam, 25.10 — wstępna, do strojenia]** Czas rundy zależny od gry: start 25 s, +1,5 s × max(0,3; 1 − H/40) za piętro, +1 s za PERFECT, −3 s za zawalenie, limit 30 s. Dobry gracz gra dłużej; rosnąca trudność i malejąca premia w końcu go doganiają.
+
 ## HUD [DECYZJA]
 - Legacy `UI.Text` (`TowerHud.cs`), referencja 1080×1920, czcionka ≥ 60.
 - Lewy górny róg: jedna statystyka na linijkę — Height, Money (+dochód/s), Pop, Jobs, Energy, Joy, Stability. Prawy górny róg: pozostały czas rundy.

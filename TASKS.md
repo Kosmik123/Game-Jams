@@ -84,6 +84,16 @@ Po każdym tasku: kompilacja/testy → commit (mały, z opisem). Build WebGL + d
   - Jam bez zmian.
 - [ ] **20. [post-jam] PERFECT wyśrodkowuje piętro.** Gdy lądowanie liczy się jako PERFECT (offset < `perfectOffset`), piętro zostaje **ustawione dokładnie nad poprzednim** (`TowerPosition.x` = X poprzedniego piętra; dla pierwszego piętra = środek platformy). Logicznie od razu (wpływa na `topOffset`, następne lądowania, niestabilność = jak przy offsecie 0). Wizualnie: krótki dosuw ~0,08 s zamiast skoku (może się nakładać ze sprężystym lądowaniem z taska 12). Napis PERFECT nad wyśrodkowanym piętrem. Test EditMode: lądowanie z offsetem 0,1 × szerokość → pozycja = poprzednie piętro; offset 0,2 → bez zmiany. Jam bez zmian.
 
+- [ ] **21. [post-jam] Czas rundy zależny od gry (wersja wstępna).** Zamiast stałych 40 s: **start 25 s**, zegar odlicza w dół, a gracz dokłada czas grą:
+  - złapane piętro: `+1,5 × max(0,3; 1 − Height/40)` s (Height = wysokość **po** złapaniu; premia maleje z wysokością, min. 0,45 s),
+  - PERFECT: dodatkowo **+1 s** (bez spadku z wysokością),
+  - zawalenie (`CollapseTop`): **−3 s** (nie poniżej 0 — przy 0 koniec rundy jak dziś),
+  - **limit 30 s** — zegar nigdy nie pokazuje więcej (nadwyżka przepada).
+  - Każda zmiana czasu pokazuje się przy timerze w prawym górnym rogu: **„+1.5s”** na zielono / **„−3s”** na czerwono, unosi się i znika w ~0,6 s. Timer < 5 s świeci na czerwono.
+  - Wszystkie liczby jako stałe w `PostJamRuleset` (np. `StartTime`, `MaxTime`, `TimePerFloor`, `TimeFalloffHeight`, `MinTimeFactor`, `PerfectTimeBonus`, `CollapseTimePenalty`) — będziemy je stroić po testach.
+  - Jam bez zmian (stałe 40 s, bez bonusów).
+  - Test EditMode na funkcji premii: H=1 → 1,46 s; H=20 → 0,75 s; H=40 → 0,45 s; PERFECT +1; kara −3 z obcięciem do 0; limit 30.
+
 - [ ] **11. [post-jam] Combo za idealne lądowania.** Licznik `PerfectStreak`: +1 przy PERFECT, zero przy nieidealnym lądowaniu (zawalenie też zeruje). **Mnożnik dochodu** = `streak ≥ 2 ? min(streak, 5) : 1` (x2…x5), działa razem z premią za szczęście (mnożą się). Napis PERFECT przy serii ≥ 2: **„PERFECT! x3”**. HUD: przy linijce Money, gdy mnożnik > 1, dopisek **„COMBO x3”** w kolorze żółtym. Stałe w `PostJamCityStats`/rulesecie. EditMode test: seria 3 PERFECT → x3, potem zwykłe lądowanie → x1; maks. x5.
 - [ ] **12. [post-jam] Juice.**
   - **Wstrząs ekranu przy zawaleniu:** kamera drga wokół swojej stałej pozycji ~0,3 s, amplituda ~0,15 j., wygasająca. Po wstrząsie kamera wraca dokładnie na miejsce (kamera w post-jam stoi — task 8).
