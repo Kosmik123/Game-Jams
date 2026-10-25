@@ -148,7 +148,21 @@ namespace ZeroHour.Tower
             gameOverTime = Time.time;
             hud.HideTutorial();
             int score = stats.Height * scorePerFloor + Mathf.FloorToInt(stats.Money);
-            hud.ShowGameOver(stats.Height, stats.Money, score);
+            string bestKey = ruleset.BestScoreKey;
+            if (bestKey == null)
+            {
+                hud.ShowGameOver(stats.Height, stats.Money, score);
+                return;
+            }
+
+            // The first round ever is a record too.
+            bool isNewBest = !PlayerPrefs.HasKey(bestKey) || score > PlayerPrefs.GetInt(bestKey);
+            if (isNewBest)
+            {
+                PlayerPrefs.SetInt(bestKey, score);
+                PlayerPrefs.Save(); // WebGL: written to IndexedDB right away
+            }
+            hud.ShowGameOver(stats.Height, stats.Money, score, PlayerPrefs.GetInt(bestKey), isNewBest);
         }
 
         private void Update()

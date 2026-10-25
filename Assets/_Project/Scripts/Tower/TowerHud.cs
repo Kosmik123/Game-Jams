@@ -8,6 +8,10 @@ namespace ZeroHour.Tower
     public class TowerHud : MonoBehaviour
     {
         private const string WarningColor = "#ff5555";
+        private const string NewBestLabel = "NEW BEST!";
+        private const float NewBestPulseScale = 1.1f;
+        private const float NewBestPulseFrequency = 2f;
+        private static readonly Color NewBestColor = new Color(1f, 0.85f, 0.2f);
 
         [SerializeField]
         private Vector2 referenceResolution = new Vector2(1080f, 1920f);
@@ -33,6 +37,7 @@ namespace ZeroHour.Tower
         private Text gameOverText;
         private RectTransform menuButton;
         private Text tutorialText;
+        private Text newBestText;
         private Color tutorialOutlineColor;
         private bool isTutorialFading;
 
@@ -157,6 +162,12 @@ namespace ZeroHour.Tower
 
         private void Update()
         {
+            if (newBestText != null && newBestText.gameObject.activeInHierarchy)
+            {
+                float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * NewBestPulseFrequency * 2f * Mathf.PI);
+                newBestText.rectTransform.localScale = Vector3.one * Mathf.Lerp(1f, NewBestPulseScale, pulse);
+            }
+
             if (!isTutorialFading)
                 return;
             float alpha = tutorialText.color.a - Time.deltaTime / tutorialFadeDuration;
@@ -211,15 +222,53 @@ namespace ZeroHour.Tower
             return value < 0 ? $"<color={WarningColor}>{text}</color>" : text;
         }
 
-        public void ShowGameOver(int height, float money, int score)
+        // bestScore is null when the version doesn't track records.
+        public void ShowGameOver(int height, float money, int score, int? bestScore = null, bool isNewBest = false)
         {
-            gameOverText.text =
+            string text =
                 "TIME'S UP!\n\n" +
                 $"Height  {height}\n" +
                 $"Money  $ {money:0}\n\n" +
-                $"<size={gameOverFontSize + 20}>Score  {score}</size>\n\n" +
-                $"<size={gameOverFontSize * 3 / 4}>Tap to play again</size>";
+                $"<size={gameOverFontSize + 20}>Score  {score}</size>";
+            int bestLineIndex = -1;
+            if (bestScore.HasValue)
+            {
+                text += "\n";
+                bestLineIndex = text.Split('\n').Length - 1;
+                // A new record gets its own pulsing text; an invisible copy keeps the line's space.
+                text += isNewBest ? $"<color=#00000000>{NewBestLabel}</color>" : $"Best  {bestScore.Value}";
+            }
+            text += $"\n\n<size={gameOverFontSize * 3 / 4}>Tap to play again</size>";
+            gameOverText.text = text;
             gameOverPanel.SetActive(true);
+
+            if (newBestText != null)
+                newBestText.gameObject.SetActive(false);
+            if (isNewBest)
+                ShowNewBest(bestLineIndex);
+        }
+
+        private void ShowNewBest(int lineIndex)
+        {
+            if (newBestText == null)
+            {
+                newBestText = CreateText("New Best", gameOverText.transform, gameOverFontSize, TextAnchor.MiddleCenter);
+                newBestText.text = NewBestLabel;
+                newBestText.color = NewBestColor;
+                newBestText.rectTransform.sizeDelta = new Vector2(800f, gameOverFontSize * 1.5f);
+            }
+
+            // Place it on the reserved line of the result text.
+            Canvas.ForceUpdateCanvases();
+            TextGenerator generator = gameOverText.cachedTextGenerator;
+            float y = 0f;
+            if (lineIndex >= 0 && lineIndex < generator.lineCount)
+            {
+                UILineInfo line = generator.lines[lineIndex];
+                y = (line.topY - line.height / 2f) / gameOverText.pixelsPerUnit;
+            }
+            newBestText.rectTransform.anchoredPosition = new Vector2(0f, y);
+            newBestText.gameObject.SetActive(true);
         }
 
         public void HideGameOver() => gameOverPanel.SetActive(false);

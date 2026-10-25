@@ -29,6 +29,9 @@ namespace ZeroHour.Tower
         // World units of platform movement per world unit of finger movement (relative control).
         public abstract float DragSensitivity { get; }
 
+        // PlayerPrefs key of the best score, or null when records aren't kept.
+        public abstract string BestScoreKey { get; }
+
         public abstract bool ShowPerfectPopup { get; }
 
         public abstract bool ShowTutorial { get; }
@@ -48,6 +51,7 @@ namespace ZeroHour.Tower
         public override TowerSway CreateSway() => new JamTowerSway();
         public override bool FixedCamera => false;
         public override bool RelativeControl => false;
+        public override string BestScoreKey => null;
         public override float DragSensitivity => 0f;
         public override bool ShowPerfectPopup => false;
         public override bool ShowTutorial => false;
@@ -74,6 +78,7 @@ namespace ZeroHour.Tower
         public override TowerSway CreateSway() => new PostJamTowerSway();
         public override bool FixedCamera => true;
         public override bool RelativeControl => true;
+        public override string BestScoreKey => "BestScore_PostJam";
         public override float DragSensitivity => 1f;
         public override bool ShowPerfectPopup => true;
         public override bool ShowTutorial => true;

@@ -58,6 +58,18 @@ Po każdym tasku: kompilacja/testy → commit (mały, z opisem). Build WebGL + d
   - Sprawdzenie: przyłożenie palca w dowolnym miejscu nie rusza platformy; przesunięcie palca o 1 j. przesuwa platformę o 1 j.; przy krawędzi platforma się zatrzymuje i od razu reaguje na ruch w drugą stronę.
 
 - [ ] **10. [post-jam] Najlepszy wynik.** Po rundzie zapisz rekord w `PlayerPrefs` (klucz np. `BestScore_PostJam`, `PlayerPrefs.Save()` od razu — w WebGL to trafia do IndexedDB). Ekran końca: pod „Score” linijka **„Best: N”**; gdy rekord pobity — **„NEW BEST!”** na żółto, lekko pulsujący (skala 1↔1,1, ~2 Hz). Pierwsza rozegrana runda też jest rekordem. Sprawdzenie: dwie rundy, rekord przeżywa restart i przeładowanie strony (w buildzie WebGL).
+- [ ] **14. ⚡ PRIORYTET (zrób zaraz po 10, przed 11) — rozmiar okna WebGL 540×720.** Strona gry jest za duża (600×960 nie mieści się w typowym oknie, ucina górę HUD).
+  - `PlayerSettings.defaultWebScreenWidth/Height` = **540 × 720** — ustaw skryptem edytorowym w batchmode (np. metoda w `Assets/Editor/`), nie ręczną edycją `ProjectSettings.asset`. Zacommituj tylko te dwie wartości (w `ProjectSettings.asset` leży niezacommitowana obca zmiana batchingu — nie dołączaj jej, chyba że nie da się rozdzielić; wtedy napisz).
+  - To ustawienie strony, nie rozgrywki — dotyczy obu wersji. **Sprawdź wersję jamową** tak samo jak post-jam: proporcje 3:4 zamiast ~10:16, więc kamera (`FitCamera`) pokaże szerszy, niższy obszar. Ma się mieścić cała szerokość gry (`playWidth`), szczyt wieży na 40%, spadające piętra widoczne od góry.
+  - HUD (`CanvasScaler` 1080×1920): przy 540×720 sprawdź, czy statystyki (lewy górny), timer, ekran końca, PERFECT, samouczek i menu wyboru wersji się mieszczą i nie nachodzą na siebie. Jeśli trzeba, ustaw `matchWidthOrHeight` tak, żeby UI skalowało się sensownie (np. 1 = wg wysokości) — napisz w COMMS, co wybrałeś.
+  - Sprawdzenie: lokalny build WebGL w oknie ~800×800 — cała gra widoczna bez przewijania, konsola czysta. (Rozmiar osadzenia na stronie itch.io ustawia autor w panelu gry — nie Twoja działka.)
+- [ ] **15. ⚡ PRIORYTET (po 14, przed 11) — sterowanie: telefon przeciąga, PC podąża za myszą.** Zmiana taska 9 w post-jam:
+  - **Dotyk** (telefon/tablet): bez zmian — przeciąganie względne (`RelativeDrag`).
+  - **Mysz** (PC): powrót do starego zachowania — **X platformy = X kursora**, bez wciskania przycisku (jak w wersji jamowej). Przeciąganie z LPM znika.
+  - Wybór per wejście, nie per platforma: dotyk ekranu → ścieżka względna; ruch myszy → ścieżka absolutna. Zachowaj ochronę z jamu: na telefonie mysz ignorowana (`hasSeenTouch`/`isMobilePlatform`), żeby platforma nie uciekała do (0,0).
+  - Kod absolutny weź wspólny z jamem (nie kopiuj, jeśli się da); jam zachowuje się 1:1 jak dotąd.
+  - Zaktualizuj `RelativeDragTests`/Play Mode: mysz bez przycisku → platforma pod kursorem; dotyk → przeciąganie jak w tasku 9.
+
 - [ ] **11. [post-jam] Combo za idealne lądowania.** Licznik `PerfectStreak`: +1 przy PERFECT, zero przy nieidealnym lądowaniu (zawalenie też zeruje). **Mnożnik dochodu** = `streak ≥ 2 ? min(streak, 5) : 1` (x2…x5), działa razem z premią za szczęście (mnożą się). Napis PERFECT przy serii ≥ 2: **„PERFECT! x3”**. HUD: przy linijce Money, gdy mnożnik > 1, dopisek **„COMBO x3”** w kolorze żółtym. Stałe w `PostJamCityStats`/rulesecie. EditMode test: seria 3 PERFECT → x3, potem zwykłe lądowanie → x1; maks. x5.
 - [ ] **12. [post-jam] Juice.**
   - **Wstrząs ekranu przy zawaleniu:** kamera drga wokół swojej stałej pozycji ~0,3 s, amplituda ~0,15 j., wygasająca. Po wstrząsie kamera wraca dokładnie na miejsce (kamera w post-jam stoi — task 8).

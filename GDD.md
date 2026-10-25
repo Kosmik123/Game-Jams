@@ -12,12 +12,13 @@ Sekcje oznaczone **[DECYZJA]** są ustalone, **[PROPOZYCJA]** czekają na akcept
 - Poniższe sekcje opisują wersję post-jam, chyba że zaznaczono inaczej.
 
 ## Platforma i testowanie [DECYZJA]
+- **[DECYZJA 25.10]** Okno WebGL **540×720** (było 600×960 — za duże na typowy ekran). Dotyczy obu wersji.
 - Gra **pionowa (portrait)**, mobile-first; testy wyłącznie przez build WebGL → itch.io (https://kosmik123.itch.io/0h-game-jam-2026) → przeglądarka telefonu.
 - Autor nie ma dostępu do edytora Unity w trakcie jamu → **cała scena budowana w kodzie** (bootstrap `[RuntimeInitializeOnLoadMethod]`), bez edycji scen/prefabów.
 - Grafika pięter: pixel art 32×32 (x4 → 128×128 PNG) w `Assets/_Project/Resources/Floors/<FloorType.Name>.png`, ładowany przez `Resources.Load<Sprite>`. Generuje je `Tools/floor_sprites.py` (czysty Python; grafikę zmienia designer). Wspólny styl: boczne filary w ciemniejszym odcieniu, szara płyta stropowa na dole (piętra ładnie się stykają), dominujący kolor = kolor typu w HUD. Platforma i tło nadal generowane w kodzie.
 
 ## Rdzeń rozgrywki [DECYZJA]
-- **[DECYZJA post-jam, 25.10]** Sterowanie względne: platforma przesuwa się o tyle, o ile przesunie się palec (przeciąganie w dowolnym miejscu ekranu, 1:1, w granicach `playWidth`); na komputerze przeciąganie z wciśniętym lewym przyciskiem. Opis poniżej dotyczy wersji jamowej.
+- **[DECYZJA post-jam, 25.10, zmienione 18:40]** Sterowanie: **dotyk** — przeciąganie względne (platforma przesuwa się o tyle, o ile palec, 1:1, w granicach `playWidth`); **mysz (PC)** — X platformy = X kursora, bez klikania (jak w jamie). Opis poniżej dotyczy wersji jamowej.
 - Na dole ekranu jest **platforma (podstawa wieżowca)**. Porusza się tylko w osi **X**: tam gdzie palec (lub kursor myszy), tam platforma. W osi Y stoi w miejscu. **Bez dotyku platforma zostaje w miejscu** (nie wraca do krawędzi).
 - Z górnej krawędzi ekranu **spadają piętra na zmianę**: pojedynczo co ~0,7 s, każde w innym miejscu X niż poprzednie (odstęp ≥ 1,5 szerokości piętra) i innego typu niż poprzednie. W powietrzu są naraz 2–3 piętra na różnych wysokościach; gracz wybiera, które złapać — to główna decyzja w grze. (Wcześniejsze „fale” 3 pięter naraz odrzucone — wyglądały jak ściana.)
 - **Rosnąca trudność**: z wysokością wieży piętra spadają szybciej i częściej — `fallSpeed = min(3 + 0,15 × Height, 8)`, `spawnInterval = max(0,7 − 0,01 × Height, 0,4)`.
