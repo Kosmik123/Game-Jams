@@ -6,7 +6,7 @@ Sekcje oznaczone **[DECYZJA]** są ustalone, **[PROPOZYCJA]** czekają na akcept
 
 ## Wersje gry: jam / post-jam [DECYZJA, 25.10.2026]
 - Gra startuje od **sceny wyboru wersji** (`VersionSelect`, scena nr 0): przyciski **„Jam version”** i **„Post-jam version”**. Jeden build WebGL na itch.io zawiera obie wersje.
-- **Jam version** = rozgrywka dokładnie jak w buildzie z jamu (`39a94ec`): runda 90 s, stała prędkość/interwał, bez PERFECT i samouczka. **Zamrożona na zawsze** — żadnych zmian rozgrywki ani UI, także poprawek błędów; cały rozwój tylko w post-jam.
+- **Jam version** = rozgrywka jak w buildzie z jamu (`39a94ec`), ale z rundą **40 s** jak w poprawce `bbd8628` (decyzja autora 25.10, 18:10), stała prędkość/interwał, bez PERFECT i samouczka. **Zamrożona na zawsze** — żadnych zmian rozgrywki ani UI, także poprawek błędów; cały rozwój tylko w post-jam.
 - **Post-jam version** = dalszy rozwój: runda 40 s, PERFECT!, rosnąca trudność, samouczek i kolejne funkcje.
 - Różnice między wersjami żyją w `TowerRuleset` (`JamRuleset`, `PostJamRuleset`); wspólny kod nie sprawdza wersji „ifami” rozsianymi po logice.
 - Poniższe sekcje opisują wersję post-jam, chyba że zaznaczono inaczej.
@@ -51,7 +51,7 @@ Budynek jako „miasto w pionie”, każde piętro wpływa na statystyki (warto�
 - Cele wysokości jako poziomy — otwarte, na razie nie robimy.
 
 ## Runda i wynik [DECYZJA]
-- Runda trwa **40 s** w post-jam (skrócone z 90 s — było za długo); wersja jamowa zostaje przy 90 s. Po czasie spawn się zatrzymuje i pojawia się ekran końca: Height, Money, **Score = Height × 10 + Money**, napis „Tap to play again”.
+- Runda trwa **40 s** w post-jam (skrócone z 90 s — było za długo); wersja jamowa też 40 s (decyzja autora 25.10). Po czasie spawn się zatrzymuje i pojawia się ekran końca: Height, Money, **Score = Height × 10 + Money**, napis „Tap to play again”.
 - Tap/klik restartuje grę bez przeładowania sceny (bootstrap `AfterSceneLoad` nie odpala się ponownie po `LoadScene`).
 
 ## HUD [DECYZJA]

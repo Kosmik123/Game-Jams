@@ -41,7 +41,7 @@ namespace ZeroHour.Tower
     public class JamRuleset : TowerRuleset
     {
         public override string Name => "Jam";
-        public override float RoundDuration => 90f;
+        public override float RoundDuration => 40f;
         public override float FallSpeed(int towerHeight) => 3f;
         public override float SpawnInterval(int towerHeight) => 0.7f;
         public override CityStats CreateEconomy() => new CityStats();
