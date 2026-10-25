@@ -57,6 +57,9 @@ namespace ZeroHour.Tower
         // At the end of the round the camera zooms out to show the whole building.
         public abstract bool ShowTowerShot { get; }
 
+        // Screen shake on collapse, "+$" from the roof and squashy landings.
+        public abstract bool ShowJuice { get; }
+
         public abstract bool ShowPerfectPopup { get; }
 
         public abstract bool ShowTutorial { get; }
@@ -84,6 +87,7 @@ namespace ZeroHour.Tower
         public override string PopulationLabel => "Pop";
         public override bool SnapPerfectLandings => false;
         public override bool ShowTowerShot => false;
+        public override bool ShowJuice => false;
         public override float DragSensitivity => 0f;
         public override bool ShowPerfectPopup => false;
         public override bool ShowTutorial => false;
@@ -130,6 +134,7 @@ namespace ZeroHour.Tower
         public override string PopulationLabel => "Popul";
         public override bool SnapPerfectLandings => true;
         public override bool ShowTowerShot => true;
+        public override bool ShowJuice => true;
         public override float DragSensitivity => 1f;
         public override bool ShowPerfectPopup => true;
         public override bool ShowTutorial => true;

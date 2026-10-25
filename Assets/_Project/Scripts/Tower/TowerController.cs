@@ -136,7 +136,7 @@ namespace ZeroHour.Tower
             float placeX = Landing.PlaceX(offsetX, previousX, floor.Size, perfectOffset, game.Ruleset.SnapPerfectLandings, out bool isPerfect);
 
             floor.transform.SetParent(transform, true);
-            floor.PlaceInTower(new Vector2(placeX, localTop + floor.Size / 2f), offsetX - placeX);
+            floor.PlaceInTower(new Vector2(placeX, localTop + floor.Size / 2f), offsetX - placeX, game.Ruleset.ShowJuice);
             localTop += floor.Size;
             floors.Add(floor);
 
