@@ -44,6 +44,9 @@ namespace ZeroHour.Tower
 
         public float TopY => transform.position.y + localTop;
 
+        // Height of the tower top above the platform.
+        public float LocalTop => localTop;
+
         public float TopX => transform.position.x + (floors.Count > 0 ? floors[floors.Count - 1].TowerPosition.x : 0f);
 
         // 1 = rock solid, 0 = about to collapse.

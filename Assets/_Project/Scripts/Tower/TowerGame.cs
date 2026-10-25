@@ -37,6 +37,10 @@ namespace ZeroHour.Tower
         [SerializeField]
         private float cameraFollowSpeed = 3f;
 
+        [Tooltip("With a fixed camera: how fast the tower sinks (or rises after a collapse) to keep its top in place.")]
+        [SerializeField]
+        private float towerSinkSpeed = 3f;
+
         [Header("Round")]
         [SerializeField]
         private int scorePerFloor = 10;
@@ -58,6 +62,7 @@ namespace ZeroHour.Tower
         private float? lastSpawnX;
         private FloorType lastSpawnType;
         private float baseY;
+        private float startBaseY;
         private float startCameraY;
         private float timeLeft;
         private bool isGameOver;
@@ -89,7 +94,8 @@ namespace ZeroHour.Tower
             Camera.backgroundColor = SkyColor;
             FitCamera();
             startCameraY = Camera.transform.position.y;
-            baseY = BottomY + baseMargin;
+            startBaseY = BottomY + baseMargin;
+            baseY = startBaseY;
 
             squareSprite = CreateSquareSprite(32, 3);
             hud = gameObject.AddComponent<TowerHud>();
@@ -117,6 +123,7 @@ namespace ZeroHour.Tower
             Vector3 cameraPosition = Camera.transform.position;
             cameraPosition.y = startCameraY;
             Camera.transform.position = cameraPosition;
+            baseY = startBaseY;
 
             Tower = new GameObject("Tower").AddComponent<TowerController>();
             Tower.transform.position = new Vector3(0f, BaseY, 0f);
@@ -192,6 +199,16 @@ namespace ZeroHour.Tower
 
             // Keep the tower top at a fixed screen height, leaving free space above it.
             float size = Camera.orthographicSize;
+            if (ruleset.FixedCamera)
+            {
+                // The camera stays put and the whole tower sinks instead, so falling floors
+                // keep a steady speed on screen. Never higher than the starting position.
+                float allowedTopY = startCameraY - size + 2f * size * towerTopScreenFraction;
+                float targetBaseY = Mathf.Min(startBaseY, allowedTopY - Tower.LocalTop);
+                baseY = Mathf.Lerp(baseY, targetBaseY, 1f - Mathf.Exp(-towerSinkSpeed * Time.deltaTime));
+                return;
+            }
+
             float targetY = Mathf.Max(startCameraY, Tower.TopY + size - 2f * size * towerTopScreenFraction);
             Vector3 cameraPosition = Camera.transform.position;
             cameraPosition.y = Mathf.Lerp(cameraPosition.y, targetY, 1f - Mathf.Exp(-cameraFollowSpeed * Time.deltaTime));

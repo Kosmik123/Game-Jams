@@ -20,6 +20,9 @@ namespace ZeroHour.Tower
 
         public abstract TowerSway CreateSway();
 
+        // Camera stays still and the tower sinks, instead of the camera following the tower up.
+        public abstract bool FixedCamera { get; }
+
         public abstract bool ShowPerfectPopup { get; }
 
         public abstract bool ShowTutorial { get; }
@@ -37,6 +40,7 @@ namespace ZeroHour.Tower
         public override float SpawnInterval(int towerHeight) => 0.7f;
         public override CityStats CreateEconomy() => new CityStats();
         public override TowerSway CreateSway() => new JamTowerSway();
+        public override bool FixedCamera => false;
         public override bool ShowPerfectPopup => false;
         public override bool ShowTutorial => false;
         public override bool ShowMenuButton => false;
@@ -60,6 +64,7 @@ namespace ZeroHour.Tower
             Mathf.Max(BaseSpawnInterval - SpawnIntervalPerFloor * towerHeight, MinSpawnInterval);
         public override CityStats CreateEconomy() => new PostJamCityStats();
         public override TowerSway CreateSway() => new PostJamTowerSway();
+        public override bool FixedCamera => true;
         public override bool ShowPerfectPopup => true;
         public override bool ShowTutorial => true;
         public override bool ShowMenuButton => true;
