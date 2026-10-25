@@ -41,6 +41,10 @@ namespace ZeroHour.Tower
         [SerializeField]
         private int scorePerFloor = 10;
 
+        [Tooltip("Post-jam tutorial hides after the first caught floor or after this many seconds.")]
+        [SerializeField]
+        private float tutorialDuration = 5f;
+
         [Tooltip("Seconds after the round ends before a tap restarts, so a held finger doesn't skip the end screen.")]
         [SerializeField]
         private float restartDelay = 0.7f;
@@ -127,12 +131,15 @@ namespace ZeroHour.Tower
             lastSpawnType = null;
             isGameOver = false;
             hud.HideGameOver();
+            if (ruleset.ShowTutorial)
+                hud.ShowTutorial("Move finger to catch floors");
         }
 
         private void EndRound()
         {
             isGameOver = true;
             gameOverTime = Time.time;
+            hud.HideTutorial();
             int score = stats.Height * scorePerFloor + Mathf.FloorToInt(stats.Money);
             hud.ShowGameOver(stats.Height, stats.Money, score);
         }
@@ -160,6 +167,8 @@ namespace ZeroHour.Tower
                 floor.SetPowered(stats.IsPowered);
 
             timeLeft -= Time.deltaTime;
+            if (ruleset.ShowTutorial && (Tower.Floors.Count > 0 || ruleset.RoundDuration - timeLeft >= tutorialDuration))
+                hud.FadeOutTutorial();
             hud.Refresh(stats, Tower.Stability, timeLeft);
             if (timeLeft <= 0f)
             {

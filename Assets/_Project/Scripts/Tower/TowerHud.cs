@@ -21,11 +21,20 @@ namespace ZeroHour.Tower
         [SerializeField]
         private int gameOverFontSize = 80;
 
+        [SerializeField]
+        private int tutorialFontSize = 64;
+
+        [SerializeField]
+        private float tutorialFadeDuration = 0.5f;
+
         private Text statsText;
         private Text timerText;
         private GameObject gameOverPanel;
         private Text gameOverText;
         private RectTransform menuButton;
+        private Text tutorialText;
+        private Color tutorialOutlineColor;
+        private bool isTutorialFading;
 
         private void Awake()
         {
@@ -117,6 +126,55 @@ namespace ZeroHour.Tower
             label.rectTransform.anchorMin = Vector2.zero;
             label.rectTransform.anchorMax = Vector2.one;
             label.rectTransform.sizeDelta = Vector2.zero;
+        }
+
+        public void ShowTutorial(string message)
+        {
+            if (tutorialText == null)
+            {
+                tutorialText = CreateText("Tutorial", statsText.canvas.transform, tutorialFontSize, TextAnchor.MiddleCenter);
+                tutorialText.rectTransform.SetSiblingIndex(gameOverPanel.transform.GetSiblingIndex());
+                tutorialText.rectTransform.sizeDelta = new Vector2(1000f, tutorialFontSize * 1.5f);
+                tutorialOutlineColor = tutorialText.GetComponent<Outline>().effectColor;
+            }
+            tutorialText.text = message;
+            isTutorialFading = false;
+            SetTutorialAlpha(1f);
+            tutorialText.gameObject.SetActive(true);
+        }
+
+        public void FadeOutTutorial()
+        {
+            if (tutorialText != null && tutorialText.gameObject.activeSelf)
+                isTutorialFading = true;
+        }
+
+        public void HideTutorial()
+        {
+            if (tutorialText != null)
+                tutorialText.gameObject.SetActive(false);
+        }
+
+        private void Update()
+        {
+            if (!isTutorialFading)
+                return;
+            float alpha = tutorialText.color.a - Time.deltaTime / tutorialFadeDuration;
+            if (alpha <= 0f)
+            {
+                isTutorialFading = false;
+                HideTutorial();
+                return;
+            }
+            SetTutorialAlpha(alpha);
+        }
+
+        private void SetTutorialAlpha(float alpha)
+        {
+            tutorialText.color = new Color(1f, 1f, 1f, alpha);
+            Color outline = tutorialOutlineColor;
+            outline.a *= alpha;
+            tutorialText.GetComponent<Outline>().effectColor = outline;
         }
 
         public bool IsOverMenuButton(Vector2 screenPosition) =>

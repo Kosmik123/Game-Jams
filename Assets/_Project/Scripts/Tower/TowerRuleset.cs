@@ -53,7 +53,7 @@ namespace ZeroHour.Tower
         public override float SpawnInterval(int towerHeight) =>
             Mathf.Max(BaseSpawnInterval - SpawnIntervalPerFloor * towerHeight, MinSpawnInterval);
         public override bool ShowPerfectPopup => true;
-        public override bool ShowTutorial => false;
+        public override bool ShowTutorial => true;
         public override bool ShowMenuButton => true;
     }
 }
