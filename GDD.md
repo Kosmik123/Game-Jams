@@ -7,7 +7,7 @@ Sekcje oznaczone **[DECYZJA]** są ustalone, **[PROPOZYCJA]** czekają na akcept
 ## Platforma i testowanie [DECYZJA]
 - Gra **pionowa (portrait)**, mobile-first; testy wyłącznie przez build WebGL → itch.io (https://kosmik123.itch.io/0h-game-jam-2026) → przeglądarka telefonu.
 - Autor nie ma dostępu do edytora Unity w trakcie jamu → **cała scena budowana w kodzie** (bootstrap `[RuntimeInitializeOnLoadMethod]`), bez edycji scen/prefabów.
-- Grafika na razie generowana w kodzie (kwadraty z ramką, kolor = typ piętra).
+- Grafika pięter: pixel art 32×32 (x4 → 128×128 PNG) w `Assets/_Project/Resources/Floors/<FloorType.Name>.png`, ładowany przez `Resources.Load<Sprite>`. Generuje je `Tools/floor_sprites.py` (czysty Python; grafikę zmienia designer). Wspólny styl: boczne filary w ciemniejszym odcieniu, szara płyta stropowa na dole (piętra ładnie się stykają), dominujący kolor = kolor typu w HUD. Platforma i tło nadal generowane w kodzie.
 
 ## Rdzeń rozgrywki [DECYZJA]
 - Na dole ekranu jest **platforma (podstawa wieżowca)**. Porusza się tylko w osi **X**: tam gdzie palec (lub kursor myszy), tam platforma. W osi Y stoi w miejscu. **Bez dotyku platforma zostaje w miejscu** (nie wraca do krawędzi).
