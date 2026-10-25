@@ -11,7 +11,10 @@ Sekcje oznaczone **[DECYZJA]** są ustalone, **[PROPOZYCJA]** czekają na akcept
 
 ## Rdzeń rozgrywki [DECYZJA]
 - Na dole ekranu jest **platforma (podstawa wieżowca)**. Porusza się tylko w osi **X**: tam gdzie palec (lub kursor myszy), tam platforma. W osi Y stoi w miejscu. **Bez dotyku platforma zostaje w miejscu** (nie wraca do krawędzi).
-- Z górnej krawędzi ekranu **spadają piętra falami**: 2–3 piętra naraz, na tej samej wysokości, w różnych miejscach X (odstęp ≥ 1,5 szerokości piętra), najlepiej różnych typów; fala co ~1,8 s. Gracz wybiera, które piętro złapać — to główna decyzja w grze.
+- Z górnej krawędzi ekranu **spadają piętra na zmianę**: pojedynczo co ~0,7 s, każde w innym miejscu X niż poprzednie (odstęp ≥ 1,5 szerokości piętra) i innego typu niż poprzednie. W powietrzu są naraz 2–3 piętra na różnych wysokościach; gracz wybiera, które złapać — to główna decyzja w grze. (Wcześniejsze „fale” 3 pięter naraz odrzucone — wyglądały jak ściana.)
+- **Rosnąca trudność**: z wysokością wieży piętra spadają szybciej i częściej — `fallSpeed = min(3 + 0,15 × Height, 8)`, `spawnInterval = max(0,7 − 0,01 × Height, 0,4)`.
+- **PERFECT!**: idealne lądowanie (przesunięcie < 12% szerokości) pokazuje unoszący się napis „PERFECT!” nad piętrem (oprócz uspokojenia wieży).
+- **Samouczek**: na starcie każdej rundy napis „Move finger to catch floors” na środku; znika po pierwszym złapanym piętrze albo po 5 s.
 - Piętro, które spadnie na szczyt wieży (przetnie jego wysokość nad wieżą), dokleja się do budynku z zachowaniem przesunięcia w X. Chybione piętro spada dalej i znika.
 - **Kamera** jedzie w górę razem z budynkiem: szczyt wieży trzyma się na ~40% wysokości ekranu, widać tylko kilka górnych pięter, a nad budynkiem zostaje wolna przestrzeń na sterowanie i decyzje gracza.
 
