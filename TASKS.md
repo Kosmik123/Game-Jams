@@ -84,7 +84,7 @@ Po każdym tasku: kompilacja/testy → commit (mały, z opisem). Build WebGL + d
   - Jam bez zmian.
 - [x] **20. [post-jam] PERFECT wyśrodkowuje piętro.** Gdy lądowanie liczy się jako PERFECT (offset < `perfectOffset`), piętro zostaje **ustawione dokładnie nad poprzednim** (`TowerPosition.x` = X poprzedniego piętra; dla pierwszego piętra = środek platformy). Logicznie od razu (wpływa na `topOffset`, następne lądowania, niestabilność = jak przy offsecie 0). Wizualnie: krótki dosuw ~0,08 s zamiast skoku (może się nakładać ze sprężystym lądowaniem z taska 12). Napis PERFECT nad wyśrodkowanym piętrem. Test EditMode: lądowanie z offsetem 0,1 × szerokość → pozycja = poprzednie piętro; offset 0,2 → bez zmiany. Jam bez zmian.
 
-- [ ] **21. [post-jam] Czas rundy zależny od gry (wersja wstępna).** Zamiast stałych 40 s: **start 25 s**, zegar odlicza w dół, a gracz dokłada czas grą:
+- [x] **21. [post-jam] Czas rundy zależny od gry (wersja wstępna).** Zamiast stałych 40 s: **start 25 s**, zegar odlicza w dół, a gracz dokłada czas grą:
   - złapane piętro: `+1,5 × max(0,3; 1 − Height/40)` s (Height = wysokość **po** złapaniu; premia maleje z wysokością, min. 0,45 s),
   - PERFECT: dodatkowo **+1 s** (bez spadku z wysokością),
   - zawalenie (`CollapseTop`): **−3 s** (nie poniżej 0 — przy 0 koniec rundy jak dziś),
