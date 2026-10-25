@@ -60,6 +60,11 @@ namespace ZeroHour.Tower
         // Screen shake on collapse, "+$" from the roof and squashy landings.
         public abstract bool ShowJuice { get; }
 
+        // Floors are always 1 unit wide; their height and art (Resources/<folder>) depend on the version.
+        public abstract float FloorHeight { get; }
+
+        public abstract string FloorArtFolder { get; }
+
         public abstract bool ShowPerfectPopup { get; }
 
         public abstract bool ShowTutorial { get; }
@@ -88,6 +93,8 @@ namespace ZeroHour.Tower
         public override bool SnapPerfectLandings => false;
         public override bool ShowTowerShot => false;
         public override bool ShowJuice => false;
+        public override float FloorHeight => 1f;
+        public override string FloorArtFolder => "Floors";
         public override float DragSensitivity => 0f;
         public override bool ShowPerfectPopup => false;
         public override bool ShowTutorial => false;
@@ -135,6 +142,8 @@ namespace ZeroHour.Tower
         public override bool SnapPerfectLandings => true;
         public override bool ShowTowerShot => true;
         public override bool ShowJuice => true;
+        public override float FloorHeight => 0.75f;
+        public override string FloorArtFolder => "FloorsWide";
         public override float DragSensitivity => 1f;
         public override bool ShowPerfectPopup => true;
         public override bool ShowTutorial => true;
