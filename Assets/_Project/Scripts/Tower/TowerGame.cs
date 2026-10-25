@@ -43,7 +43,7 @@ namespace ZeroHour.Tower
 
         [Header("Round")]
         [SerializeField]
-        private float roundDuration = 90f;
+        private float roundDuration = 40f;
 
         [SerializeField]
         private int scorePerFloor = 10;
@@ -98,12 +98,16 @@ namespace ZeroHour.Tower
         {
             foreach (FallingFloor floor in spawnedFloors)
             {
-                if (floor != null)
+                if (floor)
+                {
                     Destroy(floor.gameObject);
+                }
             }
             spawnedFloors.Clear();
-            if (Tower != null)
+            if (Tower)
+            {
                 Destroy(Tower.gameObject);
+            }
 
             Vector3 cameraPosition = Camera.transform.position;
             cameraPosition.y = startCameraY;
@@ -143,7 +147,7 @@ namespace ZeroHour.Tower
 
             stats.Recalculate(Tower.Floors);
             stats.Tick(Time.deltaTime);
-            foreach (FallingFloor floor in Tower.Floors)
+            foreach (var floor in Tower.Floors)
                 floor.SetPowered(stats.IsPowered);
 
             timeLeft -= Time.deltaTime;

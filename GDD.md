@@ -34,7 +34,7 @@ Budynek jako „miasto w pionie”, każde piętro wpływa na statystyki (warto�
 - Cele wysokości jako poziomy — otwarte, na razie nie robimy.
 
 ## Runda i wynik [DECYZJA]
-- Runda trwa **90 s**. Po czasie spawn się zatrzymuje i pojawia się ekran końca: Height, Money, **Score = Height × 10 + Money**, napis „Tap to play again”.
+- Runda trwa **40 s** (skrócone z 90 s — było za długo). Po czasie spawn się zatrzymuje i pojawia się ekran końca: Height, Money, **Score = Height × 10 + Money**, napis „Tap to play again”.
 - Tap/klik restartuje grę bez przeładowania sceny (bootstrap `AfterSceneLoad` nie odpala się ponownie po `LoadScene`).
 
 ## HUD [DECYZJA]
