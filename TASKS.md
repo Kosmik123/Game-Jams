@@ -116,7 +116,7 @@ Po każdym tasku: kompilacja/testy → commit (mały, z opisem). Build WebGL + d
   - Jam bez zmian.
   - Sprawdzenie (EditMode na funkcji przycinania): offset +1 → zakres platformy [−4, 2] przy `playWidth = 6`; offset 0 → jak dotąd; skrajny offset → platforma na krawędzi ekranu. Play Mode: krzywa wieża, dach dosięga obu krawędzi `playWidth`.
 
-- [ ] **22. [JAM — wyjątek od zamrożenia, decyzja autora] Przycisk „Menu” na ekranie końca wersji jamowej.** `JamRuleset.ShowMenuButton = true` — ten sam przycisk co w post-jam (lewy dolny róg ekranu końca), wraca do wyboru wersji. Nic poza tym w jamie się nie zmienia (rozgrywka, układ ekranu końca, HUD — 1:1). Sprawdź w buildzie: jam → koniec rundy → „Menu” → menu wyboru wersji; tap poza przyciskiem dalej restartuje.
+- [x] **22. [JAM — wyjątek od zamrożenia, decyzja autora] Przycisk „Menu” na ekranie końca wersji jamowej.** `JamRuleset.ShowMenuButton = true` — ten sam przycisk co w post-jam (lewy dolny róg ekranu końca), wraca do wyboru wersji. Nic poza tym w jamie się nie zmienia (rozgrywka, układ ekranu końca, HUD — 1:1). Sprawdź w buildzie: jam → koniec rundy → „Menu” → menu wyboru wersji; tap poza przyciskiem dalej restartuje.
 - [ ] **23. [post-jam] Synergie sąsiednich pięter.** Kolejność pięter w wieży zaczyna mieć znaczenie. Sąsiedzi = piętra bezpośrednio nad sobą (`Tower.Floors[i]` i `[i+1]`). Każda **para sąsiadów** liczona raz:
   - **Mieszkalne + Park** → **+1 Joy** („widok na park”),
   - **Mieszkalne + Elektrownia** → **−1 Joy** („smog pod oknem”; dodatkowo do −2 elektrowni),
