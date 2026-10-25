@@ -17,7 +17,7 @@ namespace ZeroHour.Tower
         }
 
         // Returns the new platform X. A new press or a different pointer only sets the reference point.
-        public float Update(bool isPressed, int pointerId, float pointerWorldX, float platformX, float halfRange)
+        public float Update(bool isPressed, int pointerId, float pointerWorldX, float platformX, float minX, float maxX)
         {
             if (!isPressed)
             {
@@ -35,7 +35,7 @@ namespace ZeroHour.Tower
 
             float delta = pointerWorldX - lastPointerX;
             lastPointerX = pointerWorldX;
-            return Mathf.Clamp(platformX + delta * sensitivity, -halfRange, halfRange);
+            return Mathf.Clamp(platformX + delta * sensitivity, minX, maxX);
         }
     }
 }
