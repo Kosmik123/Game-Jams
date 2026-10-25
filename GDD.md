@@ -6,7 +6,7 @@ Sekcje oznaczone **[DECYZJA]** są ustalone, **[PROPOZYCJA]** czekają na akcept
 
 ## Wersje gry: jam / post-jam [DECYZJA, 25.10.2026]
 - Gra startuje od **sceny wyboru wersji** (`VersionSelect`, scena nr 0): przyciski **„Jam version”** i **„Post-jam version”**. Jeden build WebGL na itch.io zawiera obie wersje.
-- **Jam version** = rozgrywka dokładnie jak w buildzie z jamu (`39a94ec`): runda 90 s, stała prędkość/interwał, bez PERFECT i samouczka. Jedyny dodatek: powrót do menu z ekranu końca.
+- **Jam version** = rozgrywka dokładnie jak w buildzie z jamu (`39a94ec`): runda 90 s, stała prędkość/interwał, bez PERFECT i samouczka. **Zamrożona na zawsze** — żadnych zmian rozgrywki ani UI, także poprawek błędów; cały rozwój tylko w post-jam.
 - **Post-jam version** = dalszy rozwój: runda 40 s, PERFECT!, rosnąca trudność, samouczek i kolejne funkcje.
 - Różnice między wersjami żyją w `TowerRuleset` (`JamRuleset`, `PostJamRuleset`); wspólny kod nie sprawdza wersji „ifami” rozsianymi po logice.
 - Poniższe sekcje opisują wersję post-jam, chyba że zaznaczono inaczej.
