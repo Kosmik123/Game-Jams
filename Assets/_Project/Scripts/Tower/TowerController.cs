@@ -37,6 +37,7 @@ namespace ZeroHour.Tower
         private TowerGame game;
         private float localTop;
         private float instability;
+        private bool hasSeenTouch;
 
         public IReadOnlyList<FallingFloor> Floors => floors;
 
@@ -112,14 +113,20 @@ namespace ZeroHour.Tower
             instability = instabilityAfterCollapse;
         }
 
+        // Without a finger on the screen the platform stays put. The mouse is ignored on phones,
+        // where its position is (0,0) when nothing is touching.
         private bool TryGetPointerWorldX(out float worldX)
         {
             worldX = 0f;
             Vector2 screenPosition;
             var touchscreen = Touchscreen.current;
-            if (touchscreen != null && touchscreen.primaryTouch.press.isPressed)
+            bool isTouching = touchscreen != null && touchscreen.primaryTouch.press.isPressed;
+            if (isTouching)
+                hasSeenTouch = true;
+
+            if (isTouching)
                 screenPosition = touchscreen.primaryTouch.position.ReadValue();
-            else if (Mouse.current != null)
+            else if (Mouse.current != null && !hasSeenTouch && !Application.isMobilePlatform)
                 screenPosition = Mouse.current.position.ReadValue();
             else
                 return false;
