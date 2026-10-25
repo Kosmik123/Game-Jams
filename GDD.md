@@ -23,6 +23,7 @@ Sekcje oznaczone **[DECYZJA]** są ustalone, **[PROPOZYCJA]** czekają na akcept
 - **PERFECT!**: idealne lądowanie (przesunięcie < 12% szerokości) pokazuje unoszący się napis „PERFECT!” nad piętrem (oprócz uspokojenia wieży).
 - **Samouczek**: na starcie każdej rundy napis „Move finger to catch floors” na środku; znika po pierwszym złapanym piętrze albo po 5 s.
 - Piętro, które spadnie na szczyt wieży (przetnie jego wysokość nad wieżą), dokleja się do budynku z zachowaniem przesunięcia w X. Chybione piętro spada dalej i znika.
+- **[DECYZJA post-jam, 25.10]** Kamera stoi w miejscu, a wieża zjeżdża w dół po każdym piętrze (szczyt na ~40% ekranu). Powód: ruch kamery w górę sprawiał, że spadające piętra wyglądały na chwilowo szybsze (zgłoszenie graczy). Poniższy opis dotyczy wersji jamowej.
 - **Kamera** jedzie w górę razem z budynkiem: szczyt wieży trzyma się na ~40% wysokości ekranu, widać tylko kilka górnych pięter, a nad budynkiem zostaje wolna przestrzeń na sterowanie i decyzje gracza.
 
 ## Statystyki [DECYZJA — zaimplementowane]

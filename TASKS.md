@@ -42,6 +42,13 @@ Po każdym tasku: kompilacja/testy → commit (mały, z opisem). Build WebGL + d
   - Częstotliwość maleje z wysokością (wysokie budynki kołyszą się wolniej): `ω = 3 / sqrt(1 + Height / 15)`. Licz fazę przyrostowo (`phase += ω × dt`), żeby zmiana ω nie powodowała skoków.
   - Wygładzanie: wyświetlana niestabilność dąży do rzeczywistej (`Mathf.MoveTowards` / lerp ~2/s), bez szarpnięcia po złapaniu piętra.
   - Parametry w `PostJamRuleset`; jam zostaje przy starym wzorze.
+- [ ] **8. [post-jam] Kamera stoi, wieża zjeżdża w dół (zgłoszenie graczy).** Po złapaniu piętra kamera rusza w górę (`TowerGame` ~l. 180, lerp do `targetY`), przez co spadające piętra przez chwilę **wyglądają, jakby przyspieszały**. Odwrotnie: kamera stoi na `startCameraY` przez całą rundę, a **cała wieża (platforma + piętra) płynnie zjeżdża w dół**, tak żeby szczyt trzymał się na `towerTopScreenFraction` (40%) wysokości ekranu.
+  - `BaseY` staje się dynamiczne: cel `baseY = min(startBaseY, startBaseY − (TowerTopLocal − dozwolona wysokość))`, dążenie do celu jak teraz kamera (wykładniczo, `cameraFollowSpeed` → np. `towerSinkSpeed`). `TowerController.Update` dalej ustawia `position.y = game.BaseY`.
+  - Spadające piętra, spawn (`TopY + floorSize`) i tło są w stałym układzie ekranu — ich ruch na ekranie ma być **jednostajny** niezależnie od tego, co robi wieża.
+  - Po zawaleniu (`CollapseTop`) wieża płynnie podjeżdża do góry, ale nie wyżej niż `startBaseY`. Zawalone piętra spadają jak dotąd.
+  - Restart rundy: `baseY = startBaseY`.
+  - Sprawdzenie: piętro spadające obok wieży w chwili łapania innego piętra ma stałą prędkość na ekranie (np. log `screenY` co klatkę — różnice równe); konsola czysta.
+  - Tylko post-jam (jam zostaje z ruchomą kamerą, w rulesecie np. `bool FixedCamera`).
 
 ## Zrobione (jam, do `39a94ec` na itch.io)
 
