@@ -23,6 +23,9 @@ namespace ZeroHour.Controls
         [SerializeField]
         private Vector2 margin = new Vector2(120f, 120f);
 
+        // Turn on when the game needs an on-screen stick.
+        private static readonly bool isEnabled = false;
+
         private GameObject canvasObject;
 
         public bool IsVisible => canvasObject.activeSelf;
@@ -30,6 +33,9 @@ namespace ZeroHour.Controls
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void CreateInstance()
         {
+            if (!isEnabled)
+                return;
+
             var joystickObject = new GameObject(nameof(MobileJoystick));
             DontDestroyOnLoad(joystickObject);
             joystickObject.AddComponent<MobileJoystick>();
