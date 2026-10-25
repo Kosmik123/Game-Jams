@@ -67,7 +67,7 @@ Po każdym tasku: kompilacja/testy → commit (mały, z opisem). Build WebGL + d
   - To ustawienie strony, nie rozgrywki — dotyczy obu wersji. **Sprawdź wersję jamową** tak samo jak post-jam: proporcje 3:4 zamiast ~10:16, więc kamera (`FitCamera`) pokaże szerszy, niższy obszar. Ma się mieścić cała szerokość gry (`playWidth`), szczyt wieży na 40%, spadające piętra widoczne od góry.
   - HUD (`CanvasScaler` 1080×1920): przy 540×720 sprawdź, czy statystyki (lewy górny), timer, ekran końca, PERFECT, samouczek i menu wyboru wersji się mieszczą i nie nachodzą na siebie. Jeśli trzeba, ustaw `matchWidthOrHeight` tak, żeby UI skalowało się sensownie (np. 1 = wg wysokości) — napisz w COMMS, co wybrałeś.
   - Sprawdzenie: lokalny build WebGL w oknie ~800×800 — cała gra widoczna bez przewijania, konsola czysta. (Rozmiar osadzenia na stronie itch.io ustawia autor w panelu gry — nie Twoja działka.)
-- [ ] **15. ⚡ PRIORYTET (po 14, przed 11) — sterowanie: telefon przeciąga, PC podąża za myszą.** Zmiana taska 9 w post-jam:
+- [x] **15. ⚡ PRIORYTET (po 14, przed 11) — sterowanie: telefon przeciąga, PC podąża za myszą.** Zmiana taska 9 w post-jam:
   - **Dotyk** (telefon/tablet): bez zmian — przeciąganie względne (`RelativeDrag`).
   - **Mysz** (PC): powrót do starego zachowania — **X platformy = X kursora**, bez wciskania przycisku (jak w wersji jamowej). Przeciąganie z LPM znika.
   - Wybór per wejście, nie per platforma: dotyk ekranu → ścieżka względna; ruch myszy → ścieżka absolutna. Zachowaj ochronę z jamu: na telefonie mysz ignorowana (`hasSeenTouch`/`isMobilePlatform`), żeby platforma nie uciekała do (0,0).
