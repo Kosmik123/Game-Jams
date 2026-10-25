@@ -6,14 +6,16 @@ namespace ZeroHour.Tower
     // Stats bar at the top of the screen, round timer and the end screen, built from code.
     public class TowerHud : MonoBehaviour
     {
+        private const string WarningColor = "#ff5555";
+
         [SerializeField]
         private Vector2 referenceResolution = new Vector2(1080f, 1920f);
 
         [SerializeField]
-        private int fontSize = 46;
+        private int fontSize = 60;
 
         [SerializeField]
-        private int timerFontSize = 60;
+        private int timerFontSize = 72;
 
         [SerializeField]
         private int gameOverFontSize = 80;
@@ -37,13 +39,25 @@ namespace ZeroHour.Tower
             scaler.referenceResolution = referenceResolution;
             scaler.matchWidthOrHeight = 0.5f;
 
-            statsText = CreateText("Stats", canvasObject.transform, fontSize, TextAnchor.UpperCenter);
-            var statsRect = statsText.rectTransform;
-            statsRect.anchorMin = new Vector2(0f, 1f);
-            statsRect.anchorMax = new Vector2(1f, 1f);
-            statsRect.pivot = new Vector2(0.5f, 1f);
-            statsRect.anchoredPosition = new Vector2(0f, -30f);
-            statsRect.sizeDelta = new Vector2(-60f, 300f);
+            // Panel in the top-left corner that shrinks to fit the text, so it hides as little as possible.
+            var statsPanel = new GameObject("Stats Panel", typeof(RectTransform), typeof(Image), typeof(VerticalLayoutGroup), typeof(ContentSizeFitter));
+            statsPanel.transform.SetParent(canvasObject.transform, false);
+            var panelRect = (RectTransform)statsPanel.transform;
+            panelRect.anchorMin = new Vector2(0f, 1f);
+            panelRect.anchorMax = new Vector2(0f, 1f);
+            panelRect.pivot = new Vector2(0f, 1f);
+            panelRect.anchoredPosition = new Vector2(20f, -20f);
+            statsPanel.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.3f);
+            statsPanel.GetComponent<Image>().raycastTarget = false;
+            var layout = statsPanel.GetComponent<VerticalLayoutGroup>();
+            layout.padding = new RectOffset(20, 20, 12, 12);
+            layout.childControlWidth = true;
+            layout.childControlHeight = true;
+            var fitter = statsPanel.GetComponent<ContentSizeFitter>();
+            fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            statsText = CreateText("Stats", statsPanel.transform, fontSize, TextAnchor.UpperLeft);
 
             timerText = CreateText("Timer", canvasObject.transform, timerFontSize, TextAnchor.UpperRight);
             var timerRect = timerText.rectTransform;
@@ -55,10 +69,10 @@ namespace ZeroHour.Tower
 
             gameOverPanel = new GameObject("Game Over", typeof(RectTransform), typeof(Image));
             gameOverPanel.transform.SetParent(canvasObject.transform, false);
-            var panelRect = (RectTransform)gameOverPanel.transform;
-            panelRect.anchorMin = Vector2.zero;
-            panelRect.anchorMax = Vector2.one;
-            panelRect.sizeDelta = Vector2.zero;
+            var gameOverRect = (RectTransform)gameOverPanel.transform;
+            gameOverRect.anchorMin = Vector2.zero;
+            gameOverRect.anchorMax = Vector2.one;
+            gameOverRect.sizeDelta = Vector2.zero;
             gameOverPanel.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.65f);
 
             gameOverText = CreateText("Result", gameOverPanel.transform, gameOverFontSize, TextAnchor.MiddleCenter);
@@ -88,19 +102,32 @@ namespace ZeroHour.Tower
 
         public void Refresh(CityStats stats, float stability, float timeLeft)
         {
-            string energyColor = stats.IsPowered ? "white" : "#ff5555";
-            string happinessColor = stats.Happiness >= 0 ? "white" : "#ff5555";
-            string stabilityColor = stability > 0.5f ? "white" : stability > 0.25f ? "#ffcc33" : "#ff5555";
+            string stabilityColor = stability > 0.5f ? "white" : stability > 0.25f ? "#ffcc33" : WarningColor;
             statsText.text =
-                $"Height {stats.Height}   $ {stats.Money:0} (+{stats.Income:0.0}/s)\n" +
-                $"Pop {stats.Population}/{stats.Jobs} jobs   " +
-                $"<color={energyColor}>Energy {stats.Energy:+0;-0;0}</color>   " +
-                $"<color={happinessColor}>Joy {stats.Happiness:+0;-0;0}</color>\n" +
+                $"Height {stats.Height}\n" +
+                $"$ {stats.Money:0} (+{stats.Income:0.0}/s)\n" +
+                $"{Label("Pop", 0)} {stats.Population}\n" +
+                $"{Label("Jobs", 1)} {stats.Jobs}\n" +
+                $"{Label("Energy", 2)} {Signed(stats.Energy)}\n" +
+                $"{Label("Joy", 3)} {Signed(stats.Happiness)}\n" +
                 $"<color={stabilityColor}>Stability {stability * 100f:0}%</color>" +
-                (stats.IsPowered ? "" : "   <color=#ff5555>BLACKOUT!</color>");
+                (stats.IsPowered ? "" : $"\n<color={WarningColor}>BLACKOUT!</color>");
 
             int seconds = Mathf.CeilToInt(Mathf.Max(0f, timeLeft));
-            timerText.text = seconds <= 10 ? $"<color=#ff5555>{seconds}s</color>" : $"{seconds}s";
+            timerText.text = seconds <= 10 ? $"<color={WarningColor}>{seconds}s</color>" : $"{seconds}s";
+        }
+
+        // Stat label in the color of the floor type that produces it (order of FloorType.All).
+        private static string Label(string label, int floorTypeIndex)
+        {
+            string color = ColorUtility.ToHtmlStringRGB(FloorType.All[floorTypeIndex].Color);
+            return $"<color=#{color}>{label}</color>";
+        }
+
+        private static string Signed(int value)
+        {
+            string text = value.ToString("+0;-0;0");
+            return value < 0 ? $"<color={WarningColor}>{text}</color>" : text;
         }
 
         public void ShowGameOver(int height, float money, int score)
