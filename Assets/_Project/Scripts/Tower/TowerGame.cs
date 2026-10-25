@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace ZeroHour.Tower
@@ -23,8 +24,20 @@ namespace ZeroHour.Tower
         [SerializeField]
         private float fallSpeed = 3f;
 
+        [Header("Waves")]
+        [Tooltip("Seconds between waves of falling floors.")]
         [SerializeField]
-        private float spawnInterval = 1.2f;
+        private float spawnInterval = 1.8f;
+
+        [SerializeField]
+        private int minFloorsPerWave = 2;
+
+        [SerializeField]
+        private int maxFloorsPerWave = 3;
+
+        [Tooltip("Minimum horizontal distance between floors in a wave, in floor widths.")]
+        [SerializeField]
+        private float waveSpacing = 1.5f;
 
         [Tooltip("Screen height fraction (from bottom) where the camera keeps the tower top.")]
         [SerializeField]
@@ -85,7 +98,7 @@ namespace ZeroHour.Tower
             if (spawnTimer <= 0f)
             {
                 spawnTimer = spawnInterval;
-                SpawnFloor();
+                SpawnWave();
             }
         }
 
@@ -103,13 +116,53 @@ namespace ZeroHour.Tower
             Camera.transform.position = cameraPosition;
         }
 
-        private void SpawnFloor()
+        // A row of floors at the same height; the player can catch only one of them.
+        private void SpawnWave()
         {
+            int count = Random.Range(minFloorsPerWave, maxFloorsPerWave + 1);
             float halfRange = (playWidth - floorSize) / 2f;
-            var position = new Vector3(Random.Range(-halfRange, halfRange), TopY + floorSize, 0f);
+            float minDistance = waveSpacing * floorSize;
+
+            var types = new List<FloorType>(FloorType.All);
+            var positionsX = new List<float>();
+            for (int i = 0; i < count; i++)
+            {
+                if (!TryPickWaveX(positionsX, halfRange, minDistance, out float x))
+                    break;
+                positionsX.Add(x);
+
+                // Different types while there are unused ones left.
+                if (types.Count == 0)
+                    types.AddRange(FloorType.All);
+                int typeIndex = Random.Range(0, types.Count);
+                FloorType type = types[typeIndex];
+                types.RemoveAt(typeIndex);
+
+                SpawnFloor(new Vector3(x, TopY + floorSize, 0f), type);
+            }
+        }
+
+        private static bool TryPickWaveX(List<float> takenX, float halfRange, float minDistance, out float x)
+        {
+            for (int attempt = 0; attempt < 30; attempt++)
+            {
+                x = Random.Range(-halfRange, halfRange);
+                bool isFree = true;
+                foreach (float other in takenX)
+                    isFree &= Mathf.Abs(other - x) >= minDistance;
+                if (isFree)
+                    return true;
+            }
+
+            x = 0f;
+            return false;
+        }
+
+        private void SpawnFloor(Vector3 position, FloorType type)
+        {
             var floor = new GameObject("Floor").AddComponent<FallingFloor>();
             floor.transform.position = position;
-            floor.Init(this, FloorType.GetRandom(), squareSprite, floorSize, fallSpeed);
+            floor.Init(this, type, squareSprite, floorSize, fallSpeed);
         }
 
         // White square with a darker border; 9-sliced so the border keeps its width at any size.
