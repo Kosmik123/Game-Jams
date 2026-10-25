@@ -152,10 +152,8 @@ namespace ZeroHour.Tower
             Tower = new GameObject("Tower").AddComponent<TowerController>();
             Tower.transform.position = new Vector3(0f, BaseY, 0f);
             Tower.Init(this, squareSprite, platformWidth);
-            if (ruleset.ShowPerfectPopup)
-                Tower.PerfectLanding += floor => PerfectPopup.Show(hud, Camera, floor.transform);
-            Tower.FloorLanded += (floor, isPerfect) => ChangeTime(ruleset.FloorTimeBonus(Tower.Floors.Count, isPerfect));
-            Tower.Collapsed += () => ChangeTime(-ruleset.CollapseTimePenalty);
+            Tower.FloorLanded += OnFloorLanded;
+            Tower.Collapsed += OnTowerCollapsed;
 
             stats = ruleset.CreateEconomy();
             timeLeft = ruleset.RoundDuration;
@@ -268,6 +266,20 @@ namespace ZeroHour.Tower
             Vector3 cameraPosition = Camera.transform.position;
             cameraPosition.y = Mathf.Lerp(cameraPosition.y, targetY, 1f - Mathf.Exp(-cameraFollowSpeed * Time.deltaTime));
             Camera.transform.position = cameraPosition;
+        }
+
+        private void OnFloorLanded(FallingFloor floor, bool isPerfect)
+        {
+            stats.RegisterLanding(isPerfect);
+            if (isPerfect && ruleset.ShowPerfectPopup)
+                PerfectPopup.Show(hud, Camera, floor.transform, stats.ComboMultiplier);
+            ChangeTime(ruleset.FloorTimeBonus(Tower.Floors.Count, isPerfect));
+        }
+
+        private void OnTowerCollapsed()
+        {
+            stats.RegisterCollapse();
+            ChangeTime(-ruleset.CollapseTimePenalty);
         }
 
         // Bonus or penalty from the tower; only during the round.

@@ -40,8 +40,6 @@ namespace ZeroHour.Tower
         private float instability;
         private bool hasSeenTouch;
 
-        public event Action<FallingFloor> PerfectLanding;
-
         // A floor joined the tower (raised before a collapse it may cause).
         public event Action<FallingFloor, bool> FloorLanded;
 
@@ -144,10 +142,7 @@ namespace ZeroHour.Tower
 
             float offset = Mathf.Abs(placeX - previousX) / floor.Size;
             if (isPerfect)
-            {
                 instability = Mathf.Max(0f, instability - perfectCalm);
-                PerfectLanding?.Invoke(floor);
-            }
             else
                 instability += offset * offset * instabilityPerOffset;
 

@@ -105,6 +105,20 @@ namespace ZeroHour.Tower
 
         public void Tick(float deltaTime) => Money += Income * deltaTime;
 
+        // Perfect landings in a row; the jam economy doesn't count them.
+        public int PerfectStreak { get; protected set; }
+
+        // Income multiplier from the perfect streak (1 = no combo).
+        public virtual int ComboMultiplier => 1;
+
+        public virtual void RegisterLanding(bool isPerfect)
+        {
+        }
+
+        public virtual void RegisterCollapse()
+        {
+        }
+
         protected virtual FloorStats GetFloorStats(FloorType type) =>
             new FloorStats(type.Population, type.Jobs, type.Energy, type.Happiness);
 

@@ -9,6 +9,8 @@ namespace ZeroHour.Tower
     {
         private const float HappinessIncomeBonus = 0.05f;
         private const float MaxHappinessMultiplier = 1.5f;
+        private const int MinComboStreak = 2;
+        private const int MaxComboMultiplier = 5;
 
         // Floor numbers tuned so 2 residential + 2 offices + 1 power plant + 1 park balance out.
         private static readonly Dictionary<string, FloorStats> Floors = new Dictionary<string, FloorStats>
@@ -21,6 +23,13 @@ namespace ZeroHour.Tower
 
         public override string PowerWarning => IsPowered ? null : $"Power {PowerRatio * 100f:0}%";
 
+        // x2..x5 from the second perfect landing in a row.
+        public override int ComboMultiplier => PerfectStreak >= MinComboStreak ? Mathf.Min(PerfectStreak, MaxComboMultiplier) : 1;
+
+        public override void RegisterLanding(bool isPerfect) => PerfectStreak = isPerfect ? PerfectStreak + 1 : 0;
+
+        public override void RegisterCollapse() => PerfectStreak = 0;
+
         protected override FloorStats GetFloorStats(FloorType type) =>
             Floors.TryGetValue(type.Name, out FloorStats stats) ? stats : base.GetFloorStats(type);
 
@@ -30,7 +39,7 @@ namespace ZeroHour.Tower
         protected override float CalculateIncome(int population, int jobs, int happiness, float powerRatio)
         {
             float happinessMultiplier = happiness > 0 ? Mathf.Min(1f + HappinessIncomeBonus * happiness, MaxHappinessMultiplier) : 1f;
-            return base.CalculateIncome(population, jobs, happiness, powerRatio) * happinessMultiplier;
+            return base.CalculateIncome(population, jobs, happiness, powerRatio) * happinessMultiplier * ComboMultiplier;
         }
 
         protected override bool NeedsPower(FloorStats floor) => floor.Energy < 0;
