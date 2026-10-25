@@ -5,7 +5,11 @@ Rozmowy, pytania i protokół buildów (`[BUILD START]`/`[BUILD END]`): `COMMS.m
 
 ## Etap: post-jam (od 25.10.2026, 15:40)
 
-Gałąź: dalej `0h-jam-2026` (nazwa `0h-jam-2026/postjam` jest niemożliwa w gicie obok istniejącej gałęzi `0h-jam-2026`).
+**Worktree (od 25.10, 19:00):**
+- Programista: `C:\Users\Kosmik\Unity Projects\Game Jams-dev`, gałąź `0h-jam-2026-dev` — tam kod, testy, commity, własne buildy (własne `Library/`, własny lock Unity — buildy mogą iść równolegle).
+- Menedżer: `C:\Users\Kosmik\Unity Projects\Game Jams`, gałąź `0h-jam-2026` — dokumenty, merge `0h-jam-2026-dev`, build do deployu, deploy.
+- `TASKS.md`, `COMMS.md`, `GDD.md` żyją **tylko w worktree menedżera** — programista czyta/dopisuje je po pełnej ścieżce i **nie commituje** ich (odhaczenia commituje menedżer). W worktree dev te pliki są nieaktualne — nie czytaj ich stamtąd.
+- Programista nie merguje do `0h-jam-2026`; menedżer nie commituje do `0h-jam-2026-dev`. Gdy dev potrzebuje zmian z głównej gałęzi: `git merge 0h-jam-2026` w worktree dev.
 Po każdym tasku: kompilacja/testy → commit (mały, z opisem). Build WebGL + deploy na itch.io robi **menedżer**. Programista może zrobić lokalny build weryfikacyjny po ogłoszeniu w `COMMS.md`.
 
 ### Do zrobienia (kolejność = priorytet)
