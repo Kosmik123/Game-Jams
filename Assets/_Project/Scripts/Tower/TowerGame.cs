@@ -19,6 +19,13 @@ namespace ZeroHour.Tower
         private const float IncomeRise = 0.8f;
         private const float IncomeDuration = 0.7f;
         private static readonly Color IncomeColor = new Color(0.45f, 1f, 0.45f);
+        private const int NeighborFontSize = 40;
+        private const float NeighborPopupSideOffset = 0.9f;
+        private const float NeighborRise = 0.5f;
+        private const float NeighborDuration = 0.9f;
+        private static readonly Color NeighborGoodColor = new Color(0.45f, 1f, 0.45f);
+        private static readonly Color NeighborBadColor = new Color(1f, 0.33f, 0.33f);
+        private static readonly Color NeighborIncomeColor = new Color(1f, 0.85f, 0.3f);
 
         [SerializeField]
         private float playWidth = 6f;
@@ -312,6 +319,41 @@ namespace ZeroHour.Tower
                     combo > 1 ? $"PERFECT! x{combo}" : "PERFECT!", PerfectFontSize, Color.white, PerfectRise, PerfectDuration);
             }
             ChangeTime(ruleset.FloorTimeBonus(Tower.Floors.Count, isPerfect));
+            ShowNeighborEffect(floor);
+        }
+
+        // Teaches the synergies: a new pair with the floor below shows its effect at the joint, beside the
+        // tower toward the screen center so it doesn't cover PERFECT.
+        private void ShowNeighborEffect(FallingFloor floor)
+        {
+            var floors = Tower.Floors;
+            if (floors.Count < 2 || floors[floors.Count - 1] != floor)
+                return;
+            NeighborEffect effect = stats.GetNeighborEffect(floors[floors.Count - 2].Type, floor.Type);
+            if (effect.IsNone)
+                return;
+
+            string label;
+            Color color;
+            if (effect.Happiness > 0)
+            {
+                label = $"+{effect.Happiness} Joy";
+                color = NeighborGoodColor;
+            }
+            else if (effect.Happiness < 0)
+            {
+                label = $"\u2212{-effect.Happiness} Joy";
+                color = NeighborBadColor;
+            }
+            else
+            {
+                label = "+$";
+                color = NeighborIncomeColor;
+            }
+
+            float side = floor.transform.position.x > Camera.transform.position.x ? -1f : 1f;
+            var joint = new Vector3(side * NeighborPopupSideOffset, -floor.Height / 2f, 0f);
+            WorldPopup.Show(hud, Camera, floor.transform, joint, label, NeighborFontSize, color, NeighborRise, NeighborDuration);
         }
 
         private void OnTowerCollapsed()

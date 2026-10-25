@@ -19,6 +19,21 @@ namespace ZeroHour.Tower
         }
     }
 
+    // Effect of two floors directly on top of each other.
+    public readonly struct NeighborEffect
+    {
+        public readonly int Happiness;
+        public readonly float Income;
+
+        public NeighborEffect(int happiness, float income)
+        {
+            Happiness = happiness;
+            Income = income;
+        }
+
+        public bool IsNone => Happiness == 0 && Income == 0f;
+    }
+
     // City economy computed from the floors in the tower. The base class is the jam economy
     // (all-or-nothing blackout); rulesets create a subclass to change the rules.
     public class CityStats
@@ -36,6 +51,9 @@ namespace ZeroHour.Tower
         public int Happiness { get; private set; }
         public float Income { get; private set; }
         public float Money { get; private set; }
+
+        // Base income per second from neighbor pairs, before power and multipliers.
+        public float NeighborIncome { get; private set; }
 
         // Share of the energy demand that is supplied, 0..1.
         public float PowerRatio { get; private set; }
@@ -73,6 +91,15 @@ namespace ZeroHour.Tower
                 happiness += floor.Happiness;
             }
 
+            // Each pair of floors directly on top of each other counts once.
+            float neighborIncome = 0f;
+            for (int i = 0; i + 1 < floors.Count; i++)
+            {
+                NeighborEffect effect = GetNeighborEffect(floors[i], floors[i + 1]);
+                happiness += effect.Happiness;
+                neighborIncome += effect.Income;
+            }
+
             // Unhappy residents move out.
             if (happiness < 0)
                 population = Mathf.Max(0, population + happiness * ResidentsLostPerUnhappiness);
@@ -82,6 +109,7 @@ namespace ZeroHour.Tower
             Jobs = jobs;
             Energy = supply - demand;
             Happiness = happiness;
+            NeighborIncome = neighborIncome;
             PowerRatio = CalculatePowerRatio(supply, demand);
             Income = CalculateIncome(population, jobs, happiness, PowerRatio);
 
@@ -125,7 +153,10 @@ namespace ZeroHour.Tower
         protected virtual float CalculatePowerRatio(int supply, int demand) => supply >= demand ? 1f : 0f;
 
         protected virtual float CalculateIncome(int population, int jobs, int happiness, float powerRatio) =>
-            Mathf.Min(population, jobs) * IncomePerWorker * powerRatio;
+            (Mathf.Min(population, jobs) * IncomePerWorker + NeighborIncome) * powerRatio;
+
+        // The jam economy ignores the order of the floors.
+        public virtual NeighborEffect GetNeighborEffect(FloorType below, FloorType above) => default;
 
         // Jam: in a blackout every floor goes dark (FallingFloor keeps power plants lit).
         protected virtual bool NeedsPower(FloorStats floor) => true;

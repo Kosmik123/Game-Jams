@@ -9,6 +9,9 @@ namespace ZeroHour.Tower
     {
         private const float HappinessIncomeBonus = 0.05f;
         private const float MaxHappinessMultiplier = 1.5f;
+        private const int ParkNeighborJoy = 1;      // "view of the park"
+        private const int PowerNeighborJoy = -1;    // "smog under the window"
+        private const float CommuteIncome = 0.3f;   // "short commute"
         private const int MinComboStreak = 2;
         private const int MaxComboMultiplier = 5;
 
@@ -29,6 +32,26 @@ namespace ZeroHour.Tower
         public override void RegisterLanding(bool isPerfect) => PerfectStreak = isPerfect ? PerfectStreak + 1 : 0;
 
         public override void RegisterCollapse() => PerfectStreak = 0;
+
+        // Residential floors care about their neighbors; the order of the pair doesn't matter.
+        public override NeighborEffect GetNeighborEffect(FloorType below, FloorType above)
+        {
+            FloorType other;
+            if (below.Name == "Residential")
+                other = above;
+            else if (above.Name == "Residential")
+                other = below;
+            else
+                return default;
+
+            switch (other.Name)
+            {
+                case "Park": return new NeighborEffect(ParkNeighborJoy, 0f);
+                case "Power": return new NeighborEffect(PowerNeighborJoy, 0f);
+                case "Office": return new NeighborEffect(0, CommuteIncome);
+                default: return default;
+            }
+        }
 
         protected override FloorStats GetFloorStats(FloorType type) =>
             Floors.TryGetValue(type.Name, out FloorStats stats) ? stats : base.GetFloorStats(type);
