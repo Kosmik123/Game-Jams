@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace ZeroHour.Tower
 {
     // Everything that differs between game versions. Shared code asks the ruleset
@@ -36,10 +38,20 @@ namespace ZeroHour.Tower
 
     public class PostJamRuleset : TowerRuleset
     {
+        // Difficulty grows with every floor in the tower.
+        private const float BaseFallSpeed = 3f;
+        private const float FallSpeedPerFloor = 0.15f;
+        private const float MaxFallSpeed = 8f;
+        private const float BaseSpawnInterval = 0.7f;
+        private const float SpawnIntervalPerFloor = 0.01f;
+        private const float MinSpawnInterval = 0.4f;
+
         public override string Name => "Post-jam";
         public override float RoundDuration => 40f;
-        public override float FallSpeed(int towerHeight) => 3f;
-        public override float SpawnInterval(int towerHeight) => 0.7f;
+        public override float FallSpeed(int towerHeight) =>
+            Mathf.Min(BaseFallSpeed + FallSpeedPerFloor * towerHeight, MaxFallSpeed);
+        public override float SpawnInterval(int towerHeight) =>
+            Mathf.Max(BaseSpawnInterval - SpawnIntervalPerFloor * towerHeight, MinSpawnInterval);
         public override bool ShowPerfectPopup => true;
         public override bool ShowTutorial => false;
         public override bool ShowMenuButton => true;
