@@ -38,6 +38,12 @@ Budynek jako „miasto w pionie”, każde piętro wpływa na statystyki (warto�
 - **Energia < 0** → BLACKOUT: piętra (poza elektrowniami) ciemnieją, dochód = 0.
 - **Szczęście < 0** → każdy punkt poniżej zera wyprowadza 5 mieszkańców.
 - **Stabilność** (`TowerController.cs`): niestabilność += (przesunięcie/szerokość)² × 120 przy każdym piętrze; idealne trafienie (< 12% szerokości) uspokaja o 15. Przy 100% górne 3 piętra się zawalają, niestabilność spada do 40. Wieża kołysze się wizualnie proporcjonalnie do niestabilności.
+- **[DECYZJA post-jam, 25.10]** Rewizja ekonomii (jam zostaje jak wyżej):
+  - Biura nie zmieniają populacji; zamieniają zatrudnionych mieszkańców na pieniądze — `min(Pop, Jobs)` to liczba pracujących.
+  - Zasilanie proporcjonalne: `PowerRatio = min(1, produkcja / zużycie)`, dochód × `PowerRatio`, ciemnieją górne piętra. Koniec skoku „jedno piętro za dużo → dochód 0”, który przy starcie (pierwsze piętro bez elektrowni) był regułą.
+  - Szczęście > 0 daje +5% dochodu za punkt (maks. +50%), więc park ma sens także powyżej zera. Park +4 (było +3).
+  - Wzorcowy „blok”: 2 mieszkalne + 2 biura + 1 elektrownia + 1 park = energia 0, szczęście 0, 4 $/s.
+- **[DECYZJA post-jam, 25.10]** Kołysanie: wychylenie szczytu maleje z wysokością (`1 / (1 + H/15)`), wygina się głównie góra (`((i+1)/H)^1,5`), wysoka wieża kołysze się wolniej (`ω = 3/√(1 + H/15)`). Tylko efekt wizualny.
 - Cele wysokości jako poziomy — otwarte, na razie nie robimy.
 
 ## Runda i wynik [DECYZJA]
