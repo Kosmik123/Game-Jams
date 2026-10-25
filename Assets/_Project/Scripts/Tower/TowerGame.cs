@@ -33,6 +33,8 @@ namespace ZeroHour.Tower
         [SerializeField]
         private float cameraFollowSpeed = 3f;
 
+        private readonly CityStats stats = new CityStats();
+        private TowerHud hud;
         private Sprite squareSprite;
         private float spawnTimer;
         private float baseY;
@@ -65,11 +67,19 @@ namespace ZeroHour.Tower
             Tower = new GameObject("Tower").AddComponent<TowerController>();
             Tower.transform.position = new Vector3(0f, BaseY, 0f);
             Tower.Init(this, squareSprite, platformWidth);
+
+            hud = gameObject.AddComponent<TowerHud>();
         }
 
         private void Update()
         {
             FitCamera();
+
+            stats.Recalculate(Tower.Floors);
+            stats.Tick(Time.deltaTime);
+            foreach (FallingFloor floor in Tower.Floors)
+                floor.SetPowered(stats.IsPowered);
+            hud.Refresh(stats, Tower.Stability);
 
             spawnTimer -= Time.deltaTime;
             if (spawnTimer <= 0f)
