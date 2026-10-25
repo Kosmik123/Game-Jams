@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using ZeroHour.Audio;
 using ZeroHour.Tower;
 using ZeroHour.UI;
 
@@ -28,6 +29,7 @@ namespace ZeroHour.Menu
             camera.backgroundColor = TowerGame.SkyColor;
 
             UiFactory.EnsureEventSystem();
+            AudioManager.Instance.StopMusic(); // the menu is silent for now
             Canvas canvas = UiFactory.CreateCanvas("Menu Canvas", transform, 50);
 
             Text title = UiFactory.CreateText("Title", canvas.transform, titleFontSize, TextAnchor.MiddleCenter);
@@ -58,6 +60,7 @@ namespace ZeroHour.Menu
 
         private static void Play(GameVersionType version)
         {
+            AudioManager.Instance.Play("ui_click");
             GameVersion.Selected = version;
             SceneManager.LoadScene(GameBootstrap.GameScene);
         }

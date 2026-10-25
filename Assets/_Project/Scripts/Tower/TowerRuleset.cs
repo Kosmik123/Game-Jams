@@ -65,6 +65,9 @@ namespace ZeroHour.Tower
 
         public abstract string FloorArtFolder { get; }
 
+        // Sound effects, music and the mute button (the version select clicks always sound).
+        public abstract bool PlaySounds { get; }
+
         public abstract bool ShowPerfectPopup { get; }
 
         public abstract bool ShowTutorial { get; }
@@ -93,6 +96,7 @@ namespace ZeroHour.Tower
         public override bool SnapPerfectLandings => false;
         public override bool ShowTowerShot => false;
         public override bool ShowJuice => false;
+        public override bool PlaySounds => false;
         public override float FloorHeight => 1f;
         public override string FloorArtFolder => "Floors";
         public override float DragSensitivity => 0f;
@@ -142,6 +146,7 @@ namespace ZeroHour.Tower
         public override bool SnapPerfectLandings => true;
         public override bool ShowTowerShot => true;
         public override bool ShowJuice => true;
+        public override bool PlaySounds => true;
         public override float FloorHeight => 0.75f;
         public override string FloorArtFolder => "FloorsWide";
         public override float DragSensitivity => 1f;

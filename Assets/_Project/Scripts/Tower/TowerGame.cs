@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
+using ZeroHour.Audio;
 
 namespace ZeroHour.Tower
 {
@@ -19,6 +20,12 @@ namespace ZeroHour.Tower
         private const float IncomeRise = 0.8f;
         private const float IncomeDuration = 0.7f;
         private static readonly Color IncomeColor = new Color(0.45f, 1f, 0.45f);
+        private const float MusicVolume = 0.5f;
+        private const float EndScreenMusicVolume = 0.2f;
+        private const float CoinVolume = 0.4f;
+        private const float LandPitchJitter = 0.05f;
+        private const float NewBestSoundDelay = 0.5f;
+        private const int TickFromSecond = 5;
         private const int NeighborFontSize = 40;
         private const float NeighborPopupSideOffset = 0.9f;
         private const float NeighborRise = 0.5f;
@@ -113,6 +120,8 @@ namespace ZeroHour.Tower
         private float shakeTimeLeft;
         private float incomePopupTimer;
         private float moneyAtLastPopup;
+        private int lastTickSecond;
+        private float newBestSoundTime = -1f;
         private bool isGameOver;
         private float gameOverTime;
 
@@ -154,6 +163,8 @@ namespace ZeroHour.Tower
             hud.PopulationLabel = ruleset.PopulationLabel;
             if (ruleset.ShowMenuButton)
                 hud.AddMenuButton();
+            if (ruleset.PlaySounds)
+                hud.AddMuteButton(AudioManager.Instance.IsMuted);
             StartRound();
         }
 
@@ -192,6 +203,10 @@ namespace ZeroHour.Tower
             shakeTimeLeft = 0f;
             incomePopupTimer = 0f;
             moneyAtLastPopup = 0f;
+            lastTickSecond = int.MaxValue;
+            newBestSoundTime = -1f;
+            if (ruleset.PlaySounds)
+                AudioManager.Instance.PlayMusic("music_game", MusicVolume);
             spawnTimer = 0f;
             lastSpawnX = null;
             lastSpawnType = null;
@@ -206,6 +221,9 @@ namespace ZeroHour.Tower
             isGameOver = true;
             gameOverTime = Time.time;
             hud.HideTutorial();
+            PlaySound("time_up");
+            if (ruleset.PlaySounds)
+                AudioManager.Instance.SetMusicVolume(EndScreenMusicVolume);
             if (ruleset.ShowTowerShot)
             {
                 towerShotTime = 0f;
@@ -226,6 +244,7 @@ namespace ZeroHour.Tower
             bool isNewBest = !PlayerPrefs.HasKey(bestKey) || score > PlayerPrefs.GetInt(bestKey);
             if (isNewBest)
             {
+                newBestSoundTime = Time.time + NewBestSoundDelay;
                 PlayerPrefs.SetInt(bestKey, score);
                 PlayerPrefs.Save(); // WebGL: written to IndexedDB right away
             }
@@ -243,15 +262,32 @@ namespace ZeroHour.Tower
                     UpdateShake();
             }
 
+            if (ruleset.PlaySounds && TryGetTap(out Vector2 muteTap) && hud.IsOverMuteButton(muteTap))
+            {
+                AudioManager.Instance.IsMuted = !AudioManager.Instance.IsMuted;
+                hud.SetMuted(AudioManager.Instance.IsMuted);
+                PlaySound("ui_click");
+                return;
+            }
+
             if (isGameOver)
             {
+                if (newBestSoundTime >= 0f && Time.time >= newBestSoundTime)
+                {
+                    newBestSoundTime = -1f;
+                    PlaySound("new_best");
+                }
+
                 // Taps wait for the end shot to finish.
                 float delay = towerShotTime >= 0f ? Mathf.Max(restartDelay, towerShotDuration) : restartDelay;
                 if (Time.time - gameOverTime >= delay && TryGetTap(out Vector2 tapPosition))
                 {
                     // Checked on press like the restart, so the restart can't hide the button first.
                     if (hud.IsOverMenuButton(tapPosition))
+                    {
+                        PlaySound("ui_click");
                         SceneManager.LoadScene(ZeroHour.GameBootstrap.VersionSelectScene);
+                    }
                     else
                         StartRound();
                 }
@@ -268,6 +304,11 @@ namespace ZeroHour.Tower
             if (ruleset.ShowTutorial && (Tower.Floors.Count > 0 || roundElapsed >= tutorialDuration))
                 hud.FadeOutTutorial();
             hud.Refresh(stats, Tower.Stability, timeLeft);
+            // A tick on every full second of the last five.
+            int second = Mathf.CeilToInt(timeLeft);
+            if (second < lastTickSecond && second >= 1 && second <= TickFromSecond)
+                PlaySound("tick");
+            lastTickSecond = second;
             if (timeLeft <= 0f)
             {
                 EndRound();
@@ -312,6 +353,9 @@ namespace ZeroHour.Tower
         private void OnFloorLanded(FallingFloor floor, bool isPerfect)
         {
             stats.RegisterLanding(isPerfect);
+            PlaySound("land_" + floor.Type.Name.ToLowerInvariant(), 1f, Random.Range(1f - LandPitchJitter, 1f + LandPitchJitter));
+            if (isPerfect)
+                PlaySound("perfect_" + Mathf.Max(1, stats.ComboMultiplier));
             if (isPerfect && ruleset.ShowPerfectPopup)
             {
                 int combo = stats.ComboMultiplier;
@@ -335,6 +379,7 @@ namespace ZeroHour.Tower
 
             string label;
             Color color;
+            PlaySound(effect.Happiness < 0 ? "synergy_bad" : "synergy_good");
             if (effect.Happiness > 0)
             {
                 label = $"+{effect.Happiness} Joy";
@@ -359,6 +404,7 @@ namespace ZeroHour.Tower
         private void OnTowerCollapsed()
         {
             stats.RegisterCollapse();
+            PlaySound("collapse");
             if (ruleset.ShowJuice)
                 shakeTimeLeft = shakeDuration;
             ChangeTime(-ruleset.CollapseTimePenalty);
@@ -377,6 +423,7 @@ namespace ZeroHour.Tower
                 return;
             var roof = new Vector3(Tower.TopOffset, Tower.LocalTop + IncomePopupHeight, 0f);
             WorldPopup.Show(hud, Camera, Tower.transform, roof, $"+${earned}", IncomeFontSize, IncomeColor, IncomeRise, IncomeDuration);
+            PlaySound("coin", CoinVolume);
         }
 
         // Shakes the (still) camera around its start position, fading out, then puts it back exactly.
@@ -394,6 +441,15 @@ namespace ZeroHour.Tower
             Camera.transform.position = home + (Vector3)(Random.insideUnitCircle * strength);
         }
 
+        public bool IsOverHudButton(Vector2 screenPosition) => hud.IsOverMuteButton(screenPosition);
+
+        // The jam version is silent.
+        private void PlaySound(string clipName, float volume = 1f, float pitch = 1f)
+        {
+            if (ruleset.PlaySounds)
+                AudioManager.Instance.Play(clipName, volume, pitch);
+        }
+
         // Bonus or penalty from the tower; only during the round.
         private void ChangeTime(float change)
         {
@@ -401,6 +457,7 @@ namespace ZeroHour.Tower
                 return;
             float before = timeLeft;
             timeLeft = ruleset.ApplyTimeChange(timeLeft, change);
+            PlaySound(change > 0f ? "time_bonus" : "time_penalty");
             hud.ShowTimeChange(timeLeft - before, change);
         }
 
