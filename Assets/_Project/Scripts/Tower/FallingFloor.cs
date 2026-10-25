@@ -4,13 +4,14 @@ namespace ZeroHour.Tower
 {
     public class FallingFloor : MonoBehaviour
     {
-        private static readonly Color UnpoweredTint = new Color(0.35f, 0.35f, 0.4f);
+        private static readonly Color UnpoweredTint = new Color(0.45f, 0.45f, 0.5f);
 
         private TowerGame game;
         private float fallSpeed;
         private SpriteRenderer spriteRenderer;
         private bool isDebris;
         private float spin;
+        private bool hasArt;
 
         public FloorType Type { get; private set; }
         public float Size { get; private set; }
@@ -27,10 +28,23 @@ namespace ZeroHour.Tower
             Size = size;
 
             spriteRenderer = gameObject.AddComponent<SpriteRenderer>();
-            spriteRenderer.sprite = sprite;
-            spriteRenderer.color = type.Color;
-            spriteRenderer.drawMode = SpriteDrawMode.Sliced;
-            spriteRenderer.size = new Vector2(size, size);
+
+            // Floor art from Resources/Floors/<type name>; the tinted square is the fallback.
+            Sprite art = Resources.Load<Sprite>($"Floors/{type.Name}");
+            hasArt = art != null;
+            if (hasArt)
+            {
+                spriteRenderer.sprite = art;
+                spriteRenderer.drawMode = SpriteDrawMode.Simple;
+                transform.localScale = Vector3.one * (size / art.bounds.size.x);
+            }
+            else
+            {
+                spriteRenderer.sprite = sprite;
+                spriteRenderer.drawMode = SpriteDrawMode.Sliced;
+                spriteRenderer.size = new Vector2(size, size);
+            }
+            SetPowered(true);
         }
 
         private void Update()
@@ -73,7 +87,8 @@ namespace ZeroHour.Tower
         public void SetPowered(bool isPowered)
         {
             bool producesPower = Type.Energy > 0;
-            spriteRenderer.color = isPowered || producesPower ? Type.Color : Type.Color * UnpoweredTint;
+            Color baseColor = hasArt ? Color.white : Type.Color;
+            spriteRenderer.color = isPowered || producesPower ? baseColor : baseColor * UnpoweredTint;
         }
 
         // Falls off the collapsing tower and never attaches again.
