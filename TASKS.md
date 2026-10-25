@@ -95,7 +95,7 @@ Po każdym tasku: kompilacja/testy → commit (mały, z opisem). Build WebGL + d
   - Test EditMode na funkcji premii: H=1 → 1,46 s; H=20 → 0,75 s; H=40 → 0,45 s; PERFECT +1; kara −3 z obcięciem do 0; limit 30.
 
 - [x] **11. [post-jam] Combo za idealne lądowania.** Licznik `PerfectStreak`: +1 przy PERFECT, zero przy nieidealnym lądowaniu (zawalenie też zeruje). **Mnożnik dochodu** = `streak ≥ 2 ? min(streak, 5) : 1` (x2…x5), działa razem z premią za szczęście (mnożą się). Napis PERFECT przy serii ≥ 2: **„PERFECT! x3”**. HUD: przy linijce Money, gdy mnożnik > 1, dopisek **„COMBO x3”** w kolorze żółtym. Stałe w `PostJamCityStats`/rulesecie. EditMode test: seria 3 PERFECT → x3, potem zwykłe lądowanie → x1; maks. x5.
-- [ ] **12. [post-jam] Juice.**
+- [x] **12. [post-jam] Juice.**
   - **Wstrząs ekranu przy zawaleniu:** kamera drga wokół swojej stałej pozycji ~0,3 s, amplituda ~0,15 j., wygasająca. Po wstrząsie kamera wraca dokładnie na miejsce (kamera w post-jam stoi — task 8).
   - **„+$” z wieży:** co 1 s, gdy dochód > 0, nad szczytem wieży wylatuje mały napis **„+$N”** (N = zarobione w tej sekundzie, zaokrąglone; ~48 px, zielony z obrysem), unosi się ~0,8 j. i znika w ~0,7 s. Można użyć mechaniki z `PerfectPopup`.
   - **Sprężyste lądowanie:** złapane piętro na chwilę się spłaszcza (skala ×1,15 w X, ×0,85 w Y) i wraca do 1 w ~0,15 s. Tylko wizualnie — nie zmieniaj pozycji kolizyjnych ani wysokości wieży.
