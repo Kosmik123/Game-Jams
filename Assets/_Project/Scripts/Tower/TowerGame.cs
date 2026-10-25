@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace ZeroHour.Tower
 {
@@ -46,12 +47,27 @@ namespace ZeroHour.Tower
         [SerializeField]
         private float cameraFollowSpeed = 3f;
 
-        private readonly CityStats stats = new CityStats();
+        [Header("Round")]
+        [SerializeField]
+        private float roundDuration = 90f;
+
+        [SerializeField]
+        private int scorePerFloor = 10;
+
+        [Tooltip("Seconds after the round ends before a tap restarts, so a held finger doesn't skip the end screen.")]
+        [SerializeField]
+        private float restartDelay = 0.7f;
+
+        private readonly List<FallingFloor> spawnedFloors = new List<FallingFloor>();
+        private CityStats stats;
         private TowerHud hud;
         private Sprite squareSprite;
         private float spawnTimer;
         private float baseY;
         private float startCameraY;
+        private float timeLeft;
+        private bool isGameOver;
+        private float gameOverTime;
 
         public Camera Camera { get; private set; }
         public TowerController Tower { get; private set; }
@@ -76,23 +92,69 @@ namespace ZeroHour.Tower
             baseY = BottomY + baseMargin;
 
             squareSprite = CreateSquareSprite(32, 3);
+            hud = gameObject.AddComponent<TowerHud>();
+            StartRound();
+        }
+
+        // Restart rebuilds the game objects instead of reloading the scene,
+        // because the bootstrap only runs on the first scene load.
+        private void StartRound()
+        {
+            foreach (FallingFloor floor in spawnedFloors)
+            {
+                if (floor != null)
+                    Destroy(floor.gameObject);
+            }
+            spawnedFloors.Clear();
+            if (Tower != null)
+                Destroy(Tower.gameObject);
+
+            Vector3 cameraPosition = Camera.transform.position;
+            cameraPosition.y = startCameraY;
+            Camera.transform.position = cameraPosition;
 
             Tower = new GameObject("Tower").AddComponent<TowerController>();
             Tower.transform.position = new Vector3(0f, BaseY, 0f);
             Tower.Init(this, squareSprite, platformWidth);
 
-            hud = gameObject.AddComponent<TowerHud>();
+            stats = new CityStats();
+            timeLeft = roundDuration;
+            spawnTimer = 0f;
+            isGameOver = false;
+            hud.HideGameOver();
+        }
+
+        private void EndRound()
+        {
+            isGameOver = true;
+            gameOverTime = Time.time;
+            int score = stats.Height * scorePerFloor + Mathf.FloorToInt(stats.Money);
+            hud.ShowGameOver(stats.Height, stats.Money, score);
         }
 
         private void Update()
         {
             FitCamera();
 
+            if (isGameOver)
+            {
+                if (Time.time - gameOverTime >= restartDelay && WasTapped())
+                    StartRound();
+                return;
+            }
+
             stats.Recalculate(Tower.Floors);
             stats.Tick(Time.deltaTime);
             foreach (FallingFloor floor in Tower.Floors)
                 floor.SetPowered(stats.IsPowered);
-            hud.Refresh(stats, Tower.Stability);
+
+            timeLeft -= Time.deltaTime;
+            hud.Refresh(stats, Tower.Stability, timeLeft);
+            if (timeLeft <= 0f)
+            {
+                EndRound();
+                return;
+            }
 
             spawnTimer -= Time.deltaTime;
             if (spawnTimer <= 0f)
@@ -163,6 +225,15 @@ namespace ZeroHour.Tower
             var floor = new GameObject("Floor").AddComponent<FallingFloor>();
             floor.transform.position = position;
             floor.Init(this, type, squareSprite, floorSize, fallSpeed);
+            spawnedFloors.Add(floor);
+        }
+
+        private static bool WasTapped()
+        {
+            var touchscreen = Touchscreen.current;
+            if (touchscreen != null && touchscreen.primaryTouch.press.wasPressedThisFrame)
+                return true;
+            return Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame;
         }
 
         // White square with a darker border; 9-sliced so the border keeps its width at any size.
