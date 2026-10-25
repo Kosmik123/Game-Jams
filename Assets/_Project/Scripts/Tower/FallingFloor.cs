@@ -64,7 +64,7 @@ namespace ZeroHour.Tower
             TowerController tower = game.Tower;
             float bottom = position.y - Size / 2f;
             bool crossedTop = previousBottom >= tower.TopY && bottom < tower.TopY;
-            if (!isDebris && crossedTop && Mathf.Abs(position.x - tower.TopX) < Size)
+            if (!isDebris && !tower.IsFrozen && crossedTop && Mathf.Abs(position.x - tower.TopX) < Size)
             {
                 IsAttached = true;
                 tower.Attach(this);

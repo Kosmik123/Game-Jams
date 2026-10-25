@@ -180,6 +180,7 @@ namespace ZeroHour.Tower
                 towerShotStartPosition = Camera.transform.position;
                 towerShotStartSize = Camera.orthographicSize;
                 Tower.SuppressSway = true;
+                Tower.IsFrozen = true;
             }
             int score = stats.Height * scorePerFloor + Mathf.FloorToInt(stats.Money);
             string bestKey = ruleset.BestScoreKey;

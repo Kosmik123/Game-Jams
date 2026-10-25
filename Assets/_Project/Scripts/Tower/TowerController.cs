@@ -57,6 +57,9 @@ namespace ZeroHour.Tower
         // Calms the visual sway to zero (end-of-round shot).
         public bool SuppressSway { get; set; }
 
+        // No more floors join the tower, so it matches the frozen end-of-round stats.
+        public bool IsFrozen { get; set; }
+
         // World bounds of the platform and the stacked floors, from their logical positions.
         public void GetBounds(out float minX, out float maxX, out float bottomY, out float topY)
         {
