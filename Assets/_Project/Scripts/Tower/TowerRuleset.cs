@@ -69,7 +69,7 @@ namespace ZeroHour.Tower
 
         public abstract bool ShowTutorial { get; }
 
-        // "Menu" on the end screen; the jam version has no way back (reload the page).
+        // "Menu" on the end screen, back to the version select.
         public abstract bool ShowMenuButton { get; }
     }
 
@@ -98,7 +98,7 @@ namespace ZeroHour.Tower
         public override float DragSensitivity => 0f;
         public override bool ShowPerfectPopup => false;
         public override bool ShowTutorial => false;
-        public override bool ShowMenuButton => false;
+        public override bool ShowMenuButton => true;
     }
 
     public class PostJamRuleset : TowerRuleset
