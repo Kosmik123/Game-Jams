@@ -107,14 +107,15 @@ namespace ZeroHour.Tower
         {
             float previousX = floors.Count > 0 ? floors[floors.Count - 1].TowerPosition.x : 0f;
             float offsetX = floor.transform.position.x - transform.position.x;
+            float placeX = Landing.PlaceX(offsetX, previousX, floor.Size, perfectOffset, game.Ruleset.SnapPerfectLandings, out bool isPerfect);
 
             floor.transform.SetParent(transform, true);
-            floor.PlaceInTower(new Vector2(offsetX, localTop + floor.Size / 2f));
+            floor.PlaceInTower(new Vector2(placeX, localTop + floor.Size / 2f), offsetX - placeX);
             localTop += floor.Size;
             floors.Add(floor);
 
-            float offset = Mathf.Abs(offsetX - previousX) / floor.Size;
-            if (offset < perfectOffset)
+            float offset = Mathf.Abs(placeX - previousX) / floor.Size;
+            if (isPerfect)
             {
                 instability = Mathf.Max(0f, instability - perfectCalm);
                 PerfectLanding?.Invoke(floor);
