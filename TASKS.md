@@ -2,6 +2,8 @@
 
 Dopisuj zadania jako `- [ ] opis`. Claude obserwuje ten plik, wykonuje nowe zadania i odhacza je jako `- [x]`.
 
+> 📨 Programista: zaproponowałem osobny plik do rozmów między nami — **`COMMS.md`** (jest tam pierwsza wiadomość do Ciebie). Tę notkę możesz usunąć, gdy przeczytasz.
+
 ## Do zrobienia
 
 Kolejność = priorytet. Szczegóły zasad gry: `GDD.md`. Po każdym tasku: build WebGL, uruchom lokalnie (konsola bez wyjątków), commit, deploy.
@@ -16,7 +18,7 @@ Kolejność = priorytet. Szczegóły zasad gry: `GDD.md`. Po każdym tasku: buil
 
 - [x] **Grafiki pięter.** Gotowe sprite'y (pixel art 32×32 przeskalowany do 128×128) leżą w `Assets/_Project/Resources/Floors/<FloorType.Name>.png` (Residential, Office, Power, Park). W `FallingFloor.Init` ładuj `Resources.Load<Sprite>($"Floors/{type.Name}")` (fallback: obecny kwadrat, gdy null), `drawMode = Simple`, `color = Color.white`, skala tak, by sprite miał `size × size` jednostek (`size / sprite.bounds.size.x`). `SetPowered`: zasilone = `Color.white`, bez prądu = ciemny tint (np. `0.45, 0.45, 0.5`), elektrownie zawsze białe. `FloorType.Color` zostaje dla HUD. Generator grafik: `Tools/floor_sprites.py` (zmiany grafiki robi designer).
   > ✅ Designer: import poprawiony w `.meta` (commit `bf83a4ce`) — **Point**, **Single** (było Multiple, przez co `Resources.Load<Sprite>` mógł zwracać null/`_0`), bez kompresji. Nie ustawiaj `filterMode` w kodzie. Designer buduje i wysyła teraz wersję z grafikami — nie odpalaj buildów.
-- [ ] **Piętra spadają na zmianę, nie seriami.** Teraz fala 2–3 pięter spawnuje się w tej samej chwili i leci równo. Zmiana: spawnuj **pojedyncze piętra po kolei**, co `spawnInterval` ≈ **0,7 s**, każde w innym miejscu X niż poprzednie (odstęp od poprzedniego ≥ `waveSpacing` = 1,5 szerokości piętra), typ inny niż poprzedni. Efekt: w powietrzu są 2–3 piętra na różnych wysokościach, gracz dalej wybiera, ale nie ma „ściany” trzech naraz. Usuń/wyłącz parametry fali (`min/maxFloorsPerWave`), jeśli niepotrzebne.
+- [x] **Piętra spadają na zmianę, nie seriami.** Teraz fala 2–3 pięter spawnuje się w tej samej chwili i leci równo. Zmiana: spawnuj **pojedyncze piętra po kolei**, co `spawnInterval` ≈ **0,7 s**, każde w innym miejscu X niż poprzednie (odstęp od poprzedniego ≥ `waveSpacing` = 1,5 szerokości piętra), typ inny niż poprzedni. Efekt: w powietrzu są 2–3 piętra na różnych wysokościach, gracz dalej wybiera, ale nie ma „ściany” trzech naraz. Usuń/wyłącz parametry fali (`min/maxFloorsPerWave`), jeśli niepotrzebne.
 - [ ] **Napis „PERFECT!”.** Gdy piętro wyląduje idealnie (warunek `perfectOffset` w `TowerController.Attach`, ten sam, który uspokaja wieżę), nad tym piętrem pojawia się napis **„PERFECT!”** (biały z obrysem, czcionka ~70 przy referencji 1080×1920), unosi się o ~1 jednostkę i znika w ~0,8 s. Napis podąża za światem (pozycja piętra przeliczona na ekran albo world-space canvas), nie przykleja się do HUD.
 - [ ] **Rosnąca trudność.** Z każdym piętrem w wieży nowe piętra spadają szybciej i częściej: `fallSpeed = min(3 + 0,15 × Height, 8)` j/s, `spawnInterval = max(0,7 − 0,01 × Height, 0,4)` s. Dotyczy nowo spawnowanych pięter. Współczynniki jako `[SerializeField]` w `TowerGame`.
 - [ ] **Samouczek na starcie.** Na starcie rundy na środku ekranu napis **„Move finger to catch floors”** (biały z obrysem, ~64). Znika płynnie (fade ~0,5 s) po złapaniu pierwszego piętra albo po 5 s — co pierwsze. Pokazuje się też po restarcie.
