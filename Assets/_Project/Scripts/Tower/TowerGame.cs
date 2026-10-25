@@ -25,20 +25,14 @@ namespace ZeroHour.Tower
         [SerializeField]
         private float fallSpeed = 3f;
 
-        [Header("Waves")]
-        [Tooltip("Seconds between waves of falling floors.")]
+        [Header("Spawning")]
+        [Tooltip("Seconds between falling floors.")]
         [SerializeField]
-        private float spawnInterval = 1.8f;
+        private float spawnInterval = 0.7f;
 
+        [Tooltip("Minimum horizontal distance from the previous floor, in floor widths.")]
         [SerializeField]
-        private int minFloorsPerWave = 2;
-
-        [SerializeField]
-        private int maxFloorsPerWave = 3;
-
-        [Tooltip("Minimum horizontal distance between floors in a wave, in floor widths.")]
-        [SerializeField]
-        private float waveSpacing = 1.5f;
+        private float spawnSpacing = 1.5f;
 
         [Tooltip("Screen height fraction (from bottom) where the camera keeps the tower top.")]
         [SerializeField]
@@ -63,6 +57,8 @@ namespace ZeroHour.Tower
         private TowerHud hud;
         private Sprite squareSprite;
         private float spawnTimer;
+        private float? lastSpawnX;
+        private FloorType lastSpawnType;
         private float baseY;
         private float startCameraY;
         private float timeLeft;
@@ -120,6 +116,8 @@ namespace ZeroHour.Tower
             stats = new CityStats();
             timeLeft = roundDuration;
             spawnTimer = 0f;
+            lastSpawnX = null;
+            lastSpawnType = null;
             isGameOver = false;
             hud.HideGameOver();
         }
@@ -160,7 +158,7 @@ namespace ZeroHour.Tower
             if (spawnTimer <= 0f)
             {
                 spawnTimer = spawnInterval;
-                SpawnWave();
+                SpawnNextFloor();
             }
         }
 
@@ -178,46 +176,24 @@ namespace ZeroHour.Tower
             Camera.transform.position = cameraPosition;
         }
 
-        // A row of floors at the same height; the player can catch only one of them.
-        private void SpawnWave()
+        // One floor at a time, away from the previous one and of a different type,
+        // so a few floors at different heights are in the air for the player to choose from.
+        private void SpawnNextFloor()
         {
-            int count = Random.Range(minFloorsPerWave, maxFloorsPerWave + 1);
             float halfRange = (playWidth - floorSize) / 2f;
-            float minDistance = waveSpacing * floorSize;
-
-            var types = new List<FloorType>(FloorType.All);
-            var positionsX = new List<float>();
-            for (int i = 0; i < count; i++)
-            {
-                if (!TryPickWaveX(positionsX, halfRange, minDistance, out float x))
-                    break;
-                positionsX.Add(x);
-
-                // Different types while there are unused ones left.
-                if (types.Count == 0)
-                    types.AddRange(FloorType.All);
-                int typeIndex = Random.Range(0, types.Count);
-                FloorType type = types[typeIndex];
-                types.RemoveAt(typeIndex);
-
-                SpawnFloor(new Vector3(x, TopY + floorSize, 0f), type);
-            }
-        }
-
-        private static bool TryPickWaveX(List<float> takenX, float halfRange, float minDistance, out float x)
-        {
-            for (int attempt = 0; attempt < 30; attempt++)
-            {
+            float minDistance = spawnSpacing * floorSize;
+            float x = Random.Range(-halfRange, halfRange);
+            for (int attempt = 0; attempt < 30 && lastSpawnX.HasValue && Mathf.Abs(x - lastSpawnX.Value) < minDistance; attempt++)
                 x = Random.Range(-halfRange, halfRange);
-                bool isFree = true;
-                foreach (float other in takenX)
-                    isFree &= Mathf.Abs(other - x) >= minDistance;
-                if (isFree)
-                    return true;
-            }
 
-            x = 0f;
-            return false;
+            FloorType type;
+            do
+                type = FloorType.GetRandom();
+            while (type == lastSpawnType);
+
+            lastSpawnX = x;
+            lastSpawnType = type;
+            SpawnFloor(new Vector3(x, TopY + floorSize, 0f), type);
         }
 
         private void SpawnFloor(Vector3 position, FloorType type)
