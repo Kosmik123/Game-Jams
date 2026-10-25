@@ -36,3 +36,18 @@ OK, przyjąłem: freeze 02:13. Po buildzie weryfikacyjnym commituję „Piętra 
 
 ### [02:14] Menedżer → Programista
 [BUILD END] Finalna wersja 39a94ece wysłana na itch.io. Koniec pracy — nic już nie zmieniamy.
+
+---
+## Etap post-jam (25.10.2026)
+
+### [15:40] Menedżer → Programista
+🔔 **Start pracy, etap post-jam.** Obserwuj `TASKS.md` (nowe taski) i ten plik.
+
+Co się zmienia:
+- Gra będzie miała **dwie wersje w jednym buildzie**: „Jam version” (zamrożona, jak na itch.io po jamie) i „Post-jam version” (rozwijana). Wybór na nowej, pierwszej scenie. Szczegóły w `GDD.md` → „Wersje gry” i w `TASKS.md`.
+- Kolejność: **1. abstrakcja `TowerRuleset` (Jam/PostJam)** → **2. scena wyboru wersji** → potem PERFECT, trudność, samouczek — te trzy tylko w post-jam.
+- Gałąź zostaje `0h-jam-2026`. Commit po każdym tasku, odhaczasz `- [x]` w `TASKS.md`.
+- Buildy i deploy robię ja. Twój build weryfikacyjny — OK, z protokołem `[BUILD START]`/`[BUILD END]` tutaj i sprawdzeniem `Temp\UnityLockfile`. Deploy — nigdy.
+- Scenę i Build Settings twórz skryptem edytorowym (batchmode), nie ręcznie w YAML. Nie zgaduj GUID-ów.
+
+Pytania i propozycje (np. gdy abstrakcja gdzieś za droga) pisz tutaj. Po skończeniu taska 2 daj znać — zrobię build i deploy.

@@ -4,6 +4,13 @@ Temat jamu: **stack**. Jam trwa 1 godzinę (powtórzona godzina przy zmianie cza
 Plik jest źródłem prawdy o decyzjach projektowych — każdy agent czyta go przed pracą i dopisuje nowe decyzje.
 Sekcje oznaczone **[DECYZJA]** są ustalone, **[PROPOZYCJA]** czekają na akceptację autora.
 
+## Wersje gry: jam / post-jam [DECYZJA, 25.10.2026]
+- Gra startuje od **sceny wyboru wersji** (`VersionSelect`, scena nr 0): przyciski **„Jam version”** i **„Post-jam version”**. Jeden build WebGL na itch.io zawiera obie wersje.
+- **Jam version** = rozgrywka dokładnie jak w buildzie z jamu (`39a94ec`): runda 90 s, stała prędkość/interwał, bez PERFECT i samouczka. Jedyny dodatek: powrót do menu z ekranu końca.
+- **Post-jam version** = dalszy rozwój: runda 40 s, PERFECT!, rosnąca trudność, samouczek i kolejne funkcje.
+- Różnice między wersjami żyją w `TowerRuleset` (`JamRuleset`, `PostJamRuleset`); wspólny kod nie sprawdza wersji „ifami” rozsianymi po logice.
+- Poniższe sekcje opisują wersję post-jam, chyba że zaznaczono inaczej.
+
 ## Platforma i testowanie [DECYZJA]
 - Gra **pionowa (portrait)**, mobile-first; testy wyłącznie przez build WebGL → itch.io (https://kosmik123.itch.io/0h-game-jam-2026) → przeglądarka telefonu.
 - Autor nie ma dostępu do edytora Unity w trakcie jamu → **cała scena budowana w kodzie** (bootstrap `[RuntimeInitializeOnLoadMethod]`), bez edycji scen/prefabów.
@@ -34,7 +41,7 @@ Budynek jako „miasto w pionie”, każde piętro wpływa na statystyki (warto�
 - Cele wysokości jako poziomy — otwarte, na razie nie robimy.
 
 ## Runda i wynik [DECYZJA]
-- Runda trwa **40 s** (skrócone z 90 s — było za długo). Po czasie spawn się zatrzymuje i pojawia się ekran końca: Height, Money, **Score = Height × 10 + Money**, napis „Tap to play again”.
+- Runda trwa **40 s** w post-jam (skrócone z 90 s — było za długo); wersja jamowa zostaje przy 90 s. Po czasie spawn się zatrzymuje i pojawia się ekran końca: Height, Money, **Score = Height × 10 + Money**, napis „Tap to play again”.
 - Tap/klik restartuje grę bez przeładowania sceny (bootstrap `AfterSceneLoad` nie odpala się ponownie po `LoadScene`).
 
 ## HUD [DECYZJA]
