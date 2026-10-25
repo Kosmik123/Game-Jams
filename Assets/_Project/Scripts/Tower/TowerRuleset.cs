@@ -23,7 +23,8 @@ namespace ZeroHour.Tower
         // Camera stays still and the tower sinks, instead of the camera following the tower up.
         public abstract bool FixedCamera { get; }
 
-        // Platform moves by the finger's movement instead of jumping under the finger.
+        // Touch moves the platform by the finger's movement instead of jumping under the finger
+        // (the mouse still places it under the cursor).
         public abstract bool RelativeControl { get; }
 
         // World units of platform movement per world unit of finger movement (relative control).
