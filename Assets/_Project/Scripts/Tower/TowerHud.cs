@@ -9,6 +9,7 @@ namespace ZeroHour.Tower
     {
         private const string WarningColor = "#ff5555";
         private const string NewBestLabel = "NEW BEST!";
+        private const string ComboColor = "#ffd84d";
         private const int TimeChangeFontSize = 50;
         private const float TimeChangeRise = 40f;
         private const float TimeChangeDuration = 0.6f;
@@ -227,7 +228,8 @@ namespace ZeroHour.Tower
             string stabilityColor = stability > 0.5f ? "white" : stability > 0.25f ? "#ffcc33" : WarningColor;
             statsText.text =
                 $"Height {stats.Height}\n" +
-                $"$ {stats.Money:0} (+{stats.Income:0.0}/s)\n" +
+                $"$ {stats.Money:0} (+{stats.Income:0.0}/s)" +
+                (stats.ComboMultiplier > 1 ? $" <color={ComboColor}>COMBO x{stats.ComboMultiplier}</color>" : "") + "\n" +
                 $"{Label(PopulationLabel, 0)} {stats.Population}\n" +
                 $"{Label("Jobs", 1)} {stats.Jobs}\n" +
                 $"{Label("Energy", 2)} {Signed(stats.Energy)}\n" +

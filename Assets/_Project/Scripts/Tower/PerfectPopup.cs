@@ -19,10 +19,11 @@ namespace ZeroHour.Tower
         private Color outlineColor;
         private float age;
 
-        public static void Show(TowerHud hud, Camera worldCamera, Transform anchor)
+        // combo > 1 adds the multiplier: "PERFECT! x3".
+        public static void Show(TowerHud hud, Camera worldCamera, Transform anchor, int combo = 1)
         {
             Text text = hud.CreateWorldText("Perfect Popup", FontSize);
-            text.text = "PERFECT!";
+            text.text = combo > 1 ? $"PERFECT! x{combo}" : "PERFECT!";
             var popup = text.gameObject.AddComponent<PerfectPopup>();
             popup.worldCamera = worldCamera;
             popup.anchor = anchor;
