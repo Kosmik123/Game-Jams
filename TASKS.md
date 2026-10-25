@@ -74,6 +74,8 @@ Po każdym tasku: kompilacja/testy → commit (mały, z opisem). Build WebGL + d
   - Kod absolutny weź wspólny z jamem (nie kopiuj, jeśli się da); jam zachowuje się 1:1 jak dotąd.
   - Zaktualizuj `RelativeDragTests`/Play Mode: mysz bez przycisku → platforma pod kursorem; dotyk → przeciąganie jak w tasku 9.
 
+- [ ] **18. ⚡ PRIORYTET (zaraz po 16) — w zakresie ruchu wygrywa dach, nie ekran.** Poprawka taska 17 (decyzja autora): platforma i tak zwykle jest pod ekranem (kamera stoi, wieża zjeżdża — widać kilka górnych pięter), więc **usuń ograniczenie platformy do widocznej szerokości ekranu**. Zakres ruchu = tylko warunek dachu: `platformX ∈ [−playWidth/2 − topOffset, playWidth/2 − topOffset]`, dach zawsze dosięga obu krawędzi `playWidth` niezależnie od wychylenia. Mysz: dach pod kursorem (bez zmian). Zaktualizuj `PlatformRangeTests` (np. offset ±20 → zakres przesunięty o −20, bez przycinania do ekranu). Jam bez zmian.
+
 - [ ] **11. [post-jam] Combo za idealne lądowania.** Licznik `PerfectStreak`: +1 przy PERFECT, zero przy nieidealnym lądowaniu (zawalenie też zeruje). **Mnożnik dochodu** = `streak ≥ 2 ? min(streak, 5) : 1` (x2…x5), działa razem z premią za szczęście (mnożą się). Napis PERFECT przy serii ≥ 2: **„PERFECT! x3”**. HUD: przy linijce Money, gdy mnożnik > 1, dopisek **„COMBO x3”** w kolorze żółtym. Stałe w `PostJamCityStats`/rulesecie. EditMode test: seria 3 PERFECT → x3, potem zwykłe lądowanie → x1; maks. x5.
 - [ ] **12. [post-jam] Juice.**
   - **Wstrząs ekranu przy zawaleniu:** kamera drga wokół swojej stałej pozycji ~0,3 s, amplituda ~0,15 j., wygasająca. Po wstrząsie kamera wraca dokładnie na miejsce (kamera w post-jam stoi — task 8).
