@@ -10,8 +10,8 @@ Sekcje oznaczone **[DECYZJA]** są ustalone, **[PROPOZYCJA]** czekają na akcept
 - Grafika na razie generowana w kodzie (kwadraty z ramką, kolor = typ piętra).
 
 ## Rdzeń rozgrywki [DECYZJA]
-- Na dole ekranu jest **platforma (podstawa wieżowca)**. Porusza się tylko w osi **X**: tam gdzie palec (lub kursor myszy), tam platforma. W osi Y stoi w miejscu.
-- Z górnej krawędzi ekranu **spadają piętra** — kwadraty różnych typów (różne grafiki/kolory).
+- Na dole ekranu jest **platforma (podstawa wieżowca)**. Porusza się tylko w osi **X**: tam gdzie palec (lub kursor myszy), tam platforma. W osi Y stoi w miejscu. **Bez dotyku platforma zostaje w miejscu** (nie wraca do krawędzi).
+- Z górnej krawędzi ekranu **spadają piętra falami**: 2–3 piętra naraz, na tej samej wysokości, w różnych miejscach X (odstęp ≥ 1,5 szerokości piętra), najlepiej różnych typów; fala co ~1,8 s. Gracz wybiera, które piętro złapać — to główna decyzja w grze.
 - Piętro, które spadnie na szczyt wieży (przetnie jego wysokość nad wieżą), dokleja się do budynku z zachowaniem przesunięcia w X. Chybione piętro spada dalej i znika.
 - **Kamera** jedzie w górę razem z budynkiem: szczyt wieży trzyma się na ~40% wysokości ekranu, widać tylko kilka górnych pięter, a nad budynkiem zostaje wolna przestrzeń na sterowanie i decyzje gracza.
 
@@ -28,8 +28,21 @@ Budynek jako „miasto w pionie”, każde piętro wpływa na statystyki (warto�
 - **Energia < 0** → BLACKOUT: piętra (poza elektrowniami) ciemnieją, dochód = 0.
 - **Szczęście < 0** → każdy punkt poniżej zera wyprowadza 5 mieszkańców.
 - **Stabilność** (`TowerController.cs`): niestabilność += (przesunięcie/szerokość)² × 120 przy każdym piętrze; idealne trafienie (< 12% szerokości) uspokaja o 15. Przy 100% górne 3 piętra się zawalają, niestabilność spada do 40. Wieża kołysze się wizualnie proporcjonalnie do niestabilności.
-- **HUD** u góry ekranu (`TowerHud.cs`, legacy `UI.Text`): wysokość, pieniądze i dochód, mieszkańcy/praca, energia, szczęście, stabilność.
-- Wynik: wysokość + pieniądze; ewentualnie cele wysokości jako poziomy (otwarte).
+- Cele wysokości jako poziomy — otwarte, na razie nie robimy.
+
+## Runda i wynik [DECYZJA]
+- Runda trwa **90 s**. Po czasie spawn się zatrzymuje i pojawia się ekran końca: Height, Money, **Score = Height × 10 + Money**, napis „Tap to play again”.
+- Tap/klik restartuje grę bez przeładowania sceny (bootstrap `AfterSceneLoad` nie odpala się ponownie po `LoadScene`).
+
+## HUD [DECYZJA]
+- Legacy `UI.Text` (`TowerHud.cs`), referencja 1080×1920, czcionka ≥ 60.
+- Lewy górny róg: jedna statystyka na linijkę — Height, Money (+dochód/s), Pop, Jobs, Energy, Joy, Stability. Prawy górny róg: pozostały czas rundy.
+- Kolory etykiet = kolory typów pięter: Pop pomarańczowy, Jobs niebieski, Energy żółty, Joy zielony. Ujemne wartości i BLACKOUT na czerwono. Dopuszczalne półprzezroczyste tło pod tekstem.
+
+## Proces pracy (role)
+- **Designer/menadżer** (agent Claude #1): pisze taski w `TASKS.md` i decyzje w tym pliku, rozwiązuje konflikty w `TASKS.md`.
+- **Programista** (agent Claude #2): wykonuje taski z `TASKS.md` w kolejności, odhacza `- [x]`, pytania pisze pod taskiem jako `  > ❓ ...`.
+- Po każdym tasku: build WebGL → test lokalny (np. `python -m http.server` w `Builds/webgl`, konsola bez wyjątków) → commit → deploy. Buildy/deploy robi jeden agent naraz (Unity blokuje projekt).
 
 ## Kod
 - `Assets/_Project/Scripts/Tower/` (namespace `ZeroHour.Tower`): `TowerGame` (bootstrap, kamera, spawner), `TowerController` (platforma, piętra, stabilność), `FallingFloor`, `FloorType`, `CityStats`, `TowerHud`.
