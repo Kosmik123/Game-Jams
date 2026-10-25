@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using ZeroHour.UI;
 
 namespace ZeroHour.Tower
 {
@@ -24,6 +25,7 @@ namespace ZeroHour.Tower
         private Text timerText;
         private GameObject gameOverPanel;
         private Text gameOverText;
+        private RectTransform menuButton;
 
         private void Awake()
         {
@@ -83,22 +85,34 @@ namespace ZeroHour.Tower
             gameOverPanel.SetActive(false);
         }
 
-        private static Text CreateText(string name, Transform parent, int size, TextAnchor alignment)
-        {
-            var textObject = new GameObject(name, typeof(RectTransform), typeof(Text), typeof(Outline));
-            textObject.transform.SetParent(parent, false);
-            textObject.GetComponent<Outline>().effectDistance = new Vector2(3f, -3f);
+        private static Text CreateText(string name, Transform parent, int size, TextAnchor alignment) =>
+            UiFactory.CreateText(name, parent, size, alignment);
 
-            var text = textObject.GetComponent<Text>();
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            text.fontSize = size;
-            text.alignment = alignment;
-            text.color = Color.white;
-            text.raycastTarget = false;
-            text.supportRichText = true;
-            text.horizontalOverflow = HorizontalWrapMode.Overflow;
-            return text;
+        // Small "Menu" box in the bottom-left corner of the end screen. TowerGame checks taps
+        // against it itself, because the restart reacts to the press, before a Button would.
+        public void AddMenuButton()
+        {
+            var buttonObject = new GameObject("Menu Button", typeof(RectTransform), typeof(Image));
+            buttonObject.transform.SetParent(gameOverPanel.transform, false);
+            menuButton = (RectTransform)buttonObject.transform;
+            menuButton.anchorMin = Vector2.zero;
+            menuButton.anchorMax = Vector2.zero;
+            menuButton.pivot = Vector2.zero;
+            menuButton.anchoredPosition = new Vector2(40f, 40f);
+            menuButton.sizeDelta = new Vector2(300f, 140f);
+            buttonObject.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0.2f);
+            buttonObject.GetComponent<Image>().raycastTarget = false;
+
+            Text label = CreateText("Label", menuButton, gameOverFontSize * 3 / 4, TextAnchor.MiddleCenter);
+            label.text = "Menu";
+            label.rectTransform.anchorMin = Vector2.zero;
+            label.rectTransform.anchorMax = Vector2.one;
+            label.rectTransform.sizeDelta = Vector2.zero;
         }
+
+        public bool IsOverMenuButton(Vector2 screenPosition) =>
+            menuButton != null && menuButton.gameObject.activeInHierarchy &&
+            RectTransformUtility.RectangleContainsScreenPoint(menuButton, screenPosition, null);
 
         public void Refresh(CityStats stats, float stability, float timeLeft)
         {

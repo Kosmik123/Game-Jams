@@ -1,12 +1,15 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 namespace ZeroHour.Tower
 {
     // Builds the whole game from code (no scene setup needed) and spawns falling floors.
     public class TowerGame : MonoBehaviour
     {
+        public static readonly Color SkyColor = new Color(0.55f, 0.78f, 0.95f);
+
         [SerializeField]
         private float playWidth = 6f;
 
@@ -64,12 +67,6 @@ namespace ZeroHour.Tower
         public float BaseY => baseY;
         public TowerRuleset Ruleset => ruleset;
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        private static void CreateInstance()
-        {
-            Create(new PostJamRuleset());
-        }
-
         public static TowerGame Create(TowerRuleset ruleset)
         {
             // Inactive until the ruleset is set, so Awake already sees it.
@@ -85,18 +82,19 @@ namespace ZeroHour.Tower
         {
             Camera = Camera.main;
             Camera.orthographic = true;
-            Camera.backgroundColor = new Color(0.55f, 0.78f, 0.95f);
+            Camera.backgroundColor = SkyColor;
             FitCamera();
             startCameraY = Camera.transform.position.y;
             baseY = BottomY + baseMargin;
 
             squareSprite = CreateSquareSprite(32, 3);
             hud = gameObject.AddComponent<TowerHud>();
+            if (ruleset.ShowMenuButton)
+                hud.AddMenuButton();
             StartRound();
         }
 
-        // Restart rebuilds the game objects instead of reloading the scene,
-        // because the bootstrap only runs on the first scene load.
+        // Restart rebuilds the game objects instead of reloading the scene.
         private void StartRound()
         {
             foreach (FallingFloor floor in spawnedFloors)
@@ -143,8 +141,14 @@ namespace ZeroHour.Tower
 
             if (isGameOver)
             {
-                if (Time.time - gameOverTime >= restartDelay && WasTapped())
-                    StartRound();
+                if (Time.time - gameOverTime >= restartDelay && TryGetTap(out Vector2 tapPosition))
+                {
+                    // Checked on press like the restart, so the restart can't hide the button first.
+                    if (hud.IsOverMenuButton(tapPosition))
+                        SceneManager.LoadScene(ZeroHour.GameBootstrap.VersionSelectScene);
+                    else
+                        StartRound();
+                }
                 return;
             }
 
@@ -211,12 +215,21 @@ namespace ZeroHour.Tower
             spawnedFloors.Add(floor);
         }
 
-        private static bool WasTapped()
+        private static bool TryGetTap(out Vector2 screenPosition)
         {
             var touchscreen = Touchscreen.current;
             if (touchscreen != null && touchscreen.primaryTouch.press.wasPressedThisFrame)
+            {
+                screenPosition = touchscreen.primaryTouch.position.ReadValue();
                 return true;
-            return Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame;
+            }
+            if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
+            {
+                screenPosition = Mouse.current.position.ReadValue();
+                return true;
+            }
+            screenPosition = default;
+            return false;
         }
 
         // White square with a darker border; 9-sliced so the border keeps its width at any size.

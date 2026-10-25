@@ -17,6 +17,9 @@ namespace ZeroHour.Tower
         public abstract bool ShowPerfectPopup { get; }
 
         public abstract bool ShowTutorial { get; }
+
+        // "Menu" on the end screen; the jam version has no way back (reload the page).
+        public abstract bool ShowMenuButton { get; }
     }
 
     // Frozen rules of the build shipped at the end of the jam (39a94ec).
@@ -28,6 +31,7 @@ namespace ZeroHour.Tower
         public override float SpawnInterval(int towerHeight) => 0.7f;
         public override bool ShowPerfectPopup => false;
         public override bool ShowTutorial => false;
+        public override bool ShowMenuButton => false;
     }
 
     public class PostJamRuleset : TowerRuleset
@@ -38,5 +42,6 @@ namespace ZeroHour.Tower
         public override float SpawnInterval(int towerHeight) => 0.7f;
         public override bool ShowPerfectPopup => false;
         public override bool ShowTutorial => false;
+        public override bool ShowMenuButton => true;
     }
 }

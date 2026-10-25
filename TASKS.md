@@ -18,7 +18,7 @@ Po każdym tasku: kompilacja/testy → commit (mały, z opisem). Build WebGL + d
   - Jeżeli abstrakcja jakiejś części jest zbyt kosztowna, dopuszczalna jest kopia klasy pod `Jam/` — napisz wtedy w `COMMS.md`, co i dlaczego.
   - Sprawdzenie: oba warianty uruchomione z kodu dają rundę 90 s / 40 s, konsola czysta.
 
-- [ ] **2. Scena wyboru wersji (pierwsza scena gry).**
+- [x] **2. Scena wyboru wersji (pierwsza scena gry).**
   - Nowa scena `Assets/_Project/Scenes/VersionSelect/VersionSelect.unity` jako **scena nr 0** w Build Settings, `Game.unity` jako nr 1.
   - Scenę i wpis w Build Settings utwórz **skryptem edytorowym** (`Assets/Editor/…`, np. menu `Tools/Create Version Select Scene` + metoda statyczna do odpalenia przez `-executeMethod` w batchmode), nie ręczną edycją YAML. Scena zawiera tylko kamerę; reszta jak dotąd budowana w kodzie.
   - UI (legacy `UI.Text`/`Button`, styl jak HUD, referencja 1080×1920, portrait): tytuł **„Stack City”**, dwa duże przyciski jeden pod drugim: **„Jam version”** i **„Post-jam version”** (czcionka ≥ 70, łatwe do trafienia palcem), pod nimi małym drukiem np. „0h Game Jam 2026”. Tło w kolorze nieba z gry.
