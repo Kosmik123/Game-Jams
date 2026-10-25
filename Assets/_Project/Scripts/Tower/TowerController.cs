@@ -34,6 +34,7 @@ namespace ZeroHour.Tower
         private readonly List<FallingFloor> floors = new List<FallingFloor>();
         private TowerGame game;
         private TowerSway sway;
+        private RelativeDrag drag;
         private float localTop;
         private float instability;
         private bool hasSeenTouch;
@@ -56,6 +57,8 @@ namespace ZeroHour.Tower
         {
             this.game = game;
             sway = game.Ruleset.CreateSway();
+            if (game.Ruleset.RelativeControl)
+                drag = new RelativeDrag(game.Ruleset.DragSensitivity);
             localTop = platformHeight / 2f;
 
             var spriteRenderer = gameObject.AddComponent<SpriteRenderer>();
@@ -69,9 +72,15 @@ namespace ZeroHour.Tower
         {
             Vector3 position = transform.position;
             position.y = game.BaseY;
-            if (TryGetPointerWorldX(out float pointerX))
+            float halfRange = game.PlayWidth / 2f;
+            if (drag != null)
             {
-                float halfRange = game.PlayWidth / 2f;
+                bool isPressed = TryGetDragPointer(out Vector2 screenPosition, out int pointerId);
+                float pointerX = isPressed ? game.Camera.ScreenToWorldPoint(screenPosition).x : 0f;
+                position.x = drag.Update(isPressed, pointerId, pointerX, position.x, halfRange);
+            }
+            else if (TryGetPointerWorldX(out float pointerX))
+            {
                 position.x = Mathf.Clamp(pointerX, -halfRange, halfRange);
             }
             transform.position = position;
@@ -140,6 +149,31 @@ namespace ZeroHour.Tower
 
             worldX = game.Camera.ScreenToWorldPoint(screenPosition).x;
             return true;
+        }
+
+        // Relative control: a finger on the screen, or the left mouse button held on desktop.
+        private bool TryGetDragPointer(out Vector2 screenPosition, out int pointerId)
+        {
+            var touchscreen = Touchscreen.current;
+            if (touchscreen != null && touchscreen.primaryTouch.press.isPressed)
+            {
+                hasSeenTouch = true;
+                screenPosition = touchscreen.primaryTouch.position.ReadValue();
+                pointerId = touchscreen.primaryTouch.touchId.ReadValue();
+                return true;
+            }
+
+            var mouse = Mouse.current;
+            if (mouse != null && mouse.leftButton.isPressed && !hasSeenTouch && !Application.isMobilePlatform)
+            {
+                screenPosition = mouse.position.ReadValue();
+                pointerId = -1;
+                return true;
+            }
+
+            screenPosition = default;
+            pointerId = 0;
+            return false;
         }
     }
 }

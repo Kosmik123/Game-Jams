@@ -49,7 +49,7 @@ Po każdym tasku: kompilacja/testy → commit (mały, z opisem). Build WebGL + d
   - Restart rundy: `baseY = startBaseY`.
   - Sprawdzenie: piętro spadające obok wieży w chwili łapania innego piętra ma stałą prędkość na ekranie (np. log `screenY` co klatkę — różnice równe); konsola czysta.
   - Tylko post-jam (jam zostaje z ruchomą kamerą, w rulesecie np. `bool FixedCamera`).
-- [ ] **9. [post-jam] Sterowanie względne (przeciąganie).** Dziś platforma skacze pod palec (`TowerController.TryGetPointerWorldX` → `position.x = pointerX`). Nowe: platforma przesuwa się **o tyle, o ile przesunął się palec**, niezależnie od tego, gdzie palec leży na ekranie.
+- [x] **9. [post-jam] Sterowanie względne (przeciąganie).** Dziś platforma skacze pod palec (`TowerController.TryGetPointerWorldX` → `position.x = pointerX`). Nowe: platforma przesuwa się **o tyle, o ile przesunął się palec**, niezależnie od tego, gdzie palec leży na ekranie.
   - Co klatkę, gdy palec jest wciśnięty: `deltaX = worldX(teraz) − worldX(poprzednia klatka)`, `x = clamp(x + deltaX × dragSensitivity, −playWidth/2, playWidth/2)`. `dragSensitivity = 1` (1:1 w jednostkach świata), w `PostJamRuleset`.
   - Przyrost per klatka (nie „pozycja startowa + przesunięcie”), żeby po dociśnięciu do krawędzi ruch w drugą stronę działał od razu, bez martwej strefy.
   - Przyłożenie palca **nie przesuwa** platformy (pierwsza klatka dotyku tylko zapamiętuje pozycję). Puszczenie — platforma stoi. Zmiana palca / nowy dotyk = nowy punkt odniesienia, bez skoku.

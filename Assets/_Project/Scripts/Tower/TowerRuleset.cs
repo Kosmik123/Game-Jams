@@ -23,6 +23,12 @@ namespace ZeroHour.Tower
         // Camera stays still and the tower sinks, instead of the camera following the tower up.
         public abstract bool FixedCamera { get; }
 
+        // Platform moves by the finger's movement instead of jumping under the finger.
+        public abstract bool RelativeControl { get; }
+
+        // World units of platform movement per world unit of finger movement (relative control).
+        public abstract float DragSensitivity { get; }
+
         public abstract bool ShowPerfectPopup { get; }
 
         public abstract bool ShowTutorial { get; }
@@ -41,6 +47,8 @@ namespace ZeroHour.Tower
         public override CityStats CreateEconomy() => new CityStats();
         public override TowerSway CreateSway() => new JamTowerSway();
         public override bool FixedCamera => false;
+        public override bool RelativeControl => false;
+        public override float DragSensitivity => 0f;
         public override bool ShowPerfectPopup => false;
         public override bool ShowTutorial => false;
         public override bool ShowMenuButton => false;
@@ -65,6 +73,8 @@ namespace ZeroHour.Tower
         public override CityStats CreateEconomy() => new PostJamCityStats();
         public override TowerSway CreateSway() => new PostJamTowerSway();
         public override bool FixedCamera => true;
+        public override bool RelativeControl => true;
+        public override float DragSensitivity => 1f;
         public override bool ShowPerfectPopup => true;
         public override bool ShowTutorial => true;
         public override bool ShowMenuButton => true;
