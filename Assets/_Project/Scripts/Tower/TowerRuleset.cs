@@ -33,6 +33,8 @@ namespace ZeroHour.Tower
         // PlayerPrefs key of the best score, or null when records aren't kept.
         public abstract string BestScoreKey { get; }
 
+        public abstract string PopulationLabel { get; }
+
         public abstract bool ShowPerfectPopup { get; }
 
         public abstract bool ShowTutorial { get; }
@@ -53,6 +55,7 @@ namespace ZeroHour.Tower
         public override bool FixedCamera => false;
         public override bool RelativeControl => false;
         public override string BestScoreKey => null;
+        public override string PopulationLabel => "Pop";
         public override float DragSensitivity => 0f;
         public override bool ShowPerfectPopup => false;
         public override bool ShowTutorial => false;
@@ -80,6 +83,7 @@ namespace ZeroHour.Tower
         public override bool FixedCamera => true;
         public override bool RelativeControl => true;
         public override string BestScoreKey => "BestScore_PostJam";
+        public override string PopulationLabel => "Popul";
         public override float DragSensitivity => 1f;
         public override bool ShowPerfectPopup => true;
         public override bool ShowTutorial => true;

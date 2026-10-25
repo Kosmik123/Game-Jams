@@ -99,6 +99,7 @@ namespace ZeroHour.Tower
 
             squareSprite = CreateSquareSprite(32, 3);
             hud = gameObject.AddComponent<TowerHud>();
+            hud.PopulationLabel = ruleset.PopulationLabel;
             if (ruleset.ShowMenuButton)
                 hud.AddMenuButton();
             StartRound();
