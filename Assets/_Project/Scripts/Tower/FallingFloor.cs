@@ -6,6 +6,8 @@ namespace ZeroHour.Tower
     {
         private static readonly Color UnpoweredTint = new Color(0.45f, 0.45f, 0.5f);
         private const float SlideDuration = 0.08f;
+        private const float SquashDuration = 0.15f;
+        private static readonly Vector2 SquashScale = new Vector2(1.15f, 0.85f);
 
         private TowerGame game;
         private float fallSpeed;
@@ -15,6 +17,8 @@ namespace ZeroHour.Tower
         private bool hasArt;
         private float slideFromX;
         private float slideTime;
+        private Vector3 baseScale = Vector3.one;
+        private float squashTime = float.MaxValue;
 
         public FloorType Type { get; private set; }
         public float Size { get; private set; }
@@ -40,6 +44,7 @@ namespace ZeroHour.Tower
                 spriteRenderer.sprite = art;
                 spriteRenderer.drawMode = SpriteDrawMode.Simple;
                 transform.localScale = Vector3.one * (size / art.bounds.size.x);
+                baseScale = transform.localScale;
             }
             else
             {
@@ -76,8 +81,10 @@ namespace ZeroHour.Tower
         }
 
         // slideFromX: visual offset at the moment of landing that eases to zero (a snapped floor slides into place).
-        public void PlaceInTower(Vector2 towerPosition, float slideFromX = 0f)
+        // squash: the floor flattens for a moment and springs back (visual only).
+        public void PlaceInTower(Vector2 towerPosition, float slideFromX = 0f, bool squash = false)
         {
+            squashTime = squash ? 0f : float.MaxValue;
             TowerPosition = towerPosition;
             this.slideFromX = slideFromX;
             slideTime = 0f;
@@ -93,7 +100,17 @@ namespace ZeroHour.Tower
                 slideTime += Time.deltaTime;
                 slide = slideFromX * (1f - Mathf.Clamp01(slideTime / SlideDuration));
             }
-            transform.localPosition = new Vector3(TowerPosition.x + offsetX + slide, TowerPosition.y, 0f);
+            // The squash keeps the floor's bottom on the floor below.
+            float squashY = 1f;
+            if (squashTime < SquashDuration)
+            {
+                squashTime += Time.deltaTime;
+                float t = Mathf.Clamp01(squashTime / SquashDuration);
+                Vector2 scale = Vector2.Lerp(SquashScale, Vector2.one, t);
+                squashY = scale.y;
+                transform.localScale = new Vector3(baseScale.x * scale.x, baseScale.y * scale.y, baseScale.z);
+            }
+            transform.localPosition = new Vector3(TowerPosition.x + offsetX + slide, TowerPosition.y - (1f - squashY) * Size / 2f, 0f);
         }
 
         public void SetPowered(bool isPowered)
@@ -108,6 +125,8 @@ namespace ZeroHour.Tower
         {
             IsAttached = false;
             isDebris = true;
+            squashTime = float.MaxValue;
+            transform.localScale = baseScale;
             transform.SetParent(null, true);
             fallSpeed *= 1.5f;
             spin = Random.Range(-200f, 200f);

@@ -10,6 +10,16 @@ namespace ZeroHour.Tower
     {
         public static readonly Color SkyColor = new Color(0.55f, 0.78f, 0.95f);
 
+        private const int PerfectFontSize = 70;
+        private const float PerfectPopupHeight = 0.8f;
+        private const float PerfectRise = 1f;
+        private const float PerfectDuration = 0.8f;
+        private const int IncomeFontSize = 48;
+        private const float IncomePopupHeight = 0.3f;
+        private const float IncomeRise = 0.8f;
+        private const float IncomeDuration = 0.7f;
+        private static readonly Color IncomeColor = new Color(0.45f, 1f, 0.45f);
+
         [SerializeField]
         private float playWidth = 6f;
 
@@ -61,6 +71,17 @@ namespace ZeroHour.Tower
         [SerializeField]
         private float towerShotMargin = 0.1f;
 
+        [Header("Juice")]
+        [SerializeField]
+        private float shakeDuration = 0.3f;
+
+        [SerializeField]
+        private float shakeAmplitude = 0.15f;
+
+        [Tooltip("Seconds between \"+$\" texts from the roof.")]
+        [SerializeField]
+        private float incomePopupInterval = 1f;
+
         [Tooltip("Seconds after the round ends before a tap restarts, so a held finger doesn't skip the end screen.")]
         [SerializeField]
         private float restartDelay = 0.7f;
@@ -82,6 +103,9 @@ namespace ZeroHour.Tower
         private float towerShotStartSize;
         private float timeLeft;
         private float roundElapsed;
+        private float shakeTimeLeft;
+        private float incomePopupTimer;
+        private float moneyAtLastPopup;
         private bool isGameOver;
         private float gameOverTime;
 
@@ -158,6 +182,9 @@ namespace ZeroHour.Tower
             stats = ruleset.CreateEconomy();
             timeLeft = ruleset.RoundDuration;
             roundElapsed = 0f;
+            shakeTimeLeft = 0f;
+            incomePopupTimer = 0f;
+            moneyAtLastPopup = 0f;
             spawnTimer = 0f;
             lastSpawnX = null;
             lastSpawnType = null;
@@ -203,7 +230,11 @@ namespace ZeroHour.Tower
             if (towerShotTime >= 0f)
                 UpdateTowerShot();
             else
+            {
                 FitCamera();
+                if (shakeTimeLeft > 0f)
+                    UpdateShake();
+            }
 
             if (isGameOver)
             {
@@ -235,6 +266,9 @@ namespace ZeroHour.Tower
                 EndRound();
                 return;
             }
+
+            if (ruleset.ShowJuice)
+                UpdateIncomePopup();
 
             spawnTimer -= Time.deltaTime;
             if (spawnTimer <= 0f)
@@ -272,14 +306,50 @@ namespace ZeroHour.Tower
         {
             stats.RegisterLanding(isPerfect);
             if (isPerfect && ruleset.ShowPerfectPopup)
-                PerfectPopup.Show(hud, Camera, floor.transform, stats.ComboMultiplier);
+            {
+                int combo = stats.ComboMultiplier;
+                WorldPopup.Show(hud, Camera, floor.transform, Vector3.up * PerfectPopupHeight,
+                    combo > 1 ? $"PERFECT! x{combo}" : "PERFECT!", PerfectFontSize, Color.white, PerfectRise, PerfectDuration);
+            }
             ChangeTime(ruleset.FloorTimeBonus(Tower.Floors.Count, isPerfect));
         }
 
         private void OnTowerCollapsed()
         {
             stats.RegisterCollapse();
+            if (ruleset.ShowJuice)
+                shakeTimeLeft = shakeDuration;
             ChangeTime(-ruleset.CollapseTimePenalty);
+        }
+
+        // Every second with income, "+$N" (money earned in that second) rises from the roof.
+        private void UpdateIncomePopup()
+        {
+            incomePopupTimer += Time.deltaTime;
+            if (incomePopupTimer < incomePopupInterval)
+                return;
+            incomePopupTimer -= incomePopupInterval;
+            int earned = Mathf.RoundToInt(stats.Money - moneyAtLastPopup);
+            moneyAtLastPopup = stats.Money;
+            if (earned <= 0)
+                return;
+            var roof = new Vector3(Tower.TopOffset, Tower.LocalTop + IncomePopupHeight, 0f);
+            WorldPopup.Show(hud, Camera, Tower.transform, roof, $"+${earned}", IncomeFontSize, IncomeColor, IncomeRise, IncomeDuration);
+        }
+
+        // Shakes the (still) camera around its start position, fading out, then puts it back exactly.
+        private void UpdateShake()
+        {
+            shakeTimeLeft -= Time.deltaTime;
+            var home = new Vector3(startCameraX, startCameraY, Camera.transform.position.z);
+            if (shakeTimeLeft <= 0f)
+            {
+                shakeTimeLeft = 0f;
+                Camera.transform.position = home;
+                return;
+            }
+            float strength = shakeAmplitude * shakeTimeLeft / shakeDuration;
+            Camera.transform.position = home + (Vector3)(Random.insideUnitCircle * strength);
         }
 
         // Bonus or penalty from the tower; only during the round.
