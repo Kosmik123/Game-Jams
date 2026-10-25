@@ -8,7 +8,23 @@ namespace ZeroHour.Tower
     {
         public abstract string Name { get; }
 
+        // Seconds on the clock when the round starts.
         public abstract float RoundDuration { get; }
+
+        // The clock never shows more than this; extra time is lost.
+        public abstract float MaxTime { get; }
+
+        // Seconds added for a caught floor; towerHeight is the height after the catch.
+        public abstract float FloorTimeBonus(int towerHeight, bool isPerfect);
+
+        // Seconds taken for a collapse (a positive number).
+        public abstract float CollapseTimePenalty { get; }
+
+        // The timer turns red when it shows this many seconds or fewer.
+        public abstract int TimerWarningSeconds { get; }
+
+        // Time left after a bonus or a penalty, kept within 0..MaxTime.
+        public float ApplyTimeChange(float timeLeft, float change) => Mathf.Clamp(timeLeft + change, 0f, MaxTime);
 
         // Units per second for a floor spawned when the tower has the given height.
         public abstract float FallSpeed(int towerHeight);
@@ -54,6 +70,10 @@ namespace ZeroHour.Tower
     {
         public override string Name => "Jam";
         public override float RoundDuration => 40f;
+        public override float MaxTime => RoundDuration;
+        public override float FloorTimeBonus(int towerHeight, bool isPerfect) => 0f;
+        public override float CollapseTimePenalty => 0f;
+        public override int TimerWarningSeconds => 10;
         public override float FallSpeed(int towerHeight) => 3f;
         public override float SpawnInterval(int towerHeight) => 0.7f;
         public override CityStats CreateEconomy() => new CityStats();
@@ -80,8 +100,24 @@ namespace ZeroHour.Tower
         private const float SpawnIntervalPerFloor = 0.01f;
         private const float MinSpawnInterval = 0.4f;
 
+        // The clock starts low and the player earns time by building.
+        private const float StartTime = 25f;
+        private const float MaxRoundTime = 30f;
+        private const float TimePerFloor = 1.5f;
+        private const float TimeFalloffHeight = 40f;
+        private const float MinTimeFactor = 0.3f;
+        private const float PerfectTimeBonus = 1f;
+        private const float CollapsePenalty = 3f;
+
         public override string Name => "Post-jam";
-        public override float RoundDuration => 40f;
+        public override float RoundDuration => StartTime;
+        public override float MaxTime => MaxRoundTime;
+        public override float CollapseTimePenalty => CollapsePenalty;
+        public override int TimerWarningSeconds => 4;
+
+        // The floor bonus shrinks as the tower grows; the perfect bonus doesn't.
+        public override float FloorTimeBonus(int towerHeight, bool isPerfect) =>
+            TimePerFloor * Mathf.Max(MinTimeFactor, 1f - towerHeight / TimeFalloffHeight) + (isPerfect ? PerfectTimeBonus : 0f);
         public override float FallSpeed(int towerHeight) =>
             Mathf.Min(BaseFallSpeed + FallSpeedPerFloor * towerHeight, MaxFallSpeed);
         public override float SpawnInterval(int towerHeight) =>

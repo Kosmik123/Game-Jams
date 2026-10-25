@@ -9,6 +9,11 @@ namespace ZeroHour.Tower
     {
         private const string WarningColor = "#ff5555";
         private const string NewBestLabel = "NEW BEST!";
+        private const int TimeChangeFontSize = 50;
+        private const float TimeChangeRise = 40f;
+        private const float TimeChangeDuration = 0.6f;
+        private static readonly Color TimeBonusColor = new Color(0.45f, 1f, 0.45f);
+        private static readonly Color TimePenaltyColor = new Color(1f, 0.33f, 0.33f);
         private const float TopLayoutBottom = 0.62f;
         private const float TopLayoutPanelAlpha = 0.35f;
         private const float NewBestPulseScale = 1.1f;
@@ -41,6 +46,8 @@ namespace ZeroHour.Tower
         private Text tutorialText;
         private Text newBestText;
         private Canvas hudCanvas;
+
+        public int TimerWarningSeconds { get; set; } = 10;
         private bool isTopLayout;
 
         // HUD label of the population stat; the version can rename it.
@@ -196,6 +203,21 @@ namespace ZeroHour.Tower
             tutorialText.GetComponent<Outline>().effectColor = outline;
         }
 
+        // "+1.5s" / "-3s" under the timer. applied is what the clock really changed by (a bonus over the
+        // limit is lost); requested decides the color, so a bonus at the limit still reads as a bonus.
+        public void ShowTimeChange(float applied, float requested)
+        {
+            bool isBonus = requested > 0f;
+            string label = (isBonus ? "+" : "\u2212") + Mathf.Abs(isBonus ? requested : applied).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture) + "s";
+            Text text = CreateText("Time Change", hudCanvas.transform, TimeChangeFontSize, TextAnchor.UpperRight);
+            RectTransform rect = text.rectTransform;
+            rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(1f, 1f);
+            rect.sizeDelta = new Vector2(300f, TimeChangeFontSize * 1.5f);
+            rect.anchoredPosition = new Vector2(-30f, -30f - timerFontSize * 1.2f);
+            text.text = label;
+            text.gameObject.AddComponent<FloatingText>().Init(isBonus ? TimeBonusColor : TimePenaltyColor, TimeChangeRise, TimeChangeDuration);
+        }
+
         public bool IsOverMenuButton(Vector2 screenPosition) =>
             menuButton != null && menuButton.gameObject.activeInHierarchy &&
             RectTransformUtility.RectangleContainsScreenPoint(menuButton, screenPosition, null);
@@ -214,7 +236,7 @@ namespace ZeroHour.Tower
                 (stats.PowerWarning == null ? "" : $"\n<color={WarningColor}>{stats.PowerWarning}</color>");
 
             int seconds = Mathf.CeilToInt(Mathf.Max(0f, timeLeft));
-            timerText.text = seconds <= 10 ? $"<color={WarningColor}>{seconds}s</color>" : $"{seconds}s";
+            timerText.text = seconds <= TimerWarningSeconds ? $"<color={WarningColor}>{seconds}s</color>" : $"{seconds}s";
         }
 
         // Stat label in the color of the floor type that produces it (order of FloorType.All).

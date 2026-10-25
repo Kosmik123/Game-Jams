@@ -42,6 +42,11 @@ namespace ZeroHour.Tower
 
         public event Action<FallingFloor> PerfectLanding;
 
+        // A floor joined the tower (raised before a collapse it may cause).
+        public event Action<FallingFloor, bool> FloorLanded;
+
+        public event Action Collapsed;
+
         public IReadOnlyList<FallingFloor> Floors => floors;
 
         public float TopY => transform.position.y + localTop;
@@ -143,6 +148,8 @@ namespace ZeroHour.Tower
             else
                 instability += offset * offset * instabilityPerOffset;
 
+            FloorLanded?.Invoke(floor, isPerfect);
+
             if (instability >= MaxInstability)
                 CollapseTop();
         }
@@ -158,6 +165,7 @@ namespace ZeroHour.Tower
                 floor.Collapse();
             }
             instability = instabilityAfterCollapse;
+            Collapsed?.Invoke();
         }
 
         // Without a finger on the screen the platform stays put. The mouse is ignored on phones,

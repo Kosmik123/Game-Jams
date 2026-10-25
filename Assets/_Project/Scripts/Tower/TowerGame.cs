@@ -81,6 +81,7 @@ namespace ZeroHour.Tower
         private Vector3 towerShotStartPosition;
         private float towerShotStartSize;
         private float timeLeft;
+        private float roundElapsed;
         private bool isGameOver;
         private float gameOverTime;
 
@@ -116,6 +117,7 @@ namespace ZeroHour.Tower
 
             squareSprite = CreateSquareSprite(32, 3);
             hud = gameObject.AddComponent<TowerHud>();
+            hud.TimerWarningSeconds = ruleset.TimerWarningSeconds;
             if (ruleset.ShowTowerShot)
                 hud.UseTopLayout();
             hud.PopulationLabel = ruleset.PopulationLabel;
@@ -152,9 +154,12 @@ namespace ZeroHour.Tower
             Tower.Init(this, squareSprite, platformWidth);
             if (ruleset.ShowPerfectPopup)
                 Tower.PerfectLanding += floor => PerfectPopup.Show(hud, Camera, floor.transform);
+            Tower.FloorLanded += (floor, isPerfect) => ChangeTime(ruleset.FloorTimeBonus(Tower.Floors.Count, isPerfect));
+            Tower.Collapsed += () => ChangeTime(-ruleset.CollapseTimePenalty);
 
             stats = ruleset.CreateEconomy();
             timeLeft = ruleset.RoundDuration;
+            roundElapsed = 0f;
             spawnTimer = 0f;
             lastSpawnX = null;
             lastSpawnType = null;
@@ -222,7 +227,8 @@ namespace ZeroHour.Tower
                 Tower.Floors[i].SetPowered(stats.IsFloorPowered(i));
 
             timeLeft -= Time.deltaTime;
-            if (ruleset.ShowTutorial && (Tower.Floors.Count > 0 || ruleset.RoundDuration - timeLeft >= tutorialDuration))
+            roundElapsed += Time.deltaTime;
+            if (ruleset.ShowTutorial && (Tower.Floors.Count > 0 || roundElapsed >= tutorialDuration))
                 hud.FadeOutTutorial();
             hud.Refresh(stats, Tower.Stability, timeLeft);
             if (timeLeft <= 0f)
@@ -261,6 +267,16 @@ namespace ZeroHour.Tower
             Vector3 cameraPosition = Camera.transform.position;
             cameraPosition.y = Mathf.Lerp(cameraPosition.y, targetY, 1f - Mathf.Exp(-cameraFollowSpeed * Time.deltaTime));
             Camera.transform.position = cameraPosition;
+        }
+
+        // Bonus or penalty from the tower; only during the round.
+        private void ChangeTime(float change)
+        {
+            if (isGameOver || change == 0f)
+                return;
+            float before = timeLeft;
+            timeLeft = ruleset.ApplyTimeChange(timeLeft, change);
+            hud.ShowTimeChange(timeLeft - before, change);
         }
 
         // Zooms out until the whole building, from the platform to the roof, fills the lower part of the
