@@ -35,6 +35,8 @@ namespace ZeroHour.Tower
         private TowerGame game;
         private TowerSway sway;
         private RelativeDrag drag;
+        private int lastTouchId = -1;
+        private bool isTouchBlocked;
         private float platformWidth;
         private float localTop;
         private float instability;
@@ -110,9 +112,14 @@ namespace ZeroHour.Tower
 
                 // Touch drags the platform; the mouse puts the roof under the cursor.
                 bool isTouching = TryGetTouch(out Vector2 touchPosition, out int touchId);
-                float touchX = isTouching ? game.Camera.ScreenToWorldPoint(touchPosition).x : 0f;
-                position.x = drag.Update(isTouching, touchId, touchX, position.x, minX, maxX);
-                if (!isTouching && TryGetMouseWorldX(out float mouseX))
+                // A touch that starts on a HUD button (mute) never drags the platform.
+                if (isTouching && touchId != lastTouchId)
+                    isTouchBlocked = game.IsOverHudButton(touchPosition);
+                lastTouchId = isTouching ? touchId : -1;
+                bool isDragging = isTouching && !isTouchBlocked;
+                float touchX = isDragging ? game.Camera.ScreenToWorldPoint(touchPosition).x : 0f;
+                position.x = drag.Update(isDragging, touchId, touchX, position.x, minX, maxX);
+                if (!isTouching && TryGetMouseWorldX(out float mouseX) && !game.IsOverHudButton(Mouse.current.position.ReadValue()))
                     position.x = Mathf.Clamp(mouseX - topOffset, minX, maxX);
             }
             else if (TryGetPointerWorldX(out float pointerX))

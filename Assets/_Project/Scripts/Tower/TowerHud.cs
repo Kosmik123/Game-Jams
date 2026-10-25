@@ -44,6 +44,8 @@ namespace ZeroHour.Tower
         private GameObject gameOverPanel;
         private Text gameOverText;
         private RectTransform menuButton;
+        private RectTransform muteButton;
+        private Text muteLabel;
         private Text tutorialText;
         private Text newBestText;
         private Canvas hudCanvas;
@@ -218,6 +220,31 @@ namespace ZeroHour.Tower
             text.text = label;
             text.gameObject.AddComponent<FloatingText>().Init(isBonus ? TimeBonusColor : TimePenaltyColor, TimeChangeRise, TimeChangeDuration);
         }
+
+        // Small toggle in the bottom-right corner, drawn above the end screen. TowerGame hit-tests it.
+        public void AddMuteButton(bool isMuted)
+        {
+            var buttonObject = new GameObject("Mute Button", typeof(RectTransform), typeof(Image));
+            buttonObject.transform.SetParent(hudCanvas.transform, false);
+            muteButton = (RectTransform)buttonObject.transform;
+            muteButton.anchorMin = muteButton.anchorMax = muteButton.pivot = new Vector2(1f, 0f);
+            muteButton.anchoredPosition = new Vector2(-40f, 40f);
+            muteButton.sizeDelta = new Vector2(220f, 120f);
+            buttonObject.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.25f);
+            buttonObject.GetComponent<Image>().raycastTarget = false;
+
+            muteLabel = CreateText("Label", muteButton, fontSize, TextAnchor.MiddleCenter);
+            muteLabel.rectTransform.anchorMin = Vector2.zero;
+            muteLabel.rectTransform.anchorMax = Vector2.one;
+            muteLabel.rectTransform.sizeDelta = Vector2.zero;
+            SetMuted(isMuted);
+        }
+
+        public void SetMuted(bool isMuted) => muteLabel.text = isMuted ? "\u266A off" : "\u266A";
+
+        public bool IsOverMuteButton(Vector2 screenPosition) =>
+            muteButton != null && muteButton.gameObject.activeInHierarchy &&
+            RectTransformUtility.RectangleContainsScreenPoint(muteButton, screenPosition, null);
 
         public bool IsOverMenuButton(Vector2 screenPosition) =>
             menuButton != null && menuButton.gameObject.activeInHierarchy &&
