@@ -117,6 +117,8 @@ namespace ZeroHour.Tower
             Tower = new GameObject("Tower").AddComponent<TowerController>();
             Tower.transform.position = new Vector3(0f, BaseY, 0f);
             Tower.Init(this, squareSprite, platformWidth);
+            if (ruleset.ShowPerfectPopup)
+                Tower.PerfectLanding += floor => PerfectPopup.Show(hud, Camera, floor.transform);
 
             stats = new CityStats();
             timeLeft = ruleset.RoundDuration;

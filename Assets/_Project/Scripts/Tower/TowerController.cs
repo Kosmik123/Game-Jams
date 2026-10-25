@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -38,6 +39,8 @@ namespace ZeroHour.Tower
         private float localTop;
         private float instability;
         private bool hasSeenTouch;
+
+        public event Action<FallingFloor> PerfectLanding;
 
         public IReadOnlyList<FallingFloor> Floors => floors;
 
@@ -92,7 +95,10 @@ namespace ZeroHour.Tower
 
             float offset = Mathf.Abs(offsetX - previousX) / floor.Size;
             if (offset < perfectOffset)
+            {
                 instability = Mathf.Max(0f, instability - perfectCalm);
+                PerfectLanding?.Invoke(floor);
+            }
             else
                 instability += offset * offset * instabilityPerOffset;
 

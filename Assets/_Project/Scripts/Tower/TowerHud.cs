@@ -85,6 +85,15 @@ namespace ZeroHour.Tower
             gameOverPanel.SetActive(false);
         }
 
+        // Text that follows a world position (positioned by the caller), drawn below the HUD panels.
+        public Text CreateWorldText(string name, int size)
+        {
+            Text text = CreateText(name, statsText.canvas.transform, size, TextAnchor.MiddleCenter);
+            text.rectTransform.SetAsFirstSibling();
+            text.rectTransform.sizeDelta = new Vector2(600f, size * 1.5f);
+            return text;
+        }
+
         private static Text CreateText(string name, Transform parent, int size, TextAnchor alignment) =>
             UiFactory.CreateText(name, parent, size, alignment);
 

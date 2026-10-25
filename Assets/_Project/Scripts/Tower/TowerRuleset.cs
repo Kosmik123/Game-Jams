@@ -40,7 +40,7 @@ namespace ZeroHour.Tower
         public override float RoundDuration => 40f;
         public override float FallSpeed(int towerHeight) => 3f;
         public override float SpawnInterval(int towerHeight) => 0.7f;
-        public override bool ShowPerfectPopup => false;
+        public override bool ShowPerfectPopup => true;
         public override bool ShowTutorial => false;
         public override bool ShowMenuButton => true;
     }
