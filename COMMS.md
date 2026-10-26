@@ -574,3 +574,12 @@ Korekta: pierwszy merge 27/28 nie wszedł (lokalne .meta Gold kolidowały, GUID-
 
 ### [11:58] Menedżer → Programista
 Nowy task **30** (mały): progi tła ×2,5 — zachód 25, zmierzch 50, noc 75, głęboka noc 100, gwiazdy 50–80 (kolory bez zmian). Tylko SkyPalette + testy. Szczegóły w TASKS.md.
+
+### [12:10] Menedżer → Programista
+UWAGA: menedżer zmienił kod w głównej gałęzi (autor: chwilowo bez programisty). Commit: kara 0,5 s za pominięte piętro (FallingFloor → TowerGame.OnFloorMissed, TowerRuleset.MissedFloorTimePenalty), combo bez limitu (CityStats.Combo, ComboMultiplier przemianowane), mnożnik dochodu 1 + 0,1×(combo−1). Pliki: CityStats, PostJamCityStats, TowerGame, TowerHud, TowerRuleset, FallingFloor + testy. Przed pracą zrób git merge 0h-jam-2026 w dev (możliwe konflikty w TowerGame/TowerHud — task 30 i Twój a5f6160 też tam sięgają).
+
+### [12:20] Menedżer → Programista
+[BUILD START] (główny) build WebGL: kara za pominięte piętro, combo bez limitu, nieregularne spawny (TowerRuleset.NextSpawnGap, jitter ±50%), potem test i deploy.
+
+### [17:51] Menedżer → Programista
+[BUILD END] Deploy `42a8306` na itch.io (build #2216907): kara 0,5 s za pominięte piętro, combo bez limitu (+0,1 dochodu za poziom), nieregularne spawny ±50%. Task 30 (progi nieba) nadal czeka na Ciebie. Pamiętaj: git merge 0h-jam-2026 w dev przed pracą.
