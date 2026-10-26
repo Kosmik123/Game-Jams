@@ -15,8 +15,7 @@ namespace ZeroHour.Tower
         private const float TimeChangeDuration = 0.6f;
         private static readonly Color TimeBonusColor = new Color(0.45f, 1f, 0.45f);
         private static readonly Color TimePenaltyColor = new Color(1f, 0.33f, 0.33f);
-        private const float TopLayoutBottom = 0.62f;
-        private const float TopLayoutPanelAlpha = 0.35f;
+        private static readonly Vector2 CenteredTextOutline = new Vector2(5f, -5f);
         private const float NewBestPulseScale = 1.1f;
         private const float NewBestPulseFrequency = 2f;
         private static readonly Color NewBestColor = new Color(1f, 0.85f, 0.2f);
@@ -51,7 +50,7 @@ namespace ZeroHour.Tower
         private Canvas hudCanvas;
 
         public int TimerWarningSeconds { get; set; } = 10;
-        private bool isTopLayout;
+        private bool isCenteredLayout;
 
         // HUD label of the population stat; the version can rename it.
         public string PopulationLabel { get; set; } = "Pop";
@@ -281,23 +280,22 @@ namespace ZeroHour.Tower
             return value < 0 ? $"<color={WarningColor}>{text}</color>" : text;
         }
 
-        // End screen text in the top third over a lighter panel, leaving the rest of the screen to the tower.
-        public void UseTopLayout()
+        // End screen text centered over the tower, which fills the whole screen. No dark veil: a thick
+        // outline keeps the text readable on any background.
+        public void UseCenteredLayout()
         {
-            isTopLayout = true;
-            gameOverPanel.GetComponent<Image>().color = new Color(0f, 0f, 0f, TopLayoutPanelAlpha);
-            var resultRect = gameOverText.rectTransform;
-            resultRect.anchorMin = new Vector2(0f, TopLayoutBottom);
-            resultRect.anchorMax = Vector2.one;
-            resultRect.offsetMin = new Vector2(30f, 0f);
-            resultRect.offsetMax = new Vector2(-30f, -40f);
-            gameOverText.alignment = TextAnchor.UpperCenter;
+            isCenteredLayout = true;
+            gameOverPanel.GetComponent<Image>().color = Color.clear;
+            var outline = gameOverText.GetComponent<Outline>();
+            outline.effectColor = Color.black;
+            outline.effectDistance = CenteredTextOutline;
+            gameOverText.alignment = TextAnchor.MiddleCenter;
         }
 
         // bestScore is null when the version doesn't track records.
         public void ShowGameOver(int height, float money, int score, int? bestScore = null, bool isNewBest = false)
         {
-            string text = isTopLayout
+            string text = isCenteredLayout
                 ? "TIME'S UP!\n" +
                   $"Height  {height}    Money  $ {money:0}\n" +
                   $"<size={gameOverFontSize + 20}>Score  {score}</size>"
@@ -313,11 +311,11 @@ namespace ZeroHour.Tower
                 // A new record gets its own pulsing text; an invisible copy keeps the line's space.
                 text += isNewBest ? $"<color=#00000000>{NewBestLabel}</color>" : $"Best  {bestScore.Value}";
             }
-            text += (isTopLayout ? "\n" : "\n\n") + $"<size={gameOverFontSize * 3 / 4}>Tap to play again</size>";
+            text += (isCenteredLayout ? "\n" : "\n\n") + $"<size={gameOverFontSize * 3 / 4}>Tap to play again</size>";
             gameOverText.text = text;
             gameOverPanel.SetActive(true);
-            // The summary repeats the stats; the panel and the timer would sit under the top-layout text.
-            if (isTopLayout)
+            // The summary repeats the stats; the panel and the timer would sit under the centered text.
+            if (isCenteredLayout)
                 SetGameplayHudVisible(false);
 
             if (newBestText != null)
