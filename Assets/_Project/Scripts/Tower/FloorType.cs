@@ -30,6 +30,11 @@ namespace ZeroHour.Tower
             new FloorType("Park", new Color(0.4f, 0.8f, 0.45f), 0, 0, 0, 3),
         };
 
+        // The rare golden floor: no stats, never part of the random draw (see GoldSpawner).
+        public static FloorType Gold { get; } = new FloorType("Gold", new Color(1f, 0.84f, 0.1f), 0, 0, 0, 0);
+
+        public bool IsGold => this == Gold;
+
         public static FloorType GetRandom() => All[Random.Range(0, All.Count)];
     }
 }

@@ -7,6 +7,8 @@ namespace ZeroHour.Tower
         private static readonly Color UnpoweredTint = new Color(0.45f, 0.45f, 0.5f);
         private const float SlideDuration = 0.08f;
         private const float SquashDuration = 0.15f;
+        private const float GoldPulseDepth = 0.15f;
+        private const float GoldPulseFrequency = 4f;
         private static readonly Vector2 SquashScale = new Vector2(1.15f, 0.85f);
 
         private TowerGame game;
@@ -24,6 +26,7 @@ namespace ZeroHour.Tower
         public float Width { get; private set; }
         public float Height { get; private set; }
         public bool IsAttached { get; private set; }
+        public bool IsDebris => isDebris;
 
         // Position in the tower, without the visual wobble.
         public Vector2 TowerPosition { get; private set; }
@@ -68,6 +71,8 @@ namespace ZeroHour.Tower
             position.y -= fallSpeed * Time.deltaTime;
             transform.position = position;
             transform.Rotate(0f, 0f, spin * Time.deltaTime);
+            if (Type.IsGold && !isDebris)
+                PulseGold();
 
             TowerController tower = game.Tower;
             float bottom = position.y - Height / 2f;
@@ -114,6 +119,14 @@ namespace ZeroHour.Tower
                 transform.localScale = new Vector3(baseScale.x * scale.x, baseScale.y * scale.y, baseScale.z);
             }
             transform.localPosition = new Vector3(TowerPosition.x + offsetX + slide, TowerPosition.y - (1f - squashY) * Height / 2f, 0f);
+        }
+
+        // The golden floor flickers in brightness while it falls.
+        private void PulseGold()
+        {
+            float wave = 0.5f + 0.5f * Mathf.Sin(Time.time * GoldPulseFrequency * 2f * Mathf.PI);
+            float value = 1f - GoldPulseDepth * wave;
+            spriteRenderer.color = new Color(value, value, value, 1f);
         }
 
         public void SetPowered(bool isPowered)

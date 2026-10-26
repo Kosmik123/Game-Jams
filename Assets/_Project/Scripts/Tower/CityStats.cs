@@ -133,6 +133,9 @@ namespace ZeroHour.Tower
 
         public void Tick(float deltaTime) => Money += Income * deltaTime;
 
+        // One-off cash that doesn't come from income (the golden floor).
+        public void AddBonusMoney(float amount) => Money += amount;
+
         // Perfect landings in a row; the jam economy doesn't count them.
         public int PerfectStreak { get; protected set; }
 
