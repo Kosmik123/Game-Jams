@@ -43,6 +43,9 @@ namespace ZeroHour.Tower
         // catching floors.
         public abstract float TowerTopScreenFraction { get; }
 
+        // The sky changes from day to night as the tower grows; off keeps the plain sky color.
+        public virtual bool DynamicSky => false;
+
         // Golden floor: a rare, faster floor that pays a bonus. Off (zero chance) unless a version opts in.
         public virtual float GoldChance => 0f;
         public virtual int GoldMinHeight => 0;
@@ -164,6 +167,7 @@ namespace ZeroHour.Tower
         public override TowerSway CreateSway() => new PostJamTowerSway();
         public override bool FixedCamera => true;
         public override float TowerTopScreenFraction => 0.25f;
+        public override bool DynamicSky => true;
         public override float GoldChance => GoldSpawnChance;
         public override int GoldMinHeight => GoldSpawnMinHeight;
         public override int GoldPity => GoldSpawnPity;

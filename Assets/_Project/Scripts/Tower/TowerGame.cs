@@ -102,6 +102,7 @@ namespace ZeroHour.Tower
         private TowerRuleset ruleset;
         private CityStats stats;
         private GoldSpawner goldSpawner;
+        private SkyBackground sky;
         private TowerHud hud;
         private Sprite squareSprite;
         private float spawnTimer;
@@ -149,6 +150,8 @@ namespace ZeroHour.Tower
             Camera.orthographic = true;
             Camera.backgroundColor = SkyColor;
             FitCamera();
+            if (ruleset.DynamicSky)
+                sky = SkyBackground.Create(Camera, SkyColor);
             startCameraY = Camera.transform.position.y;
             startCameraX = Camera.transform.position.x;
             startBaseY = BottomY + baseMargin;
@@ -165,6 +168,13 @@ namespace ZeroHour.Tower
             if (ruleset.PlaySounds)
                 hud.AddMuteButton(AudioManager.Instance.IsMuted);
             StartRound();
+        }
+
+        // The sky hangs on the camera, which outlives this object when the game is recreated.
+        private void OnDestroy()
+        {
+            if (sky != null)
+                Destroy(sky.gameObject);
         }
 
         // Restart rebuilds the game objects instead of reloading the scene.
@@ -198,6 +208,8 @@ namespace ZeroHour.Tower
 
             stats = ruleset.CreateEconomy();
             goldSpawner = new GoldSpawner(ruleset.GoldChance, ruleset.GoldMinHeight, ruleset.GoldPity);
+            if (sky != null)
+                sky.ResetToDay();
             timeLeft = ruleset.RoundDuration;
             roundElapsed = 0f;
             shakeTimeLeft = 0f;
@@ -253,6 +265,8 @@ namespace ZeroHour.Tower
 
         private void Update()
         {
+            if (sky != null)
+                sky.SetTargetHeight(stats.Height);
             if (towerShotTime >= 0f)
                 UpdateTowerShot();
             else
