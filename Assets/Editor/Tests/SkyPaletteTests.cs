@@ -27,32 +27,32 @@ public class SkyPaletteTests
     }
 
     [Test]
-    public void Height5_IsHalfwayBetweenDayAndSunset()
+    public void Height12_5_IsHalfwayBetweenDayAndSunset()
     {
-        SkyPalette.Evaluate(5f, Day, out Color top, out Color bottom);
+        SkyPalette.Evaluate(12.5f, Day, out Color top, out Color bottom);
         AssertColor(Mid(Day, Hex(0x4A6FA5)), top);
         AssertColor(Mid(Day, Hex(0xF4A261)), bottom);
     }
 
     [Test]
-    public void Height10_IsSunset()
+    public void Height25_IsSunset()
     {
-        SkyPalette.Evaluate(10f, Day, out Color top, out Color bottom);
+        SkyPalette.Evaluate(25f, Day, out Color top, out Color bottom);
         AssertColor(Hex(0x4A6FA5), top);
         AssertColor(Hex(0xF4A261), bottom);
     }
 
     [Test]
-    public void Height25_IsHalfwayBetweenDuskAndNight()
+    public void Height62_5_IsHalfwayBetweenDuskAndNight()
     {
-        SkyPalette.Evaluate(25f, Day, out Color top, out Color bottom);
+        SkyPalette.Evaluate(62.5f, Day, out Color top, out Color bottom);
         AssertColor(Mid(Hex(0x2B2D6E), Hex(0x0A0F2C)), top);
         AssertColor(Mid(Hex(0xC2557A), Hex(0x1F2A5C)), bottom);
     }
 
-    [TestCase(40f)]
-    [TestCase(80f)]
-    public void Height40AndUp_IsDeepNight(float height)
+    [TestCase(100f)]
+    [TestCase(200f)]
+    public void Height100AndUp_IsDeepNight(float height)
     {
         SkyPalette.Evaluate(height, Day, out Color top, out Color bottom);
         AssertColor(Hex(0x03051A), top);
@@ -60,11 +60,11 @@ public class SkyPaletteTests
     }
 
     [TestCase(0f, 0f)]
-    [TestCase(20f, 0f)]
-    [TestCase(26f, 0.5f)]
-    [TestCase(32f, 1f)]
+    [TestCase(50f, 0f)]
+    [TestCase(65f, 0.5f)]
     [TestCase(80f, 1f)]
-    public void StarAlpha_RisesBetween20And32(float height, float expected)
+    [TestCase(200f, 1f)]
+    public void StarAlpha_RisesBetween50And80(float height, float expected)
     {
         Assert.AreEqual(expected, SkyPalette.StarAlpha(height), 1e-4f);
     }

@@ -5,10 +5,10 @@ namespace ZeroHour.Tower
     // Sky colors by tower height: day, sunset, dusk, night. Pure math, so it can be tested.
     public static class SkyPalette
     {
-        private const float StarsStartHeight = 20f;
-        private const float StarsFullHeight = 32f;
+        private const float StarsStartHeight = 50f;
+        private const float StarsFullHeight = 80f;
 
-        private static readonly float[] Heights = { 10f, 20f, 30f, 40f };
+        private static readonly float[] Heights = { 25f, 50f, 75f, 100f };
         private static readonly Color[] Tops = { Hex(0x4A6FA5), Hex(0x2B2D6E), Hex(0x0A0F2C), Hex(0x03051A) };
         private static readonly Color[] Bottoms = { Hex(0xF4A261), Hex(0xC2557A), Hex(0x1F2A5C), Hex(0x101A40) };
 
@@ -41,7 +41,7 @@ namespace ZeroHour.Tower
             bottom = Bottoms[Bottoms.Length - 1];
         }
 
-        // 0 up to height 20, rising linearly to 1 at height 32.
+        // 0 up to height 50, rising linearly to 1 at height 80.
         public static float StarAlpha(float height) =>
             Mathf.Clamp01((height - StarsStartHeight) / (StarsFullHeight - StarsStartHeight));
 

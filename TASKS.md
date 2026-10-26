@@ -197,7 +197,7 @@ Po każdym tasku: kompilacja/testy → commit (mały, z opisem). Build WebGL + d
   - EditMode: interpolacja kolorów (Height 0, 5, 10, 25, 40, 80 → oczekiwane wartości policzone ręcznie z tabeli), alfa gwiazd (0 przy H ≤ 20, 0,5 przy H = 26, 1 przy H ≥ 32).
   - Play Mode: screeny tła dla Height 0, 10, 20, 30, 40 do `COMMS.md`; jam bez zmian (stały kolor nieba).
 
-- [ ] **30. [post-jam] Tło: progi wysokości ×2,5 (decyzja autora).** Noc na Height 40 przychodzi za szybko. Zmiana tylko progów w `SkyPalette` (kolory bez zmian), wszystko proporcjonalnie ×2,5:
+- [x] **30. [post-jam] Tło: progi wysokości ×2,5 (decyzja autora).** Noc na Height 40 przychodzi za szybko. Zmiana tylko progów w `SkyPalette` (kolory bez zmian), wszystko proporcjonalnie ×2,5:
 
   | Height (było → ma być) | Góra | Dół |
   |---|---|---|
