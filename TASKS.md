@@ -197,6 +197,21 @@ Po każdym tasku: kompilacja/testy → commit (mały, z opisem). Build WebGL + d
   - EditMode: interpolacja kolorów (Height 0, 5, 10, 25, 40, 80 → oczekiwane wartości policzone ręcznie z tabeli), alfa gwiazd (0 przy H ≤ 20, 0,5 przy H = 26, 1 przy H ≥ 32).
   - Play Mode: screeny tła dla Height 0, 10, 20, 30, 40 do `COMMS.md`; jam bez zmian (stały kolor nieba).
 
+- [ ] **30. [post-jam] Tło: progi wysokości ×2,5 (decyzja autora).** Noc na Height 40 przychodzi za szybko. Zmiana tylko progów w `SkyPalette` (kolory bez zmian), wszystko proporcjonalnie ×2,5:
+
+  | Height (było → ma być) | Góra | Dół |
+  |---|---|---|
+  | 0 → 0 | obecny kolor nieba | obecny kolor nieba |
+  | 10 → **25** | `#4A6FA5` | `#F4A261` (zachód) |
+  | 20 → **50** | `#2B2D6E` | `#C2557A` (zmierzch) |
+  | 30 → **75** | `#0A0F2C` | `#1F2A5C` (noc) |
+  | 40+ → **100+** | `#03051A` | `#101A40` (głęboka noc) |
+
+  - **Gwiazdy:** pełne pojawianie od Height **50 do 80** (było 20–32): alfa 0 przy H ≤ 50, 0,5 przy H = 65, 1 przy H ≥ 80.
+  - Progi jako stałe w jednym miejscu (np. `SkyPalette`), łatwe do strojenia; reszta (wygładzanie 1/s, restart, jam bez `DynamicSky`) bez zmian.
+  - Zaktualizuj testy `SkyPaletteTests`: wartości dla Height 0, 12,5 (połowa między dniem a zachodem), 25, 50, 75, 100, 200 oraz alfa gwiazd 0/0/0,5/1/1 dla 0/50/65/80/200 (liczone ręcznie z tabeli).
+  - Uwaga: przy tej skali typowa runda (H ≈ 25–45) kończy się na zachodzie/zmierzchu, noc to nagroda dla bardzo dobrych graczy.
+
 ## Zrobione (jam, do `39a94ec` na itch.io)
 
 - [x] Input na telefonie (platforma zostaje w miejscu bez dotyku).

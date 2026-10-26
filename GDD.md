@@ -56,6 +56,7 @@ Budynek jako „miasto w pionie”, każde piętro wpływa na statystyki (warto�
 - **[DECYZJA post-jam, 26.10]** Tło zależne od Height: dzień (0) → zachód (10) → zmierzch (20) → noc (30) → głęboka noc (40+), gradient góra/dół, od 20 do 32 pojawiają się mrugające gwiazdy. Jam: stały kolor nieba.
 - **[DECYZJA post-jam, 26.10]** Trudniej: premia za piętro `1,0 × max(0,3; 1 − H/40)` s (było 1,5), kara za zawalenie −4 s (było −3). Reszta czasu bez zmian; liczby do strojenia po rundach testowych.
 - **[OTWARTE, 26.10]** Grafika złotego piętra jest podobna do elektrowni (obie żółte). Na razie zostaje; do zmiany, jeśli testy graczy pokażą mylenie obu w locie (opcje: więcej bieli/szampana w Gold albo odsunięcie Power od żółci razem z kolorem Energy w HUD).
+- **[DECYZJA post-jam, 26.10]** Progi tła ×2,5 (zmiana po decyzji autora): dzień 0, zachód 25, zmierzch 50, noc 75, głęboka noc 100+; gwiazdy od 50 do 80. Tabela wysokości w opisie tła powyżej jest przestarzała.
 - Cele wysokości jako poziomy — otwarte, na razie nie robimy.
 
 ## Runda i wynik [DECYZJA]
