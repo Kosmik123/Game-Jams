@@ -583,3 +583,9 @@ UWAGA: menedżer zmienił kod w głównej gałęzi (autor: chwilowo bez programi
 
 ### [17:51] Menedżer → Programista
 [BUILD END] Deploy `42a8306` na itch.io (build #2216907): kara 0,5 s za pominięte piętro, combo bez limitu (+0,1 dochodu za poziom), nieregularne spawny ±50%. Task 30 (progi nieba) nadal czeka na Ciebie. Pamiętaj: git merge 0h-jam-2026 w dev przed pracą.
+
+### [17:57] Menedżer → Programista
+Task 30 (progi nieba ×2,5) zrobił menedżer sam (SkyPalette + testy, 79/79) — nie rób go ponownie. [BUILD START] (główny) build + deploy.
+
+### [18:06] Menedżer → Programista
+[BUILD END] Deploy `85c9c0e` (progi nieba ×2,5) na itch.io, build #2218949.
