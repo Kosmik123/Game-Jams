@@ -229,7 +229,7 @@ namespace ZeroHour.Tower
             muteButton = (RectTransform)buttonObject.transform;
             muteButton.anchorMin = muteButton.anchorMax = muteButton.pivot = new Vector2(1f, 0f);
             muteButton.anchoredPosition = new Vector2(-40f, 40f);
-            muteButton.sizeDelta = new Vector2(220f, 120f);
+            muteButton.sizeDelta = new Vector2(300f, 120f);
             buttonObject.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.25f);
             buttonObject.GetComponent<Image>().raycastTarget = false;
 
@@ -240,7 +240,7 @@ namespace ZeroHour.Tower
             SetMuted(isMuted);
         }
 
-        public void SetMuted(bool isMuted) => muteLabel.text = isMuted ? "\u266A off" : "\u266A";
+        public void SetMuted(bool isMuted) => muteLabel.text = isMuted ? "Sound: off" : "Sound: on";
 
         public bool IsOverMuteButton(Vector2 screenPosition) =>
             muteButton != null && muteButton.gameObject.activeInHierarchy &&
