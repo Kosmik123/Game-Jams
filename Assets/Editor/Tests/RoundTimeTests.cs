@@ -52,4 +52,28 @@ public class RoundTimeTests
         Assert.AreEqual(9.5f, postJam.ApplyTimeChange(10f, -postJam.MissedFloorTimePenalty), 1e-4f);
         Assert.AreEqual(0f, postJam.ApplyTimeChange(0.3f, -postJam.MissedFloorTimePenalty), 1e-4f);
     }
+
+    [Test]
+    public void PostJam_SpawnGaps_AreIrregularButKeepTheMean()
+    {
+        // Height 0: base interval 0.7 s, jitter +-50% -> 0.35 s .. 1.05 s.
+        Assert.AreEqual(0.35f, postJam.NextSpawnGap(0, 0f), 1e-4f);
+        Assert.AreEqual(0.7f, postJam.NextSpawnGap(0, 0.5f), 1e-4f);
+        Assert.AreEqual(1.05f, postJam.NextSpawnGap(0, 1f), 1e-4f);
+        var rng = new System.Random(7);
+        float sum = 0f;
+        const int n = 20000;
+        for (int i = 0; i < n; i++)
+            sum += postJam.NextSpawnGap(0, (float)rng.NextDouble());
+        Assert.AreEqual(0.7f, sum / n, 0.01f);
+    }
+
+    [Test]
+    public void SpawnGap_NeverBelowMinimum_AndJamStaysRegular()
+    {
+        // Height 60: base interval 0.4 s -> 0.2 s at best, still above the 0.15 s floor.
+        Assert.GreaterOrEqual(postJam.NextSpawnGap(60, 0f), TowerRuleset.MinSpawnGap);
+        Assert.AreEqual(0.7f, jam.NextSpawnGap(0, 0f), 1e-4f);
+        Assert.AreEqual(0.7f, jam.NextSpawnGap(0, 1f), 1e-4f);
+    }
 }

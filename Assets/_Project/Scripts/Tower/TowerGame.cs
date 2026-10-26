@@ -337,7 +337,7 @@ namespace ZeroHour.Tower
             spawnTimer -= Time.deltaTime;
             if (spawnTimer <= 0f)
             {
-                spawnTimer = ruleset.SpawnInterval(stats.Height);
+                spawnTimer = ruleset.NextSpawnGap(stats.Height, Random.value);
                 SpawnNextFloor();
             }
         }

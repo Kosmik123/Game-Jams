@@ -58,6 +58,7 @@ Budynek jako „miasto w pionie”, każde piętro wpływa na statystyki (warto�
 - **[OTWARTE, 26.10]** Grafika złotego piętra jest podobna do elektrowni (obie żółte). Na razie zostaje; do zmiany, jeśli testy graczy pokażą mylenie obu w locie (opcje: więcej bieli/szampana w Gold albo odsunięcie Power od żółci razem z kolorem Energy w HUD).
 - **[DECYZJA post-jam, 26.10]** Progi tła ×2,5 (zmiana po decyzji autora): dzień 0, zachód 25, zmierzch 50, noc 75, głęboka noc 100+; gwiazdy od 50 do 80. Tabela wysokości w opisie tła powyżej jest przestarzała.
 - **[DECYZJA post-jam, 26.10]** Trudniej (robione przez menedżera, bez programisty): (1) **kara za pominięte piętro** — każde zwykłe piętro, które spadnie poza dolny brzeg ekranu, odejmuje 0,5 s (`MissedFloorPenalty`; złote jest bez kary; szczątki z zawalenia nie liczą się); (2) **combo bez limitu** — N-te idealne lądowanie z rzędu = combo N (od 2), dźwięk `perfect_N` zatrzymuje się na 5; (3) **mnożnik dochodu z combo** = `1 + 0,1 × (combo − 1)`: combo 2 → ×1,1, 3 → ×1,2, 4 → ×1,3 itd. (było ×combo, maks. ×5). HUD pokazuje „COMBO N (x1.2)”.
+- **[DECYZJA post-jam, 26.10]** Nieregularne spawny: odstęp między piętrami = `SpawnInterval(Height)` × losowo od 0,5 do 1,5 (rozrzut ±50%, ta sama średnia, minimum 0,15 s). Jam: stałe odstępy.
 - Cele wysokości jako poziomy — otwarte, na razie nie robimy.
 
 ## Runda i wynik [DECYZJA]

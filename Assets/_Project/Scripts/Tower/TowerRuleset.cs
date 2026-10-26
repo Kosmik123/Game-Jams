@@ -35,6 +35,16 @@ namespace ZeroHour.Tower
         // Seconds until the next floor, measured when the tower has the given height.
         public abstract float SpawnInterval(int towerHeight);
 
+        // How far the real gap may stray from SpawnInterval, as a fraction of it (0.5 = from half to one and a half).
+        public virtual float SpawnIntervalJitter => 0f;
+
+        // The shortest gap between two floors, so they never overlap.
+        public const float MinSpawnGap = 0.15f;
+
+        // A random gap around SpawnInterval with the same mean; unit01 is a uniform random number from 0 to 1.
+        public float NextSpawnGap(int towerHeight, float unit01) =>
+            Mathf.Max(MinSpawnGap, SpawnInterval(towerHeight) * (1f + SpawnIntervalJitter * (2f * unit01 - 1f)));
+
         public abstract CityStats CreateEconomy();
 
         public abstract TowerSway CreateSway();
@@ -160,6 +170,7 @@ namespace ZeroHour.Tower
         public override float MaxTime => MaxRoundTime;
         public override float CollapseTimePenalty => CollapsePenalty;
         public override float MissedFloorTimePenalty => MissedFloorPenalty;
+        public override float SpawnIntervalJitter => 0.5f;
         public override int TimerWarningSeconds => 4;
 
         // The floor bonus shrinks as the tower grows; the perfect bonus doesn't.
