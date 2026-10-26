@@ -147,6 +147,48 @@ Po każdym tasku: kompilacja/testy → commit (mały, z opisem). Build WebGL + d
   - **Import** (`AudioImporter`, np. w `Assets/Editor/`, dla `Resources/Audio/`): SFX — Decompress On Load, PCM/ADPCM, mono; `music_game` — Compressed In Memory (Vorbis, quality ~0,5), Load In Background. Zacommituj `.meta`.
   - Sprawdzenie: build WebGL, wszystkie zdarzenia słychać, mute działa i przeżywa przeładowanie, jam cichy, konsola czysta.
 
+- [ ] **25. ⚡ PRIORYTET (po 24, przed 26) [post-jam] Niższy dach — więcej nieba do manewrowania.** Dziś szczyt wieży trzyma się na `towerTopScreenFraction` = 0,4 wysokości ekranu (od dołu), a od góry ~1/3 ekranu zajmuje HUD (statystyki + timer) i miejsce spawnu pięter. Wolnego nieba między dachem a HUD zostaje za mało, żeby wygodnie wybierać i łapać piętra (zgłoszenie autora).
+  - Frakcja przestaje być polem `TowerGame` wspólnym dla obu wersji, a staje się właściwością rulesetu: `TowerRuleset.TowerTopScreenFraction` — **Jam 0,4** (bez zmian), **PostJam 0,25**. Stała w `PostJamRuleset`, łatwa do strojenia.
+  - Dotyczy tego samego miejsca co task 8 (`FitCamera`, `allowedTopY`). Nic poza tą liczbą nie zmieniaj w mechanice zjeżdżania wieży.
+  - Sprawdź w buildzie (540×720): (a) na starcie platforma i pierwsze piętra są w całości w kadrze, a wieża zaczyna zjeżdżać dopiero gdy dach dojdzie do 25% wysokości; (b) zmierz i podaj w `COMMS.md`, ile % wysokości ekranu zostaje między dachem a dolną krawędzią panelu statystyk (przed i po); (c) PERFECT/„+$”/popupy synergii nadal mieszczą się nad dachem; (d) kołysanie wysokiej wieży nie wypycha dachu pod krawędź; (e) jam wygląda dokładnie jak dotąd.
+  - Jeśli po zmianie HUD i tak zasłania spawn pięter, napisz w `COMMS.md` zamiast poprawiać układ HUD na własną rękę.
+
+- [ ] **26. [post-jam] Ekran końca: wieżowiec na całe tło, tekst na środku.** Zmiana taska 19 (decyzja autora): zamiast „wieża w dolnych 2/3, tekst u góry” — **cały wieżowiec od platformy po dach zajmuje praktycznie cały ekran jako tło, a wyniki są wyśrodkowanym tekstem na wierzchu.** Tekst nie zasłania budynku w istotny sposób, bo to tylko napisy.
+  - `towerShotScreenShare`: 2/3 → **1** (ruleset post-jam; jam nie ma ujęcia, bez zmian). Margines wokół wieży zmniejsz do ~6% (po 3% z góry i z dołu), żeby budynek wypełniał kadr; wzory z `UpdateTowerShot` (`size`, `upperY`, `lowerY`) zostają, tylko z nowym udziałem. Krótka wieża (0–3 piętra): jak dotąd nie przybliżaj kamery poniżej rozmiaru startowego.
+  - **Tekst końca** (TIME'S UP!, Height, Money, Score, Best, NEW BEST!, „Tap to play again”): wyśrodkowany w pionie i poziomie (`MiddleCenter`), na wierzchu wieży. Zamiast ciemnej zasłony na cały ekran (dziś alfa 0,65) — **brak ciemnej zasłony na całym ekranie**; czytelność przez gruby czarny obrys/cień tekstu (`Outline`, np. odległość 4–5 px) i ewentualnie bardzo lekkie tło tylko pod blokiem tekstu (alfa ≤ 0,35, wąski prostokąt dopasowany do tekstu).
+  - **Reszta HUD podczas ujęcia:** panel statystyk (lewy górny róg) i timer ukryj od momentu „TIME'S UP!” (wyniki są w tekście końca), żeby nie zasłaniały dachu. Przycisk „Menu” (lewy dolny róg) i przycisk ♪ (prawy dolny) zostają i mają zostać klikalne.
+  - Reszta jak w tasku 19: ease in-out ~1,5 s, wygaszone kołysanie, „Tap to play again”/„Menu” aktywne po animacji, restart przywraca kamerę natychmiast.
+  - Sprawdzenie: koniec rundy przy 0, 1, ~10 i ~40 piętrach — wieża wypełnia kadr (górny i dolny margines ≈ 3%), tekst czytelny na jasnym i ciemnym tle (po tasku 28 tło będzie się zmieniać!), nic się nie rozjeżdża; zrzut ekranu z 10 i ~40 pięter do `COMMS.md`. Jam bez zmian.
+
+- [ ] **27. [post-jam] Złote piętro.** Rzadkie, szybsze, daje bonus. Nagroda za refleks i ryzyko (odciąga gracza od wyboru innego piętra).
+  - **Nowy `FloorType` „Gold”** — **nie wchodzi** do `FloorType.GetRandom()` (osobny los w `SpawnNextFloor`). Statystyki: wszystko 0 (nie zużywa prądu, nie zmienia Pop/Jobs/Joy, nie tworzy synergii sąsiadów; liczy się jako piętro do `Height`). Sprite: `Assets/_Project/Resources/FloorsWide/Gold.png` (128×96, dostarczę ja — designer; trafi do głównej gałęzi, zrób `git merge 0h-jam-2026` w dev przed rozpoczęciem). `FloorSpriteImporter` ma objąć nowy plik.
+  - **Losowanie:** przy każdym spawnie szansa **5%**, ale: nie wcześniej niż od `Height ≥ 3`, najwyżej jedno złote w powietrzu naraz, oraz **gwarancja** — po 25 spawnach bez złotego następne jest złote (licznik zerowany po spawnie złotego i przy restarcie rundy). Liczby w `PostJamRuleset` (`GoldChance`, `GoldMinHeight`, `GoldPity`). Jam: `GoldChance = 0`.
+  - **W powietrzu:** prędkość spadania ×1,4 względem zwykłej (`GoldFallSpeedFactor`); sprite lekko pulsuje jasnością (±15%, ~4 Hz); w chwili pojawienia się dźwięk `gold_spawn` (ciche, krótkie błyśnięcie — dostarczę).
+  - **Po złapaniu** (wszystko naraz, wartości w rulesecie): **+3 s czasu** (przez `ChangeTime`, więc z napisem czasu i limitem 30 s), **niestabilność −25** (nie poniżej 0), **jednorazowo +$25** (do Money i do wyniku), popup „GOLD!” w złotym kolorze (jak PERFECT, ~70) nad piętrem, dźwięk `gold` (dostarczę). Złote piętro **może** być PERFECT (combo działa normalnie jak dla innych pięter).
+  - Chybione złote znika jak każde inne, bez kary.
+  - Złote piętro nie jest „konsumentem” prądu — nie ma wpływu na ciemnienie pięter (`PowerRatio`).
+  - EditMode: (a) `GetRandom` nigdy nie zwraca Gold; (b) licznik pity: po 25 spawnach bez złotego następny jest złoty (stały seed/wstrzyknięty generator); (c) jedno złote w powietrzu naraz; (d) po złapaniu: czas +3 (z limitem 30), niestabilność max(0, x − 25), Money +25; (e) wieża R,Gold,Park nie tworzy żadnych par synergii z Gold; jam nigdy nie spawnuje Gold.
+  - Play Mode: złote piętro pojawia się, spada szybciej, pulsuje, po złapaniu wszystkie efekty widać; konsola czysta.
+
+- [ ] **28. [post-jam] Tło zmienia się z wysokością wieży.** Dzień → zachód słońca → zmierzch → noc ze gwiazdami. Pokazuje postęp i nagradza wysokie wieże.
+  - Zależność od `Height` (liczba pięter), wygładzona (płynne dążenie ~1/s do wartości docelowej, żeby kolor nie skakał przy zawaleniu). Dwukolorowy pionowy gradient (góra / dół ekranu) interpolowany liniowo między punktami:
+
+    | Height | Góra | Dół |
+    |---|---|---|
+    | 0 | obecny kolor nieba z gry | obecny kolor nieba z gry |
+    | 10 | `#4A6FA5` | `#F4A261` (zachód) |
+    | 20 | `#2B2D6E` | `#C2557A` (zmierzch) |
+    | 30 | `#0A0F2C` | `#1F2A5C` (noc) |
+    | 40+ | `#03051A` | `#101A40` (głęboka noc) |
+
+  - **Gwiazdy:** od Height 20 do 32 stopniowo (alfa 0 → 1) pojawiają się białe kwadraciki 2–3 px (styl pixel-art), ~40 sztuk w stałych pozycjach (generator z ustalonym seedem), na stałe w układzie ekranu; delikatne mruganie (alfa ±30%, losowa faza, ~0,5–1,5 Hz). Bez księżyca na razie.
+  - Implementacja: tło w układzie ekranu za wszystkim (quad jako dziecko kamery skalowany do widoku albo kamera + canvas) — **musi działać także przy oddaleniu kamery w ujęciu końcowym (task 26)** i przy zmianie rozmiaru okna. Żadnych zasobów graficznych — gradient i gwiazdy generowane w kodzie (tekstura 1×64 / pojedyncze kwadraty).
+  - Restart rundy: tło wraca natychmiast do dnia. Na ekranie końca tło zostaje takie, jakie było na wysokości wieży.
+  - Zawalenie obniża `Height` → tło płynnie się „rozjaśnia” w tył (OK, zamierzone).
+  - **Czytelność:** tekst HUD jest biały z obrysem — sprawdź na każdym stopniu tła (w tym najjaśniejszym punkcie zachodu); napisy popupów (PERFECT, „+$N”, synergie, GOLD!) nie mogą znikać na żadnym tle; jeśli któryś zniknie, dodaj obrys i napisz w `COMMS.md`.
+  - EditMode: interpolacja kolorów (Height 0, 5, 10, 25, 40, 80 → oczekiwane wartości policzone ręcznie z tabeli), alfa gwiazd (0 przy H ≤ 20, 0,5 przy H = 26, 1 przy H ≥ 32).
+  - Play Mode: screeny tła dla Height 0, 10, 20, 30, 40 do `COMMS.md`; jam bez zmian (stały kolor nieba).
+
 ## Zrobione (jam, do `39a94ec` na itch.io)
 
 - [x] Input na telefonie (platforma zostaje w miejscu bez dotyku).

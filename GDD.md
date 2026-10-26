@@ -50,6 +50,10 @@ Budynek jako „miasto w pionie”, każde piętro wpływa na statystyki (warto�
 - **[DECYZJA post-jam, 25.10]** Kołysanie: wychylenie szczytu maleje z wysokością (`1 / (1 + H/15)`), wygina się głównie góra (`((i+1)/H)^1,5`), wysoka wieża kołysze się wolniej (`ω = 3/√(1 + H/15)`). Tylko efekt wizualny.
 - **[DECYZJA post-jam, 25.10]** Rekord (`PlayerPrefs`, „NEW BEST!”), combo za serię PERFECT (mnożnik dochodu x2–x5, zerowany nieidealnym lądowaniem) i juice (wstrząs przy zawaleniu, „+$N” z wieży co sekundę, sprężyste lądowanie).
 - **[DECYZJA post-jam, 25.10]** Piętra 4:3: szerokość 1 j., wysokość 0,75 j., grafiki 32×24 (×4 = 128×96) w `Resources/FloorsWide/`, generowane `Tools/floor_sprites.py --wide`. Kwadraty 32×32 w `Resources/Floors/` zostają dla wersji jamowej.
+- **[DECYZJA post-jam, 26.10]** Dach niżej: szczyt wieży trzyma się na 25% wysokości ekranu (było 40%), żeby było więcej wolnego nieba do manewrowania. Jam bez zmian (40%).
+- **[DECYZJA post-jam, 26.10]** Ekran końca: wieżowiec od platformy po dach wypełnia praktycznie cały ekran (margines ~3% z góry i z dołu), wyniki to wyśrodkowany tekst z obrysem na wierzchu, bez ciemnej zasłony; panel statystyk i timer znikają. Zastępuje układ „wieża w dolnych 2/3”.
+- **[DECYZJA post-jam, 26.10]** Złote piętro: szansa 5% na spawn (od Height 3, jedno naraz, gwarancja po 25 spawnach), spada ×1,4 szybciej, pulsuje. Po złapaniu: +3 s, niestabilność −25, +$25, popup „GOLD!”. Bez statystyk i synergii, liczy się do Height. Liczby do strojenia po testach.
+- **[DECYZJA post-jam, 26.10]** Tło zależne od Height: dzień (0) → zachód (10) → zmierzch (20) → noc (30) → głęboka noc (40+), gradient góra/dół, od 20 do 32 pojawiają się mrugające gwiazdy. Jam: stały kolor nieba.
 - Cele wysokości jako poziomy — otwarte, na razie nie robimy.
 
 ## Runda i wynik [DECYZJA]
