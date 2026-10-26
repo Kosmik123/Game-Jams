@@ -28,6 +28,10 @@ namespace ZeroHour.Tower
         [SerializeField]
         private int collapsedFloors = 3;
 
+        [Tooltip("How fast the platform eases to its new spot when the roof shifts (a floor lands off-center, the top collapses). Higher is quicker.")]
+        [SerializeField]
+        private float roofShiftSpeed = 12f;
+
         [SerializeField]
         private float instabilityAfterCollapse = 40f;
 
@@ -41,6 +45,7 @@ namespace ZeroHour.Tower
         private float localTop;
         private float instability;
         private bool hasSeenTouch;
+        private float mouseRoofOffset;
 
         // A floor joined the tower (raised before a collapse it may cause).
         public event Action<FallingFloor, bool> FloorLanded;
@@ -119,8 +124,15 @@ namespace ZeroHour.Tower
                 bool isDragging = isTouching && !isTouchBlocked;
                 float touchX = isDragging ? game.Camera.ScreenToWorldPoint(touchPosition).x : 0f;
                 position.x = drag.Update(isDragging, touchId, touchX, position.x, minX, maxX);
+
+                // The mouse puts the roof under the cursor. The roof offset eases to its new value, so a floor
+                // landing off-center slides the tower into place instead of snapping it.
+                mouseRoofOffset = Easing.Follow(mouseRoofOffset, topOffset, roofShiftSpeed, Time.deltaTime);
                 if (!isTouching && TryGetMouseWorldX(out float mouseX) && !game.IsOverHudButton(Mouse.current.position.ReadValue()))
-                    position.x = Mathf.Clamp(mouseX - topOffset, minX, maxX);
+                {
+                    PlatformRange.Get(mouseRoofOffset, halfRange, out float mouseMinX, out float mouseMaxX);
+                    position.x = Mathf.Clamp(mouseX - mouseRoofOffset, mouseMinX, mouseMaxX);
+                }
             }
             else if (TryGetPointerWorldX(out float pointerX))
             {
