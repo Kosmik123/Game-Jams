@@ -55,6 +55,7 @@ Budynek jako „miasto w pionie”, każde piętro wpływa na statystyki (warto�
 - **[DECYZJA post-jam, 26.10]** Złote piętro: szansa 5% na spawn (od Height 3, jedno naraz, gwarancja po 25 spawnach), spada ×1,4 szybciej, pulsuje. Po złapaniu: +3 s, niestabilność −25, +$25, popup „GOLD!”. Bez statystyk i synergii, liczy się do Height. Liczby do strojenia po testach.
 - **[DECYZJA post-jam, 26.10]** Tło zależne od Height: dzień (0) → zachód (10) → zmierzch (20) → noc (30) → głęboka noc (40+), gradient góra/dół, od 20 do 32 pojawiają się mrugające gwiazdy. Jam: stały kolor nieba.
 - **[DECYZJA post-jam, 26.10]** Trudniej: premia za piętro `1,0 × max(0,3; 1 − H/40)` s (było 1,5), kara za zawalenie −4 s (było −3). Reszta czasu bez zmian; liczby do strojenia po rundach testowych.
+- **[OTWARTE, 26.10]** Grafika złotego piętra jest podobna do elektrowni (obie żółte). Na razie zostaje; do zmiany, jeśli testy graczy pokażą mylenie obu w locie (opcje: więcej bieli/szampana w Gold albo odsunięcie Power od żółci razem z kolorem Energy w HUD).
 - Cele wysokości jako poziomy — otwarte, na razie nie robimy.
 
 ## Runda i wynik [DECYZJA]
