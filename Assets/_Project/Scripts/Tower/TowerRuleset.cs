@@ -123,11 +123,11 @@ namespace ZeroHour.Tower
         // The clock starts low and the player earns time by building.
         private const float StartTime = 25f;
         private const float MaxRoundTime = 30f;
-        private const float TimePerFloor = 1.5f;
+        private const float TimePerFloor = 1f;
         private const float TimeFalloffHeight = 40f;
         private const float MinTimeFactor = 0.3f;
         private const float PerfectTimeBonus = 1f;
-        private const float CollapsePenalty = 3f;
+        private const float CollapsePenalty = 4f;
 
         public override string Name => "Post-jam";
         public override float RoundDuration => StartTime;

@@ -6,10 +6,10 @@ public class RoundTimeTests
     private readonly TowerRuleset postJam = new PostJamRuleset();
     private readonly TowerRuleset jam = new JamRuleset();
 
-    [TestCase(1, 1.4625f)]
-    [TestCase(20, 0.75f)]
-    [TestCase(40, 0.45f)]
-    [TestCase(80, 0.45f)]
+    [TestCase(1, 0.975f)]
+    [TestCase(20, 0.5f)]
+    [TestCase(40, 0.3f)]
+    [TestCase(80, 0.3f)]
     public void FloorBonus_ShrinksWithHeight(int height, float expected)
     {
         Assert.AreEqual(expected, postJam.FloorTimeBonus(height, false), 1e-4f);
@@ -22,11 +22,11 @@ public class RoundTimeTests
     }
 
     [Test]
-    public void Collapse_TakesThreeSeconds_NotBelowZero()
+    public void Collapse_TakesFourSeconds_NotBelowZero()
     {
-        Assert.AreEqual(3f, postJam.CollapseTimePenalty, 1e-4f);
-        Assert.AreEqual(7f, postJam.ApplyTimeChange(10f, -postJam.CollapseTimePenalty), 1e-4f);
-        Assert.AreEqual(0f, postJam.ApplyTimeChange(2f, -postJam.CollapseTimePenalty), 1e-4f);
+        Assert.AreEqual(4f, postJam.CollapseTimePenalty, 1e-4f);
+        Assert.AreEqual(6f, postJam.ApplyTimeChange(10f, -postJam.CollapseTimePenalty), 1e-4f);
+        Assert.AreEqual(0f, postJam.ApplyTimeChange(3f, -postJam.CollapseTimePenalty), 1e-4f);
     }
 
     [Test]
