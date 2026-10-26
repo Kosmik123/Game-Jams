@@ -39,6 +39,10 @@ namespace ZeroHour.Tower
         // Camera stays still and the tower sinks, instead of the camera following the tower up.
         public abstract bool FixedCamera { get; }
 
+        // Screen height fraction (from the bottom) where the tower top is kept; the rest is sky for
+        // catching floors.
+        public abstract float TowerTopScreenFraction { get; }
+
         // Touch moves the platform by the finger's movement instead of jumping under the finger
         // (the mouse still places it under the cursor).
         public abstract bool RelativeControl { get; }
@@ -90,6 +94,7 @@ namespace ZeroHour.Tower
         public override CityStats CreateEconomy() => new CityStats();
         public override TowerSway CreateSway() => new JamTowerSway();
         public override bool FixedCamera => false;
+        public override float TowerTopScreenFraction => 0.4f;
         public override bool RelativeControl => false;
         public override string BestScoreKey => null;
         public override string PopulationLabel => "Pop";
@@ -140,6 +145,7 @@ namespace ZeroHour.Tower
         public override CityStats CreateEconomy() => new PostJamCityStats();
         public override TowerSway CreateSway() => new PostJamTowerSway();
         public override bool FixedCamera => true;
+        public override float TowerTopScreenFraction => 0.25f;
         public override bool RelativeControl => true;
         public override string BestScoreKey => "BestScore_PostJam";
         public override string PopulationLabel => "Popul";

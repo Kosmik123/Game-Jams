@@ -54,10 +54,6 @@ namespace ZeroHour.Tower
         [SerializeField]
         private float spawnSpacing = 1.5f;
 
-        [Tooltip("Screen height fraction (from bottom) where the camera keeps the tower top.")]
-        [SerializeField]
-        private float towerTopScreenFraction = 0.4f;
-
         [SerializeField]
         private float cameraFollowSpeed = 3f;
 
@@ -334,6 +330,7 @@ namespace ZeroHour.Tower
 
             // Keep the tower top at a fixed screen height, leaving free space above it.
             float size = Camera.orthographicSize;
+            float towerTopScreenFraction = ruleset.TowerTopScreenFraction;
             if (ruleset.FixedCamera)
             {
                 // The camera stays put and the whole tower sinks instead, so falling floors
