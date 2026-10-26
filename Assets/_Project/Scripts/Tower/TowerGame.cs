@@ -54,10 +54,6 @@ namespace ZeroHour.Tower
         [SerializeField]
         private float spawnSpacing = 1.5f;
 
-        [Tooltip("Screen height fraction (from bottom) where the camera keeps the tower top.")]
-        [SerializeField]
-        private float towerTopScreenFraction = 0.4f;
-
         [SerializeField]
         private float cameraFollowSpeed = 3f;
 
@@ -79,11 +75,11 @@ namespace ZeroHour.Tower
 
         [Tooltip("Share of the screen height (from the bottom) the tower may take in the end shot.")]
         [SerializeField]
-        private float towerShotScreenShare = 2f / 3f;
+        private float towerShotScreenShare = 1f;
 
         [Tooltip("Margin around the tower in the end shot, as a share of its size (split between both sides).")]
         [SerializeField]
-        private float towerShotMargin = 0.1f;
+        private float towerShotMargin = 0.06f;
 
         [Header("Juice")]
         [SerializeField]
@@ -159,7 +155,7 @@ namespace ZeroHour.Tower
             hud = gameObject.AddComponent<TowerHud>();
             hud.TimerWarningSeconds = ruleset.TimerWarningSeconds;
             if (ruleset.ShowTowerShot)
-                hud.UseTopLayout();
+                hud.UseCenteredLayout();
             hud.PopulationLabel = ruleset.PopulationLabel;
             if (ruleset.ShowMenuButton)
                 hud.AddMenuButton();
@@ -334,6 +330,7 @@ namespace ZeroHour.Tower
 
             // Keep the tower top at a fixed screen height, leaving free space above it.
             float size = Camera.orthographicSize;
+            float towerTopScreenFraction = ruleset.TowerTopScreenFraction;
             if (ruleset.FixedCamera)
             {
                 // The camera stays put and the whole tower sinks instead, so falling floors
@@ -461,8 +458,7 @@ namespace ZeroHour.Tower
             hud.ShowTimeChange(timeLeft - before, change);
         }
 
-        // Zooms out until the whole building, from the platform to the roof, fills the lower part of the
-        // screen. The target is recomputed every frame, as floors still in the air may land.
+        // Zooms out until the whole building, from the platform to the roof, fills the screen. The target is recomputed every frame, as floors still in the air may land.
         private void UpdateTowerShot()
         {
             towerShotTime += Time.deltaTime;
