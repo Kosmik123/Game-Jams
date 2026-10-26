@@ -128,7 +128,7 @@ Po każdym tasku: kompilacja/testy → commit (mały, z opisem). Build WebGL + d
   - Jam bez zmian.
   - EditMode testy: R,Park → Joy −1+4+1 = +4; R,P → energia +3, Joy −1−2−1 = −4; R,O → dochód (min(10,10)×0,2 + 0,3) × mnożniki przy pełnym zasilaniu; Park,R,Park → +2 Joy z synergii; kolejność R,O,R,O vs R,R,O,O → różna liczba par R–O (3 vs 1).
 
-- [ ] **24. [post-jam] Dźwięk i muzyka.** Pliki gotowe: `Assets/_Project/Resources/Audio/*.wav` (mono 16-bit 22050 Hz, generator `Tools/sound_gen.py` — zmiany brzmienia robi designer). Bez `.meta` — powstaną przy imporcie.
+- [x] **24. [post-jam] Dźwięk i muzyka.** Pliki gotowe: `Assets/_Project/Resources/Audio/*.wav` (mono 16-bit 22050 Hz, generator `Tools/sound_gen.py` — zmiany brzmienia robi designer). Bez `.meta` — powstaną przy imporcie.
   - `AudioManager` (tworzony w kodzie jak reszta; jeden na grę, przeżywa zmianę sceny — `DontDestroyOnLoad`), ładuje klipy przez `Resources.Load<AudioClip>("Audio/<nazwa>")`. Pula 4–6 `AudioSource` na SFX + jeden na muzykę (loop).
   - **Zdarzenia → dźwięki (tylko post-jam):**
     - złapane piętro → `land_<residential|office|power|park>` (+ lekka losowa zmiana wysokości ±5%),
