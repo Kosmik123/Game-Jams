@@ -168,7 +168,7 @@ Po każdym tasku: kompilacja/testy → commit (mały, z opisem). Build WebGL + d
   - Reszta jak w tasku 19: ease in-out ~1,5 s, wygaszone kołysanie, „Tap to play again”/„Menu” aktywne po animacji, restart przywraca kamerę natychmiast.
   - Sprawdzenie: koniec rundy przy 0, 1, ~10 i ~40 piętrach — wieża wypełnia kadr (górny i dolny margines ≈ 3%), tekst czytelny na jasnym i ciemnym tle (po tasku 28 tło będzie się zmieniać!), nic się nie rozjeżdża; zrzut ekranu z 10 i ~40 pięter do `COMMS.md`. Jam bez zmian.
 
-- [ ] **27. [post-jam] Złote piętro.** Rzadkie, szybsze, daje bonus. Nagroda za refleks i ryzyko (odciąga gracza od wyboru innego piętra).
+- [x] **27. [post-jam] Złote piętro.** Rzadkie, szybsze, daje bonus. Nagroda za refleks i ryzyko (odciąga gracza od wyboru innego piętra).
   - **Nowy `FloorType` „Gold”** — **nie wchodzi** do `FloorType.GetRandom()` (osobny los w `SpawnNextFloor`). Statystyki: wszystko 0 (nie zużywa prądu, nie zmienia Pop/Jobs/Joy, nie tworzy synergii sąsiadów; liczy się jako piętro do `Height`). Sprite: `Assets/_Project/Resources/FloorsWide/Gold.png` (128×96, dostarczę ja — designer; trafi do głównej gałęzi, zrób `git merge 0h-jam-2026` w dev przed rozpoczęciem). `FloorSpriteImporter` ma objąć nowy plik.
   - **Losowanie:** przy każdym spawnie szansa **5%**, ale: nie wcześniej niż od `Height ≥ 3`, najwyżej jedno złote w powietrzu naraz, oraz **gwarancja** — po 25 spawnach bez złotego następne jest złote (licznik zerowany po spawnie złotego i przy restarcie rundy). Liczby w `PostJamRuleset` (`GoldChance`, `GoldMinHeight`, `GoldPity`). Jam: `GoldChance = 0`.
   - **W powietrzu:** prędkość spadania ×1,4 względem zwykłej (`GoldFallSpeedFactor`); sprite lekko pulsuje jasnością (±15%, ~4 Hz); w chwili pojawienia się dźwięk `gold_spawn` (ciche, krótkie błyśnięcie — dostarczę).
@@ -178,7 +178,7 @@ Po każdym tasku: kompilacja/testy → commit (mały, z opisem). Build WebGL + d
   - EditMode: (a) `GetRandom` nigdy nie zwraca Gold; (b) licznik pity: po 25 spawnach bez złotego następny jest złoty (stały seed/wstrzyknięty generator); (c) jedno złote w powietrzu naraz; (d) po złapaniu: czas +3 (z limitem 30), niestabilność max(0, x − 25), Money +25; (e) wieża R,Gold,Park nie tworzy żadnych par synergii z Gold; jam nigdy nie spawnuje Gold.
   - Play Mode: złote piętro pojawia się, spada szybciej, pulsuje, po złapaniu wszystkie efekty widać; konsola czysta.
 
-- [ ] **28. [post-jam] Tło zmienia się z wysokością wieży.** Dzień → zachód słońca → zmierzch → noc ze gwiazdami. Pokazuje postęp i nagradza wysokie wieże.
+- [x] **28. [post-jam] Tło zmienia się z wysokością wieży.** Dzień → zachód słońca → zmierzch → noc ze gwiazdami. Pokazuje postęp i nagradza wysokie wieże.
   - Zależność od `Height` (liczba pięter), wygładzona (płynne dążenie ~1/s do wartości docelowej, żeby kolor nie skakał przy zawaleniu). Dwukolorowy pionowy gradient (góra / dół ekranu) interpolowany liniowo między punktami:
 
     | Height | Góra | Dół |
