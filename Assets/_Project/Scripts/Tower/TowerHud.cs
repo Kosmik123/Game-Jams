@@ -255,7 +255,7 @@ namespace ZeroHour.Tower
             statsText.text =
                 $"Height {stats.Height}\n" +
                 $"$ {stats.Money:0} (+{stats.Income:0.0}/s)" +
-                (stats.ComboMultiplier > 1 ? $" <color={ComboColor}>COMBO x{stats.ComboMultiplier}</color>" : "") + "\n" +
+                (stats.Combo > 1 ? $" <color={ComboColor}>COMBO {stats.Combo} (x{stats.ComboIncomeMultiplier:0.0})</color>" : "") + "\n" +
                 $"{Label(PopulationLabel, 0)} {stats.Population}\n" +
                 $"{Label("Jobs", 1)} {stats.Jobs}\n" +
                 $"{Label("Energy", 2)} {Signed(stats.Energy)}\n" +

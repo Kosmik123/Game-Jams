@@ -42,5 +42,14 @@ public class RoundTimeTests
         Assert.AreEqual(40f, jam.RoundDuration, 1e-4f);
         Assert.AreEqual(0f, jam.FloorTimeBonus(1, true));
         Assert.AreEqual(0f, jam.CollapseTimePenalty);
+        Assert.AreEqual(0f, jam.MissedFloorTimePenalty);
+    }
+
+    [Test]
+    public void PostJam_MissedFloor_CostsHalfASecond()
+    {
+        Assert.AreEqual(0.5f, postJam.MissedFloorTimePenalty, 1e-4f);
+        Assert.AreEqual(9.5f, postJam.ApplyTimeChange(10f, -postJam.MissedFloorTimePenalty), 1e-4f);
+        Assert.AreEqual(0f, postJam.ApplyTimeChange(0.3f, -postJam.MissedFloorTimePenalty), 1e-4f);
     }
 }

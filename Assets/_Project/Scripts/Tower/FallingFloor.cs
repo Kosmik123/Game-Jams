@@ -85,7 +85,11 @@ namespace ZeroHour.Tower
             }
 
             if (position.y < game.BottomY - Height)
+            {
+                if (!isDebris)
+                    game.OnFloorMissed(this);
                 Destroy(gameObject);
+            }
         }
 
         // slideFromX: visual offset at the moment of landing that eases to zero (a snapped floor slides into place).

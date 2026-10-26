@@ -20,6 +20,9 @@ namespace ZeroHour.Tower
         // Seconds taken for a collapse (a positive number).
         public abstract float CollapseTimePenalty { get; }
 
+        // Seconds taken for a floor that fell past the bottom edge uncaught (a positive number).
+        public abstract float MissedFloorTimePenalty { get; }
+
         // The timer turns red when it shows this many seconds or fewer.
         public abstract int TimerWarningSeconds { get; }
 
@@ -100,6 +103,7 @@ namespace ZeroHour.Tower
         public override float MaxTime => RoundDuration;
         public override float FloorTimeBonus(int towerHeight, bool isPerfect) => 0f;
         public override float CollapseTimePenalty => 0f;
+        public override float MissedFloorTimePenalty => 0f;
         public override int TimerWarningSeconds => 10;
         public override float FallSpeed(int towerHeight) => 3f;
         public override float SpawnInterval(int towerHeight) => 0.7f;
@@ -140,6 +144,7 @@ namespace ZeroHour.Tower
         private const float MinTimeFactor = 0.3f;
         private const float PerfectTimeBonus = 1f;
         private const float CollapsePenalty = 4f;
+        private const float MissedFloorPenalty = 0.5f;
 
         // Golden floor.
         private const float GoldSpawnChance = 0.05f;
@@ -154,6 +159,7 @@ namespace ZeroHour.Tower
         public override float RoundDuration => StartTime;
         public override float MaxTime => MaxRoundTime;
         public override float CollapseTimePenalty => CollapsePenalty;
+        public override float MissedFloorTimePenalty => MissedFloorPenalty;
         public override int TimerWarningSeconds => 4;
 
         // The floor bonus shrinks as the tower grows; the perfect bonus doesn't.

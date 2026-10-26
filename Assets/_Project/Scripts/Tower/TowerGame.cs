@@ -23,6 +23,8 @@ namespace ZeroHour.Tower
         private const float MusicVolume = 0.5f;
         private const float EndScreenMusicVolume = 0.2f;
         private const float CoinVolume = 0.4f;
+        private const float MissedFloorSoundVolume = 0.4f;
+        private const int MaxPerfectSound = 5; // perfect_1..perfect_5; higher combos reuse the last one
         private const float LandPitchJitter = 0.05f;
         private const float NewBestSoundDelay = 0.5f;
         private const int TickFromSecond = 5;
@@ -371,10 +373,10 @@ namespace ZeroHour.Tower
             if (!floor.Type.IsGold)
                 PlaySound("land_" + floor.Type.Name.ToLowerInvariant(), 1f, Random.Range(1f - LandPitchJitter, 1f + LandPitchJitter));
             if (isPerfect)
-                PlaySound("perfect_" + Mathf.Max(1, stats.ComboMultiplier));
+                PlaySound("perfect_" + Mathf.Clamp(stats.Combo, 1, MaxPerfectSound));
             if (isPerfect && ruleset.ShowPerfectPopup)
             {
-                int combo = stats.ComboMultiplier;
+                int combo = stats.Combo;
                 WorldPopup.Show(hud, Camera, floor.transform, Vector3.up * PerfectPopupHeight,
                     combo > 1 ? $"PERFECT! x{combo}" : "PERFECT!", PerfectFontSize, Color.white, PerfectRise, PerfectDuration);
             }
@@ -435,6 +437,14 @@ namespace ZeroHour.Tower
             WorldPopup.Show(hud, Camera, floor.transform, joint, label, NeighborFontSize, color, NeighborRise, NeighborDuration);
         }
 
+        // A floor fell past the bottom edge without being caught: costs time (the golden floor is a bonus, so it is free to miss).
+        public void OnFloorMissed(FallingFloor floor)
+        {
+            if (floor.Type.IsGold)
+                return;
+            ChangeTime(-ruleset.MissedFloorTimePenalty, MissedFloorSoundVolume);
+        }
+
         private void OnTowerCollapsed()
         {
             stats.RegisterCollapse();
@@ -485,13 +495,13 @@ namespace ZeroHour.Tower
         }
 
         // Bonus or penalty from the tower; only during the round.
-        private void ChangeTime(float change)
+        private void ChangeTime(float change, float soundVolume = 1f)
         {
             if (isGameOver || change == 0f)
                 return;
             float before = timeLeft;
             timeLeft = ruleset.ApplyTimeChange(timeLeft, change);
-            PlaySound(change > 0f ? "time_bonus" : "time_penalty");
+            PlaySound(change > 0f ? "time_bonus" : "time_penalty", soundVolume);
             hud.ShowTimeChange(timeLeft - before, change);
         }
 

@@ -139,8 +139,11 @@ namespace ZeroHour.Tower
         // Perfect landings in a row; the jam economy doesn't count them.
         public int PerfectStreak { get; protected set; }
 
-        // Income multiplier from the perfect streak (1 = no combo).
-        public virtual int ComboMultiplier => 1;
+        // Combo level from the perfect streak (1 = no combo); it has no upper limit.
+        public virtual int Combo => 1;
+
+        // Income multiplier from the combo (1 = no bonus).
+        public virtual float ComboIncomeMultiplier => 1f;
 
         public virtual void RegisterLanding(bool isPerfect)
         {

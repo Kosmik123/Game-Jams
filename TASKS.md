@@ -212,6 +212,8 @@ Po każdym tasku: kompilacja/testy → commit (mały, z opisem). Build WebGL + d
   - Zaktualizuj testy `SkyPaletteTests`: wartości dla Height 0, 12,5 (połowa między dniem a zachodem), 25, 50, 75, 100, 200 oraz alfa gwiazd 0/0/0,5/1/1 dla 0/50/65/80/200 (liczone ręcznie z tabeli).
   - Uwaga: przy tej skali typowa runda (H ≈ 25–45) kończy się na zachodzie/zmierzchu, noc to nagroda dla bardzo dobrych graczy.
 
+- [x] **31. [post-jam] Trudniej: kara za pominięte piętro, combo bez limitu (zrobione przez menedżera, 26.10).** `MissedFloorTimePenalty` 0,5 s (jam 0), `PostJamCityStats.Combo` bez limitu i `ComboIncomeMultiplier = 1 + 0,1 × (combo − 1)`. Testy: `ComboTests`, `RoundTimeTests` (77/77). Szczegóły w GDD.
+
 ## Zrobione (jam, do `39a94ec` na itch.io)
 
 - [x] Input na telefonie (platforma zostaje w miejscu bez dotyku).
