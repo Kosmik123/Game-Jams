@@ -1,7 +1,7 @@
 """Pixel-art floor sprites written as PNG with pure Python, upscaled x4.
 
 Square 32x32 set (jam version, Resources/Floors):      python floor_sprites.py <out>
-Wide 32x24 (4:3) set (post-jam, Resources/FloorsWide): python floor_sprites.py <out> --wide
+Wide 32x24 (4:3) set (post-jam, Resources/FloorsWide, incl. the Gold bonus floor): python floor_sprites.py <out> --wide
 """
 import os
 import struct
@@ -294,11 +294,43 @@ def park_wide():
     return c
 
 
+def gold_wide():
+    """Bonus floor (post-jam only): gold bricks, a coin medallion and sparkles."""
+    wall, dark, light = hexc('#ffe27a'), hexc('#b8860b'), hexc('#fff8d0')
+    brick, shade, shine = hexc('#ffd34d'), hexc('#e0a812'), hexc('#ffffff')
+    c = Canvas(w=WW, h=WH)
+    frame(c, wall, dark, light)
+    for y in range(3, WH - 4, 4):
+        c.rect(2, y, WW - 4, 1, brick)
+        off = 2 if (y // 4) % 2 else 6
+        for x in range(off, WW - 2, 8):
+            c.rect(x, y - 3, 1, 3, brick)
+    # coin medallion
+    c.circle(16, 10.5, 7.5, dark)
+    c.circle(16, 10.5, 6.2, hexc('#ffe680'))
+    c.circle(16.6, 11.1, 4.6, wall)
+    c.rect(15, 6, 2, 9, shade)
+    c.rect(13, 7, 6, 1, shade)
+    c.rect(13, 13, 6, 1, shade)
+    c.rect(13, 9, 6, 1, shade)
+    c.rect(13, 11, 6, 1, shade)
+    # sparkles
+    for sx, sy in ((6, 6), (26, 14), (24, 5)):
+        c.px(sx, sy, shine)
+        c.px(sx - 1, sy, light)
+        c.px(sx + 1, sy, light)
+        c.px(sx, sy - 1, light)
+        c.px(sx, sy + 1, light)
+    c.px(11, 7, shine)
+    c.px(12, 6, shine)
+    return c
+
+
 if __name__ == '__main__':
     out = sys.argv[1]
     wide_set = '--wide' in sys.argv[2:]
     os.makedirs(out, exist_ok=True)
-    sprites = (('Residential', residential_wide), ('Office', office_wide), ('Power', power_wide), ('Park', park_wide))         if wide_set else (('Residential', residential), ('Office', office), ('Power', power), ('Park', park))
+    sprites = (('Residential', residential_wide), ('Office', office_wide), ('Power', power_wide), ('Park', park_wide), ('Gold', gold_wide))         if wide_set else (('Residential', residential), ('Office', office), ('Power', power), ('Park', park))
     for name, fn in sprites:
         fn().save(os.path.join(out, name + '.png'))
         print('wrote', name)

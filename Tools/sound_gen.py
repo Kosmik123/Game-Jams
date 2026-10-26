@@ -182,6 +182,20 @@ def ui_click():
     return tone(0.04, 'square', 880, 1100, volume=0.25, duty=0.25, release=0.03)
 
 
+def gold():
+    # Bright G-major run up into a held shimmering top note, with a bell an octave above.
+    run = arpeggio(['G5', 'B5', 'D6', 'G6'], 0.06, volume=0.28, duty=0.25)
+    top = mix(tone(0.4, 'square', note_freq('B6'), volume=0.2, duty=0.25, release=0.35, vibrato=7.0),
+              tone(0.4, 'sine', note_freq('B6') * 2, volume=0.12, release=0.35))
+    return concat(run, top)
+
+
+def gold_spawn():
+    # Quiet two-note twinkle that announces a golden floor entering the screen.
+    return concat(tone(0.05, 'triangle', note_freq('B6'), volume=0.16, release=0.04),
+                  tone(0.12, 'triangle', note_freq('E7'), volume=0.16, release=0.1))
+
+
 # --- Music ---------------------------------------------------------------------------------
 
 BPM = 120
@@ -269,6 +283,8 @@ SOUNDS = {
     'time_up': time_up,
     'new_best': new_best,
     'ui_click': ui_click,
+    'gold': gold,
+    'gold_spawn': gold_spawn,
     'music_game': music_loop,
 }
 
