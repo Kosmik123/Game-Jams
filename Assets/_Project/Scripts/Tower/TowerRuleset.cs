@@ -43,6 +43,15 @@ namespace ZeroHour.Tower
         // catching floors.
         public abstract float TowerTopScreenFraction { get; }
 
+        // Golden floor: a rare, faster floor that pays a bonus. Off (zero chance) unless a version opts in.
+        public virtual float GoldChance => 0f;
+        public virtual int GoldMinHeight => 0;
+        public virtual int GoldPity => 0;
+        public virtual float GoldFallSpeedFactor => 1f;
+        public virtual float GoldTimeBonus => 0f;
+        public virtual float GoldInstabilityRelief => 0f;
+        public virtual float GoldMoneyBonus => 0f;
+
         // Touch moves the platform by the finger's movement instead of jumping under the finger
         // (the mouse still places it under the cursor).
         public abstract bool RelativeControl { get; }
@@ -129,6 +138,15 @@ namespace ZeroHour.Tower
         private const float PerfectTimeBonus = 1f;
         private const float CollapsePenalty = 4f;
 
+        // Golden floor.
+        private const float GoldSpawnChance = 0.05f;
+        private const int GoldSpawnMinHeight = 3;
+        private const int GoldSpawnPity = 25;
+        private const float GoldSpeedFactor = 1.4f;
+        private const float GoldBonusTime = 3f;
+        private const float GoldBonusStability = 25f;
+        private const float GoldBonusMoney = 25f;
+
         public override string Name => "Post-jam";
         public override float RoundDuration => StartTime;
         public override float MaxTime => MaxRoundTime;
@@ -146,6 +164,13 @@ namespace ZeroHour.Tower
         public override TowerSway CreateSway() => new PostJamTowerSway();
         public override bool FixedCamera => true;
         public override float TowerTopScreenFraction => 0.25f;
+        public override float GoldChance => GoldSpawnChance;
+        public override int GoldMinHeight => GoldSpawnMinHeight;
+        public override int GoldPity => GoldSpawnPity;
+        public override float GoldFallSpeedFactor => GoldSpeedFactor;
+        public override float GoldTimeBonus => GoldBonusTime;
+        public override float GoldInstabilityRelief => GoldBonusStability;
+        public override float GoldMoneyBonus => GoldBonusMoney;
         public override bool RelativeControl => true;
         public override string BestScoreKey => "BestScore_PostJam";
         public override string PopulationLabel => "Popul";

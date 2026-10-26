@@ -159,6 +159,9 @@ namespace ZeroHour.Tower
                 CollapseTop();
         }
 
+        // Calms the tower down (the golden floor); never below zero.
+        public void RelieveInstability(float amount) => instability = Mathf.Max(0f, instability - amount);
+
         private void CollapseTop()
         {
             int count = Mathf.Min(collapsedFloors, floors.Count);

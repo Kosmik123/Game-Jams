@@ -33,6 +33,8 @@ namespace ZeroHour.Tower
         private static readonly Color NeighborGoodColor = new Color(0.45f, 1f, 0.45f);
         private static readonly Color NeighborBadColor = new Color(1f, 0.33f, 0.33f);
         private static readonly Color NeighborIncomeColor = new Color(1f, 0.85f, 0.3f);
+        private static readonly Color GoldColor = new Color(1f, 0.84f, 0.1f);
+        private const float GoldPopupExtraHeight = 0.7f;
 
         [SerializeField]
         private float playWidth = 6f;
@@ -99,6 +101,7 @@ namespace ZeroHour.Tower
         private readonly List<FallingFloor> spawnedFloors = new List<FallingFloor>();
         private TowerRuleset ruleset;
         private CityStats stats;
+        private GoldSpawner goldSpawner;
         private TowerHud hud;
         private Sprite squareSprite;
         private float spawnTimer;
@@ -194,6 +197,7 @@ namespace ZeroHour.Tower
             Tower.Collapsed += OnTowerCollapsed;
 
             stats = ruleset.CreateEconomy();
+            goldSpawner = new GoldSpawner(ruleset.GoldChance, ruleset.GoldMinHeight, ruleset.GoldPity);
             timeLeft = ruleset.RoundDuration;
             roundElapsed = 0f;
             shakeTimeLeft = 0f;
@@ -350,7 +354,8 @@ namespace ZeroHour.Tower
         private void OnFloorLanded(FallingFloor floor, bool isPerfect)
         {
             stats.RegisterLanding(isPerfect);
-            PlaySound("land_" + floor.Type.Name.ToLowerInvariant(), 1f, Random.Range(1f - LandPitchJitter, 1f + LandPitchJitter));
+            if (!floor.Type.IsGold)
+                PlaySound("land_" + floor.Type.Name.ToLowerInvariant(), 1f, Random.Range(1f - LandPitchJitter, 1f + LandPitchJitter));
             if (isPerfect)
                 PlaySound("perfect_" + Mathf.Max(1, stats.ComboMultiplier));
             if (isPerfect && ruleset.ShowPerfectPopup)
@@ -359,8 +364,26 @@ namespace ZeroHour.Tower
                 WorldPopup.Show(hud, Camera, floor.transform, Vector3.up * PerfectPopupHeight,
                     combo > 1 ? $"PERFECT! x{combo}" : "PERFECT!", PerfectFontSize, Color.white, PerfectRise, PerfectDuration);
             }
-            ChangeTime(ruleset.FloorTimeBonus(Tower.Floors.Count, isPerfect));
+            float timeChange = ruleset.FloorTimeBonus(Tower.Floors.Count, isPerfect);
+            if (floor.Type.IsGold)
+            {
+                timeChange += ruleset.GoldTimeBonus;
+                CollectGold(floor, isPerfect);
+            }
+            ChangeTime(timeChange);
             ShowNeighborEffect(floor);
+        }
+
+        // Golden floor caught: calms the tower (before the landing can topple it), pays cash, and celebrates.
+        // Its time bonus goes through ChangeTime together with the floor bonus.
+        private void CollectGold(FallingFloor floor, bool isPerfect)
+        {
+            PlaySound("gold");
+            Tower.RelieveInstability(ruleset.GoldInstabilityRelief);
+            stats.AddBonusMoney(ruleset.GoldMoneyBonus);
+            moneyAtLastPopup += ruleset.GoldMoneyBonus; // not part of the per-second income popup
+            float height = PerfectPopupHeight + (isPerfect && ruleset.ShowPerfectPopup ? GoldPopupExtraHeight : 0f);
+            WorldPopup.Show(hud, Camera, floor.transform, Vector3.up * height, "GOLD!", PerfectFontSize, GoldColor, PerfectRise, PerfectDuration);
         }
 
         // Teaches the synergies: a new pair with the floor below shows its effect at the joint, beside the
@@ -501,21 +524,38 @@ namespace ZeroHour.Tower
             for (int attempt = 0; attempt < 30 && lastSpawnX.HasValue && Mathf.Abs(x - lastSpawnX.Value) < minDistance; attempt++)
                 x = Random.Range(-halfRange, halfRange);
 
-            FloorType type;
-            do
-                type = FloorType.GetRandom();
-            while (type == lastSpawnType);
+            bool isGold = goldSpawner.Next(stats.Height, IsGoldInAir(), Random.value);
+            FloorType type = FloorType.Gold;
+            if (!isGold)
+            {
+                do
+                    type = FloorType.GetRandom();
+                while (type == lastSpawnType);
+                lastSpawnType = type;
+            }
 
             lastSpawnX = x;
-            lastSpawnType = type;
             SpawnFloor(new Vector3(x, TopY + ruleset.FloorHeight, 0f), type);
+            if (isGold)
+                PlaySound("gold_spawn");
+        }
+
+        private bool IsGoldInAir()
+        {
+            foreach (FallingFloor floor in spawnedFloors)
+            {
+                if (floor && floor.Type.IsGold && !floor.IsAttached && !floor.IsDebris)
+                    return true;
+            }
+            return false;
         }
 
         private void SpawnFloor(Vector3 position, FloorType type)
         {
             var floor = new GameObject("Floor").AddComponent<FallingFloor>();
             floor.transform.position = position;
-            floor.Init(this, type, squareSprite, floorWidth, ruleset.FloorHeight, ruleset.FloorArtFolder, ruleset.FallSpeed(stats.Height));
+            float fallSpeed = ruleset.FallSpeed(stats.Height) * (type.IsGold ? ruleset.GoldFallSpeedFactor : 1f);
+            floor.Init(this, type, squareSprite, floorWidth, ruleset.FloorHeight, ruleset.FloorArtFolder, fallSpeed);
             spawnedFloors.Add(floor);
         }
 
