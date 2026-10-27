@@ -48,6 +48,7 @@ namespace PayWithPixels
         public void Hurt(int dmg)
         {
             var game = Game.Instance;
+            if (game.GodMode) return;
             if (invulnTimer > 0 || dashTimer > 0 || game.state == Game.State.Dead || game.state == Game.State.Won) return;
             if (shieldLeft > 0)
             {
