@@ -85,12 +85,53 @@ namespace PayWithPixels
         }
     }
 
+    /// <summary>Fala uderzeniowa po dashu (fx_shockwave_0..3): rosnacy pierscien, znika po ulamku sekundy.</summary>
+    public class Shockwave : MonoBehaviour
+    {
+        private float t, radius;
+        private SpriteRenderer sr;
+
+        public static void Spawn(Transform parent, Vector2 pos, float radius)
+        {
+            var go = new GameObject("Shockwave");
+            go.transform.SetParent(parent, false);
+            go.transform.position = pos;
+            var s = go.AddComponent<Shockwave>();
+            s.radius = radius;
+            s.sr = Art.MakeRenderer(go, Art.Square("fx_shockwave_0", 32), 9);
+        }
+
+        private void Update()
+        {
+            t += Time.deltaTime;
+            if (t > 0.3f) { Destroy(gameObject); return; }
+            var sprite = Resources.Load<Sprite>("Sprites/fx_shockwave_" + Mathf.Min(3, Mathf.FloorToInt(t / 0.075f)));
+            if (sprite != null) sr.sprite = sprite;
+            float unit = sr.sprite != null ? sr.sprite.bounds.size.x : 2f;
+            transform.localScale = Vector3.one * (radius * 2f / unit) * Mathf.Lerp(0.4f, 1f, t / 0.3f);
+        }
+    }
+
     /// <summary>Pet-dron: krazy wokol gracza i strzela do najblizszego wroga.</summary>
     public class Drone : MonoBehaviour
     {
+        public static readonly List<Drone> All = new List<Drone>();
         private int index;
         private float angle;
         private float fireTimer;
+
+        private void OnEnable() => All.Add(this);
+        private void OnDisable() => All.Remove(this);
+
+        /// <summary>Zysk DRONE ORBIT: dron zestrzeliwuje pociski wroga, ktore do niego dolecza.</summary>
+        public static bool BlocksBullet(Vector2 pos)
+        {
+            var game = Game.Instance;
+            if (game == null || game.stats.droneOrbit <= 0) return false;
+            foreach (var d in All)
+                if (((Vector2)d.transform.position - pos).sqrMagnitude < 0.45f * 0.45f) return true;
+            return false;
+        }
 
         public static Drone Create(Transform parent, int index)
         {
@@ -112,7 +153,7 @@ namespace PayWithPixels
 
             angle += Time.deltaTime * 2.2f;
             Vector2 center = game.player.transform.position;
-            transform.position = center + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * 1.2f;
+            transform.position = center + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * (game.stats.droneOrbit > 0 ? 1.5f : 1.2f);
 
             fireTimer -= Time.deltaTime;
             if (fireTimer > 0 || game.state != Game.State.Playing) return;

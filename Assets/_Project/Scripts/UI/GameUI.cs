@@ -356,7 +356,7 @@ namespace PayWithPixels
 
         // ---------- pauza ----------
 
-        public void ShowPause(Action onResume, Action onRestart, Action onVolume, Action onFlicker, Action onShake, Action onMusic, Action onSfx, Action onReset = null, string resetLabel = "RESET PROGRESS")
+        public void ShowPause(Action onResume, Action onRestart, Action onVolume, Action onFlicker, Action onShake, Action onMusic, Action onSfx, Action onReset = null, string resetLabel = "RESET PROGRESS", Action onExport = null, Action onImport = null)
         {
             foreach (Transform c in pausePanel.transform) Destroy(c.gameObject);
             tinted.RemoveAll(kv => kv.Key == null);
@@ -371,8 +371,8 @@ namespace PayWithPixels
             float y = 0.80f;
             void PauseButton(string label, Action act)
             {
-                MakeButton(pausePanel.transform, label, new Vector2(0.3f, y - 0.075f), new Vector2(0.7f, y), true, act);
-                y -= 0.085f;
+                MakeButton(pausePanel.transform, label, new Vector2(0.3f, y - 0.063f), new Vector2(0.7f, y), true, act);
+                y -= 0.071f;
             }
             PauseButton("RESUME", onResume);
             PauseButton("MASTER " + vol + "/10  (CLICK +1)", onVolume);
@@ -381,6 +381,8 @@ namespace PayWithPixels
             PauseButton("REDUCE FLICKER: " + (Settings.ReduceFlicker ? "ON" : "OFF"), onFlicker);
             PauseButton("SCREENSHAKE: " + (Settings.Shake ? "ON" : "OFF"), onShake);
             PauseButton("RESTART RUN", onRestart);
+            if (onExport != null) PauseButton("EXPORT SAVE CODE", onExport);
+            if (onImport != null) PauseButton("IMPORT SAVE CODE", onImport);
             if (onReset != null) PauseButton(resetLabel, onReset);
             Recolor();
             pausePanel.SetActive(true);

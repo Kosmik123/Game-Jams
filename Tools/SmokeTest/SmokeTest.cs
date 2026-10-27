@@ -40,6 +40,21 @@ public class SmokeTest
             T("Meta").GetProperty("Selected", All).SetValue(null, Enum.ToObject(T("Weapon"), weaponId));
         }
         Call(game, "StartRun");
+        if (Environment.GetEnvironmentVariable("SMOKE_ALL") == "1")
+        {
+            // wszystkie zyski na maksymalnym poziomie i po jednym stacku kazdej ceny: cwiczy nowe drzewka
+            var stats = Get(game, "stats");
+            var catalog = T("Catalog");
+            var lv = (IDictionary)Get(stats, "levels");
+            foreach (var g in (IEnumerable)catalog.GetField("Gains", All).GetValue(null))
+                if (!(bool)Get(g, "consumable") && (string)Get(g, "name") != "TIME FREEZE") lv[(string)Get(g, "name")] = (int)Get(g, "maxLevel");
+            Call(stats, "Recompute");
+            Call(game, "RefreshDrones");
+            Set(Get(game, "stats"), "silenceStacks", 1);
+            Set(Get(game, "stats"), "inputDelayStacks", 2);
+            Set(Get(game, "stats"), "priceyShopStacks", 1);
+            Set(game, "debt", 40);
+        }
         Application.targetFrameRate = -1;
         QualitySettings.vSyncCount = 0;
         T("Game").GetField("DebugTimeScale", All).SetValue(null, 5f);
@@ -62,6 +77,16 @@ public class SmokeTest
             }
             Set(stats, "legsStacks", 0);
             Set(game, "zone", 1);
+        }
+
+        // kod zapisu: eksport -> import dziala, smieci sa odrzucane
+        {
+            var save = T("Save");
+            string code = (string)save.GetMethod("Export", All).Invoke(null, null);
+            Debug.Log("[smoke] save code " + code.Length + " chars");
+            Assert.IsTrue(code.StartsWith("PWP1:"), "export prefix");
+            Assert.IsTrue((bool)save.GetMethod("Import", All).Invoke(null, new object[] { code }), "import of own code");
+            Assert.IsFalse((bool)save.GetMethod("Import", All).Invoke(null, new object[] { "junk" }), "junk rejected");
         }
 
         var rng = new System.Random(1);
@@ -90,6 +115,7 @@ public class SmokeTest
             if (player != null) Set(player, "hp", 999);
 
             if (state == "Won" || state == "Dead") break;
+            if (Environment.GetEnvironmentVariable("SMOKE_ALL") == "1" && player != null && frame % 240 == 0 && state == "Playing") Call(player, "EndDash", game);
 
             if (state == "Playing" && player != null && frame % 6 == 0)
             {

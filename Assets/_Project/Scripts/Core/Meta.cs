@@ -55,20 +55,20 @@ namespace PayWithPixels
         public static int Ascension
         {
             get { Load(); return Mathf.Min(ascSel, ascMax); }
-            set { ascSel = Mathf.Clamp(value, 0, ascMax); Save(); }
+            set { ascSel = Mathf.Clamp(value, 0, ascMax); Persist(); }
         }
 
         public static bool TutorialDone
         {
             get { Load(); return tutorial; }
-            set { tutorial = value; Save(); }
+            set { tutorial = value; Persist(); }
         }
         private static bool tutorial;
 
         public static Weapon Selected
         {
             get { Load(); return IsWeaponUnlocked(selected) ? selected : Weapon.Pistol; }
-            set { selected = value; Save(); }
+            set { selected = value; Persist(); }
         }
         private static Weapon selected = Weapon.Pistol;
 
@@ -79,7 +79,7 @@ namespace PayWithPixels
         {
             Load();
             if (!unlocked.Add(id)) return false;
-            Save();
+            Persist();
             return true;
         }
 
@@ -113,7 +113,7 @@ namespace PayWithPixels
             }
             if (score > bestScore) bestScore = score;
             if (waveReached > best) best = waveReached;
-            Save();
+            Persist();
         }
 
         /// <summary>Kasuje caly postep (rekordy, osiagniecia, bronie, Ascension, tutorial); ustawienia dzwieku zostaja.</summary>
@@ -127,10 +127,20 @@ namespace PayWithPixels
             try
             {
                 foreach (var k in new[] { KeyBest, KeyWins, KeyRuns, KeyAch, KeyWeapon, KeyTutorial, KeyAscMax, KeyAscSel, KeyBestScore })
-                    PlayerPrefs.DeleteKey(k);
-                PlayerPrefs.Save();
+                    Save.DeleteKey(k);
+                Save.Flush();
             }
             catch { }
+        }
+
+        public static void Preload() => Load();
+
+        /// <summary>Wczytuje stan od nowa (po imporcie kodu zapisu).</summary>
+        public static void Reload()
+        {
+            unlocked.Clear();
+            loaded = false;
+            Load();
         }
 
         private static void Load()
@@ -139,34 +149,34 @@ namespace PayWithPixels
             loaded = true;
             try
             {
-                best = PlayerPrefs.GetInt(KeyBest, 0);
-                wins = PlayerPrefs.GetInt(KeyWins, 0);
-                runs = PlayerPrefs.GetInt(KeyRuns, 0);
-                tutorial = PlayerPrefs.GetInt(KeyTutorial, 0) == 1;
-                ascMax = PlayerPrefs.GetInt(KeyAscMax, 0);
-                ascSel = PlayerPrefs.GetInt(KeyAscSel, 0);
-                bestScore = PlayerPrefs.GetInt(KeyBestScore, 0);
-                selected = (Weapon)PlayerPrefs.GetInt(KeyWeapon, 0);
-                foreach (var id in PlayerPrefs.GetString(KeyAch, "").Split(','))
+                best = Save.GetInt(KeyBest, 0);
+                wins = Save.GetInt(KeyWins, 0);
+                runs = Save.GetInt(KeyRuns, 0);
+                tutorial = Save.GetInt(KeyTutorial, 0) == 1;
+                ascMax = Save.GetInt(KeyAscMax, 0);
+                ascSel = Save.GetInt(KeyAscSel, 0);
+                bestScore = Save.GetInt(KeyBestScore, 0);
+                selected = (Weapon)Save.GetInt(KeyWeapon, 0);
+                foreach (var id in Save.GetString(KeyAch, "").Split(','))
                     if (!string.IsNullOrEmpty(id)) unlocked.Add(id);
             }
             catch { }
         }
 
-        private static void Save()
+        private static void Persist()
         {
             try
             {
-                PlayerPrefs.SetInt(KeyBest, best);
-                PlayerPrefs.SetInt(KeyWins, wins);
-                PlayerPrefs.SetInt(KeyRuns, runs);
-                PlayerPrefs.SetInt(KeyTutorial, tutorial ? 1 : 0);
-                PlayerPrefs.SetInt(KeyAscMax, ascMax);
-                PlayerPrefs.SetInt(KeyAscSel, ascSel);
-                PlayerPrefs.SetInt(KeyBestScore, bestScore);
-                PlayerPrefs.SetInt(KeyWeapon, (int)selected);
-                PlayerPrefs.SetString(KeyAch, string.Join(",", unlocked));
-                PlayerPrefs.Save();
+                Save.SetInt(KeyBest, best);
+                Save.SetInt(KeyWins, wins);
+                Save.SetInt(KeyRuns, runs);
+                Save.SetInt(KeyTutorial, tutorial ? 1 : 0);
+                Save.SetInt(KeyAscMax, ascMax);
+                Save.SetInt(KeyAscSel, ascSel);
+                Save.SetInt(KeyBestScore, bestScore);
+                Save.SetInt(KeyWeapon, (int)selected);
+                Save.SetString(KeyAch, string.Join(",", unlocked));
+                Save.Flush();
             }
             catch { }
         }
