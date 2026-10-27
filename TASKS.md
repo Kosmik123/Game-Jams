@@ -123,3 +123,12 @@ Projekt: Unity 6000.4.9f1, kod i assety w `Assets/_Project` (Scripts, Graphics, 
 - [ ] Szablon WebGL: meta viewport, brak zoomu, pełny ekran na telefonie, przycisk FULLSCREEN powiększony.
 ## Designer
 - [ ] Test mobile w emulacji przeglądarki + prośba do Kosmika o test na prawdziwym telefonie przez itch.io.
+
+---
+# FAZA 9 — trwałe save'y między buildami (designer, po przerwie)
+Problem: PlayerPrefs w WebGL (IndexedDB, klucz zależny od adresu strony) resetuje się przy każdym nowym uploadzie na itch.io.
+## Programista
+- [ ] Warstwa zapisu: wtyczka .jslib (Assets/_Project/Plugins/WebGL) czytająca/zapisująca localStorage pod stałymi kluczami z prefiksem 'payWithPixels_v1_' (domena itch może być wspólna z innymi grami). Jedna klasa Save zamiast bezpośredniego PlayerPrefs (rekordy, osiągnięcia, bronie, Ascension, ustawienia). W Edytorze i na innych platformach: PlayerPrefs.
+- [ ] Migracja: przy starcie, jeśli localStorage pusty, a PlayerPrefs ma dane, przepisz je.
+- [ ] Kod zapisu w pauzie: 'EXPORT SAVE' (pokazuje i kopiuje do schowka krótki tekst, np. base64) oraz 'IMPORT SAVE' (wklejenie przez prompt przeglądarki lub klawisz Ctrl+V).
+- [ ] Test: zapis -> nowy build wgrany na tę samą stronę -> save zostaje (sprawdzi designer na itch).
