@@ -132,3 +132,12 @@ Problem: PlayerPrefs w WebGL (IndexedDB, klucz zależny od adresu strony) resetu
 - [ ] Migracja: przy starcie, jeśli localStorage pusty, a PlayerPrefs ma dane, przepisz je.
 - [ ] Kod zapisu w pauzie: 'EXPORT SAVE' (pokazuje i kopiuje do schowka krótki tekst, np. base64) oraz 'IMPORT SAVE' (wklejenie przez prompt przeglądarki lub klawisz Ctrl+V).
 - [ ] Test: zapis -> nowy build wgrany na tę samą stronę -> save zostaje (sprawdzi designer na itch).
+
+---
+# FAZA 10 — zyski warunkowe (PROPOZYCJA, czeka na akceptację Kosmika; nie zaczynać bez sygnału)
+## Programista
+- [ ] Zyski warunkowe wg GDD v4: drzewka DRON / DASH / KRYTYK (ok. 10 nowych zysków), szansa x2 po spełnieniu warunku, 3 poziomy.
+- [ ] Opcjonalnie: ceny CISZA, OPÓŹNIENIE WEJŚCIA, DROGI SKLEP; zyski DŁUG JAKO BROŃ, REWERS CZASU, BLOKADA CENY.
+- [ ] Dopasowanie siły ceny do mocy zysku.
+## Grafik
+- [ ] Ikony nowych zysków i cen, sprity (orbita drona, fala uderzeniowa, miny już są).

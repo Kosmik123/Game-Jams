@@ -175,3 +175,13 @@ Obecni: Goniec, Strzelec, Tank. Dodać: Skaczek (dash na gracza), Oblężnik (po
 - **Trwałe save'y między buildami** (FAZA 9): do zrobienia po przerwie.
 - Siła ceny dopasowana do mocy zysku (v3.1): nie zrobione (cena losowa, od fali 7 x2 dla drogich zysków).
 - Przegląd czytelności po testach zewnętrznych (czekamy na uwagi testerów).
+
+---
+
+# GDD v4 (PROPOZYCJA, do akceptacji Kosmika) — zyski warunkowe i drzewka
+- **Zyski warunkowe**: dostępne w sklepie tylko, gdy gracz ma zysk bazowy (kod już to wspiera: `Gain.available(stats)`). Szansa pojawienia się x2 po spełnieniu warunku.
+- **Drzewko DRON** (baza: DRONE): DRON-SIŁA, DRON-SZYBKOSTRZELNOŚĆ, WIĘCEJ DRONÓW (do 3), ORBITA (krąży wokół gracza i blokuje pociski).
+- **Drzewko DASH** (baza: DASH): MINY (są), FALA UDERZENIOWA (odpycha i rani), PODWÓJNY DASH, DASH-KRYT.
+- **Drzewko KRYTYK** (baza: CRITICAL): KRYT-WYBUCH, KRYT-MONETY, POTRÓJNY KRYT.
+- Każdy ma cenę zmysłową; koszt w monetach rośnie z poziomem, nie maleje. Limit ~10 nowych zysków.
+- Dodatkowe pomysły do wyboru: ceny CISZA, OPÓŹNIENIE WEJŚCIA, DROGI SKLEP; zyski DŁUG JAKO BROŃ, REWERS CZASU, BLOKADA CENY; dopasowanie siły ceny do mocy zysku.
