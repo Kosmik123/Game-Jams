@@ -11,6 +11,7 @@ namespace PayWithPixels
         private float invulnTimer;
         private float dashTimer, dashCooldown;
         private Vector2 dashDir;
+        private float walkClock;
         private SpriteRenderer sr;
         private Transform aimMark;
 
@@ -63,6 +64,10 @@ namespace PayWithPixels
             }
             Vector2 step = move * game.stats.MoveSpeed;
             if (dashTimer > 0) { dashTimer -= Time.deltaTime; step = dashDir * 20f; }
+            if (move.sqrMagnitude > 0.01f) walkClock += Time.deltaTime;
+            sr.sprite = move.sqrMagnitude > 0.01f
+                ? Art.Circle("player_walk_" + (Mathf.FloorToInt(walkClock / 0.15f) % 2), 16)
+                : Art.Circle("player", 16);
             var pos = (Vector2)transform.position + step * Time.deltaTime;
             pos.x = Mathf.Clamp(pos.x, -Game.ArenaHalf.x, Game.ArenaHalf.x);
             pos.y = Mathf.Clamp(pos.y, -Game.ArenaHalf.y, Game.ArenaHalf.y);

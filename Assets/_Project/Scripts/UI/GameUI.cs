@@ -12,7 +12,7 @@ namespace PayWithPixels
         private readonly List<KeyValuePair<Graphic, bool>> tinted = new List<KeyValuePair<Graphic, bool>>(); // true = foreground
         private Font font;
         private Text hud;
-        private GameObject shopPanel, deathPanel;
+        private GameObject shopPanel, deathPanel, titlePanel;
         private Text deathText;
         private RectTransform shopCards;
 
@@ -52,6 +52,7 @@ namespace PayWithPixels
             deathPanel = NewPanel("Death", transform);
             shopPanel.SetActive(false);
             deathPanel.SetActive(false);
+            BuildTitle();
 
             deathText = NewText("DeathText", deathPanel.transform, "", 32, TextAnchor.MiddleCenter);
             Stretch(deathText.rectTransform, new Vector2(0, 0), new Vector2(1, 1), Vector2.zero, Vector2.zero);
@@ -141,6 +142,54 @@ namespace PayWithPixels
         }
 
         public void HideShop() => shopPanel.SetActive(false);
+
+        private void BuildTitle()
+        {
+            titlePanel = NewPanel("Title", transform);
+            titlePanel.transform.SetAsLastSibling();
+
+            var logoSprite = Resources.Load<Sprite>("Sprites/title_logo");
+            if (logoSprite != null)
+            {
+                var logo = NewImage("Logo", titlePanel.transform, true);
+                logo.sprite = logoSprite;
+                logo.preserveAspect = true;
+                logo.raycastTarget = false;
+                Stretch(logo.rectTransform, new Vector2(0.1f, 0.5f), new Vector2(0.9f, 0.92f), Vector2.zero, Vector2.zero);
+            }
+            else
+            {
+                var t = NewText("Name", titlePanel.transform, "PAY WITH PIXELS", 48, TextAnchor.MiddleCenter);
+                Stretch(t.rectTransform, new Vector2(0, 0.55f), new Vector2(1, 0.9f), Vector2.zero, Vector2.zero);
+            }
+
+            var tagSprite = Resources.Load<Sprite>("Sprites/title_tagline");
+            if (tagSprite != null)
+            {
+                var tag = NewImage("Tagline", titlePanel.transform, true);
+                tag.sprite = tagSprite;
+                tag.preserveAspect = true;
+                tag.raycastTarget = false;
+                Stretch(tag.rectTransform, new Vector2(0.2f, 0.32f), new Vector2(0.8f, 0.48f), Vector2.zero, Vector2.zero);
+            }
+
+            var start = NewText("Start", titlePanel.transform, "CLICK TO START\nWASD MOVE   MOUSE AIM + SHOOT", 22, TextAnchor.MiddleCenter);
+            Stretch(start.rectTransform, new Vector2(0, 0.08f), new Vector2(1, 0.28f), Vector2.zero, Vector2.zero);
+            titlePanel.SetActive(false);
+        }
+
+        public void ShowTitle(Action onStart)
+        {
+            var btn = titlePanel.GetComponent<Button>() ?? titlePanel.AddComponent<Button>();
+            btn.transition = Selectable.Transition.None;
+            btn.targetGraphic = titlePanel.GetComponent<Image>();
+            btn.onClick.RemoveAllListeners();
+            btn.onClick.AddListener(() => onStart());
+            Recolor();
+            titlePanel.SetActive(true);
+        }
+
+        public void HideTitle() => titlePanel.SetActive(false);
 
         public void ShowDeath(int wave, Action onRestart, bool won = false)
         {

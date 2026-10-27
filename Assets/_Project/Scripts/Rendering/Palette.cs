@@ -35,7 +35,7 @@ namespace PayWithPixels
             new[] { "0F380F", "9BBC0F" },
             new[] { "000000", "FFFFFF" },
             new[] { "2B0A3D", "FF5E9C" },
-            new[] { "1B1B1E", "FF9F1C" },
+            new[] { "1A0A00", "FFB000" },
         };
 
         public static void SetIndex(int index)

@@ -6,7 +6,7 @@ namespace PayWithPixels
     /// <summary>Caly stan runu: fale, monety, sklep, smierc. Wszystko budowane w kodzie (patrz Bootstrap).</summary>
     public class Game : MonoBehaviour
     {
-        public enum State { Playing, Clearing, Shop, Dead, Won }
+        public enum State { Title, Playing, Clearing, Shop, Dead, Won }
 
         public const float OrthoSize = 5.625f; // 180 px / 16 PPU / 2
         public static readonly Vector2 ArenaHalf = new Vector2(9.5f, 5.2f);
@@ -59,7 +59,8 @@ namespace PayWithPixels
             BuildArena();
             ui = GameUI.Create(transform);
 
-            StartRun();
+            state = State.Title;
+            ui.ShowTitle(StartRun);
         }
 
         private void BuildArena()
@@ -101,6 +102,7 @@ namespace PayWithPixels
             coins = 0;
             ApplyPrices();
             player = Player.Create(world);
+            ui.HideTitle();
             ui.HideDeath();
             ui.HideShop();
             StartWave();
@@ -150,8 +152,13 @@ namespace PayWithPixels
         private void Update()
         {
             if (player != null) display.SetFogCenter(player.transform.position);
-            if (player != null) ui.SetHud(player.hp, stats.maxHp, wave, coins);
+            if (player != null && state != State.Title) ui.SetHud(player.hp, stats.maxHp, wave, coins);
 
+            if (state == State.Title)
+            {
+                if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return)) StartRun();
+                return;
+            }
             UpdateFlicker();
 
             switch (state)

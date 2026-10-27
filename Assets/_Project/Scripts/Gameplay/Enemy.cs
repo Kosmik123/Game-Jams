@@ -20,6 +20,9 @@ namespace PayWithPixels
         private float clock;
         private int pattern;
         private SpriteRenderer sr;
+        private string walkName;
+        private int spriteSize;
+        private bool diamond;
 
         public static Enemy SpawnBoss(Transform parent, Vector2 pos)
         {
@@ -88,17 +91,20 @@ namespace PayWithPixels
             switch (type)
             {
                 case EnemyType.Chaser:
-                    Art.MakeRenderer(go, Art.Diamond("enemy_chaser", 16), 5);
+                    e.sr = Art.MakeRenderer(go, Art.Diamond("enemy_chaser", 16), 5);
+                    e.walkName = "enemy_chaser"; e.spriteSize = 16; e.diamond = true;
                     e.radius = 0.45f; e.hp = 1 + wave / 4; e.speed = 2.6f * scale;
                     break;
                 case EnemyType.Shooter:
-                    Art.MakeRenderer(go, Art.Square("enemy_shooter", 16), 5);
+                    e.sr = Art.MakeRenderer(go, Art.Square("enemy_shooter", 16), 5);
+                    e.walkName = "enemy_shooter"; e.spriteSize = 16;
                     e.radius = 0.45f; e.hp = 2 + wave / 4; e.speed = 2f * scale;
                     e.shootTimer = Random.Range(0.5f, 1.8f);
                     e.strafeSign = Random.value < 0.5f ? -1f : 1f;
                     break;
                 default:
-                    Art.MakeRenderer(go, Art.Square("enemy_tank", 24), 5);
+                    e.sr = Art.MakeRenderer(go, Art.Square("enemy_tank", 24), 5);
+                    e.walkName = "enemy_tank"; e.spriteSize = 24;
                     e.radius = 0.7f; e.hp = 8 + wave; e.speed = 1.2f * scale; e.contactDamage = 2;
                     break;
             }
@@ -117,6 +123,7 @@ namespace PayWithPixels
                 Game.Instance.OnBossKilled();
                 return;
             }
+            Shard.Burst(transform.parent, transform.position, 5);
             Game.Instance.SpawnCoin(transform.position, type == EnemyType.Tank ? 3 : 1);
             Destroy(gameObject);
         }
@@ -155,6 +162,13 @@ namespace PayWithPixels
                 }
             }
             else move = dir;
+
+            clock += Time.deltaTime;
+            if (walkName != null)
+            {
+                string frame = walkName + "_walk_" + (Mathf.FloorToInt(clock / 0.25f) % 2);
+                sr.sprite = diamond ? Art.Diamond(frame, spriteSize) : Art.Square(frame, spriteSize);
+            }
 
             pos += move * (speed * Time.deltaTime);
             pos.x = Mathf.Clamp(pos.x, -Game.ArenaHalf.x, Game.ArenaHalf.x);
