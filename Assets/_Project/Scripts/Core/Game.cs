@@ -44,6 +44,7 @@ namespace PayWithPixels
         private float freezeTimer;
         private bool freezeReady;
         private int kills;
+        private float lingerTimer;
         private readonly Drone[] drones = new Drone[3];
         public bool Frozen => freezeTimer > 0;
 
@@ -288,6 +289,7 @@ namespace PayWithPixels
                     break;
                 case State.Playing:
                     UpdateSpawner();
+                    UpdateLingerFailsafe();
                     if (spawnLeft <= 0 && Enemy.All.Count == 0)
                     {
                         state = State.Clearing;
@@ -386,6 +388,20 @@ namespace PayWithPixels
             Palette.Inverted = flick != Frozen;   // zamrozenie czasu tez odwraca palete
         }
 
+        /// <summary>Zabezpieczenie: jesli po koncu spawnu wrogowie (poza bossem i Poborca) zaciely sie dlugo na planszy, odchodza.</summary>
+        private void UpdateLingerFailsafe()
+        {
+            bool lingering = spawnLeft <= 0 && Enemy.All.Count > 0 && !Frozen;
+            if (!lingering) { lingerTimer = 0; return; }
+            lingerTimer += Time.deltaTime;
+            if (lingerTimer < 75f) return;
+            lingerTimer = 0;
+            bool any = false;
+            foreach (var e in Enemy.All.ToArray())
+                if (e != null && e.IsRegular) { Destroy(e.gameObject); any = true; }
+            if (any) ui.Toast("THE REST GAVE UP THE CHASE");
+        }
+
         private void UpdateSpawner()
         {
             if (spawnLeft <= 0) return;
@@ -472,19 +488,35 @@ namespace PayWithPixels
             state = State.Shop;
             shopOffers = Catalog.Roll(3, wave, stats);
             rerolls = 0;
+            purchases = 0;
             haggled = false;
             RefreshShopUi();
         }
 
         private List<Offer> shopOffers;
         private int rerolls;
+        private int purchases;   // zakupy w tej wizycie: kazdy kolejny +25%
         private bool haggled;
 
-        private int RerollCost => 2 + 2 * rerolls;
+        private int RerollCost => 3 + 2 * rerolls;
+
+        /// <summary>Aktualny koszt oferty: +25% za kazdy wczesniejszy zakup w tej wizycie.</summary>
+        public int CostOf(Offer o) => Mathf.CeilToInt(o.cost * (1f + 0.25f * purchases));
 
         private void RefreshShopUi()
         {
-            ui.ShowShop(shopOffers, coins, debt, Buy, CloseShop, RerollCost, Reroll, !haggled, Haggle);
+            ui.ShowShop(shopOffers, coins, debt, Buy, CloseShop, RerollCost, Reroll, !haggled, Haggle, PayDebt);
+        }
+
+        /// <summary>Splaca dlug dostepnymi monetami.</summary>
+        private void PayDebt()
+        {
+            int amount = Mathf.Min(coins, debt);
+            if (amount <= 0) return;
+            coins -= amount;
+            debt -= amount;
+            Sfx.Play(Sound.Buy);
+            RefreshShopUi();
         }
 
         private void Reroll()
@@ -504,13 +536,19 @@ namespace PayWithPixels
             coins -= 1;
             haggled = true;
             foreach (var o in shopOffers)
-                o.price = Catalog.Prices[Random.Range(0, Catalog.Prices.Count)];
+                if (!o.sold) o.price = Catalog.Prices[Random.Range(0, Catalog.Prices.Count)];
             Sfx.Play(Sound.Hurt);
             RefreshShopUi();
         }
 
         /// <summary>Czy oferta jest do kupienia (za monety albo na kredyt).</summary>
-        public bool CanAfford(Offer o) => o.sell || coins >= o.cost || debt + (o.cost - coins) <= MaxDebt;
+        public bool CanAfford(Offer o)
+        {
+            if (o.sold) return false;
+            if (o.sell) return true;
+            int c = CostOf(o);
+            return coins >= c || debt + (c - coins) <= MaxDebt;
+        }
 
         private void Buy(Offer o)
         {
@@ -518,12 +556,14 @@ namespace PayWithPixels
             if (o.sell) coins += o.reward;
             else
             {
-                if (coins >= o.cost) coins -= o.cost;
+                int c = CostOf(o);
+                if (coins >= c) coins -= c;
                 else
                 {
-                    debt += o.cost - coins;   // brak monet: reszta na kredyt
+                    debt += c - coins;   // brak monet: reszta na kredyt
                     coins = 0;
                 }
+                purchases++;
                 var g = o.gain;
                 if (!g.consumable) stats.levels[g.name] = o.level;
                 stats.Recompute();
@@ -537,7 +577,8 @@ namespace PayWithPixels
             stats.Recompute();
             if (player.hp > stats.maxHp) player.hp = stats.maxHp;
             ApplyPrices();
-            CloseShop();
+            o.sold = true;
+            RefreshShopUi();   // sklep zostaje otwarty; NEXT WAVE zamyka
         }
 
         private void CloseShop()

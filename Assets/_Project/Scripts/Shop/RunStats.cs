@@ -122,6 +122,7 @@ namespace PayWithPixels
         public Price price;
         public int cost;
         public int level;   // poziom zysku po zakupie
+        public bool sold;   // kupiona w tej wizycie
         public bool sell;   // oferta "Sprzedaj": bierzesz cene, dostajesz monety
         public int reward;
     }

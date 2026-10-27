@@ -19,7 +19,7 @@ public class SmokeTest
     private static void Set(object o, string f, object v) => o.GetType().GetField(f, All).SetValue(o, v);
     private static object Call(object o, string m, params object[] a) => o.GetType().GetMethod(m, All).Invoke(o, a);
 
-    [UnityTest]
+    [UnityTest, Timeout(900000)]
     public IEnumerator PlayThroughRun()
     {
         yield return EditorSceneManager.LoadSceneInPlayMode("Assets/_Project/Scenes/Game/Game.unity", new LoadSceneParameters(LoadSceneMode.Single));
@@ -46,6 +46,14 @@ public class SmokeTest
             {
                 Debug.Log($"[smoke] frame {frame} state={state} zone={zone} wave={Get(game, "waveInZone")} coins={Get(game, "coins")} debt={Get(game, "debt")}");
                 lastState = state; lastZone = zone;
+            }
+
+            if (frame % 1500 == 0 && state == "Playing")
+            {
+                var list = (System.Collections.IList)T("Enemy").GetField("All", All).GetValue(null);
+                var sb = new System.Text.StringBuilder();
+                foreach (Component e in list) sb.Append(e.name + "@" + e.transform.position.ToString("F1") + " ");
+                Debug.Log($"[smoke] frame {frame} playing, enemies: {sb}");
             }
 
             var player = Get(game, "player");

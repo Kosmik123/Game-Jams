@@ -111,7 +111,7 @@ namespace PayWithPixels
         }
 
         public void ShowShop(List<Offer> offers, int coins, int debt, Action<Offer> onBuy, Action onSkip,
-            int rerollCost, Action onReroll, bool haggleAvailable, Action onHaggle)
+            int rerollCost, Action onReroll, bool haggleAvailable, Action onHaggle, Action onPayDebt)
         {
             foreach (Transform c in shopPanel.transform) Destroy(c.gameObject);
             tinted.RemoveAll(kv => kv.Key == null);
@@ -129,15 +129,16 @@ namespace PayWithPixels
                 Stretch(inner.rectTransform, Vector2.zero, Vector2.one, new Vector2(3, 3), new Vector2(-3, -3));
 
                 bool canBuy = Game.Instance.CanAfford(o);
-                bool onCredit = !o.sell && coins < o.cost;
+                int cost = Game.Instance.CostOf(o);
+                bool onCredit = !o.sell && coins < cost;
                 string top = o.sell
                     ? "SELL\nGET " + o.reward + " COINS"
                     : "GAIN" + (o.level > 1 ? " LV" + o.level : "") + "\n" + o.gain.name + "\n" + o.gain.description;
-                string bottom = o.sell
-                    ? "[ SELL ]"
-                    : !canBuy ? "NEED " + o.cost + " COINS"
-                    : onCredit ? "CREDIT: DEBT +" + (o.cost - coins)
-                    : "BUY: " + o.cost + " COINS";
+                string bottom = o.sold ? "* SOLD *"
+                    : o.sell ? "[ SELL ]"
+                    : !canBuy ? "NEED " + cost + " COINS"
+                    : onCredit ? "CREDIT: DEBT +" + (cost - coins)
+                    : "BUY: " + cost + " COINS";
                 var txt = NewText("Text", inner.transform,
                     top + "\n\nPRICE\n" + o.price.name + "\n" + o.price.description +
                     (Catalog.SynergyText(o, Game.Instance.stats) is string syn ? "\n\n* SYNERGY *\n" + syn : "") + "\n\n" + bottom,
@@ -170,9 +171,10 @@ namespace PayWithPixels
                 btn.onClick.AddListener(() => onBuy(offer));
             }
 
-            MakeShopButton("REROLL: " + rerollCost + " COINS", 0.04f, 0.30f, coins >= rerollCost, onReroll);
-            MakeShopButton("SKIP", 0.37f, 0.63f, true, onSkip);
-            MakeShopButton(haggleAvailable ? "HAGGLE: 1 COIN" : "HAGGLED", 0.70f, 0.96f, haggleAvailable && coins >= 1, onHaggle);
+            MakeShopButton("REROLL: " + rerollCost, 0.02f, 0.25f, coins >= rerollCost, onReroll);
+            MakeShopButton(debt > 0 ? "PAY DEBT: " + Mathf.Min(coins, debt) : "NO DEBT", 0.26f, 0.49f, debt > 0 && coins > 0, onPayDebt);
+            MakeShopButton(haggleAvailable ? "HAGGLE: 1" : "HAGGLED", 0.50f, 0.73f, haggleAvailable && coins >= 1, onHaggle);
+            MakeShopButton("NEXT WAVE", 0.74f, 0.98f, true, onSkip);
 
             Recolor();
             shopPanel.SetActive(true);

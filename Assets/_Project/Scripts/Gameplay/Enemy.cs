@@ -10,6 +10,7 @@ namespace PayWithPixels
         public static readonly List<Enemy> All = new List<Enemy>();
 
         public float radius;
+        public bool IsRegular => type != EnemyType.Boss && type != EnemyType.Collector;
         private EnemyType type;
         private int hp;
         private int maxHp;
