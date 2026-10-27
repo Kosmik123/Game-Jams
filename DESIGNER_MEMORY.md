@@ -13,7 +13,7 @@ Gra "Pay With Pixels" (temat Everything Has a Price), 1-bit Jam 15, branch `1-bi
 1. Unity na głównym projekcie musi być ZAMKNIĘTE (sprawdź procesy Unity.exe z `Game Jams`, bez `Temp`; boty programisty w Temp nie przeszkadzają).
 2. `git lfs checkout`, potem `Unity.exe -batchmode -nographics -quit -noaudio -projectPath "C:/Projekty gier/Unity/Game Jams" -logFile <log> -executeMethod PayWithPixels.Build.WebGLBuilder.BuildWebGL` (w logu: "WebGL build: Succeeded").
 3. `butler push Builds/WebGL kosmik123/pay-with-pixels:html5 --userversion <hash>-<opis>`. Strona: https://kosmik123.itch.io/pay-with-pixels.
-4. Ostatni deploy: `86a7a6f6-leaderboard` (44 MB) — tablica wyników, bossowie 10e, Poborca od długu 10f, INERCJA, SILENCE przerywany, waga cen, poprawieni Strażnicy.
+4. Deploy `86a7a6f6-leaderboard` (44 MB; tablica wyników, 10e, 10f, INERCJA, SILENCE przerywany, waga cen, Strażnicy) miał błędy tablicy, więc ZOSTAŁ COFNIĘTY: aktualnie na itch jest `74555e24-10e-rollback` (stan sprzed tablicy, bez 10f; Poborca po staremu w ostatniej fali). Rollback robi się przez worktree: `git worktree add --detach <Temp>/jam_rollback <commit>`, build tamtędy, `butler push`, potem `git worktree remove --force` (główne repo ma niezacommitowane zmiany Kosmika).
 
 ## Zrobione (w buildzie)
 3 strefy x (5 fal + boss), 8 wrogów + Poborca, 29 zysków (drzewka Dron/Dash/Krytyk, Dług jako broń, Rewers czasu, Blokada ceny), ceny zmysłów (w tym Cisza, Opóźnienie wejścia, Drogi sklep, Inercja), dług, kontrakty, REDEEM, fabuła, Ascension, trwałe save'y (localStorage + kod zapisu), tablica wyników (klasa Online, board `pay_with_pixels_score`, anonimowe logowanie, projekt podłączony: cloudProjectId 31bceb74-5233-4801-bb98-8aa6618d16f7, org kosmik123).
@@ -28,7 +28,7 @@ Gra "Pay With Pixels" (temat Everything Has a Price), 1-bit Jam 15, branch `1-bi
 - Wyniki botów (FAZA 12): careful 6% wygranych (cel 30-50% niespełniony, bot nie dashuje/nie unika), human 0%, średnia fala ok. 10.6; główna ściana to wejście do Z3 (fala 13). Decyzja: liczby zostają do uwag z gry Kosmika; następne dźwignie: HP/waga Oblężnika i Spawnera, x1.1 HP strefy 3.
 
 ## W kolejce
-1. Kosmik testuje tablicę wyników na itch (L na tytule, wynik po runie, F12 przy "OFFLINE"). Jeśli błąd logowania: sprawdzić Authentication w Unity Dashboard; błąd przekazać programiście.
+1. NAPRAWA TABLICY WYNIKÓW (kod jest w `1-bit-jam-15`, Kosmik: "naprawimy kiedyś indziej"): zebrać błędy z konsoli (F12, "OFFLINE"), sprawdzić Authentication w Unity Dashboard i środowisko, przekazać programiście; potem zbudować aktualne `1-bit-jam-15` i wrzucić na itch.
 2. Uwagi z gry Kosmika -> ewentualny dalszy balans (Z3, Strażnik, Poborca 10f).
 3. FAZA 13: nowe strefy 4+ (GDD v6 napiszę ja, po balansie), nowi bossowie, wrogowie, palety.
 4. Grafik: ewentualny 9-slice tła areny (dyskusja z Kosmikiem, mała korzyść), ikony do nowych rzeczy na prośbę programisty.
