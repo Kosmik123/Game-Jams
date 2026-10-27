@@ -14,6 +14,10 @@ namespace PayWithPixels
         public float moveSpeedMul = 1f;
         public int fogStacks;
         public int pixelStacks;
+        public int flickerStacks;
+
+        /// <summary>Cena "Migotanie": co 8 s paleta odwraca sie na (1 + 0.5*stack) s.</summary>
+        public float FlickerDuration => flickerStacks <= 0 ? 0f : 1f + 0.5f * flickerStacks;
 
         public float FireInterval => 0.35f / fireRateMul;
         public float MoveSpeed => 5f * moveSpeedMul;
@@ -65,6 +69,8 @@ namespace PayWithPixels
                 apply = s => s.fogStacks++ },
             new Price { name = "PIXELATION", icon = "icon_pixelation_grid", description = "WORSE PICTURE RESOLUTION",
                 apply = s => s.pixelStacks++ },
+            new Price { name = "FLICKER", icon = "icon_flicker_flash", description = "PALETTE INVERTS EVERY FEW SECONDS",
+                apply = s => s.flickerStacks++ },
             new Price { name = "HEAVY LEGS", icon = "icon_legs_boot", description = "-20% MOVE SPEED",
                 apply = s => s.moveSpeedMul *= 0.8f },
         };
