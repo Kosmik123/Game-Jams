@@ -128,3 +128,13 @@ Obecni: Goniec, Strzelec, Tank. Dodać: Skaczek (dash na gracza), Oblężnik (po
 - Do 24. godziny: rdzeń i treść zamknięte (fabuła, Kontrakty, balans, czytelność).
 - 24-40: testy ręczne, balans, bugi, polish, strona gry.
 - 40-48: bufor, build finalny, publikacja (tylko gdy Kosmik założy stronę).
+
+---
+
+# GDD v3.1 — Ulgi (REDEEM) i łagodniejsze ceny (feedback testerów)
+- Ceny były zbyt dotkliwe: każda oferta = monety + trwała wada na cały run. Zmiany:
+- **REDEEM**: w co 3. sklepie jedna oferta to "zdejmij 1 stack wybranej ceny" (koszt 8 + 4 za każdy posiadany stack tej ceny). Gracz wybiera cenę do zdjęcia.
+- **Nieliniowe stacki**: 1. stack każdej ceny słaby (np. mgła -15% promienia), 2.-3. coraz mocniejsze.
+- **Zabicie Poborcy**: dług spłacony + zdejmuje 1 stack losowej ceny.
+- **Siła ceny dopasowana do zysku**: proste zyski (leczenie, tarcza) dostają łagodną cenę, potężne (dash, wybuch, kryt) mocniejszą.
+- Cel balansu: bot 'careful' 30-50% wygranych, ludzki tester ma czuć wybór, a nie karę z góry.
