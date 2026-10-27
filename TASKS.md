@@ -88,6 +88,14 @@ Projekt: Unity 6000.4.9f1, kod i assety w `Assets/_Project` (Scripts, Graphics, 
 # FAZA 5 — Ulgi i łagodniejsze ceny (designer)
 - [ ] REDEEM: w co 3. sklepie oferta 'zdejmij 1 stack ceny' (wybór ceny, koszt 8 + 4*stacks), ikona/label 'REDEEM'.
 - [ ] Nieliniowe stacki cen (1. łagodny, 2.-3. mocniejsze) dla wszystkich cen.
-- [ ] Poborca: zabicie zdejmuje 1 stack losowej ceny (dodatkowo do spłaty długu).
+- [ ] (ANULOWANE: Poborca nie zdejmuje ceny, zobacz FAZA 6)
 - [ ] Siła ceny zależna od mocy zysku (proste zyski łagodniejsze, potężne mocniejsze).
 - [ ] Przestaw bota i puść balans ponownie; raport z liczbami (cele: random 5-15%, careful 30-50%).
+
+---
+# FAZA 6 — balans: kupowanie musi się opłacać (designer, wysoki priorytet)
+- [ ] Wrogowie rosną z falą: co 3 fale +10% HP; strefa 2 dodatkowo +15% HP i prędkości, strefa 3 +30%. Liczba wrogów rośnie ostrzej.
+- [ ] Zyski mocniejsze (większy skok na poziom), ceny zmysłów łagodne na 1. stacku (nieliniowo).
+- [ ] Poborca: zabicie zmniejsza dług o połowę (zaokrąglenie w dół) + monety; NIE zdejmuje ceny. Poborca groźniejszy (HP, prędkość). Dotyk nadal kradnie zysk.
+- [ ] Bot NOBUY (nie kupuje nic) jako strategia kontrolna w balance.ps1. Cele: NOBUY śr. koniec <= Z2, 0-3% wygranych; RANDOM 5-15%; CAREFUL 30-50%.
+- [ ] Raport tabela (strategie, % wygranych, mediana fali końca, średni dług na końcu) przed i po zmianach.
