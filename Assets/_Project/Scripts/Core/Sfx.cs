@@ -131,7 +131,7 @@ namespace PayWithPixels
         {
             if (musicSource == null || zone == musicZone) return;
             musicZone = zone;
-            if (!zoneMusic.TryGetValue(zone, out var clip)) zoneMusic[zone] = clip = BuildMusic(zone);
+            if (!zoneMusic.TryGetValue(zone, out var clip)) zoneMusic[zone] = clip = Resources.Load<AudioClip>("Music/zone" + zone) ?? BuildMusic(zone);
             bool wasPlaying = musicSource.isPlaying;
             musicSource.clip = clip;
             if (wasPlaying) musicSource.Play();
