@@ -116,6 +116,23 @@ namespace PayWithPixels
             Save();
         }
 
+        /// <summary>Kasuje caly postep (rekordy, osiagniecia, bronie, Ascension, tutorial); ustawienia dzwieku zostaja.</summary>
+        public static void ResetAll()
+        {
+            unlocked.Clear();
+            best = wins = runs = ascMax = ascSel = bestScore = 0;
+            tutorial = false;
+            selected = Weapon.Pistol;
+            loaded = true;
+            try
+            {
+                foreach (var k in new[] { KeyBest, KeyWins, KeyRuns, KeyAch, KeyWeapon, KeyTutorial, KeyAscMax, KeyAscSel, KeyBestScore })
+                    PlayerPrefs.DeleteKey(k);
+                PlayerPrefs.Save();
+            }
+            catch { }
+        }
+
         private static void Load()
         {
             if (loaded) return;

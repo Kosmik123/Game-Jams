@@ -701,6 +701,7 @@ namespace PayWithPixels
         private void TogglePause()
         {
             Paused = !Paused;
+            resetArmed = false;
             Time.timeScale = Paused ? 0f : 1f;
             if (Paused) ShowPauseMenu();
             else ui.HidePause();
@@ -714,8 +715,20 @@ namespace PayWithPixels
                 () => { Settings.ReduceFlicker = !Settings.ReduceFlicker; ShowPauseMenu(); },
                 () => { Settings.Shake = !Settings.Shake; ShowPauseMenu(); },
                 () => { Settings.MusicVolume = Settings.MusicVolume >= 0.99f ? 0f : Settings.MusicVolume + 0.1f; ShowPauseMenu(); },
-                () => { Settings.SfxVolume = Settings.SfxVolume >= 0.99f ? 0f : Settings.SfxVolume + 0.1f; ShowPauseMenu(); });
+                () => { Settings.SfxVolume = Settings.SfxVolume >= 0.99f ? 0f : Settings.SfxVolume + 0.1f; ShowPauseMenu(); },
+                () =>
+                {
+                    if (!resetArmed) { resetArmed = true; ShowPauseMenu(); return; }
+                    resetArmed = false;
+                    Meta.ResetAll();
+                    TogglePause();
+                    GoToTitle();
+                    ui.Toast("PROGRESS RESET", 3f);
+                },
+                resetArmed ? "SURE? CLICK AGAIN (ERASES ALL)" : "RESET PROGRESS");
         }
+
+        private bool resetArmed;
 
         private void Update()
         {

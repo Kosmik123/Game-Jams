@@ -355,26 +355,32 @@ namespace PayWithPixels
 
         // ---------- pauza ----------
 
-        public void ShowPause(Action onResume, Action onRestart, Action onVolume, Action onFlicker, Action onShake, Action onMusic, Action onSfx)
+        public void ShowPause(Action onResume, Action onRestart, Action onVolume, Action onFlicker, Action onShake, Action onMusic, Action onSfx, Action onReset = null, string resetLabel = "RESET PROGRESS")
         {
             foreach (Transform c in pausePanel.transform) Destroy(c.gameObject);
             tinted.RemoveAll(kv => kv.Key == null);
             pausePanel.transform.SetAsLastSibling();
 
             var title = NewText("Title", pausePanel.transform, "PAUSED", 40, TextAnchor.MiddleCenter);
-            Stretch(title.rectTransform, new Vector2(0, 0.78f), new Vector2(1, 0.95f), Vector2.zero, Vector2.zero);
+            Stretch(title.rectTransform, new Vector2(0, 0.86f), new Vector2(1, 0.98f), Vector2.zero, Vector2.zero);
 
             int vol = Mathf.RoundToInt(Settings.Volume * 10f);
             int mus = Mathf.RoundToInt(Settings.MusicVolume * 10f);
             int sfx = Mathf.RoundToInt(Settings.SfxVolume * 10f);
-            MakeButton(pausePanel.transform, "RESUME", new Vector2(0.3f, 0.66f), new Vector2(0.7f, 0.75f), true, onResume);
-            MakeButton(pausePanel.transform, "MASTER " + vol + "/10  (CLICK +1)", new Vector2(0.3f, 0.56f), new Vector2(0.7f, 0.65f), true, onVolume);
-            MakeButton(pausePanel.transform, "MUSIC " + mus + "/10  (CLICK +1)", new Vector2(0.3f, 0.46f), new Vector2(0.7f, 0.55f), true, onMusic);
-            MakeButton(pausePanel.transform, "SFX " + sfx + "/10  (CLICK +1)", new Vector2(0.3f, 0.36f), new Vector2(0.7f, 0.45f), true, onSfx);
-            MakeButton(pausePanel.transform, "REDUCE FLICKER: " + (Settings.ReduceFlicker ? "ON" : "OFF"), new Vector2(0.3f, 0.26f), new Vector2(0.7f, 0.35f), true, onFlicker);
-            MakeButton(pausePanel.transform, "SCREENSHAKE: " + (Settings.Shake ? "ON" : "OFF"), new Vector2(0.3f, 0.16f), new Vector2(0.7f, 0.25f), true, onShake);
-            MakeButton(pausePanel.transform, "RESTART RUN", new Vector2(0.3f, 0.06f), new Vector2(0.7f, 0.15f), true, onRestart);
-
+            float y = 0.80f;
+            void PauseButton(string label, Action act)
+            {
+                MakeButton(pausePanel.transform, label, new Vector2(0.3f, y - 0.075f), new Vector2(0.7f, y), true, act);
+                y -= 0.085f;
+            }
+            PauseButton("RESUME", onResume);
+            PauseButton("MASTER " + vol + "/10  (CLICK +1)", onVolume);
+            PauseButton("MUSIC " + mus + "/10  (CLICK +1)", onMusic);
+            PauseButton("SFX " + sfx + "/10  (CLICK +1)", onSfx);
+            PauseButton("REDUCE FLICKER: " + (Settings.ReduceFlicker ? "ON" : "OFF"), onFlicker);
+            PauseButton("SCREENSHAKE: " + (Settings.Shake ? "ON" : "OFF"), onShake);
+            PauseButton("RESTART RUN", onRestart);
+            if (onReset != null) PauseButton(resetLabel, onReset);
             Recolor();
             pausePanel.SetActive(true);
             toastText.transform.SetAsLastSibling();
