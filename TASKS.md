@@ -164,3 +164,35 @@ Zakres jak w FAZA 10 wyżej. Po wdrożeniu: FAZA 12 (balans). Zaczynać po sygna
 ---
 # FAZA 13 — nowe poziomy (planowanie po FAZA 10-12)
 - [ ] Strefa 4 (i ew. 5) z nowymi bossami (po 1 na strefę), 3-4 nowych wrogów, nowe palety, nowe przeszkody; opcjonalnie tryb nieskończony. Designer rozpisze GDD v6 po FAZA 12.
+
+---
+# FAZA 10b — cena INERCJA (pomysł Kosmika, designer)
+- [ ] Nowa cena INERCJA (INERTIA): ruch jest opóźniony względem inputu zarówno na starcie, jak i przy zatrzymaniu (postać ślizga się). Różnica względem INPUT DELAY: tamta opóźnia tylko rozpędzanie, INERCJA dodaje też hamowanie.
+- [ ] Stacki (nieliniowo): czas rozpędzania/hamowania 0.10 / 0.22 / 0.40 s (hamowanie ok. 1.3x dłuższe niż start). Prędkość maksymalna bez zmian; DASH nie podlega inercji (daje kontrolę). Po dashu krótkie hamowanie wg bieżącego stacku.
+- [ ] Nie kumuluje się z INPUT DELAY liniowo: gdy gracz ma obie ceny, używać dłuższego czasu startu (max), a hamowanie z INERCJI. Dodaj do tabeli cen, ikona od grafika (icon_inertia 16x16, 1-bit).
+- [ ] Do balansu (FAZA 12): sprawdzić, czy cena nie czyni walki z Oblężnikiem/Rojem nie do przejścia; pierwszy stack ma być odczuwalny, ale łagodny.
+
+---
+# FAZA 10c — SILENCE przerywany (decyzja Kosmika, designer)
+- [ ] Cena SILENCE nie wycisza dźwięku na stałe (odbiera radość z gry). Działa jak FLICKER i INVERT INPUT: w losowych momentach na krótki czas wyłącza dźwięk i muzykę, potem wraca. Tylko w State.Playing/Clearing (w sklepie i menu dźwięk działa normalnie).
+- [ ] Parametry (wzór: UpdateInvertedControls w Game.cs): przerwa między ciszami losowa 6-12 s (przy kolejnych stackach 5-10 s), czas ciszy 1.5 + 0.5*stack s (1-3 stacki). Pierwsza cisza nie wcześniej niż 5 s po starcie fali. Płynne wyciszenie/powrót (0.1 s) bez trzasków.
+- [ ] Toast na początku ciszy, np. 'SILENCE!' (jak 'CONTROLS INVERTED!'); wyciszenie dotyczy także SFX telegrafów, więc przy stacku 3 gra jest trudniejsza, ale uczciwa (telegrafy graficzne zostają).
+- [ ] Opis ceny w sklepie zmienić na: 'SOUND CUTS OUT FOR A MOMENT, NOW AND THEN'. Do FAZY 12 zbalansować pod kątem trudności (cena jest teraz łagodna, więc może wymagać mocniejszej nagrody lub niższego udziału w losowaniu).
+
+---
+# FAZA 10d — waga (dotkliwość) cen zmysłów a koszt w monetach (zatwierdzone przez Kosmika, ważny element balansu)
+- [ ] Dodaj do klasy Price pole severity (1-3). Start: 1 = SILENCE, FLICKER, ZOOM IN, INPUT DELAY; 2 = SLUGGISH AIM, HEAVY LEGS, FOG, PIXELATION, COSTLY LIFE, PRICEY SHOP; 3 = REVERSED CONTROLS, FRAGILITY, HUNGER, INERTIA. Wagi można korygować po danych z bota (własna ocena programisty ma pierwszeństwo, jeśli liczby pokazują inaczej).
+- [ ] GainCost: zniżka od wagi ceny z oferty: waga 1 = 0%, 2 = -15%, 3 = -30% (zaokrąglenie, min. 1 moneta; pierwszy darmowy zysk bez zmian). Zniżka liczona na końcu, po mnożnikach PRICEY SHOP / COSTLY LIFE.
+- [ ] Oferta 'sprzedaj zmysł': nagroda = (5 + fala/2) * (0.8 / 1.0 / 1.3 dla wagi 1/2/3), zaokrąglona.
+- [ ] UI: na karcie oferty wyraźnie pokazać zniżkę (np. cena przekreślona lub etykieta '-30%'), ewentualnie kolejność/kolor ikony wagi (1-3 kropki).
+- [ ] Kolejność prac: 10d -> 10b (INERTIA) -> 10c (SILENCE przerywany) -> pełny balans FAZA 12 (boty na końcu, bo 10d zmienia ekonomię). Po balansie raport z tabelą i skutkiem zniżek (średni koszt zakupu, % wygranych, ile razy wybierane są ceny wagi 3).
+
+---
+# FAZA 10e — bossowie: fazy i wzorce ataków (pomysł Kosmika, designer)
+Stan kodu: Toll Keeper (HP 50): 2 wzorce (pierścień / wachlarz) na przemian, od 50% HP tylko szybciej i gęściej (brak nowego wzorca). Banker (HP 95): 3 fazy (deszcz monet / pościg z wachlarzem / spirala + przyzywanie). Auctioneer (HP 130): progi HP z licytacją, pierścień + wachlarz, gęstsze w późniejszych etapach.
+- [ ] Zasada: każdy boss zmienia WZORZEC (nie tylko tempo) przy progu HP; zmiana fazy = napis (Announce) + 1 s pauzy ostrzeżenia. Każdy nowy wzorzec z telegrafem (min. 0.5 s), żadnych niemożliwych do uniknięcia salw.
+- [ ] TOLL KEEPER: faza 1 (>50%): pierścienie + wachlarze jak teraz. Faza 2 (<=50%, napis 'THE TOLL DOUBLES'): dodatkowo ŚCIANA z przerwą (rząd pocisków przez całą arenę z jedną dziurą, telegraf linii), na przemian z szybszym wachlarzem; pierścienie rzadziej.
+- [ ] BANKER: dodać wzorzec 'LOAN CALL' w fazie 2: znacznik na pozycji gracza, po 0.8 s salwa pocisków z góry w to miejsce (zmusza do ruchu); faza 3 zostaje (spirala + przyzywanie), dodać obracającą się przerwę w pierścieniu co kilka salw.
+- [ ] AUCTIONEER: 4 etapy (100/75/50/25% HP), każdy z innym wzorcem: (1) wachlarz 3 pocisków celowanych 'oferta', (2) pierścień z licytacją (jak teraz), (3) pionowe/poziome linie z telegrafem, (4) łączenie dwóch wzorców naraz + licytacja co próg.
+- [ ] Strefy 4+ (FAZA 13): każdy boss min. 4 wzorce w 3 fazach, jeden wzorzec 'podpis' bossa.
+- [ ] Zmiany bossów do balansu FAZY 12: HP bossów bez zmian, tylko wzorce; test botem 'dużo uników' oraz ręcznie przez Kosmika.
