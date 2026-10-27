@@ -1,0 +1,18 @@
+﻿@font-face { font-family: "Pixel57"; src: url("Pixel57.ttf") format("truetype") }
+html, body { background: #000 }
+body { padding: 0; margin: 0; color: #F4F1DE; font-family: "Pixel57", monospace }
+#unity-container { position: absolute }
+#unity-container.unity-desktop { left: 50%; top: 50%; transform: translate(-50%, -50%) }
+#unity-container.unity-mobile { position: fixed; width: 100%; height: 100% }
+#unity-canvas { background: #000; display: block }
+.unity-mobile #unity-canvas { width: 100%; height: 100% }
+#unity-loading-bar { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: none; text-align: center }
+#unity-loading-title { font-size: 28px; letter-spacing: 2px; margin-bottom: 20px }
+#unity-progress-bar-empty { width: 240px; height: 14px; border: 2px solid #F4F1DE; padding: 2px; margin: 0 auto }
+#unity-progress-bar-full { width: 0%; height: 100%; background: #F4F1DE }
+#unity-loading-text { font-size: 14px; margin-top: 14px }
+#unity-footer { position: relative; height: 28px }
+.unity-mobile #unity-footer { display: none }
+#unity-fullscreen-button { cursor: pointer; float: right; line-height: 28px; font-size: 12px; margin-right: 6px; color: #F4F1DE }
+#unity-fullscreen-button:hover { color: #FFB000 }
+#unity-warning { position: absolute; left: 50%; top: 5%; transform: translate(-50%); background: #F4F1DE; color: #14121A; padding: 10px; display: none }
