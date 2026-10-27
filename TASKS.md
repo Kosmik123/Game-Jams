@@ -141,3 +141,26 @@ Problem: PlayerPrefs w WebGL (IndexedDB, klucz zależny od adresu strony) resetu
 - [ ] Dopasowanie siły ceny do mocy zysku.
 ## Grafik
 - [ ] Ikony nowych zysków i cen, sprity (orbita drona, fala uderzeniowa, miny już są).
+
+---
+# FAZA 10 ZATWIERDZONA przez Kosmika (stara adnotacja 'PROPOZYCJA' nieaktualna): zyski warunkowe + nowe buffy/debuffy
+Zakres jak w FAZA 10 wyżej. Po wdrożeniu: FAZA 12 (balans). Zaczynać po sygnale od Kosmika/designera (przerwa).
+
+---
+# FAZA 11 — globalna tablica wyników (Unity Leaderboards)
+## Kosmik (usługi w Unity Cloud)
+- [ ] Podłączyć projekt do Unity Cloud, włączyć Authentication (anonimowe) i Leaderboards; utworzyć tablicę (ID np. 'pay_with_pixels_score', malejąco, keep best, bez resetu, env production). Podać designerowi ID tablicy i nazwę środowiska.
+## Programista
+- [ ] Pakiety: services.core, services.authentication, services.leaderboards. Init -> SignInAnonymouslyAsync -> nazwa gracza (UpdatePlayerNameAsync, pole wpisania nazwy raz).
+- [ ] Wysyłanie wyniku po zgonie/wygranej (AddPlayerScoreAsync), TOP 10 + pozycja gracza na ekranie końca i tytułowym; obsługa braku sieci/błędów bez crasha; limit sensowności wyniku po stronie gry.
+- [ ] Test w WebGL na itch (CORS/HTTPS), bez blokady gry przy awarii usługi.
+## Grafik
+- [ ] Ramka/układ tablicy wyników 480x270, ikona korony/medalu 1-bit (są icon_crown).
+
+---
+# FAZA 12 — balans po nowych zyskach i cenach (designer + programista)
+- [ ] Bot z nowymi zyskami i strategią HUMAN-LIKE (65% monet), cele względne, ekonomia, weryfikacja ręczna Kosmika.
+
+---
+# FAZA 13 — nowe poziomy (planowanie po FAZA 10-12)
+- [ ] Strefa 4 (i ew. 5) z nowymi bossami (po 1 na strefę), 3-4 nowych wrogów, nowe palety, nowe przeszkody; opcjonalnie tryb nieskończony. Designer rozpisze GDD v6 po FAZA 12.

@@ -185,3 +185,10 @@ Obecni: Goniec, Strzelec, Tank. Dodać: Skaczek (dash na gracza), Oblężnik (po
 - **Drzewko KRYTYK** (baza: CRITICAL): KRYT-WYBUCH, KRYT-MONETY, POTRÓJNY KRYT.
 - Każdy ma cenę zmysłową; koszt w monetach rośnie z poziomem, nie maleje. Limit ~10 nowych zysków.
 - Dodatkowe pomysły do wyboru: ceny CISZA, OPÓŹNIENIE WEJŚCIA, DROGI SKLEP; zyski DŁUG JAKO BROŃ, REWERS CZASU, BLOKADA CENY; dopasowanie siły ceny do mocy zysku.
+
+---
+
+# GDD v5 — plan rozszerzeń (zatwierdzony przez Kosmika, jest dużo czasu)
+1. **Nowe zyski i ceny + drzewka zysków** (GDD v4): Dron / Dash / Krytyk, nowe ceny i zyski. Po wdrożeniu **pełny balans** (gra mocno się zmieni): telemetria bota (NOBUY / RANDOM / CAREFUL / HUMAN-LIKE z 65% zbieranych monet), cele względne, ekonomia.
+2. **Globalna tablica wyników** (Unity Leaderboards): logowanie anonimowe + nazwa gracza, wynik = SCORE (z mnożnikiem Ascension), pokazywana na ekranie końca runu i tytułowym (TOP 10 + pozycja gracza). Tryb offline: gra działa bez sieci, wynik czeka w kolejce.
+3. **Nowe poziomy**: strefa 4+ z nowymi bossami, wrogami i paletami; opcjonalnie tryb nieskończony po wygranej.
