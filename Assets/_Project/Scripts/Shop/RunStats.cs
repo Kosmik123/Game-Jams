@@ -52,7 +52,7 @@ namespace PayWithPixels
 
         public void Recompute()
         {
-            maxHp = BaseHp - fragileStacks;
+            maxHp = BaseHp - fragileStacks + bonusMaxHp;
             fireRateMul = weapon == Weapon.Shotgun ? 0.5f : weapon == Weapon.Laser ? 0.7f : 1f;
             shotCount = weapon == Weapon.Shotgun ? 5 : 1;
             pierce = weapon == Weapon.Laser ? 3 : 0;
@@ -81,7 +81,9 @@ namespace PayWithPixels
             return name;
         }
 
-        public float FireInterval => 0.35f / fireRateMul;
+        public int bonusMaxHp;              // kontrakty
+        public float tempFireMul = 1f;      // kontrakty (czasowe)
+        public float FireInterval => 0.35f / (fireRateMul * tempFireMul);
         public float MoveSpeed => 5f * Mathf.Pow(0.8f, legsStacks);
         public float CritChance => crit * 0.12f + 0.06f * Mathf.Min(crit, 1);
         public float CritMultiplier => fogStacks > 0 ? 5f : 3f;   // synergia: Mgla + Krytyk

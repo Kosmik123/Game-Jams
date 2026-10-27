@@ -514,7 +514,7 @@ namespace PayWithPixels
                 Stretch(bossLineText.rectTransform, Vector2.zero, Vector2.one, new Vector2(12, 8), new Vector2(-12, -8));
             }
             bossLineText.text = line;
-            bossLineUntil = Time.unscaledTime + 4f;
+            bossLineUntil = Time.unscaledTime + 2.5f;
             bossLinePanel.transform.SetAsLastSibling();
             toastText.transform.SetAsLastSibling();
             Recolor();
