@@ -14,16 +14,17 @@ namespace PayWithPixels
         private float life = 2.5f;
         private readonly List<Enemy> hit = new List<Enemy>();
 
-        public static Bullet Spawn(Transform parent, Vector2 pos, Vector2 vel, bool fromPlayer, int pierce)
+        public static Bullet Spawn(Transform parent, Vector2 pos, Vector2 vel, bool fromPlayer, int pierce, string spriteName = null)
         {
             var go = new GameObject(fromPlayer ? "Bullet" : "Enemy Bullet");
             go.transform.SetParent(parent, false);
             go.transform.position = pos;
-            var sprite = fromPlayer ? Art.Square("bullet_player", 4) : Art.Diamond("bullet_enemy", 6);
+            var sprite = fromPlayer ? Art.Square("bullet_player", 4)
+                : spriteName != null ? Art.Circle(spriteName, 8) : Art.Diamond("bullet_enemy", 6);
             Art.MakeRenderer(go, sprite, 8);
             var b = go.AddComponent<Bullet>();
             b.velocity = vel;
-            go.transform.rotation = Quaternion.Euler(0, 0, Mathf.Atan2(vel.y, vel.x) * Mathf.Rad2Deg - 90f);
+            go.transform.rotation = Art.FaceRotation(vel);
             b.fromPlayer = fromPlayer;
             b.pierceLeft = pierce;
             return b;

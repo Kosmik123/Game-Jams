@@ -26,7 +26,7 @@ namespace PayWithPixels
 
             Vector2 to = (Vector2)game.player.transform.position - (Vector2)transform.position;
             float dist = to.magnitude;
-            bool pull = game.state == Game.State.Clearing || dist < 1.8f;
+            bool pull = game.state == Game.State.Clearing || dist < game.stats.magnetRange;
             if (pull) transform.position += (Vector3)(to.normalized * (10f * Time.deltaTime));
             if (dist < 0.5f)
             {

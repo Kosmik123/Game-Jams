@@ -50,3 +50,60 @@ Szybsze strzały, +max HP, dash, strzały przebijające, magnes monet, strzał 3
 - designer: GDD, TASKS, balans, decyzje, build/deploy.
 - programista: kod gry (Unity, repo ma szkielet w `Assets/_Project`, kamera w `Scripts/Camera Fit`).
 - grafik: sprity, tło, UI, paleta; assety w `Assets/_Project/Graphics`.
+
+---
+
+# GDD v2 — rozszerzenie (MVP gotowe po ~30 min, mamy 2 dni, więc celujemy w pełną grę)
+
+Status v1: MVP działa (WebGL, tytuł, fale, sklep, 3-4 ceny, boss fali 8, dźwięk). Teraz **głębia, treść, czytelność i szlif**. Nie zmieniamy rdzenia, tylko go pogłębiamy.
+
+## Filary v2
+1. **Cena jest widoczna i odczuwalna** (zmysły), ale **też ma konsekwencje w systemach** (dług, synergie).
+2. **Decyzje w sklepie mają być trudne**: zysk vs cena vs dług, z synergiami i pułapkami.
+3. **Run ma strukturę i narrację**: 3 strefy, każda z własnym wyglądem, wrogami i bossem.
+4. **Gra jest czytelna mimo kar** (czytelny gracz, pociski wrogów, UI nigdy zasłonięte).
+
+## Struktura runu
+- 3 strefy po 5 fal + boss strefy (łącznie 15 fal + 3 bossy). Wygrana = pokonanie bossa strefy 3.
+- Każda strefa: własna para palet (zmienia się w obrębie strefy co 2 fale), własny zestaw wrogów, własne przeszkody na arenie (ściany, kolce), nowy boss.
+- Przed każdą strefą krótki ekran "ZONE N" z jednym zdaniem tematu (np. "THE TOLL ROAD").
+
+## Dług (nowa mechanika centralna)
+- Zamiast tylko "masz za mało monet": **kredyt**. W sklepie można kupić zysk na dług (brak monet).
+- Dług rośnie o 20% (zaokrąglony w górę) po każdej fali (odsetki).
+- Dług > 0 po fali 4 w strefie: pojawia się **Poborca** (Collector), mini-boss który ściga gracza i po dotknięciu **zabiera zysk** (usuwa losowy zdobyty zysk, zostawia cenę). Zabicie Poborcy spłaca dług.
+- Dług widoczny w HUD jako licznik z ikoną.
+
+## Zyski (docelowo ~16)
+Obecne: szybsze strzały, +max HP, strzał potrójny, leczenie, przebijanie, dash, magnet, tarcza. Dodać:
+- Rykoszet (pociski odbijają się od ścian), Wybuch (zabici wrogowie wybuchają), Wampiryzm (zabójstwa leczą co N), Spowolnienie (aura), Pet-dron (towarzysz strzela), Krytyk (szansa x3), Minowanie (dash zostawia miny), Zamrożenie czasu (jednorazowo na falę).
+Każdy zysk ma 3 poziomy (kolejny zakup ulepsza).
+
+## Ceny (docelowo ~9 + modyfikatory)
+Obecne: Mgła, Pikselizacja, Migotanie, Ociężałość (sluggish aim), Ciężkie nogi. Dodać:
+- **Odwrócone sterowanie** (krótko co jakiś czas), **Cisza** (brak dźwięku, tylko dla tych co mają dźwięk), **Zbliżenie** (kamera ciaśniej: gorzej widać wrogów), **Kruchość** (-1 max HP), **Drogie życie** (leczenie kosztuje 2x), **Głód** (monety znikają szybciej z ziemi).
+- Ostrzeżenie: Migotanie może być męczące, dodać opcję "Reduce flicker" w menu (domyślnie wyłączona, mocno wyeksponowana).
+
+## Synergie i pułapki (decyzje)
+- Pary zysk+cena z bonusem: np. **Mgła + Krytyk** (kryt x5 w ciemności), **Pikselizacja + Pet-dron** (dron rośnie), **Ciężkie nogi + Tarcza** (tarcza dłuższa).
+- Oferta sklepu pokazuje podpowiedź "SYNERGY" gdy para pasuje do tego co masz.
+- **Reroll** oferty za monety (koszt rośnie), **Haggle**: za moneta+ryzyko zamień cenę oferty (zła cena na inną).
+
+## Wrogowie (docelowo ~9 + 3 bossy)
+Obecni: Goniec, Strzelec, Tank. Dodać: Skaczek (dash na gracza), Oblężnik (pocisk obszarowy z ostrzeżeniem), Rój (małe, grupami), Strażnik (tarcza z przodu), Spawner (rodzi gońców), Poborca (zobacz Dług). Bossy: strefa 1 (obecny, "The Toll Keeper"), strefa 2 (wielofazowy, "The Banker"), strefa 3 ("The Auctioneer": sprzedaje twoje zyski podczas walki).
+
+## Meta (między runami)
+- Ekran końca runu: statystyki, rekord (localStorage/PlayerPrefs), **odblokowania**: nowe bronie startowe (pistolet, strzelba, laser), nowe zyski w puli (odblokowywane osiągnięciami "pokonaj bossa z mgłą x3", "ukończ run z długiem 0" itp.).
+- 8-10 osiągnięć, widocznych na ekranie startowym jako ikony 1-bit.
+
+## Feeling / polish
+- Hit-stop 30-60 ms, lekki screenshake (do wyłączenia), błysk trafienia (inwersja koloru sprite'a), cząsteczki śmierci (odłamki), animacje UI sklepu (karty wjeżdżają), liczby obrażeń 5x7.
+- Tutorial: 3 krótkie podpowiedzi w pierwszej fali + objaśnienie sklepu przy pierwszej wizycie.
+- Pauza (Esc) z ustawieniami: głośność, reduce flicker, screenshake.
+- Muzyka: 3 pętle (po jednej na strefę), proceduralne.
+- Balans: docelowy czas runu 12-15 min. Każda strefa ~4-5 min.
+
+## Harmonogram (2 dni)
+- Dzień 1 (reszta): dług+Poborca, 3 nowe wrogowie, ceny rozszerzone, strefa 1 dopracowana, balans po testach.
+- Dzień 2: strefy 2-3, bossy 2-3, meta/odblokowania, osiągnięcia, tutorial, pauza/ustawienia, polish, QA, build WebGL + deploy na itch.io.
+- Ostatnie 3-4 godziny: tylko poprawki błędów, balans i wypolerowanie. Zero nowych funkcji.

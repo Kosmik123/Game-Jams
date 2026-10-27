@@ -47,6 +47,16 @@ namespace PayWithPixels
             return s;
         }
 
+        /// <summary>
+        /// Obrot sprita w strone ruchu, przyciety do wielokrotnosci 90 stopni - obrot pixel-artu o dowolny kat
+        /// w malej RT daje poszarpane plamy. Sprity patrza domyslnie w gore.
+        /// </summary>
+        public static Quaternion FaceRotation(Vector2 dir)
+        {
+            float deg = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg - 90f;
+            return Quaternion.Euler(0, 0, Mathf.Round(deg / 90f) * 90f);
+        }
+
         public static SpriteRenderer MakeRenderer(GameObject go, Sprite sprite, int order)
         {
             var sr = go.AddComponent<SpriteRenderer>();

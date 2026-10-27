@@ -3,19 +3,29 @@ using UnityEngine.SceneManagement;
 
 namespace PayWithPixels
 {
-    /// <summary>Caly stan runu: fale, monety, sklep, smierc. Wszystko budowane w kodzie (patrz Bootstrap).</summary>
+    /// <summary>Caly stan runu: strefy, fale, monety, dlug, sklep, smierc. Wszystko budowane w kodzie (patrz Bootstrap).</summary>
     public class Game : MonoBehaviour
     {
-        public enum State { Playing, Clearing, Shop, Dead }
+        public enum State { Title, ZoneIntro, Playing, Clearing, Shop, Dead, Won }
 
         public const float OrthoSize = 5.625f; // 180 px / 16 PPU / 2
         public static readonly Vector2 ArenaHalf = new Vector2(9.5f, 5.2f);
 
+        public const int Zones = 3;
+        public const int WavesPerZone = 5;           // + boss strefy
+        public const int MaxDebt = 30;
+        public const float InterestRate = 0.2f;
+
+        private static readonly string[] ZoneNames = { "THE TOLL ROAD", "THE BANK", "THE AUCTION HOUSE" };
+
         public static Game Instance { get; private set; }
 
         public State state;
-        public int wave;
+        public int zone;
+        public int waveInZone;   // 1..WavesPerZone, WavesPerZone+1 = boss
+        public int wave;         // numer fali w calym runie
         public int coins;
+        public int debt;
         public RunStats stats;
         public Player player;
         public TwoColorDisplay display;
@@ -26,7 +36,13 @@ namespace PayWithPixels
         private int spawnLeft;
         private float spawnTimer;
         private float clearTimer;
+        private float introTimer;
         private float flickerClock;
+        private bool lastWaveWasBoss;
+
+        public bool IsBossWave => waveInZone > WavesPerZone;
+        /// <summary>Trudnosc do skalowania wrogow (rosnie przez caly run).</summary>
+        public int Difficulty => (zone - 1) * (WavesPerZone + 1) + waveInZone;
 
         public static void Create()
         {
@@ -54,12 +70,14 @@ namespace PayWithPixels
             camGo.AddComponent<AudioListener>();
 
             display = TwoColorDisplay.Create(transform, cam);
+            Sfx.Init(transform);
             world = new GameObject("World").transform;
             world.SetParent(transform, false);
             BuildArena();
             ui = GameUI.Create(transform);
 
-            StartRun();
+            state = State.Title;
+            ui.ShowTitle(StartRun);
         }
 
         private void BuildArena()
@@ -97,13 +115,19 @@ namespace PayWithPixels
             Palette.Reset();
             flickerClock = 0;
             stats = new RunStats();
+            zone = 1;
+            waveInZone = 0;
             wave = 0;
             coins = 0;
+            debt = 0;
+            lastWaveWasBoss = false;
             ApplyPrices();
             player = Player.Create(world);
+            ui.HideTitle();
+            Sfx.StartMusic();
             ui.HideDeath();
             ui.HideShop();
-            StartWave();
+            BeginZone();
         }
 
         public void ApplyPrices()
@@ -112,16 +136,77 @@ namespace PayWithPixels
             display.SetFog(stats.FogRadius);
         }
 
+        private void BeginZone()
+        {
+            state = State.ZoneIntro;
+            introTimer = 2.6f;
+            waveInZone = 0;
+            Palette.SetIndex((zone - 1) * 2);
+            ui.ShowZone(zone, ZoneNames[zone - 1]);
+        }
+
         private void StartWave()
         {
             wave++;
-            Palette.SetIndex((wave - 1) / 2);
+            waveInZone++;
+            ui.HideZone();
+            Palette.SetIndex((zone - 1) * 2 + (waveInZone - 1) / 3);
             state = State.Playing;
-            spawnLeft = 4 + wave * 2;
+            lastWaveWasBoss = IsBossWave;
+            spawnLeft = IsBossWave ? 6 : 5 + 2 * waveInZone + 4 * (zone - 1);
             spawnTimer = 0.5f;
+            player.RefillShield();
+
+            if (IsBossWave)
+            {
+                Enemy.SpawnBoss(world, new Vector2(0, ArenaHalf.y - 1.5f), zone);
+                Sfx.Play(Sound.Boss);
+            }
+            else if (debt > 0 && waveInZone == WavesPerZone)
+            {
+                Enemy.SpawnCollector(world, PickSpawnPoint());
+                ui.Toast("THE COLLECTOR COMES FOR YOUR DEBT");
+            }
         }
 
-        public void AddCoins(int n) => coins += n;
+        public void AddCoins(int n)
+        {
+            coins += n;
+            Sfx.Play(Sound.Coin);
+        }
+
+        public void OnBossKilled()
+        {
+            foreach (var e in Enemy.All.ToArray()) if (e != null) Destroy(e.gameObject);
+            foreach (var b in Bullet.All.ToArray()) if (b != null) Destroy(b.gameObject);
+            spawnLeft = 0;
+            if (zone >= Zones)
+            {
+                state = State.Won;
+                Sfx.Play(Sound.Win);
+                ui.ShowDeath(wave, StartRun, true);
+            }
+            else
+            {
+                SpawnCoin(Vector2.zero, 8);
+                ui.Toast("ZONE CLEARED");
+            }
+        }
+
+        /// <summary>Poborca zabity: dlug splacony.</summary>
+        public void OnCollectorKilled()
+        {
+            debt = 0;
+            ui.Toast("DEBT PAID");
+        }
+
+        /// <summary>Poborca dotknal gracza: zabiera losowy zysk, zostawia cene.</summary>
+        public void OnCollectorTouch()
+        {
+            string taken = stats.StealRandomGain();
+            if (player.hp > stats.maxHp) player.hp = stats.maxHp;
+            ui.Toast(taken != null ? "THE COLLECTOR TOOK: " + taken : "THE COLLECTOR FOUND NOTHING TO TAKE");
+        }
 
         public void SpawnCoin(Vector2 pos, int count)
         {
@@ -132,35 +217,56 @@ namespace PayWithPixels
         public void OnPlayerDied()
         {
             state = State.Dead;
+            Sfx.Play(Sound.Death);
             ui.ShowDeath(wave, StartRun);
         }
 
         private void Update()
         {
+            if (cam != null) cam.orthographicSize = Mathf.MoveTowards(cam.orthographicSize, OrthoSize * (stats != null ? stats.CameraZoom : 1f), 4f * Time.deltaTime);
             if (player != null) display.SetFogCenter(player.transform.position);
-            if (player != null) ui.SetHud(player.hp, stats.maxHp, wave, coins);
+            if (player != null && state != State.Title)
+                ui.SetHud(player.hp, stats.maxHp, ZoneLabel(), coins, debt);
 
+            if (Input.GetKeyDown(KeyCode.M)) Sfx.ToggleMute();
+            if (state == State.Title)
+            {
+                if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return)) StartRun();
+                return;
+            }
             UpdateFlicker();
 
             switch (state)
             {
+                case State.ZoneIntro:
+                    introTimer -= Time.deltaTime;
+                    if (introTimer <= 0) StartWave();
+                    break;
                 case State.Playing:
                     UpdateSpawner();
                     if (spawnLeft <= 0 && Enemy.All.Count == 0)
                     {
                         state = State.Clearing;
                         clearTimer = 1.2f;
+                        if (debt > 0)
+                        {
+                            debt = Mathf.CeilToInt(debt * (1f + InterestRate));
+                            ui.Toast("INTEREST: DEBT IS NOW " + debt);
+                        }
                     }
                     break;
                 case State.Clearing:
                     clearTimer -= Time.deltaTime;
                     if (clearTimer <= 0) OpenShop();
                     break;
+                case State.Won:
                 case State.Dead:
                     if (Input.GetKeyDown(KeyCode.R)) StartRun();
                     break;
             }
         }
+
+        private string ZoneLabel() => IsBossWave ? "ZONE " + zone + " BOSS" : "ZONE " + zone + "-" + Mathf.Max(1, waveInZone);
 
         private void UpdateFlicker()
         {
@@ -177,14 +283,25 @@ namespace PayWithPixels
             if (spawnLeft <= 0) return;
             spawnTimer -= Time.deltaTime;
             if (spawnTimer > 0) return;
-            spawnTimer = Mathf.Max(0.35f, 0.8f - wave * 0.04f);
+            spawnTimer = Mathf.Max(0.35f, 0.8f - Difficulty * 0.03f);
             spawnLeft--;
 
-            EnemyType type = EnemyType.Chaser;
+            if (IsBossWave)
+            {
+                Enemy.Spawn(world, EnemyType.Chaser, PickSpawnPoint(), Difficulty);
+                spawnTimer = 4f;
+                return;
+            }
+            Enemy.Spawn(world, PickEnemyType(), PickSpawnPoint(), Difficulty);
+        }
+
+        /// <summary>Pula wrogow zalezy od strefy i fali.</summary>
+        private EnemyType PickEnemyType()
+        {
             float r = Random.value;
-            if (wave >= 4 && r < 0.15f) type = EnemyType.Tank;
-            else if (wave >= 2 && r < 0.45f) type = EnemyType.Shooter;
-            Enemy.Spawn(world, type, PickSpawnPoint(), wave);
+            if (waveInZone >= 4 && r < 0.15f) return EnemyType.Tank;
+            if (waveInZone >= 2 && r < 0.45f) return EnemyType.Shooter;
+            return EnemyType.Chaser;
         }
 
         private Vector2 PickSpawnPoint()
@@ -210,15 +327,34 @@ namespace PayWithPixels
             foreach (var b in Bullet.All.ToArray()) if (b != null) Destroy(b.gameObject);
 
             state = State.Shop;
-            ui.ShowShop(Catalog.Roll(3, wave), coins, Buy, CloseShop);
+            ui.ShowShop(Catalog.Roll(3, wave, stats), coins, debt, Buy, CloseShop);
         }
+
+        /// <summary>Czy oferta jest do kupienia (za monety albo na kredyt).</summary>
+        public bool CanAfford(Offer o) => o.sell || coins >= o.cost || debt + (o.cost - coins) <= MaxDebt;
 
         private void Buy(Offer o)
         {
-            if (coins < o.cost) return;
-            coins -= o.cost;
-            o.gain.apply(stats, player);
+            if (!CanAfford(o)) return;
+            if (o.sell) coins += o.reward;
+            else
+            {
+                if (coins >= o.cost) coins -= o.cost;
+                else
+                {
+                    debt += o.cost - coins;   // brak monet: reszta na kredyt
+                    coins = 0;
+                }
+                var g = o.gain;
+                if (!g.consumable) stats.levels[g.name] = o.level;
+                stats.Recompute();
+                g.onBuy?.Invoke(stats, player);
+                if (player.hp > stats.maxHp) player.hp = stats.maxHp;
+            }
+            Sfx.Play(Sound.Buy);
             o.price.apply(stats);
+            stats.Recompute();
+            if (player.hp > stats.maxHp) player.hp = stats.maxHp;
             ApplyPrices();
             CloseShop();
         }
@@ -226,7 +362,12 @@ namespace PayWithPixels
         private void CloseShop()
         {
             ui.HideShop();
-            StartWave();
+            if (lastWaveWasBoss)
+            {
+                zone++;
+                BeginZone();
+            }
+            else StartWave();
         }
     }
 
