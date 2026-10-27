@@ -2,14 +2,14 @@
   <Project Path="NaughtyAttributes.Test.csproj" />
   <Project Path="Bipolar.InterfaceSerialization.Editor.csproj" />
   <Project Path="NaughtyAttributes.Core.csproj" />
+  <Project Path="Assembly-CSharp.csproj" />
   <Project Path="NaughtyAttributes.Editor.csproj" />
   <Project Path="Bipolar.InterfaceSerialization.csproj" />
   <Project Path="MackySoft.SerializeReferenceExtensions.Editor.csproj" />
   <Project Path="Bipolar.EventSerialization.csproj" />
   <Project Path="Bipolar.SceneManagement.Editor.csproj" />
-  <Project Path="Assembly-CSharp.csproj" />
+  <Project Path="Assembly-CSharp-Editor.csproj" />
   <Project Path="Bipolar.SceneManagement.csproj" />
   <Project Path="MackySoft.SerializeReferenceExtensions.csproj" />
   <Project Path="Bipolar.ComponentEvents.csproj" />
-  <Project Path="Assembly-CSharp-Editor.csproj" />
 </Solution>
