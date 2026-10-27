@@ -105,6 +105,7 @@ namespace PayWithPixels
 
         private void Update()
         {
+            if (titlePanel.activeSelf && achSlots.Count > 0) UpdateAchievementHover();
             if (nextIcon != null && nextFrames != null && shopPanel.activeSelf)
                 nextIcon.sprite = nextFrames[(int)(Time.unscaledTime / 0.4f) % 2];
             if (bossLinePanel != null && bossLinePanel.activeSelf && Time.unscaledTime > bossLineUntil) bossLinePanel.SetActive(false);
@@ -388,6 +389,38 @@ namespace PayWithPixels
 
         public void HidePause() => pausePanel.SetActive(false);
 
+        private class AchSlot { public RectTransform rect; public Image icon, bg; public Achievement ach; public bool has; }
+        private readonly List<AchSlot> achSlots = new List<AchSlot>();
+        private int achHover = -1;
+        private string achSummary;
+        private Text achTextUi;
+
+        /// <summary>Najechanie na ikone osiagniecia: opis w stalym miejscu pod rzedem ikon + odwrocone kolory ikony.</summary>
+        private void UpdateAchievementHover()
+        {
+            int hover = -1;
+            for (int i = 0; i < achSlots.Count; i++)
+                if (RectTransformUtility.RectangleContainsScreenPoint(achSlots[i].rect, Input.mousePosition, null)) { hover = i; break; }
+            if (hover == achHover) return;
+            if (achHover >= 0 && achHover < achSlots.Count) SetAchHighlight(achSlots[achHover], false);
+            achHover = hover;
+            if (hover >= 0)
+            {
+                var s = achSlots[hover];
+                SetAchHighlight(s, true);
+                achTextUi.text = s.ach.title + ": " + s.ach.description + (s.has ? "  [UNLOCKED]" : "  [LOCKED]");
+            }
+            else achTextUi.text = achSummary;
+            Recolor();
+        }
+
+        private void SetAchHighlight(AchSlot s, bool on)
+        {
+            s.bg.enabled = on;
+            tinted.RemoveAll(kv => kv.Key == s.icon);
+            tinted.Add(new KeyValuePair<Graphic, bool>(s.icon, !on));   // pod kursorem: ikona w kolorze tla na pelnym tle
+        }
+
         private RectTransform titleDynamic;
         private Sprite[] logoFrames;
         private Image logoImage;
@@ -442,6 +475,8 @@ namespace PayWithPixels
         {
             foreach (Transform c in titleDynamic) Destroy(c.gameObject);
             tinted.RemoveAll(kv => kv.Key == null);
+            achSlots.Clear();
+            achHover = -1;
 
             // bron
             var weapons = new[] { Weapon.Pistol, Weapon.Shotgun, Weapon.Laser };
@@ -465,15 +500,22 @@ namespace PayWithPixels
                 if (has) unlockedCount++;
                 var sprite = Resources.Load<Sprite>("Icons/" + (has ? a.icon : "ach_locked"));
                 if (sprite == null) continue;
+                float x0 = 0.5f - Meta.Achievements.Length * 0.0325f + i * 0.065f;
+                var slotBg = NewImage("AchBg", titleDynamic, true);   // podswietlenie pod kursorem: pelne tlo pod ikona
+                slotBg.raycastTarget = false;
+                slotBg.enabled = false;
+                Stretch(slotBg.rectTransform, new Vector2(x0, 0.27f), new Vector2(x0 + 0.06f, 0.36f), Vector2.zero, Vector2.zero);
                 var icon = NewImage("Ach", titleDynamic, true);
                 icon.sprite = sprite;
                 icon.raycastTarget = false;
-                float x0 = 0.5f - Meta.Achievements.Length * 0.0325f + i * 0.065f;
                 Stretch(icon.rectTransform, new Vector2(x0, 0.27f), new Vector2(x0 + 0.06f, 0.36f), Vector2.zero, Vector2.zero);
                 icon.preserveAspect = true;
+                achSlots.Add(new AchSlot { rect = icon.rectTransform, icon = icon, bg = slotBg, ach = a, has = has });
             }
             var achText = NewText("AchText", titleDynamic, "ACHIEVEMENTS " + unlockedCount + "/" + Meta.Achievements.Length, 16, TextAnchor.MiddleCenter);
             Stretch(achText.rectTransform, new Vector2(0, 0.22f), new Vector2(1, 0.27f), Vector2.zero, Vector2.zero);
+            achSummary = achText.text;
+            achTextUi = achText;
 
             if (Meta.AscensionUnlocked > 0)
                 MakeButton(titleDynamic, "ASCENSION " + Meta.Ascension + "/" + Meta.AscensionUnlocked + "  [CLICK TO CHANGE]  SCORE x" + (1f + 0.25f * Meta.Ascension).ToString("0.00"),
