@@ -589,7 +589,8 @@ namespace PayWithPixels
 
         public void AddCoins(int n)
         {
-            n = Mathf.RoundToInt(n * coinMul);
+            float v = n * coinMul * (zone >= 2 ? 1.25f : 1f);   // strefy 2-3: +25% monet (losowe zaokraglenie, zeby 1 moneta tez zyskiwala)
+            n = Mathf.FloorToInt(v) + (Random.value < v - Mathf.Floor(v) ? 1 : 0);
             coins += n;
             coinsEarned += n;
             Sfx.Play(Sound.Coin);
