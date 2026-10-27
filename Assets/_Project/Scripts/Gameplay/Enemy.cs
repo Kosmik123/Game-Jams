@@ -283,6 +283,7 @@ namespace PayWithPixels
             pos += move * (moveSpeed * dt);
             pos.x = Mathf.Clamp(pos.x, -Game.ArenaHalf.x, Game.ArenaHalf.x);
             pos.y = Mathf.Clamp(pos.y, -Game.ArenaHalf.y, Game.ArenaHalf.y);
+            pos = Obstacles.Push(pos, radius * 0.8f);
             transform.position = pos;
             if (rotates && dir != Vector2.zero && dashLeft <= 0) transform.rotation = Art.FaceRotation(dir);
 

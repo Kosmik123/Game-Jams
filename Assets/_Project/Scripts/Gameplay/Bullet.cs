@@ -68,6 +68,7 @@ namespace PayWithPixels
                 }
             }
             transform.position = pos;
+            if (Obstacles.HitsSolid(pos, 0.12f)) { Destroy(gameObject); return; }
             if (life <= 0) { Destroy(gameObject); return; }
 
             if (fromPlayer)
