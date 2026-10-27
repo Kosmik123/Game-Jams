@@ -146,3 +146,49 @@ Obecni: Goniec, Strzelec, Tank. Dodać: Skaczek (dash na gracza), Oblężnik (po
 - **Wrogowie rosną**: HP i liczba wrogów rosną z falą/strefą szybciej (miękki "enrage": co 3 fale +10% HP, w strefie 2 i 3 dodatkowo +15%/+30% HP i szybkości). Boss HP rośnie z liczbą zakupionych zysków? Nie (bez karania kupowania).
 - **Zyski mocniejsze**: każdy poziom zysku daje wyraźny skok (fire rate +30%/poziom, +2 max HP, wybuch większy promień, wampiryzm co 5 zabójstw, itp.). Cena (zmysł) łagodna na 1. stacku, więc zysk ma być wart wady.
 - **Poborca**: zabicie zmniejsza dług o połowę (zaokrąglenie w dół) i daje monety. NIE zdejmuje stacka ceny (usunięte z fazy 5). Poborca jest groźniejszy (więcej HP, szybszy), a dotyk kradnie zysk. Cel: dług nie może być opłacalną strategią.
+
+---
+
+# STAN AKTUALNY (synchronizacja z kodem, build 5402db79) — ten rozdział ma pierwszeństwo przy rozbieżnościach
+
+## Zgodne z GDD
+3 strefy (5 fal + boss każda), 3 bossy (Toll Keeper / Banker / Auctioneer), dług (kredyt, odsetki 20% po fali), Poborca (od fali 5 strefy przy długu), 8 zwykłych wrogów (Goniec, Strzelec, Tank, Skaczek, Oblężnik, Rój, Strażnik, Spawner) + Poborca, 16 zysków (poziomy do 3), 10 cen, synergie, reroll, haggle, kontrakty (8), REDEEM, fabuła (intro, linijki bossów, SOLD / PAID IN FULL), pauza z ustawieniami, tutorial, meta (rekordy, osiągnięcia, odblokowania broni), 3 pętle muzyczne, dźwięk proceduralny.
+
+## Zmienione względem wcześniejszych zapisów
+- Rozdzielczość wewnętrzna **480x270** (nie 320x180), canvas WebGL 1280x720, HUD w osobnym pasku 14 px.
+- Limit kredytu **20** monet (nie 30). Odsetki 20% (30% od Ascension 4).
+- Zabicie Poborcy **zmniejsza dług o połowę** (nie zeruje), daje monety, nie zdejmuje ceny.
+- Koszt zysku: round((baza + 3*(poziom-1) + 1*posiadane_poziomy + fala/3) * 1.3). Strefy 2-3: +25% monet. Pierwszy zysk w pierwszym sklepie darmowy (cena zmysłu nadal się dolicza).
+- Reroll 3+2n monety; kolejny zakup w tej samej wizycie +25%; REDEEM w każdym sklepie (1/wizytę), koszt 10+5*stacki; kontrakt co 2. sklep.
+- Haggle: 1 moneta, raz na sklep, przelosowuje CENY ZMYSŁÓW niekupionych ofert (etykieta w UI: NEW PRICES).
+- Pierwszy stack ceny słaby, kolejne mocniejsze (krzywe nieliniowe); od fali 7 drogie zyski (koszt >= 9) dostają cenę x2.
+- Wrogowie: limit prędkości (max 0.8 * prędkość gracza przy 1 stacku nóg, Rój 2.7); rozpychanie się; pocisk bez PIERCE trafia jednego wroga.
+- 3 bronie startowe (pistolet / strzelba / laser) z różnymi zachowaniami; shotgun odblokowuje boss 1, laser boss 2.
+
+## Dodane, a nie ma w pierwotnym GDD
+**ASCENSION** 1-5 po pierwszej wygranej (A1 start z mgłą, A2 wrogowie +25% HP, A3 ciężkie nogi + pikselizacja, A4 wrogowie szybsi i odsetki 30%, A5 migotanie + zbliżenie i bossowie +20% HP; mnożnik wyniku 1+0.25*poziom), przycisk PAY DEBT (klawisz D), skróty w sklepie (1-3, R, H, D, Enter), debug (F1-F6, tylko z ?debug=1), 11 osiągnięć z opisem po najechaniu, RESET PROGRESS, szablon WebGL (czarny ekran ładowania), telegrafy ataków i limit 170 pocisków wrogów.
+
+## Z GDD, ale NIE zrobione (świadomie lub jeszcze)
+- Cena **Głuchota/Cisza** (brak dźwięku): pominięta.
+- **Liczby obrażeń** nad wrogami: pominięte (tekst 5x7 bez AA nieczytelny).
+- **Mobile**: anulowane przez Kosmika (nieczytelne); assety touch w repo są nieużywane.
+- **Trwałe save'y między buildami** (FAZA 9): do zrobienia po przerwie.
+- Siła ceny dopasowana do mocy zysku (v3.1): nie zrobione (cena losowa, od fali 7 x2 dla drogich zysków).
+- Przegląd czytelności po testach zewnętrznych (czekamy na uwagi testerów).
+
+---
+
+# GDD v4 (PROPOZYCJA, do akceptacji Kosmika) — zyski warunkowe i drzewka
+- **Zyski warunkowe**: dostępne w sklepie tylko, gdy gracz ma zysk bazowy (kod już to wspiera: `Gain.available(stats)`). Szansa pojawienia się x2 po spełnieniu warunku.
+- **Drzewko DRON** (baza: DRONE): DRON-SIŁA, DRON-SZYBKOSTRZELNOŚĆ, WIĘCEJ DRONÓW (do 3), ORBITA (krąży wokół gracza i blokuje pociski).
+- **Drzewko DASH** (baza: DASH): MINY (są), FALA UDERZENIOWA (odpycha i rani), PODWÓJNY DASH, DASH-KRYT.
+- **Drzewko KRYTYK** (baza: CRITICAL): KRYT-WYBUCH, KRYT-MONETY, POTRÓJNY KRYT.
+- Każdy ma cenę zmysłową; koszt w monetach rośnie z poziomem, nie maleje. Limit ~10 nowych zysków.
+- Dodatkowe pomysły do wyboru: ceny CISZA, OPÓŹNIENIE WEJŚCIA, DROGI SKLEP; zyski DŁUG JAKO BROŃ, REWERS CZASU, BLOKADA CENY; dopasowanie siły ceny do mocy zysku.
+
+---
+
+# GDD v5 — plan rozszerzeń (zatwierdzony przez Kosmika, jest dużo czasu)
+1. **Nowe zyski i ceny + drzewka zysków** (GDD v4): Dron / Dash / Krytyk, nowe ceny i zyski. Po wdrożeniu **pełny balans** (gra mocno się zmieni): telemetria bota (NOBUY / RANDOM / CAREFUL / HUMAN-LIKE z 65% zbieranych monet), cele względne, ekonomia.
+2. **Globalna tablica wyników** (Unity Leaderboards): logowanie anonimowe + nazwa gracza, wynik = SCORE (z mnożnikiem Ascension), pokazywana na ekranie końca runu i tytułowym (TOP 10 + pozycja gracza). Tryb offline: gra działa bez sieci, wynik czeka w kolejce.
+3. **Nowe poziomy**: strefa 4+ z nowymi bossami, wrogami i paletami; opcjonalnie tryb nieskończony po wygranej.

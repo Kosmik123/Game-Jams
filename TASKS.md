@@ -123,3 +123,44 @@ Projekt: Unity 6000.4.9f1, kod i assety w `Assets/_Project` (Scripts, Graphics, 
 - [ ] Szablon WebGL: meta viewport, brak zoomu, pełny ekran na telefonie, przycisk FULLSCREEN powiększony.
 ## Designer
 - [ ] Test mobile w emulacji przeglądarki + prośba do Kosmika o test na prawdziwym telefonie przez itch.io.
+
+---
+# FAZA 9 — trwałe save'y między buildami (designer, po przerwie)
+Problem: PlayerPrefs w WebGL (IndexedDB, klucz zależny od adresu strony) resetuje się przy każdym nowym uploadzie na itch.io.
+## Programista
+- [ ] Warstwa zapisu: wtyczka .jslib (Assets/_Project/Plugins/WebGL) czytająca/zapisująca localStorage pod stałymi kluczami z prefiksem 'payWithPixels_v1_' (domena itch może być wspólna z innymi grami). Jedna klasa Save zamiast bezpośredniego PlayerPrefs (rekordy, osiągnięcia, bronie, Ascension, ustawienia). W Edytorze i na innych platformach: PlayerPrefs.
+- [ ] Migracja: przy starcie, jeśli localStorage pusty, a PlayerPrefs ma dane, przepisz je.
+- [ ] Kod zapisu w pauzie: 'EXPORT SAVE' (pokazuje i kopiuje do schowka krótki tekst, np. base64) oraz 'IMPORT SAVE' (wklejenie przez prompt przeglądarki lub klawisz Ctrl+V).
+- [ ] Test: zapis -> nowy build wgrany na tę samą stronę -> save zostaje (sprawdzi designer na itch).
+
+---
+# FAZA 10 — zyski warunkowe (PROPOZYCJA, czeka na akceptację Kosmika; nie zaczynać bez sygnału)
+## Programista
+- [ ] Zyski warunkowe wg GDD v4: drzewka DRON / DASH / KRYTYK (ok. 10 nowych zysków), szansa x2 po spełnieniu warunku, 3 poziomy.
+- [ ] Opcjonalnie: ceny CISZA, OPÓŹNIENIE WEJŚCIA, DROGI SKLEP; zyski DŁUG JAKO BROŃ, REWERS CZASU, BLOKADA CENY.
+- [ ] Dopasowanie siły ceny do mocy zysku.
+## Grafik
+- [ ] Ikony nowych zysków i cen, sprity (orbita drona, fala uderzeniowa, miny już są).
+
+---
+# FAZA 10 ZATWIERDZONA przez Kosmika (stara adnotacja 'PROPOZYCJA' nieaktualna): zyski warunkowe + nowe buffy/debuffy
+Zakres jak w FAZA 10 wyżej. Po wdrożeniu: FAZA 12 (balans). Zaczynać po sygnale od Kosmika/designera (przerwa).
+
+---
+# FAZA 11 — globalna tablica wyników (Unity Leaderboards)
+## Kosmik (usługi w Unity Cloud)
+- [ ] Podłączyć projekt do Unity Cloud, włączyć Authentication (anonimowe) i Leaderboards; utworzyć tablicę (ID np. 'pay_with_pixels_score', malejąco, keep best, bez resetu, env production). Podać designerowi ID tablicy i nazwę środowiska.
+## Programista
+- [ ] Pakiety: services.core, services.authentication, services.leaderboards. Init -> SignInAnonymouslyAsync -> nazwa gracza (UpdatePlayerNameAsync, pole wpisania nazwy raz).
+- [ ] Wysyłanie wyniku po zgonie/wygranej (AddPlayerScoreAsync), TOP 10 + pozycja gracza na ekranie końca i tytułowym; obsługa braku sieci/błędów bez crasha; limit sensowności wyniku po stronie gry.
+- [ ] Test w WebGL na itch (CORS/HTTPS), bez blokady gry przy awarii usługi.
+## Grafik
+- [ ] Ramka/układ tablicy wyników 480x270, ikona korony/medalu 1-bit (są icon_crown).
+
+---
+# FAZA 12 — balans po nowych zyskach i cenach (designer + programista)
+- [ ] Bot z nowymi zyskami i strategią HUMAN-LIKE (65% monet), cele względne, ekonomia, weryfikacja ręczna Kosmika.
+
+---
+# FAZA 13 — nowe poziomy (planowanie po FAZA 10-12)
+- [ ] Strefa 4 (i ew. 5) z nowymi bossami (po 1 na strefę), 3-4 nowych wrogów, nowe palety, nowe przeszkody; opcjonalnie tryb nieskończony. Designer rozpisze GDD v6 po FAZA 12.
