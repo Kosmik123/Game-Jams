@@ -9,10 +9,10 @@ namespace PayWithPixels
     {
         public enum State { Title, ZoneIntro, Playing, Clearing, Shop, Dead, Won, Story }
 
-        public const float OrthoSize = 5.625f; // 180 px / 16 PPU / 2
-        public static readonly Vector2 ArenaHalf = new Vector2(9.5f, 4.7f);
-        /// <summary>Kamera i tlo areny sa przesuniete w gore o polowe paska HUD (14 px z 180 = 0.875 j.), zeby arena zaczynala sie pod paskiem.</summary>
-        public const float HudOffsetY = 0.4375f;
+        public const float OrthoSize = TwoColorDisplay.BaseHeight / 16f / 2f; // px / 16 PPU / 2 (480x270 -> 8.4375)
+        public static readonly Vector2 ArenaHalf = new Vector2(14.5f, 7.4f);  // ramka arena_bg: x 8..472, y 16..254 (pas HUD y 0-13 pusty)
+        /// <summary>Przesuniecie kamery/tla; 0, bo arena_bg 480x270 ma pas HUD wbudowany u gory.</summary>
+        public const float HudOffsetY = 0f;
 
         public const int Zones = 3;
         public const int WavesPerZone = 5;           // + boss strefy
@@ -552,6 +552,12 @@ namespace PayWithPixels
             ui.ShowZone(zone, ZoneNames[zone - 1]);
         }
 
+        /// <summary>Liczba wrogow w fali; x1.5 po powiekszeniu areny do 480x270 (2.25x powierzchni). Z1-1..3 lagodniej.</summary>
+        private int SpawnCount()
+        {
+            int n = zone == 1 ? (waveInZone <= 3 ? 5 : 8) + 2 * waveInZone : 8 + 3 * waveInZone + 6 * (zone - 1);
+            return Mathf.RoundToInt((n + wave / 3) * 1.5f);
+        }
         private void StartWave()
         {
             wave++;
@@ -562,7 +568,7 @@ namespace PayWithPixels
             Palette.SetZone(zone, waveInZone);
             state = State.Playing;
             lastWaveWasBoss = IsBossWave;
-            spawnLeft = IsBossWave ? 6 : (zone == 1 ? 6 : 8) + (zone == 1 ? 2 : 3) * waveInZone + 6 * (zone - 1) + wave / 3;
+            spawnLeft = IsBossWave ? 9 : SpawnCount();
             spawnTimer = 0.5f;
             player.RefillShield();
             freezeReady = stats.freeze > 0;

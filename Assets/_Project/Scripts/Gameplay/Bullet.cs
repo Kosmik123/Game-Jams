@@ -11,6 +11,8 @@ namespace PayWithPixels
         private Vector2 velocity;
         private bool fromPlayer;
         private int pierceLeft;
+        public bool closeBonus;       // strzelba: +1 obrazen z bliska
+        private Vector2 startPos;
         private int bouncesLeft;
         private int damage = 1;
         private float life = 2.5f;
@@ -32,6 +34,7 @@ namespace PayWithPixels
             go.transform.rotation = Art.FaceRotation(vel);
             b.fromPlayer = fromPlayer;
             b.pierceLeft = pierce;
+            b.startPos = pos;
             b.damage = damage;
             b.bouncesLeft = bounces;
             b.life = life;
@@ -91,7 +94,7 @@ namespace PayWithPixels
                     if (e == null) break;
                     hit.Add(e);
                     if (e.Blocks(velocity)) { Sfx.Play(Sound.Hit); Destroy(gameObject); return; }
-                    e.Damage(damage);
+                    e.Damage(damage + (closeBonus && (pos - startPos).sqrMagnitude < 9f ? 1 : 0));
                     if (pierceLeft-- <= 0) { Destroy(gameObject); return; }
                 }
             }

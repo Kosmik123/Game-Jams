@@ -52,13 +52,13 @@ namespace PayWithPixels
                 es.transform.SetParent(transform.parent, false);
             }
 
-            // pasek HUD: gorne 14 px z 180 (7,8% wysokosci) z pelnym tlem i linia oddzielajaca
+            // pasek HUD: gorne 14 px z 270 (5,2% wysokosci) z pelnym tlem i linia oddzielajaca
             var strip = NewImage("HudStrip", transform, false);
             strip.raycastTarget = false;
-            Stretch(strip.rectTransform, new Vector2(0, 1 - 14f / 180f), new Vector2(1, 1), Vector2.zero, Vector2.zero);
+            Stretch(strip.rectTransform, new Vector2(0, 1 - 14f / 270f), new Vector2(1, 1), Vector2.zero, Vector2.zero);
             var stripLine = NewImage("HudLine", transform, true);
             stripLine.raycastTarget = false;
-            Stretch(stripLine.rectTransform, new Vector2(0, 1 - 14f / 180f), new Vector2(1, 1 - 14f / 180f), new Vector2(0, -1.5f), new Vector2(0, 1.5f));
+            Stretch(stripLine.rectTransform, new Vector2(0, 1 - 14f / 270f), new Vector2(1, 1 - 14f / 270f), new Vector2(0, -1.5f), new Vector2(0, 1.5f));
 
             priceHud = new GameObject("Price HUD", typeof(RectTransform)).GetComponent<RectTransform>();
             priceHud.SetParent(transform, false);
@@ -68,7 +68,7 @@ namespace PayWithPixels
             priceHud.anchoredPosition = new Vector2(-8, 0);
 
             hud = NewText("HUD", transform, "", 20, TextAnchor.MiddleLeft);
-            Stretch(hud.rectTransform, new Vector2(0, 1 - 14f / 180f), new Vector2(0.66f, 1), new Vector2(12, 0), new Vector2(0, 0));
+            Stretch(hud.rectTransform, new Vector2(0, 1 - 14f / 270f), new Vector2(0.66f, 1), new Vector2(12, 0), new Vector2(0, 0));
 
             shopPanel = NewPanel("Shop", transform);
             deathPanel = NewPanel("Death", transform);

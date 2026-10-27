@@ -10,7 +10,7 @@ namespace PayWithPixels
     /// </summary>
     public class RunStats
     {
-        public const int BaseHp = 7;
+        public const int BaseHp = 6;
 
         // ---- zyski (poziomy) ----
         public readonly Dictionary<string, int> levels = new Dictionary<string, int>();
@@ -40,8 +40,8 @@ namespace PayWithPixels
 
         // ---- parametry broni ----
         public float BulletSpeed => weapon == Weapon.Laser ? 24f : weapon == Weapon.Shotgun ? 11f : 12f;
-        public float BulletLife => weapon == Weapon.Shotgun ? 0.5f : weapon == Weapon.Laser ? 1.4f : 2.5f;
-        public float SpreadStep => weapon == Weapon.Shotgun ? 8f : 12f;
+        public float BulletLife => weapon == Weapon.Shotgun ? 0.55f : weapon == Weapon.Laser ? 1.4f : 2.5f;   // strzelba ~6 j. zasiegu
+        public float SpreadStep => weapon == Weapon.Shotgun ? 7.5f * 4f / Mathf.Max(4, shotCount - 1) : 12f;   // 5 srutow = stozek ok. 30 st.
         public bool LongBullets => weapon == Weapon.Laser;
 
         public int PriceCount(string name) => priceCounts.TryGetValue(name, out var c) ? c : 0;
@@ -53,9 +53,9 @@ namespace PayWithPixels
         public void Recompute()
         {
             maxHp = BaseHp - fragileStacks + bonusMaxHp;
-            fireRateMul = weapon == Weapon.Shotgun ? 0.5f : weapon == Weapon.Laser ? 0.7f : 1f;
+            fireRateMul = weapon == Weapon.Shotgun ? 0.6f : weapon == Weapon.Laser ? 1f : 1f;
             shotCount = weapon == Weapon.Shotgun ? 5 : 1;
-            pierce = weapon == Weapon.Laser ? 3 : 0;
+            pierce = 0;
             dashLevel = 0;
             magnetRange = 1.8f;
             shieldMax = 0;

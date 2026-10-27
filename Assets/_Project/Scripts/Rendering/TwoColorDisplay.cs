@@ -9,7 +9,8 @@ namespace PayWithPixels
     /// </summary>
     public class TwoColorDisplay : MonoBehaviour
     {
-        public const int BaseHeight = 180;
+        /// <summary>Rozdzielczosc wewnetrzna RT (RT_HEIGHT; szerokosc = 16:9). Zmiana tej stalej + Game.OrthoSize/ArenaHalf cofa 480x270 -> 320x180.</summary>
+        public const int BaseHeight = 270;
         private const float Aspect = 16f / 9f;
         private const float MinHeight = 30;
 
