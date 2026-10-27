@@ -61,3 +61,21 @@ Best played in a desktop browser with sound on. Tip: how long you can play depen
 3. Mgła + pikselizacja aktywne (pokazuje "zapłaciłeś zmysłami").
 4. Boss (Banker lub Auctioneer) w innej palecie.
 5. Ekran SOLD albo PAID IN FULL.
+
+## Wygląd strony itch.io (decyzja grafika)
+
+Zasada: strona jest ciemna jak gra, kolory z palety startowej gry. Jedyny dodatkowy kolor to bursztyn z palety "5" (akcent na linki i przyciski, zamiast zlewającej się bieli).
+
+| Pole w itch.io | Wartość | Uwagi |
+|---|---|---|
+| Background color (tło tylne) | `#0C0B10` | Dodatkowo obraz tła: `itch_bg_tile_24.png`, powtarzany (Repeat), subtelna siatka kropek |
+| Page / window background (tło okna) | `#14121A` | to samo ciemne tło co w grze |
+| Text color (tekst) | `#F4F1DE` | to samo jasne co w grze, kontrast 16:1 |
+| Link color (linki) | `#FFB000` | bursztyn, kontrast 10:1 na `#14121A` |
+| Button color (przyciski) | `#FFB000` | domyślnie jak link, zostaw |
+| Title color (tytuły) | `#F4F1DE` | domyślnie jak tekst, zostaw |
+| Font | pixelowy/monospace | jeśli lista itch.io ma pixel font (np. "Press Start 2P" albo "VT323"), wybrać go; jak nie, monospace (Courier). Nagłówki bez pogrubienia. |
+| Banner (u góry) | `itch_banner_960x240.png` | 2 kolory, logo + postacie |
+| Cover | `cover_630x500.png` | 2 kolory |
+
+Pliki: `itch_banner_960x240.png`, `itch_bg_tile_24.png`, `cover_630x500.png`.
