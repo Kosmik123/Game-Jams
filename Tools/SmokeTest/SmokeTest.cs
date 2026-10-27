@@ -1,0 +1,91 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Reflection;
+using NUnit.Framework;
+#if UNITY_EDITOR
+using UnityEditor.SceneManagement;
+#endif
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.TestTools;
+
+public class SmokeTest
+{
+    private const BindingFlags All = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+
+    private static Type T(string name) => Type.GetType("PayWithPixels." + name + ", Assembly-CSharp");
+    private static object Get(object o, string f) => o.GetType().GetField(f, All)?.GetValue(o) ?? o.GetType().GetProperty(f, All)?.GetValue(o);
+    private static void Set(object o, string f, object v) => o.GetType().GetField(f, All).SetValue(o, v);
+    private static object Call(object o, string m, params object[] a) => o.GetType().GetMethod(m, All).Invoke(o, a);
+
+    [UnityTest]
+    public IEnumerator PlayThroughRun()
+    {
+        yield return EditorSceneManager.LoadSceneInPlayMode("Assets/_Project/Scenes/Game/Game.unity", new LoadSceneParameters(LoadSceneMode.Single));
+        yield return null;
+        yield return null;
+
+        if (GameObject.Find("Game") == null) T("Game").GetMethod("Create", All).Invoke(null, null);
+        yield return null;
+        var gameGo = GameObject.Find("Game");
+        Assert.NotNull(gameGo, "Game object not created by Bootstrap");
+        var game = gameGo.GetComponent(T("Game"));
+        Call(game, "StartRun");
+        Time.timeScale = 4f;
+
+        var rng = new System.Random(1);
+        int lastZone = 0;
+        string lastState = "";
+        for (int frame = 0; frame < 20000; frame++)
+        {
+            yield return null;
+            string state = Get(game, "state").ToString();
+            int zone = (int)Get(game, "zone");
+            if (state != lastState || zone != lastZone)
+            {
+                Debug.Log($"[smoke] frame {frame} state={state} zone={zone} wave={Get(game, "waveInZone")} coins={Get(game, "coins")} debt={Get(game, "debt")}");
+                lastState = state; lastZone = zone;
+            }
+
+            var player = Get(game, "player");
+            if (player != null) Set(player, "hp", 999);
+
+            if (state == "Won" || state == "Dead") break;
+
+            if (state == "Playing" && player != null && frame % 6 == 0)
+            {
+                // strzel w najblizszego wroga
+                var playerTr = ((Component)player).transform;
+                var enemies = (System.Collections.IList)T("Enemy").GetField("All", All).GetValue(null);
+                Vector2 target = Vector2.zero; float best = 1e9f;
+                foreach (Component e in enemies)
+                {
+                    float d = ((Vector2)e.transform.position - (Vector2)playerTr.position).sqrMagnitude;
+                    if (d < best) { best = d; target = e.transform.position; }
+                }
+                Vector2 dir = best < 1e8f ? (target - (Vector2)playerTr.position).normalized : Vector2.right;
+                Call(player, "Shoot", (Vector2)playerTr.position, dir);
+                if (frame % 120 == 0) playerTr.position = new Vector3((float)(rng.NextDouble() * 12 - 6), (float)(rng.NextDouble() * 6 - 3), 0);
+            }
+
+            if (state == "Shop")
+            {
+                var offers = (IList)Get(game, "shopOffers");
+                // czasem reroll / haggle, potem kup losowa oferte (lub pomin)
+                int choice = rng.Next(10);
+                if (choice == 0) Call(game, "Reroll");
+                else if (choice == 1) Call(game, "Haggle");
+                else if (offers.Count > 0 && choice < 8)
+                {
+                    var o = offers[rng.Next(offers.Count)];
+                    Call(game, "Buy", o);
+                }
+                else Call(game, "CloseShop");
+            }
+        }
+
+        Debug.Log($"[smoke] END state={Get(game, "state")} zone={Get(game, "zone")} wave={Get(game, "wave")}");
+        Assert.GreaterOrEqual((int)Get(game, "wave"), 3, "run did not progress");
+    }
+}
