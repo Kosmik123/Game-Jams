@@ -10,7 +10,9 @@ namespace PayWithPixels
         public enum State { Title, ZoneIntro, Playing, Clearing, Shop, Dead, Won, Story }
 
         public const float OrthoSize = 5.625f; // 180 px / 16 PPU / 2
-        public static readonly Vector2 ArenaHalf = new Vector2(9.5f, 5.2f);
+        public static readonly Vector2 ArenaHalf = new Vector2(9.5f, 4.7f);
+        /// <summary>Kamera i tlo areny sa przesuniete w gore o polowe paska HUD (14 px z 180 = 0.875 j.), zeby arena zaczynala sie pod paskiem.</summary>
+        public const float HudOffsetY = 0.4375f;
 
         public const int Zones = 3;
         public const int WavesPerZone = 5;           // + boss strefy
@@ -203,6 +205,7 @@ namespace PayWithPixels
         {
             var bg = new GameObject("Arena BG");
             bg.transform.SetParent(world, false);
+            bg.transform.position = new Vector3(0, HudOffsetY, 0);
             Art.MakeRenderer(bg, Art.Square("arena_bg", 16), -10);
             var wall = Art.Square("tile_wall", 16);
             // ramka areny z kafli scian (jesli sa sprity od grafika) lub cienkich bialych pasow
@@ -675,12 +678,12 @@ namespace PayWithPixels
         private void LateUpdate()
         {
             if (cam == null) return;
-            Vector3 p = new Vector3(0, 0, -10);
+            Vector3 p = new Vector3(0, HudOffsetY, -10);
             if (Settings.Shake && shake > 0.01f && !Paused)
             {
                 // przesuniecie przyciete do 1/16 j. = 1 piksel RT, zeby obraz nie mazal
                 p.x = Mathf.Round(Random.Range(-shake, shake) * 16f) / 16f;
-                p.y = Mathf.Round(Random.Range(-shake, shake) * 16f) / 16f;
+                p.y += Mathf.Round(Random.Range(-shake, shake) * 16f) / 16f;
             }
             shake = Mathf.MoveTowards(shake, 0f, 1.6f * Time.unscaledDeltaTime);
             cam.transform.position = p;

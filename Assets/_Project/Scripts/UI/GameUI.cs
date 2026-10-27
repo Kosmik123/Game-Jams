@@ -52,15 +52,23 @@ namespace PayWithPixels
                 es.transform.SetParent(transform.parent, false);
             }
 
+            // pasek HUD: gorne 14 px z 180 (7,8% wysokosci) z pelnym tlem i linia oddzielajaca
+            var strip = NewImage("HudStrip", transform, false);
+            strip.raycastTarget = false;
+            Stretch(strip.rectTransform, new Vector2(0, 1 - 14f / 180f), new Vector2(1, 1), Vector2.zero, Vector2.zero);
+            var stripLine = NewImage("HudLine", transform, true);
+            stripLine.raycastTarget = false;
+            Stretch(stripLine.rectTransform, new Vector2(0, 1 - 14f / 180f), new Vector2(1, 1 - 14f / 180f), new Vector2(0, -1.5f), new Vector2(0, 1.5f));
+
             priceHud = new GameObject("Price HUD", typeof(RectTransform)).GetComponent<RectTransform>();
             priceHud.SetParent(transform, false);
             priceHud.anchorMin = priceHud.anchorMax = new Vector2(1, 1);
             priceHud.pivot = new Vector2(1, 1);
             priceHud.sizeDelta = Vector2.zero;
-            priceHud.anchoredPosition = new Vector2(-8, -40);
+            priceHud.anchoredPosition = new Vector2(-8, 0);
 
-            hud = NewText("HUD", transform, "", 20, TextAnchor.UpperLeft);
-            Stretch(hud.rectTransform, new Vector2(0, 0), new Vector2(1, 1), new Vector2(16, 12), new Vector2(-16, -12));
+            hud = NewText("HUD", transform, "", 20, TextAnchor.MiddleLeft);
+            Stretch(hud.rectTransform, new Vector2(0, 1 - 14f / 180f), new Vector2(0.66f, 1), new Vector2(12, 0), new Vector2(0, 0));
 
             shopPanel = NewPanel("Shop", transform);
             deathPanel = NewPanel("Death", transform);
@@ -153,17 +161,17 @@ namespace PayWithPixels
                 holder.SetParent(priceHud, false);
                 holder.anchorMin = holder.anchorMax = new Vector2(1, 1);
                 holder.pivot = new Vector2(1, 1);
-                holder.sizeDelta = new Vector2(44, 44);
-                holder.anchoredPosition = new Vector2(-i * 48f, 0);
+                holder.sizeDelta = new Vector2(40, 40);
+                holder.anchoredPosition = new Vector2(-i * 44f, -1);
 
                 if (sprite != null)
                 {
                     var icon = NewImage("Icon", holder, true);
                     icon.sprite = sprite;
                     icon.raycastTarget = false;
-                    Stretch(icon.rectTransform, Vector2.zero, Vector2.one, new Vector2(4, 12), new Vector2(-4, -4));
+                    Stretch(icon.rectTransform, Vector2.zero, Vector2.one, new Vector2(8, 8), new Vector2(-8, -8));
                 }
-                var count = NewText("Count", holder, "x" + entries[i].Value, 14, TextAnchor.LowerCenter);
+                var count = NewText("Count", holder, entries[i].Value > 1 ? "x" + entries[i].Value : "", 14, TextAnchor.LowerRight);
                 Stretch(count.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             }
             Recolor();
@@ -180,7 +188,7 @@ namespace PayWithPixels
 
         public void SetHud(int hp, int maxHp, string zoneLabel, int coins, int debt, string extra = "")
         {
-            hud.text = "HP " + Mathf.Max(0, hp) + "/" + maxHp + "    " + zoneLabel + "    COINS " + coins + (debt > 0 ? "    DEBT " + debt : "") + (string.IsNullOrEmpty(extra) ? "" : "    " + extra) + "    [M] SOUND " + (Sfx.Muted ? "OFF" : "ON");
+            hud.text = "HP " + Mathf.Max(0, hp) + "/" + maxHp + "    " + zoneLabel + "    COINS " + coins + (debt > 0 ? "    DEBT " + debt : "") + (string.IsNullOrEmpty(extra) ? "" : "    " + extra) + (Sfx.Muted ? "    MUTED [M]" : "");
         }
 
         public void ShowShop(List<Offer> offers, int coins, int debt, Action<Offer> onBuy, Action onSkip,
