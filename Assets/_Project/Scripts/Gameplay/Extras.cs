@@ -98,19 +98,30 @@ namespace PayWithPixels
             var w = go.AddComponent<WarnLine>();
             w.life = life;
             float left = -Game.ArenaHalf.x, right = Game.ArenaHalf.x;
-            w.AddSeg(go.transform, left, gapX - halfGap, y);
-            w.AddSeg(go.transform, gapX + halfGap, right, y);
+            w.AddSeg(go.transform, left, gapX - halfGap, y, false);
+            w.AddSeg(go.transform, gapX + halfGap, right, y, false);
         }
 
-        private void AddSeg(Transform parent, float x0, float x1, float y)
+        /// <summary>Pionowa linia przy krawedzi areny (x), z przerwa na wysokosci gapY.</summary>
+        public static void SpawnVertical(Transform parent, float x, float gapY, float halfGap, float life)
+        {
+            var go = new GameObject("WarnLine");
+            go.transform.SetParent(parent, false);
+            var w = go.AddComponent<WarnLine>();
+            w.life = life;
+            w.AddSeg(go.transform, -Game.ArenaHalf.y, gapY - halfGap, x, true);
+            w.AddSeg(go.transform, gapY + halfGap, Game.ArenaHalf.y, x, true);
+        }
+
+        private void AddSeg(Transform parent, float x0, float x1, float y, bool vertical)
         {
             if (x1 - x0 < 0.1f) return;
             var seg = new GameObject("Seg");
             seg.transform.SetParent(parent, false);
             var sr = Art.MakeRenderer(seg, Art.Square("warn_line", 4), 9);
             float unit = sr.sprite != null ? sr.sprite.bounds.size.x : 0.25f;
-            seg.transform.position = new Vector2((x0 + x1) / 2f, y);
-            seg.transform.localScale = new Vector3((x1 - x0) / unit, 0.18f / unit, 1f);
+            seg.transform.position = vertical ? new Vector2(y, (x0 + x1) / 2f) : new Vector2((x0 + x1) / 2f, y);
+            seg.transform.localScale = vertical ? new Vector3(0.18f / unit, (x1 - x0) / unit, 1f) : new Vector3((x1 - x0) / unit, 0.18f / unit, 1f);
             segs.Add(sr);
         }
 

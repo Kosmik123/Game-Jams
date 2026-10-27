@@ -113,6 +113,9 @@ namespace PayWithPixels
         private int bossZone = 1;
         private int phase;
         private int tollPhase = 1;
+        private float gapAngle, lineTelegraph, lineGap;
+        private bool lineVertical;
+        private int lineSide = 1;
         private float wallTelegraph, wallGap;
         private float spawnAddsTimer;
         private float auctionTimer;
@@ -398,15 +401,40 @@ namespace PayWithPixels
                 }
                 else if (phase == 2)
                 {
-                    shootTimer = 1.3f;
-                    float a = AngleToPlayer(game, pos);
-                    for (int i = 0; i < 5; i++) FireBoss(pos, a + (i - 2) * 11f, 6f);
+                    pattern++;
+                    if (pattern % 2 == 0)
+                    {
+                        // LOAN CALL: znacznik na pozycji gracza, po 0.8 s salwa w to miejsce (+ jeden obok); zmusza do ruchu
+                        shootTimer = 1.8f;
+                        Vector2 target = game.player.transform.position;
+                        AreaBlast.Spawn(transform.parent, target, 0.8f, 1.7f, 1);
+                        AreaBlast.Spawn(transform.parent, target + Random.insideUnitCircle.normalized * 3.2f, 1.2f, 1.7f, 1);
+                        game.Announce("LOAN CALL!");
+                    }
+                    else
+                    {
+                        shootTimer = 1.3f;
+                        float a = AngleToPlayer(game, pos);
+                        for (int i = 0; i < 5; i++) FireBoss(pos, a + (i - 2) * 11f, 6f);
+                    }
                 }
                 else
                 {
                     shootTimer = 0.55f;
                     spin += 23f;
-                    for (int i = 0; i < 6; i++) FireBoss(pos, spin + i * 60f, 4.2f);
+                    pattern++;
+                    if (pattern % 5 == 0)
+                    {
+                        // pierscien z obracajaca sie przerwa
+                        gapAngle += 37f;
+                        for (int i = 0; i < 22; i++)
+                        {
+                            float ang = i * 360f / 22f;
+                            if (Mathf.Abs(Mathf.DeltaAngle(ang, gapAngle)) < 22f) continue;
+                            FireBoss(pos, ang, 3.8f);
+                        }
+                    }
+                    else for (int i = 0; i < 6; i++) FireBoss(pos, spin + i * 60f, 4.2f);
                 }
             }
 
@@ -431,7 +459,18 @@ namespace PayWithPixels
             if (stage != phase)
             {
                 phase = stage;
-                if (phase > 0) auctionTimer = 0.5f;   // kazdy prog HP = licytacja
+                if (phase > 0)
+                {
+                    auctionTimer = 0.5f;   // kazdy prog HP = licytacja
+                    shootTimer = 1f;       // 1 s pauzy ostrzegawczej
+                    lineTelegraph = 0f;
+                    game.Announce(phase == 1 ? "THE BIDDING RISES" : phase == 2 ? "SOLD, SOLD, SOLD" : "FINAL OFFER");
+                }
+            }
+            if (lineTelegraph > 0)
+            {
+                lineTelegraph -= Time.deltaTime;
+                if (lineTelegraph <= 0) FireLine();
             }
 
             auctionTimer -= Time.deltaTime;
@@ -444,19 +483,65 @@ namespace PayWithPixels
             shootTimer -= Time.deltaTime;
             if (shootTimer > 0) return;
             pattern++;
-            shootTimer = phase >= 2 ? 1.0f : 1.35f;
             float a = AngleToPlayer(game, pos);
-            if (pattern % 3 == 0)
+            // etap 1: oferta (wachlarz 3 celowanych); 2: pierscien z licytacja; 3: linie z telegrafem; 4: dwa wzorce naraz
+            if (phase == 0)
             {
-                int n = phase >= 2 ? 18 : 12;
-                float offset = Random.Range(0f, 360f);
-                for (int i = 0; i < n; i++) FireBoss(pos, offset + i * 360f / n, 4.2f);
+                shootTimer = 1.35f;
+                for (int i = 0; i < 3; i++) FireBoss(pos, a + (i - 1) * 9f, 7.5f);
+            }
+            else if (phase == 1)
+            {
+                shootTimer = 1.2f;
+                if (pattern % 2 == 0)
+                {
+                    float offset = Random.Range(0f, 360f);
+                    for (int i = 0; i < 14; i++) FireBoss(pos, offset + i * 360f / 14f, 4.2f);
+                }
+                else for (int i = 0; i < 4; i++) FireBoss(pos, a + (i - 1.5f) * 9f, 7.5f);
+            }
+            else if (phase == 2)
+            {
+                shootTimer = 2.2f;
+                lineVertical = pattern % 2 == 0;
+                lineSide = Random.value < 0.5f ? -1 : 1;
+                Vector2 pp = game.player.transform.position;
+                if (lineVertical)
+                {
+                    lineGap = Mathf.Clamp(pp.y + Random.Range(-2.5f, 2.5f), -Game.ArenaHalf.y + 1.8f, Game.ArenaHalf.y - 1.8f);
+                    WarnLine.SpawnVertical(transform.parent, lineSide * (Game.ArenaHalf.x - 0.4f), lineGap, 1.7f, 0.8f);
+                }
+                else
+                {
+                    lineGap = Mathf.Clamp(pp.x + Random.Range(-5f, 5f), -Game.ArenaHalf.x + 2.5f, Game.ArenaHalf.x - 2.5f);
+                    WarnLine.Spawn(transform.parent, Game.ArenaHalf.y - 0.4f, lineGap, 1.9f, 0.8f);
+                }
+                lineTelegraph = 0.8f;
             }
             else
             {
-                int n = phase >= 1 ? 4 : 3;
-                for (int i = 0; i < n; i++) FireBoss(pos, a + (i - (n - 1) / 2f) * 9f, 7.5f);
+                shootTimer = 1.4f;
+                float offset = Random.Range(0f, 360f);
+                for (int i = 0; i < 12; i++) FireBoss(pos, offset + i * 360f / 12f, 4.2f);
+                for (int i = 0; i < 3; i++) FireBoss(pos, a + (i - 1) * 9f, 7.5f);
             }
+        }
+
+        /// <summary>Auctioneer, etap 3: linia pociskow przez arene (pozioma z gory albo pionowa z boku) z jedna przerwa.</summary>
+        private void FireLine()
+        {
+            if (lineVertical)
+            {
+                float x = lineSide * (Game.ArenaHalf.x + 0.3f);
+                for (float y = -Game.ArenaHalf.y; y <= Game.ArenaHalf.y; y += 0.9f)
+                    if (Mathf.Abs(y - lineGap) >= 1.7f) Bullet.Spawn(transform.parent, new Vector2(x, y), new Vector2(-lineSide * 4.2f, 0), false, 0, bossBullet);
+            }
+            else
+            {
+                for (float x = -Game.ArenaHalf.x; x <= Game.ArenaHalf.x; x += 0.9f)
+                    if (Mathf.Abs(x - lineGap) >= 1.9f) Bullet.Spawn(transform.parent, new Vector2(x, Game.ArenaHalf.y + 0.3f), new Vector2(0, -4.2f), false, 0, bossBullet);
+            }
+            Sfx.Play(Sound.Boss);
         }
 
         private void FireBoss(Vector2 pos, float angleDeg, float speed)
