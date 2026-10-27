@@ -56,7 +56,7 @@ namespace PayWithPixels
                 case EnemyType.Dasher: return new Spec { sprite = "enemy_dasher", size = 16, radius = 0.45f, hp = 2 + d / 5, speed = 2.2f, contact = 1, coins = 2, rotates = true };
                 case EnemyType.Siege: return new Spec { sprite = "enemy_siege", size = 16, radius = 0.5f, hp = 4 + d / 4, speed = 1.6f, contact = 1, coins = 3, rotates = false };
                 case EnemyType.Swarm: return new Spec { sprite = "enemy_swarm", size = 6, radius = 0.3f, hp = 1, speed = 2.8f, contact = 1, coins = 0, rotates = false };
-                case EnemyType.Guard: return new Spec { sprite = "enemy_guard", size = 16, radius = 0.5f, hp = 5 + d / 3, speed = 1.7f, contact = 1, coins = 3, rotates = true };
+                case EnemyType.Guard: return new Spec { sprite = "enemy_guard", size = 16, radius = 0.5f, hp = 4 + d / 4, speed = 1.7f, contact = 1, coins = 3, rotates = true };
                 default: return new Spec { sprite = "enemy_spawner", size = 24, radius = 0.7f, hp = 8 + d / 2, speed = 0.7f, contact = 1, coins = 4, rotates = false };
             }
         }
@@ -245,7 +245,7 @@ namespace PayWithPixels
         public bool Blocks(Vector2 bulletVelocity)
         {
             if (type != EnemyType.Guard) return false;
-            return Vector2.Dot(-bulletVelocity.normalized, facing) > 0.55f;
+            return Vector2.Dot(-bulletVelocity.normalized, facing) > 0.7f;
         }
 
         public void Damage(int dmg, bool crit = false)
@@ -643,7 +643,7 @@ namespace PayWithPixels
 
                 case EnemyType.Guard:
                     move = dir;
-                    if (dir != Vector2.zero) facing = ((Vector2)Vector3.RotateTowards(facing, dir, 1.0f * dt, 0f)).normalized;   // tarcza obraca sie powoli: da sie go okrazyc
+                    if (dir != Vector2.zero) facing = ((Vector2)Vector3.RotateTowards(facing, dir, 0.7f * dt, 0f)).normalized;   // tarcza obraca sie powoli: da sie go okrazyc
                     break;
 
                 default:
