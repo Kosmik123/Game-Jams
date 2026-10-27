@@ -51,6 +51,7 @@ public class BalanceBot
     public IEnumerator Bot()
     {
         string strategy = Env("BOT_STRATEGY", "careful");
+        humanMode = strategy == "human";
         int runs = int.Parse(Env("BOT_RUNS", "3"));
         string outPath = Env("BOT_OUT", Path.Combine(Path.GetTempPath(), "bot_" + strategy + ".csv"));
         float speed = float.Parse(Env("BOT_SPEED", "8"), System.Globalization.CultureInfo.InvariantCulture);
@@ -90,6 +91,8 @@ public class BalanceBot
             string lastState = "";
             float fireTimer = 0;
             int shopSteps = 0;
+            int coinsAtWaveStart = 0;
+            botVel = Vector2.zero;
             string result = "timeout";
 
             for (int frame = 0; frame < 4000000; frame++)
@@ -101,7 +104,18 @@ public class BalanceBot
 
                 if (state != lastState)
                 {
-                    if (state == "Shop") { shopSteps = 0; Row(outPath, strategy, run, "wave_end", game, simTime, buys); }
+                    if (state == "Playing" && strategy == "human") coinsAtWaveStart = (int)Get(game, "coins");
+                    if (state == "Shop")
+                    {
+                        shopSteps = 0;
+                        if (strategy == "human")
+                        {
+                            // czlowiek zbiera ok. 65% monet: tracimy 35% tego, co wpadlo w tej fali
+                            int gained = (int)Get(game, "coins") - coinsAtWaveStart;
+                            if (gained > 0) Set(game, "coins", (int)Get(game, "coins") - Mathf.FloorToInt(gained * 0.35f));
+                        }
+                        Row(outPath, strategy, run, "wave_end", game, simTime, buys);
+                    }
                     lastState = state;
                 }
                 if (state == "Dead") { result = "death"; break; }
@@ -122,11 +136,19 @@ public class BalanceBot
                 else if (state == "Shop")
                 {
                     shopSteps++;
-                    if (shopSteps % 4 == 0) buys += ShopStep(strategy, game, stats, player, rng);
+                    if (shopSteps % 4 == 0) buys += ShopStep(strategy, game, stats, player, rng, outPath, run);
                     if (shopSteps > 400) Call(game, "CloseShop");
                 }
             }
             Row(outPath, strategy, run, result, game, simTime, buys);
+            if (result == "death")
+            {
+                var comp = new Dictionary<string, int>();
+                foreach (Component en in (IEnumerable)T("Enemy").GetField("All", All).GetValue(null))
+                { string k = Get(en, "type").ToString(); comp[k] = comp.TryGetValue(k, out var c) ? c + 1 : 1; }
+                var parts = new List<string>(); foreach (var kv in comp) parts.Add(kv.Key + ":" + kv.Value);
+                Debug.Log($"[bot] death-comp {strategy} run {run} wave={Get(game, "wave")} alive={string.Join(",", parts)}");
+            }
             Debug.Log($"[bot] {strategy} run {run}/{runs}: {result} zone={Get(game, "zone")} wave={Get(game, "wave")} time={simTime:F0}s");
             yield return null;
         }
@@ -165,6 +187,9 @@ public class BalanceBot
         float r = 9.5f * zoom;
         return fog > 0 ? Mathf.Min(r, fog) : r;
     }
+
+    private static Vector2 botVel;
+    private static bool humanMode;
 
     private static void BotMove(object game, object stats, Component player, float dt, System.Random rng)
     {
@@ -215,11 +240,43 @@ public class BalanceBot
             Vector2 to = nearestPos - pos;
             dir += new Vector2(-to.y, to.x).normalized * 0.7f;
         }
+        // Straznik: tarcza zawsze zwrocona do gracza, wiec czlowiek okrazna go szybciej, niz ten sie obraca
+        foreach (var e in enemies)
+        {
+            if (Get(e.comp, "type").ToString() != "Guard") continue;
+            Vector2 to = e.pos - pos;
+            if (to.magnitude > 7f) continue;
+            dir += new Vector2(-to.y, to.x).normalized * 1.8f;
+            break;
+        }
         dir += -pos.normalized * 0.12f;
 
         if ((bool)Get(game, "ControlsInverted")) dir = -dir;   // odwrocone sterowanie: czlowiek by tez pomylil kierunek
         if (dir.sqrMagnitude > 0.0001f) dir.Normalize();
 
+        // dash: ucieczka, gdy wrog jest tuz-tuz (zasieg kontaktu) albo pocisk leci prosto w gracza
+        if (dir.sqrMagnitude > 0.0001f && stats.GetType().GetProperty("InputDelay") != null && (int)Get(stats, "dashLevel") > 0)
+        {
+            bool danger = nearest < 1.5f;
+            foreach (var b in bullets)
+            {
+                if ((bool)Get(b.comp, "fromPlayer")) continue;
+                Vector2 v = (Vector2)Get(b.comp, "velocity");
+                Vector2 rel = pos - b.pos;
+                if (rel.magnitude < 1.3f && Vector2.Dot(v.normalized, rel.normalized) > 0.8f) { danger = true; break; }
+            }
+            if (danger) Call(player, "TryDash", game, dir.normalized, dir.normalized);
+        }
+        float delay = stats.GetType().GetProperty("InputDelay") != null ? (float)Get(stats, "InputDelay") : 0f;   // starsze wersje nie maja tej ceny
+        float inertia = stats.GetType().GetProperty("InertiaTime") != null ? (float)Get(stats, "InertiaTime") : 0f;
+        float startT = Mathf.Max(delay, inertia), stopT = inertia * 1.3f;
+        if (startT > 0f || stopT > 0f)
+        {
+            float t = dir.magnitude >= botVel.magnitude - 0.001f ? startT : stopT;
+            botVel = t > 0f ? Vector2.MoveTowards(botVel, dir, dt / t) : dir;
+            dir = botVel;
+        }
+        else botVel = dir;
         float spd = (float)Get(stats, "MoveSpeed");
         Vector2 np = pos + dir * spd * dt;
         np.x = Mathf.Clamp(np.x, -half.x, half.x);
@@ -234,11 +291,17 @@ public class BalanceBot
         var enemies = Visible((IEnumerable)T("Enemy").GetField("All", All).GetValue(null), pos, sight, true);
         if (enemies.Count == 0) return false;
         Obj best = enemies[0]; float bd = 99;
-        foreach (var e in enemies) { float d = Vector2.Distance(pos, e.pos); if (d < bd) { bd = d; best = e; } }
+        // czlowiek nie strzela w tarcze Straznika: najblizszy cel, ktorego tarcza nie blokuje strzalu (jak nie ma, strzela w najblizszego)
+        foreach (var e in enemies)
+        {
+            float d = Vector2.Distance(pos, e.pos);
+            if ((bool)Call(e.comp, "Blocks", (e.pos - pos).normalized)) d += 50f;
+            if (d < bd) { bd = d; best = e; }
+        }
 
         Vector2 dir = (best.pos - pos).normalized;
         // celnosc: baza + pogorszenie od cen (pikselizacja, ociezalosc celowania)
-        float err = 4f + 2.5f * (int)Get(stats, "pixelStacks") + 4f * (int)Get(stats, "aimLagStacks");
+        float err = (4f + 2.5f * (int)Get(stats, "pixelStacks") + 4f * (int)Get(stats, "aimLagStacks")) * (humanMode ? 1.5f : 1f);
         float ang = ((float)rng.NextDouble() * 2f - 1f) * err * Mathf.Deg2Rad;
         dir = new Vector2(dir.x * Mathf.Cos(ang) - dir.y * Mathf.Sin(ang), dir.x * Mathf.Sin(ang) + dir.y * Mathf.Cos(ang));
         Call(Get(game, "player"), "Shoot", pos, dir);
@@ -246,7 +309,15 @@ public class BalanceBot
     }
 
     // ---------- sklep wg strategii ----------
-    private static int ShopStep(string strategy, object game, object stats, Component player, System.Random rng)
+    private static void LogBuy(string outPath, string strategy, int run, object game, object offer)
+    {
+        var gain = Get(offer, "gain");
+        string gn = gain != null ? (string)Get(gain, "name") : "SELL";
+        File.AppendAllText(outPath.Replace(".csv", ".buys.csv"), string.Join(",", strategy, run, gn.Replace(',', ' '), ((string)Get(Get(offer, "price"), "name")).Replace(',', ' '),
+            Get(game, "wave"), Call(game, "CostOf", offer)) + "\n");
+    }
+
+    private static int ShopStep(string strategy, object game, object stats, Component player, System.Random rng, string outPath, int run)
     {
         var offers = (IList)Get(game, "shopOffers");
         int coins = (int)Get(game, "coins");
@@ -266,7 +337,7 @@ public class BalanceBot
 
         if (strategy == "buyall")
         {
-            if (candidates.Count > 0) { Call(game, "Buy", candidates[0]); return 1; }
+            if (candidates.Count > 0) { LogBuy(outPath, strategy, run, game, candidates[0]); Call(game, "Buy", candidates[0]); return 1; }
             Call(game, "CloseShop");
             return 0;
         }
@@ -274,7 +345,7 @@ public class BalanceBot
         if (strategy == "random")
         {
             int r = rng.Next(10);
-            if (candidates.Count > 0 && r < 4) { Call(game, "Buy", candidates[rng.Next(candidates.Count)]); return 1; }
+            if (candidates.Count > 0 && r < 4) { var ro = candidates[rng.Next(candidates.Count)]; LogBuy(outPath, strategy, run, game, ro); Call(game, "Buy", ro); return 1; }
             Call(game, "CloseShop");
             return 0;
         }
@@ -312,7 +383,7 @@ public class BalanceBot
                 case "FASTER SHOTS": score = 5; break;
                 case "PIERCING": score = 4; break;
                 case "TRIPLE SHOT": score = 4; break;
-                case "DASH": score = 2; break;
+                case "DASH": case "SHOCKWAVE": case "DOUBLE DASH": case "DASH CRIT": case "DASH MINES": score = 3; break;
                 case "SELL": score = 0.5f; break;
                 default: score = 3; break;
             }
@@ -320,12 +391,15 @@ public class BalanceBot
             switch (pn)
             {
                 case "FOG": case "ZOOM IN": case "REVERSED CONTROLS": case "FRAGILITY": score -= 2.5f; break;
+                case "INPUT DELAY": case "PRICEY SHOP": score -= 1.5f; break;
+                case "INERTIA": score -= 2f; break;
+                case "SILENCE": score -= 0.2f; break;
                 case "PIXELATION": case "SLUGGISH AIM": case "HUNGER": score -= 1.2f; break;
                 default: score -= 0.5f; break;
             }
             if (score > bestScore) { bestScore = score; pick = o; }
         }
-        if (pick != null) { Call(game, "Buy", pick); return 1; }
+        if (pick != null) { LogBuy(outPath, strategy, run, game, pick); Call(game, "Buy", pick); return 1; }
         Call(game, "CloseShop");
         return 0;
     }

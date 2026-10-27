@@ -6,10 +6,12 @@ param(
     [float]$Speed = 8,
     [int]$Asc = 0,
     [string]$Force = "",
-    [string]$Out = "$env:TEMP\jam_bot_$Strategy.csv"
+    [string]$Root = "",   # inny katalog repo (np. worktree z wersja bazowa)
+    [string]$Tag = "",
+    [string]$Out = "$env:TEMP\jam_bot_$Strategy$Tag.csv"
 )
-$repo = Resolve-Path "$PSScriptRoot\..\.."
-$dst = "$env:TEMP\jam_bot_$Strategy"
+$repo = if ($Root) { Resolve-Path $Root } else { Resolve-Path "$PSScriptRoot\..\.." }
+$dst = "$env:TEMP\jam_bot_$Strategy$Tag"
 New-Item -ItemType Directory -Force $dst | Out-Null
 foreach ($d in 'Assets','Packages','ProjectSettings') { robocopy "$repo\$d" "$dst\$d" /E /NFL /NDL /NJH /NJS /NP | Out-Null }
 New-Item -ItemType Directory -Force "$dst\Assets\SmokeTests" | Out-Null

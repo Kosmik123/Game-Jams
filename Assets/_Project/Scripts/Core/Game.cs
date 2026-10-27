@@ -103,6 +103,7 @@ namespace PayWithPixels
         {
             int score = Mathf.RoundToInt((wave * 100 + kills * 2 + coinsEarned + (won ? 1000 : 0)) * ScoreMul);
             Meta.RecordRun(wave, won, Ascension, score);
+            Online.Submit(score);
             ui.ShowDeath(won, RunSummary(won) + "\nSCORE " + score + (Ascension > 0 ? "  (ASCENSION " + Ascension + " x" + ScoreMul.ToString("0.00") + ")" : ""), StartRun, GoToTitle);
         }
 
@@ -142,7 +143,7 @@ namespace PayWithPixels
         public int Ascension { get; private set; }
         public float InterestRate => Ascension >= 4 ? 0.3f : 0.2f;
         /// <summary>Wrogowie rosna z fala (co 3 fale +10% HP) i ze strefa (2: +15%, 3: +30% HP oraz predkosci).</summary>
-        private float ZoneScale => zone >= 3 ? 1.3f : zone == 2 ? 1.15f : 1f;
+        private float ZoneScale => zone >= 3 ? 1.2f : zone == 2 ? 1.15f : 1f;
         public float EnemyHpMul => (Ascension >= 2 ? 1.25f : 1f) * ZoneScale * (1f + 0.1f * (wave / 4));
         public float EnemySpeedMul => (Ascension >= 4 ? 1.15f : 1f) * enemySpeedContractMul * ZoneScale;
         public float BossHpMul => (Ascension >= 5 ? 1.2f : 1f) * ContractBossHpMul;
@@ -171,6 +172,7 @@ namespace PayWithPixels
         private void Awake()
         {
             Instance = this;
+            Online.Init();   // anonimowe logowanie do tablicy wynikow w tle; bez sieci gra dziala normalnie
 #if !UNITY_WEBGL
             Application.targetFrameRate = 60;   // w WebGL zostaje requestAnimationFrame
 #endif
@@ -238,8 +240,18 @@ namespace PayWithPixels
             GoToTitleRefresh();
         }
 
-        private void GoToTitleRefresh() => ui.ShowTitle(StartRun, w => { Meta.Selected = w; GoToTitleRefresh(); },
-            () => { Meta.Ascension = (Meta.Ascension + 1) % (Meta.AscensionUnlocked + 1); GoToTitleRefresh(); });
+        private bool namePrompted;
+
+        private void GoToTitleRefresh()
+        {
+            ui.ShowTitle(StartRun, w => { Meta.Selected = w; GoToTitleRefresh(); },
+                () => { Meta.Ascension = (Meta.Ascension + 1) % (Meta.AscensionUnlocked + 1); GoToTitleRefresh(); });
+            if (!namePrompted && !Online.HasName && !Application.isBatchMode)
+            {
+                namePrompted = true;   // nazwa gracza raz, przy pierwszym uruchomieniu
+                ui.ShowLeaderboard(null, true);
+            }
+        }
 
         private void CleanupRun()
         {
@@ -555,7 +567,7 @@ namespace PayWithPixels
         /// <summary>Liczba wrogow w fali; x1.5 po powiekszeniu areny do 480x270 (2.25x powierzchni). Z1-1..3 lagodniej.</summary>
         private int SpawnCount()
         {
-            int n = zone == 1 ? (waveInZone <= 3 ? 5 : 8) + 2 * waveInZone : 8 + 3 * waveInZone + 6 * (zone - 1);
+            int n = zone == 1 ? (waveInZone <= 3 ? 5 : 8) + 2 * waveInZone : 8 + 3 * waveInZone + 5 * (zone - 1);
             return Mathf.RoundToInt((n + wave / 3) * 1.5f);
         }
         private void StartWave()
@@ -580,11 +592,23 @@ namespace PayWithPixels
                 bossBuff = false;
                 Sfx.Play(Sound.Boss);
             }
-            else if (debt > 0 && waveInZone == WavesPerZone)
+            else if (CollectorComes())
             {
                 Enemy.SpawnCollector(world, PickSpawnPoint());
                 ui.Toast("THE COLLECTOR COMES FOR YOUR DEBT");
             }
+        }
+
+        /// <summary>
+        /// Poborca: od 2. fali strefy szansa = dlug / MaxDebt (min. 10% przy dlugu > 0), maks. jeden naraz;
+        /// pewny w ostatniej zwyklej fali strefy, gdy dlug >= polowy limitu.
+        /// </summary>
+        private bool CollectorComes()
+        {
+            if (debt <= 0 || waveInZone < 2) return false;
+            foreach (var e in Enemy.All) if (e != null && e.type == EnemyType.Collector) return false;
+            if (waveInZone == WavesPerZone && debt >= MaxDebt / 2) return true;
+            return Random.value < Mathf.Clamp(debt / (float)MaxDebt, 0.1f, 1f);
         }
 
         public void AddCoins(int n)
@@ -763,10 +787,12 @@ namespace PayWithPixels
             if (player != null && state != State.Title)
                 ui.SetHud(player.hp, stats.maxHp, ZoneLabel(), coins, debt, FreezeHint());
 
+            if (ui.OverlayOpen) return;   // tablica wynikow przejmuje klawiature (wpisywanie nazwy)
             if (Input.GetKeyDown(KeyCode.M)) Sfx.ToggleMute();
             if (state == State.Story) { UpdateStory(); return; }
             if (state == State.Title)
             {
+                if (Input.GetKeyDown(KeyCode.L)) { ui.ShowLeaderboard(); return; }
                 if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return)) StartRun();
                 if (Input.GetKeyDown(KeyCode.Alpha1)) { Meta.Selected = Weapon.Pistol; GoToTitleRefresh(); }
                 if (Input.GetKeyDown(KeyCode.Alpha2) && Meta.IsWeaponUnlocked(Weapon.Shotgun)) { Meta.Selected = Weapon.Shotgun; GoToTitleRefresh(); }
@@ -779,6 +805,7 @@ namespace PayWithPixels
             UpdateFreeze();
             UpdateFlicker();
             UpdateInvertedControls();
+            UpdateSilence();
 
             switch (state)
             {
@@ -804,7 +831,7 @@ namespace PayWithPixels
                             if (!Meta.TutorialDone && !debtHintShown)
                             {
                                 debtHintShown = true;
-                                ui.Toast("DEBT GROWS 20% EVERY WAVE. PAY IT IN THE SHOP BEFORE THE COLLECTOR COMES (WAVE 5)", 7f);
+                                ui.Toast("DEBT GROWS 20% EVERY WAVE. THE COLLECTOR VISITS BIG DEBTS", 7f);
                             }
                         }
                     }
@@ -818,6 +845,7 @@ namespace PayWithPixels
                     break;
                 case State.Won:
                 case State.Dead:
+                    if (Input.GetKeyDown(KeyCode.L)) { ui.ShowLeaderboard(); break; }
                     if (Input.GetKeyDown(KeyCode.R)) StartRun();
                     if (Input.GetKeyDown(KeyCode.T)) GoToTitle();
                     break;
@@ -917,6 +945,35 @@ namespace PayWithPixels
             if (ControlsInverted && prev <= period) ui.Toast("CONTROLS INVERTED!");
         }
 
+        /// <summary>Mnoznik glosnosci (0..1) dla ceny SILENCE: plynnie wycisza dzwiek i muzyke w losowych momentach fali.</summary>
+        public float SilenceMul { get; private set; } = 1f;
+        private float silenceTimer, silenceLeft;
+        private bool silenceWasActive;
+
+        private void UpdateSilence()
+        {
+            int stacks = stats.silenceStacks;
+            bool active = stacks > 0 && (state == State.Playing || state == State.Clearing);
+            float target = 1f;
+            if (!active) { silenceWasActive = false; silenceLeft = 0; }
+            else
+            {
+                if (!silenceWasActive) { silenceWasActive = true; silenceLeft = 0; silenceTimer = Random.Range(5f, stacks > 1 ? 10f : 12f); }
+                if (silenceLeft > 0)
+                {
+                    silenceLeft -= Time.deltaTime;
+                    target = 0f;
+                    if (silenceLeft <= 0) silenceTimer = stacks > 1 ? Random.Range(5f, 10f) : Random.Range(6f, 12f);
+                }
+                else
+                {
+                    silenceTimer -= Time.deltaTime;
+                    if (silenceTimer <= 0) { silenceLeft = 1.5f + 0.5f * stacks; target = 0f; ui.Toast("SILENCE!"); }
+                }
+            }
+            SilenceMul = Mathf.MoveTowards(SilenceMul, target, Time.unscaledDeltaTime / 0.1f);
+        }
+
         private void UpdateFlicker()
         {
             float dur = stats.FlickerDuration;
@@ -987,11 +1044,11 @@ namespace PayWithPixels
             {
                 Add(EnemyType.Dasher, 2.5f);
                 Add(EnemyType.Swarm, 2f, 2);
-                Add(EnemyType.Guard, 1.8f, 3);
+                Add(EnemyType.Guard, 1.2f, 3);
             }
             if (zone >= 3)
             {
-                Add(EnemyType.Siege, 2f);
+                Add(EnemyType.Siege, 1.4f);
                 Add(EnemyType.Spawner, 0.8f, 3);
             }
 
@@ -1107,7 +1164,7 @@ namespace PayWithPixels
         private int RerollCost => freeRerolls ? 0 : 3 + 2 * rerolls;
 
         /// <summary>Aktualny koszt oferty: +25% za kazdy wczesniejszy zakup w tej wizycie.</summary>
-        public int CostOf(Offer o) => o.free ? 0 : Mathf.CeilToInt(o.cost * (1f + 0.25f * purchases) * shopMarkup * (1f + 0.2f * stats.priceyShopStacks));
+        public int CostOf(Offer o) => o.free ? 0 : Mathf.Max(1, Mathf.RoundToInt(Mathf.CeilToInt(o.cost * (1f + 0.25f * purchases) * shopMarkup * (1f + 0.2f * stats.priceyShopStacks)) * Catalog.PriceDiscount(o.price)));
 
         private List<KeyValuePair<string, int>> RedeemOptions()
         {
@@ -1120,11 +1177,7 @@ namespace PayWithPixels
         private string DebtInfo()
         {
             if (debt <= 0) return null;
-            int toCollector = WavesPerZone - waveInZone;   // Poborca wchodzi w ostatniej zwyklej fali strefy
-            string info = "DEBT +" + Mathf.RoundToInt(InterestRate * 100) + "% EVERY WAVE";
-            if (!lastWaveWasBoss && toCollector >= 1)
-                info += "  -  COLLECTOR " + (toCollector == 1 ? "NEXT WAVE" : "IN " + toCollector + " WAVES");
-            return info;
+            return "DEBT +" + Mathf.RoundToInt(InterestRate * 100) + "% EVERY WAVE";   // bez terminu Poborcy: pojawia sie losowo wg dlugu
         }
 
         private void RefreshShopUi()
@@ -1164,7 +1217,11 @@ namespace PayWithPixels
             coins -= 1;
             haggles++;
             foreach (var o in shopOffers)
-                if (!o.sold) o.price = Catalog.Prices[Random.Range(0, Catalog.Prices.Count)];
+                if (!o.sold)
+                {
+                    o.price = Catalog.Prices[Random.Range(0, Catalog.Prices.Count)];
+                    if (o.sell) o.reward = Catalog.SellReward(wave, o.price);
+                }
             Sfx.Play(Sound.Hurt);
             RefreshShopUi();
         }

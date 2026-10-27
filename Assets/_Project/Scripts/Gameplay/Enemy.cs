@@ -22,6 +22,10 @@ namespace PayWithPixels
         private float clock;
         private int pattern;
         private SpriteRenderer sr;
+        private Transform barRoot, barFill;
+        private float barWidth;
+        private static Sprite pixelMid, pixelLeft;
+        private static bool guardHintShown;
         private string walkName;
         private int spriteSize;
         private bool rotates;
@@ -48,11 +52,11 @@ namespace PayWithPixels
             {
                 case EnemyType.Chaser: return new Spec { sprite = "enemy_chaser", size = 16, radius = 0.45f, hp = 1 + d / 4, speed = 2.6f, contact = 1, coins = 1, rotates = true };
                 case EnemyType.Shooter: return new Spec { sprite = "enemy_shooter", size = 16, radius = 0.45f, hp = 2 + d / 4, speed = 2f, contact = 1, coins = 1, rotates = true };
-                case EnemyType.Tank: return new Spec { sprite = "enemy_tank", size = 24, radius = 0.7f, hp = 8 + d, speed = 1.2f, contact = 2, coins = 3, rotates = true };
+                case EnemyType.Tank: return new Spec { sprite = "enemy_tank", size = 24, radius = 0.7f, hp = 6 + d * 3 / 4, speed = 1.2f, contact = 2, coins = 3, rotates = true };
                 case EnemyType.Dasher: return new Spec { sprite = "enemy_dasher", size = 16, radius = 0.45f, hp = 2 + d / 5, speed = 2.2f, contact = 1, coins = 2, rotates = true };
                 case EnemyType.Siege: return new Spec { sprite = "enemy_siege", size = 16, radius = 0.5f, hp = 4 + d / 4, speed = 1.6f, contact = 1, coins = 3, rotates = false };
                 case EnemyType.Swarm: return new Spec { sprite = "enemy_swarm", size = 6, radius = 0.3f, hp = 1, speed = 2.8f, contact = 1, coins = 0, rotates = false };
-                case EnemyType.Guard: return new Spec { sprite = "enemy_guard", size = 16, radius = 0.5f, hp = 5 + d / 3, speed = 1.7f, contact = 1, coins = 3, rotates = true };
+                case EnemyType.Guard: return new Spec { sprite = "enemy_guard", size = 16, radius = 0.5f, hp = 4 + d / 4, speed = 1.7f, contact = 1, coins = 3, rotates = true };
                 default: return new Spec { sprite = "enemy_spawner", size = 24, radius = 0.7f, hp = 8 + d / 2, speed = 0.7f, contact = 1, coins = 4, rotates = false };
             }
         }
@@ -74,6 +78,12 @@ namespace PayWithPixels
             e.sr = Art.MakeRenderer(go, Art.Square(s.sprite + "_walk_0", s.size), 5);
             e.radius = s.radius; e.hp = e.maxHp = Mathf.CeilToInt(s.hp * Game.Instance.EnemyHpMul); e.speed = Mathf.Min(s.speed * scale * Game.Instance.EnemySpeedMul, MaxSpeed(type));
             e.contactDamage = s.contact; e.coinDrop = s.coins;
+            if (e.maxHp >= 8 && type != EnemyType.Guard) e.CreateBar();
+            if (type == EnemyType.Guard && !guardHintShown)
+            {
+                guardHintShown = true;
+                Game.Instance.Announce("GUARD: SHOOT FROM THE SIDE");
+            }
 
             e.shootTimer = Random.Range(0.5f, 1.8f);
             e.strafeSign = Random.value < 0.5f ? -1f : 1f;
@@ -95,12 +105,18 @@ namespace PayWithPixels
             e.radius = 0.6f;
             e.hp = e.maxHp = 35 + 6 * Game.Instance.zone;
             e.speed = 3.5f;
+            e.CreateBar();
             e.contactDamage = 0;
             return e;
         }
 
         private int bossZone = 1;
         private int phase;
+        private int tollPhase = 1;
+        private float gapAngle, lineTelegraph, lineGap;
+        private bool lineVertical;
+        private int lineSide = 1;
+        private float wallTelegraph, wallGap;
         private float spawnAddsTimer;
         private float auctionTimer;
         private float spin;
@@ -183,10 +199,53 @@ namespace PayWithPixels
         private void OnDisable() => All.Remove(this);
 
         /// <summary>Straznik: pocisk lecacy z przodu (od strony gracza) jest blokowany.</summary>
+        private static Sprite Pixel(bool left)
+        {
+            ref Sprite cache = ref (left ? ref pixelLeft : ref pixelMid);
+            if (cache == null)
+            {
+                var t = new Texture2D(1, 1, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point };
+                t.SetPixel(0, 0, Color.white);
+                t.Apply();
+                cache = Sprite.Create(t, new Rect(0, 0, 1, 1), new Vector2(left ? 0f : 0.5f, 0.5f), 1f);
+            }
+            return cache;
+        }
+
+        /// <summary>Cienki pasek HP nad wrogiem z duza iloscia zdrowia (czarna ramka, biale wypelnienie).</summary>
+        private void CreateBar()
+        {
+            barWidth = Mathf.Max(1.2f, radius * 2.2f);
+            var root = new GameObject("HpBar");
+            root.transform.SetParent(transform.parent, false);
+            var bg = new GameObject("Back");
+            bg.transform.SetParent(root.transform, false);
+            Art.MakeRenderer(bg, Pixel(false), 12).color = Color.black;
+            bg.transform.localScale = new Vector3(barWidth + 0.16f, 0.3f, 1f);
+            var fill = new GameObject("Fill");
+            fill.transform.SetParent(root.transform, false);
+            Art.MakeRenderer(fill, Pixel(true), 13).color = Color.white;
+            fill.transform.localPosition = new Vector3(-barWidth / 2f, 0f, 0f);
+            barRoot = root.transform;
+            barFill = fill.transform;
+        }
+
+        private void LateUpdate()
+        {
+            if (barRoot == null) return;
+            barRoot.position = transform.position + Vector3.up * (radius + 0.5f);
+            barFill.localScale = new Vector3(barWidth * Mathf.Clamp01(hp / (float)maxHp), 0.14f, 1f);
+        }
+
+        private void OnDestroy()
+        {
+            if (barRoot != null) Destroy(barRoot.gameObject);
+        }
+
         public bool Blocks(Vector2 bulletVelocity)
         {
             if (type != EnemyType.Guard) return false;
-            return Vector2.Dot(-bulletVelocity.normalized, facing) > 0.45f;
+            return Vector2.Dot(-bulletVelocity.normalized, facing) > 0.7f;
         }
 
         public void Damage(int dmg, bool crit = false)
@@ -232,6 +291,17 @@ namespace PayWithPixels
             }
         }
 
+        /// <summary>Sciana Toll Keepera: rzad pociskow przez cala arene z jedna przerwa wokol wallGap.</summary>
+        private void FireWall()
+        {
+            for (float x = -Game.ArenaHalf.x; x <= Game.ArenaHalf.x; x += 0.9f)
+            {
+                if (Mathf.Abs(x - wallGap) < 1.9f) continue;
+                Bullet.Spawn(transform.parent, new Vector2(x, Game.ArenaHalf.y + 0.3f), new Vector2(0, -4.2f), false, 0, bossBullet);
+            }
+            Sfx.Play(Sound.Boss);
+        }
+
         private Vector2 AimAngleDir(float deg) => new Vector2(Mathf.Cos(deg * Mathf.Deg2Rad), Mathf.Sin(deg * Mathf.Deg2Rad));
 
         private float AngleToPlayer(Game game, Vector2 from)
@@ -246,14 +316,39 @@ namespace PayWithPixels
             var pos = new Vector2(Mathf.Sin(clock * 0.6f) * (Game.ArenaHalf.x - 2f), Game.ArenaHalf.y - 1.6f);
             transform.position = pos;
 
+            // faza 2 (<= 50% HP): dochodzi sciana z przerwa; pierscienie rzadziej, szybszy wachlarz
+            if (tollPhase == 1 && hp * 2 <= maxHp)
+            {
+                tollPhase = 2;
+                shootTimer = 1f;                 // 1 s pauzy ostrzegawczej
+                wallTelegraph = 0f;
+                game.Announce("THE TOLL DOUBLES");
+            }
+            if (wallTelegraph > 0)
+            {
+                wallTelegraph -= Time.deltaTime;
+                if (wallTelegraph <= 0) FireWall();
+                return;
+            }
+
             shootTimer -= Time.deltaTime;
             if (shootTimer > 0) return;
-            bool enraged = hp * 2 < maxHp;
-            shootTimer = enraged ? 1.3f : 2.0f;
+            bool enraged = tollPhase == 2;
+            shootTimer = enraged ? 1.4f : 2.0f;
             pattern++;
 
+            if (enraged && pattern % 3 == 0)
+            {
+                // sciana: telegraf 0.8 s, przerwa blisko gracza (zawsze do uniku)
+                wallGap = Mathf.Clamp(game.player.transform.position.x + Random.Range(-5f, 5f), -Game.ArenaHalf.x + 2.5f, Game.ArenaHalf.x - 2.5f);
+                wallTelegraph = 0.8f;
+                shootTimer = 1.8f;
+                WarnLine.Spawn(transform.parent, Game.ArenaHalf.y - 0.4f, wallGap, 1.9f, 0.8f);
+                return;
+            }
+
             float baseAngle = AngleToPlayer(game, pos);
-            if (pattern % 2 == 0)
+            if (enraged ? pattern % 3 == 1 : pattern % 2 == 0)
             {
                 int n = enraged ? 14 : 10;
                 float offset = Random.Range(0f, 360f);
@@ -306,15 +401,40 @@ namespace PayWithPixels
                 }
                 else if (phase == 2)
                 {
-                    shootTimer = 1.3f;
-                    float a = AngleToPlayer(game, pos);
-                    for (int i = 0; i < 5; i++) FireBoss(pos, a + (i - 2) * 11f, 6f);
+                    pattern++;
+                    if (pattern % 2 == 0)
+                    {
+                        // LOAN CALL: znacznik na pozycji gracza, po 0.8 s salwa w to miejsce (+ jeden obok); zmusza do ruchu
+                        shootTimer = 1.8f;
+                        Vector2 target = game.player.transform.position;
+                        AreaBlast.Spawn(transform.parent, target, 0.8f, 1.7f, 1);
+                        AreaBlast.Spawn(transform.parent, target + Random.insideUnitCircle.normalized * 3.2f, 1.2f, 1.7f, 1);
+                        game.Announce("LOAN CALL!");
+                    }
+                    else
+                    {
+                        shootTimer = 1.3f;
+                        float a = AngleToPlayer(game, pos);
+                        for (int i = 0; i < 5; i++) FireBoss(pos, a + (i - 2) * 11f, 6f);
+                    }
                 }
                 else
                 {
                     shootTimer = 0.55f;
                     spin += 23f;
-                    for (int i = 0; i < 6; i++) FireBoss(pos, spin + i * 60f, 4.2f);
+                    pattern++;
+                    if (pattern % 5 == 0)
+                    {
+                        // pierscien z obracajaca sie przerwa
+                        gapAngle += 37f;
+                        for (int i = 0; i < 22; i++)
+                        {
+                            float ang = i * 360f / 22f;
+                            if (Mathf.Abs(Mathf.DeltaAngle(ang, gapAngle)) < 22f) continue;
+                            FireBoss(pos, ang, 3.8f);
+                        }
+                    }
+                    else for (int i = 0; i < 6; i++) FireBoss(pos, spin + i * 60f, 4.2f);
                 }
             }
 
@@ -339,7 +459,18 @@ namespace PayWithPixels
             if (stage != phase)
             {
                 phase = stage;
-                if (phase > 0) auctionTimer = 0.5f;   // kazdy prog HP = licytacja
+                if (phase > 0)
+                {
+                    auctionTimer = 0.5f;   // kazdy prog HP = licytacja
+                    shootTimer = 1f;       // 1 s pauzy ostrzegawczej
+                    lineTelegraph = 0f;
+                    game.Announce(phase == 1 ? "THE BIDDING RISES" : phase == 2 ? "SOLD, SOLD, SOLD" : "FINAL OFFER");
+                }
+            }
+            if (lineTelegraph > 0)
+            {
+                lineTelegraph -= Time.deltaTime;
+                if (lineTelegraph <= 0) FireLine();
             }
 
             auctionTimer -= Time.deltaTime;
@@ -352,19 +483,65 @@ namespace PayWithPixels
             shootTimer -= Time.deltaTime;
             if (shootTimer > 0) return;
             pattern++;
-            shootTimer = phase >= 2 ? 1.0f : 1.35f;
             float a = AngleToPlayer(game, pos);
-            if (pattern % 3 == 0)
+            // etap 1: oferta (wachlarz 3 celowanych); 2: pierscien z licytacja; 3: linie z telegrafem; 4: dwa wzorce naraz
+            if (phase == 0)
             {
-                int n = phase >= 2 ? 18 : 12;
-                float offset = Random.Range(0f, 360f);
-                for (int i = 0; i < n; i++) FireBoss(pos, offset + i * 360f / n, 4.2f);
+                shootTimer = 1.35f;
+                for (int i = 0; i < 3; i++) FireBoss(pos, a + (i - 1) * 9f, 7.5f);
+            }
+            else if (phase == 1)
+            {
+                shootTimer = 1.2f;
+                if (pattern % 2 == 0)
+                {
+                    float offset = Random.Range(0f, 360f);
+                    for (int i = 0; i < 14; i++) FireBoss(pos, offset + i * 360f / 14f, 4.2f);
+                }
+                else for (int i = 0; i < 4; i++) FireBoss(pos, a + (i - 1.5f) * 9f, 7.5f);
+            }
+            else if (phase == 2)
+            {
+                shootTimer = 2.2f;
+                lineVertical = pattern % 2 == 0;
+                lineSide = Random.value < 0.5f ? -1 : 1;
+                Vector2 pp = game.player.transform.position;
+                if (lineVertical)
+                {
+                    lineGap = Mathf.Clamp(pp.y + Random.Range(-2.5f, 2.5f), -Game.ArenaHalf.y + 1.8f, Game.ArenaHalf.y - 1.8f);
+                    WarnLine.SpawnVertical(transform.parent, lineSide * (Game.ArenaHalf.x - 0.4f), lineGap, 1.7f, 0.8f);
+                }
+                else
+                {
+                    lineGap = Mathf.Clamp(pp.x + Random.Range(-5f, 5f), -Game.ArenaHalf.x + 2.5f, Game.ArenaHalf.x - 2.5f);
+                    WarnLine.Spawn(transform.parent, Game.ArenaHalf.y - 0.4f, lineGap, 1.9f, 0.8f);
+                }
+                lineTelegraph = 0.8f;
             }
             else
             {
-                int n = phase >= 1 ? 4 : 3;
-                for (int i = 0; i < n; i++) FireBoss(pos, a + (i - (n - 1) / 2f) * 9f, 7.5f);
+                shootTimer = 1.4f;
+                float offset = Random.Range(0f, 360f);
+                for (int i = 0; i < 12; i++) FireBoss(pos, offset + i * 360f / 12f, 4.2f);
+                for (int i = 0; i < 3; i++) FireBoss(pos, a + (i - 1) * 9f, 7.5f);
             }
+        }
+
+        /// <summary>Auctioneer, etap 3: linia pociskow przez arene (pozioma z gory albo pionowa z boku) z jedna przerwa.</summary>
+        private void FireLine()
+        {
+            if (lineVertical)
+            {
+                float x = lineSide * (Game.ArenaHalf.x + 0.3f);
+                for (float y = -Game.ArenaHalf.y; y <= Game.ArenaHalf.y; y += 0.9f)
+                    if (Mathf.Abs(y - lineGap) >= 1.7f) Bullet.Spawn(transform.parent, new Vector2(x, y), new Vector2(-lineSide * 4.2f, 0), false, 0, bossBullet);
+            }
+            else
+            {
+                for (float x = -Game.ArenaHalf.x; x <= Game.ArenaHalf.x; x += 0.9f)
+                    if (Mathf.Abs(x - lineGap) >= 1.9f) Bullet.Spawn(transform.parent, new Vector2(x, Game.ArenaHalf.y + 0.3f), new Vector2(0, -4.2f), false, 0, bossBullet);
+            }
+            Sfx.Play(Sound.Boss);
         }
 
         private void FireBoss(Vector2 pos, float angleDeg, float speed)
@@ -466,7 +643,7 @@ namespace PayWithPixels
 
                 case EnemyType.Guard:
                     move = dir;
-                    if (dir != Vector2.zero) facing = ((Vector2)Vector3.RotateTowards(facing, dir, 1.6f * dt, 0f)).normalized;   // tarcza obraca sie powoli: da sie go okrazyc
+                    if (dir != Vector2.zero) facing = ((Vector2)Vector3.RotateTowards(facing, dir, 0.7f * dt, 0f)).normalized;   // tarcza obraca sie powoli: da sie go okrazyc
                     break;
 
                 default:

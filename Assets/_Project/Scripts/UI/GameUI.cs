@@ -105,6 +105,7 @@ namespace PayWithPixels
 
         private void Update()
         {
+            UpdateLeaderboard();
             if (titlePanel.activeSelf && achSlots.Count > 0) UpdateAchievementHover();
             if (nextIcon != null && nextFrames != null && shopPanel.activeSelf)
                 nextIcon.sprite = nextFrames[(int)(Time.unscaledTime / 0.4f) % 2];
@@ -239,9 +240,9 @@ namespace PayWithPixels
                     : o.free ? key + "FIRST ONE IS FREE!"
                     : !canBuy ? "NEED " + cost + " COINS"
                     : onCredit ? key + "CREDIT: DEBT +" + (cost - coins)
-                    : key + "BUY: " + cost + " COINS";
+                    : key + "BUY: " + cost + " COINS" + (o.price.severity >= 2 ? " (-" + (o.price.severity >= 3 ? 30 : 15) + "%)" : "");
                 var txt = NewText("Text", inner.transform,
-                    top + "\n\nPRICE" + (o.stacks > 1 && !o.sell ? " x" + o.stacks : "") + "\n" + o.price.name + "\n" + o.price.description +
+                    top + "\n\nPRICE " + new string('*', o.price.severity) + (o.stacks > 1 && !o.sell ? " x" + o.stacks : "") + "\n" + o.price.name + "\n" + o.price.description +
                     (Catalog.SynergyText(o, Game.Instance.stats) is string syn ? "\n\n* SYNERGY *\n" + syn : "") + "\n\n" + bottom,
                     16, TextAnchor.MiddleCenter);
                 Stretch(txt.rectTransform, Vector2.zero, Vector2.one, new Vector2(8, 8), new Vector2(-8, -8));
@@ -524,6 +525,7 @@ namespace PayWithPixels
                     new Vector2(0.2f, 0.135f), new Vector2(0.8f, 0.215f), true, onAscension);
 
             MakeButton(titleDynamic, "START   [SPACE / ENTER]", new Vector2(0.25f, 0.035f), new Vector2(0.75f, 0.125f), true, onStart);
+            MakeButton(titleDynamic, "[L] TOP 10", new Vector2(0.78f, 0.035f), new Vector2(0.98f, 0.125f), true, () => ShowLeaderboard());
             var stats = NewText("Stats", titleDynamic,
                 "BEST WAVE " + Meta.BestWave + "   BEST SCORE " + Meta.BestScore + "   WINS " + Meta.Wins, 16, TextAnchor.MiddleCenter);
             Stretch(stats.rectTransform, new Vector2(0, 0.0f), new Vector2(1, 0.035f), Vector2.zero, Vector2.zero);
@@ -564,12 +566,137 @@ namespace PayWithPixels
 
             MakeButton(deathPanel.transform, "[R] AGAIN", new Vector2(0.15f, 0.12f), new Vector2(0.48f, 0.24f), true, onAgain);
             MakeButton(deathPanel.transform, "[T] TITLE", new Vector2(0.52f, 0.12f), new Vector2(0.85f, 0.24f), true, onTitle);
+            MakeButton(deathPanel.transform, "[L] TOP 10", new Vector2(0.3f, 0.01f), new Vector2(0.7f, 0.1f), true, () => ShowLeaderboard());
 
             Recolor();
             deathPanel.SetActive(true);
         }
 
         public void HideDeath() => deathPanel.SetActive(false);
+
+        // ---------- tablica wynikow ----------
+
+        private GameObject leaderPanel;
+        private bool nameEditing;
+        private string nameBuffer = "";
+        private int leaderVersion = -1;
+        private Action leaderOnClose;
+
+        /// <summary>Tablica otwarta: gra nie reaguje na skroty klawiszowe (wpisywanie nazwy).</summary>
+        public bool OverlayOpen => leaderPanel != null && leaderPanel.activeSelf;
+
+        public void ShowLeaderboard(Action onClose = null, bool editName = false)
+        {
+            leaderOnClose = onClose;
+            if (leaderPanel == null) leaderPanel = NewPanel("Leaderboard", transform);
+            nameEditing = editName;
+            nameBuffer = Online.PlayerName;
+            Online.Refresh();
+            RebuildLeaderboard();
+            leaderPanel.SetActive(true);
+            leaderPanel.transform.SetAsLastSibling();
+            toastText.transform.SetAsLastSibling();
+        }
+
+        public void HideLeaderboard()
+        {
+            if (leaderPanel != null) leaderPanel.SetActive(false);
+            nameEditing = false;
+            leaderOnClose?.Invoke();
+        }
+
+        private void UpdateLeaderboard()
+        {
+            if (!OverlayOpen) return;
+            if (leaderVersion != Online.Version) RebuildLeaderboard();
+            if (nameEditing)
+            {
+                bool changed = false;
+                foreach (char c in Input.inputString)
+                {
+                    if (c == '\b') { if (nameBuffer.Length > 0) { nameBuffer = nameBuffer.Substring(0, nameBuffer.Length - 1); changed = true; } }
+                    else if (c == '\n' || c == '\r') { Online.SetName(nameBuffer.Length > 0 ? nameBuffer : "PLAYER"); nameEditing = false; changed = true; }
+                    else if (nameBuffer.Length < 16 && ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_')) { nameBuffer += char.ToUpperInvariant(c); changed = true; }
+                }
+                if (Input.GetKeyDown(KeyCode.Escape)) { if (!Online.HasName) Online.SetName("PLAYER"); nameEditing = false; changed = true; }
+                if (changed) RebuildLeaderboard();
+                return;
+            }
+            if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.L)) HideLeaderboard();
+            else if (Input.GetKeyDown(KeyCode.N)) { nameEditing = true; nameBuffer = Online.PlayerName; RebuildLeaderboard(); }
+        }
+
+        private void RebuildLeaderboard()
+        {
+            foreach (Transform c in leaderPanel.transform) Destroy(c.gameObject);
+            tinted.RemoveAll(kv => kv.Key == null);
+            leaderVersion = Online.Version;
+
+            var bg = Resources.Load<Sprite>("UI/ui_leaderboard_bg");
+            if (bg != null)
+            {
+                var img = NewImage("Bg", leaderPanel.transform, true);
+                img.sprite = bg;
+                img.raycastTarget = false;
+                Stretch(img.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            }
+            // uklad tla 480x270: naglowek y 20-39, tytuly kolumn 43-58, 10 wierszy po 16 px od 58, stopka 226-241
+            Vector2 A(float x, float py) => new Vector2(x, 1f - py / 270f);
+            var title = NewText("Title", leaderPanel.transform, "TOP 10", 36, TextAnchor.MiddleCenter);
+            Stretch(title.rectTransform, A(0.07f, 39f), A(0.93f, 20f), Vector2.zero, Vector2.zero);
+            string status = Online.StatusLine();
+            var heads = NewText("Heads", leaderPanel.transform, status.Length > 0 ? status : "RANK   NAME   SCORE", 14, TextAnchor.MiddleCenter);
+            Stretch(heads.rectTransform, A(0.07f, 58f), A(0.93f, 43f), Vector2.zero, Vector2.zero);
+
+            if (Online.Top.Count == 0)
+            {
+                var none = NewText("None", leaderPanel.transform, Online.State == Online.Status.Ready && !Online.Busy ? "NO SCORES YET - BE THE FIRST" : "", 18, TextAnchor.MiddleCenter);
+                Stretch(none.rectTransform, A(0.1f, 130f), A(0.9f, 100f), Vector2.zero, Vector2.zero);
+            }
+            for (int i = 0; i < Online.Top.Count && i < 10; i++)
+            {
+                var r = Online.Top[i];
+                float y0 = 58f + 16f * i, y1 = y0 + 16f;
+                if (r.rank <= 3)
+                {
+                    var icon = Resources.Load<Sprite>("Icons/icon_rank_" + r.rank);
+                    if (icon != null)
+                    {
+                        var im = NewImage("Rank", leaderPanel.transform, true);
+                        im.sprite = icon;
+                        im.preserveAspect = true;
+                        im.raycastTarget = false;
+                        Stretch(im.rectTransform, A(0.085f, y1 - 1f), A(0.15f, y0 + 1f), Vector2.zero, Vector2.zero);
+                    }
+                }
+                else
+                {
+                    var rt = NewText("R", leaderPanel.transform, "#" + r.rank, 20, TextAnchor.MiddleCenter);
+                    Stretch(rt.rectTransform, A(0.0667f, y1), A(0.1667f, y0), Vector2.zero, Vector2.zero);
+                }
+                var nt = NewText("N", leaderPanel.transform, (r.mine ? "> " : "") + r.name, 20, TextAnchor.MiddleLeft);
+                Stretch(nt.rectTransform, A(0.18f, y1), A(0.7f, y0), Vector2.zero, Vector2.zero);
+                var st = NewText("S", leaderPanel.transform, r.score.ToString(), 20, TextAnchor.MiddleRight);
+                Stretch(st.rectTransform, A(0.7f, y1), A(0.92f, y0), Vector2.zero, Vector2.zero);
+            }
+
+            string foot;
+            if (nameEditing) foot = "NAME: " + nameBuffer + (Mathf.FloorToInt(Time.unscaledTime * 2f) % 2 == 0 ? "_" : " ") + "   [ENTER] OK";
+            else
+            {
+                string me = Online.HasName ? Online.PlayerName : "-";
+                foot = "YOU: " + me + (Online.Mine.HasValue ? "   RANK #" + Online.Mine.Value.rank + "   SCORE " + Online.Mine.Value.score : "");
+            }
+            var ft = NewText("Foot", leaderPanel.transform, foot, 18, TextAnchor.MiddleCenter);
+            Stretch(ft.rectTransform, A(0.07f, 241f), A(0.93f, 226f), Vector2.zero, Vector2.zero);
+
+            if (!nameEditing)
+            {
+                MakeButton(leaderPanel.transform, "[N] CHANGE NAME", A(0.1f, 268f), A(0.46f, 246f), true, () => { nameEditing = true; nameBuffer = Online.PlayerName; RebuildLeaderboard(); });
+                MakeButton(leaderPanel.transform, "[ESC] CLOSE", A(0.54f, 268f), A(0.9f, 246f), true, HideLeaderboard);
+            }
+            Recolor();
+        }
 
         // ---------- fabula ----------
 

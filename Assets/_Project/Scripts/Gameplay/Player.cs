@@ -101,21 +101,19 @@ namespace PayWithPixels
             var move = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
             if (game.ControlsInverted) move = -move;
             if (move.sqrMagnitude > 1f) move.Normalize();
-            if (game.stats.InputDelay > 0f) { moveSmoothed = Vector2.MoveTowards(moveSmoothed, move, Time.deltaTime / game.stats.InputDelay); move = moveSmoothed; }
+            float startT = Mathf.Max(game.stats.InputDelay, game.stats.InertiaTime);   // INPUT DELAY i INERCJA: dluzszy czas startu
+            float stopT = game.stats.InertiaTime * 1.3f;                                // hamuje tylko INERCJA
+            if (startT > 0f || stopT > 0f)
+            {
+                bool speedingUp = move.magnitude >= moveSmoothed.magnitude - 0.001f;
+                float t = speedingUp ? startT : stopT;
+                moveSmoothed = t > 0f ? Vector2.MoveTowards(moveSmoothed, move, Time.deltaTime / t) : move;
+                move = moveSmoothed;
+            }
             else moveSmoothed = move;
             dashCooldown -= Time.deltaTime;
             dashWindow -= Time.deltaTime;
-            bool second = game.stats.doubleDash > 0 && dashWindow > 0;
-            if (game.stats.HasDash && (dashCooldown <= 0 || second) && Input.GetKeyDown(KeyCode.Space))
-            {
-                dashTimer = 0.15f;
-                Sfx.Play(Sound.Dash);
-                if (second) dashWindow = 0f;
-                else { dashCooldown = game.stats.DashCooldown; dashWindow = game.stats.doubleDash > 0 ? 0.8f : 0f; }
-                minesToDrop = game.stats.mines;
-                mineTimer = 0;
-                dashDir = move.sqrMagnitude > 0.01f ? move.normalized : (game.display.ScreenToWorld(Input.mousePosition) - (Vector2)transform.position).normalized;
-            }
+            if (Input.GetKeyDown(KeyCode.Space)) TryDash(game, move, game.display.ScreenToWorld(Input.mousePosition) - (Vector2)transform.position);
             Vector2 step = move * game.stats.MoveSpeed;
             if (dashTimer > 0)
             {
@@ -172,9 +170,25 @@ namespace PayWithPixels
             }
         }
 
+        /// <summary>Dash (spacja albo bot): wymaga zysku DASH i odnowionego cooldownu (albo okna DOUBLE DASH).</summary>
+        public bool TryDash(Game game, Vector2 move, Vector2 fallbackDir)
+        {
+            bool second = game.stats.doubleDash > 0 && dashWindow > 0;
+            if (!game.stats.HasDash || dashTimer > 0 || (dashCooldown > 0 && !second)) return false;
+            dashTimer = 0.15f;
+            Sfx.Play(Sound.Dash);
+            if (second) dashWindow = 0f;
+            else { dashCooldown = game.stats.DashCooldown; dashWindow = game.stats.doubleDash > 0 ? 0.8f : 0f; }
+            minesToDrop = game.stats.mines;
+            mineTimer = 0;
+            dashDir = move.sqrMagnitude > 0.01f ? move.normalized : fallbackDir.normalized;
+            return true;
+        }
+
         private void EndDash(Game game)
         {
             var st = game.stats;
+            moveSmoothed = dashDir;   // po dashu krotkie hamowanie wg INERCJI
             if (st.dashCrit > 0) critUntil = Time.time + 2f;
             if (st.shockwave <= 0) return;
             Shockwave.Spawn(transform.parent, transform.position, st.ShockwaveRadius);
