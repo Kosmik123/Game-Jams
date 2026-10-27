@@ -30,7 +30,7 @@ namespace PayWithPixels
         // ---- ceny (stacki) ----
         public int fogStacks, pixelStacks, flickerStacks, aimLagStacks, legsStacks;
         public readonly Dictionary<string, int> priceCounts = new Dictionary<string, int>();
-        public int zoomStacks, fragileStacks, costlyHealStacks, hungerStacks, invertStacks, silenceStacks, inputDelayStacks, priceyShopStacks;
+        public int zoomStacks, fragileStacks, costlyHealStacks, hungerStacks, invertStacks, silenceStacks, inputDelayStacks, priceyShopStacks, inertiaStacks;
 
         public readonly Weapon weapon;
 
@@ -105,6 +105,7 @@ namespace PayWithPixels
         /// <summary>Dlug jako bron: +1 obrazen przy jakimkolwiek dlugu, +1 przy dlugu >= 30 (poziom 2).</summary>
         public int DebtDamageBonus(int debt) => debtWeapon <= 0 || debt <= 0 ? 0 : 1 + (debtWeapon >= 2 && debt >= 30 ? 1 : 0);
         public float ShockwaveRadius => 2.2f + 0.6f * shockwave;
+        public float InertiaTime => Curve(inertiaStacks, 0f, 0.10f, 0.22f, 0.40f);   // czas rozpedzania; hamowanie 1.3x dluzej
         public float InputDelay => Curve(inputDelayStacks, 0f, 0.15f, 0.3f, 0.5f);   // czas rozpedzania do pelnej predkosci
         public float DashCooldown => dashLevel >= 3 ? 0.7f : dashLevel == 2 ? 0.95f : 1.2f;
 
@@ -139,6 +140,7 @@ namespace PayWithPixels
         public Action<RunStats> apply;
         public Action<RunStats> revert;   // REDEEM: zdejmuje 1 stack
         public Func<RunStats, bool> available;
+        public int severity = 1;   // dotkliwosc 1-3: zniznka kosztu zysku 0/15/30% i wyzsza nagroda za sprzedaz
     }
 
     public class Offer
@@ -239,8 +241,10 @@ namespace PayWithPixels
                 apply = s => s.hungerStacks++, revert = s => s.hungerStacks--, available = s => s.hungerStacks < 3 },
             new Price { name = "REVERSED CONTROLS", icon = "icon_reversed", description = "CONTROLS FLIP FOR SHORT MOMENTS",
                 apply = s => s.invertStacks++, revert = s => s.invertStacks--, available = s => s.invertStacks < 3 },
-            new Price { name = "SILENCE", icon = "icon_silence", description = "ALL SOUND IS GONE",
-                apply = s => s.silenceStacks++, revert = s => s.silenceStacks--, available = s => s.silenceStacks < 1 },
+            new Price { name = "SILENCE", icon = "icon_silence", description = "SOUND CUTS OUT FOR A MOMENT, NOW AND THEN",
+                apply = s => s.silenceStacks++, revert = s => s.silenceStacks--, available = s => s.silenceStacks < 3 },
+            new Price { name = "INERTIA", icon = "icon_inertia", description = "YOU SLIDE: SLOW TO START AND TO STOP",
+                apply = s => s.inertiaStacks++, revert = s => s.inertiaStacks--, available = s => s.inertiaStacks < 3 },
             new Price { name = "INPUT DELAY", icon = "icon_input_delay", description = "MOVEMENT RESPONDS LATE",
                 apply = s => s.inputDelayStacks++, revert = s => s.inputDelayStacks--, available = s => s.inputDelayStacks < 3 },
             new Price { name = "PRICEY SHOP", icon = "icon_pricey_shop", description = "EVERYTHING IN SHOPS COSTS +20%",
@@ -248,6 +252,21 @@ namespace PayWithPixels
             new Price { name = "HEAVY LEGS", icon = "icon_legs_boot", description = "SLOWER MOVEMENT",
                 apply = s => s.legsStacks++, revert = s => s.legsStacks-- },
         };
+
+        static Catalog()
+        {
+            void Sev(int v, params string[] names) { foreach (var n in names) Prices.Find(p => p.name == n).severity = v; }
+            Sev(1, "SILENCE", "FLICKER", "ZOOM IN", "INPUT DELAY");
+            Sev(2, "SLUGGISH AIM", "HEAVY LEGS", "FOG", "PIXELATION", "COSTLY LIFE", "PRICEY SHOP");
+            Sev(3, "REVERSED CONTROLS", "FRAGILITY", "HUNGER", "INERTIA");
+        }
+
+        /// <summary>Mnoznik kosztu zysku zaleznie od dotkliwosci ceny: 1 = x1, 2 = x0.85, 3 = x0.7.</summary>
+        public static float PriceDiscount(Price p) => p.severity >= 3 ? 0.7f : p.severity == 2 ? 0.85f : 1f;
+
+        /// <summary>Nagroda za sprzedaz ceny: (5 + fala/2) * 0.8 / 1.0 / 1.3 zaleznie od dotkliwosci.</summary>
+        public static int SellReward(int wave, Price p) =>
+            Mathf.RoundToInt((5 + wave / 2) * (p.severity >= 3 ? 1.3f : p.severity == 2 ? 1f : 0.8f));
 
         /// <summary>Synergie zysk+cena: (zysk, cena, opis efektu). Efekty sa w RunStats / Drone / Player.</summary>
         private static readonly string[][] Synergies =
@@ -300,7 +319,7 @@ namespace PayWithPixels
             if (wave >= 2 && offers.Count >= 3 && UnityEngine.Random.value < 0.6f)
             {
                 var sp = prices[UnityEngine.Random.Range(0, prices.Count)];
-                offers[offers.Count - 1] = new Offer { gain = null, price = sp, sell = true, reward = 5 + wave / 2 };
+                offers[offers.Count - 1] = new Offer { gain = null, price = sp, sell = true, reward = SellReward(wave, sp) };
             }
             return offers;
         }

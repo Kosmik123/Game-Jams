@@ -14,8 +14,8 @@ namespace PayWithPixels
         private static bool muted;
 
         public static bool Muted => muted;
-        /// <summary>Cena SILENCE: calkowita cisza (dzwiek i muzyka).</summary>
-        public static bool Silenced => Game.Instance != null && Game.Instance.stats != null && Game.Instance.stats.silenceStacks > 0;
+        /// <summary>Cena SILENCE: chwilowa cisza (dzwiek i muzyka), plynne wyciszenie.</summary>
+        public static float SilenceMul => Game.Instance != null ? Game.Instance.SilenceMul : 1f;
 
         public static void Init(Transform parent)
         {
@@ -51,15 +51,15 @@ namespace PayWithPixels
 
         public static void Play(Sound s)
         {
-            if (sfxSource == null || muted || Silenced) return;
+            if (sfxSource == null || muted || SilenceMul < 0.05f) return;
             if (clips.TryGetValue(s, out var c)) sfxSource.PlayOneShot(c);
         }
 
         /// <summary>Ustawia glosnosc muzyki i SFX z ustawien.</summary>
         public static void ApplyVolumes()
         {
-            if (musicSource != null) musicSource.volume = Silenced ? 0f : 0.35f * Settings.MusicVolume;
-            if (sfxSource != null) sfxSource.volume = Silenced ? 0f : Settings.SfxVolume;
+            if (musicSource != null) musicSource.volume = 0.35f * Settings.MusicVolume * SilenceMul;
+            if (sfxSource != null) sfxSource.volume = Settings.SfxVolume * SilenceMul;
         }
 
         public static void StartMusic()

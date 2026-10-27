@@ -779,6 +779,7 @@ namespace PayWithPixels
             UpdateFreeze();
             UpdateFlicker();
             UpdateInvertedControls();
+            UpdateSilence();
 
             switch (state)
             {
@@ -917,6 +918,35 @@ namespace PayWithPixels
             if (ControlsInverted && prev <= period) ui.Toast("CONTROLS INVERTED!");
         }
 
+        /// <summary>Mnoznik glosnosci (0..1) dla ceny SILENCE: plynnie wycisza dzwiek i muzyke w losowych momentach fali.</summary>
+        public float SilenceMul { get; private set; } = 1f;
+        private float silenceTimer, silenceLeft;
+        private bool silenceWasActive;
+
+        private void UpdateSilence()
+        {
+            int stacks = stats.silenceStacks;
+            bool active = stacks > 0 && (state == State.Playing || state == State.Clearing);
+            float target = 1f;
+            if (!active) { silenceWasActive = false; silenceLeft = 0; }
+            else
+            {
+                if (!silenceWasActive) { silenceWasActive = true; silenceLeft = 0; silenceTimer = Random.Range(5f, stacks > 1 ? 10f : 12f); }
+                if (silenceLeft > 0)
+                {
+                    silenceLeft -= Time.deltaTime;
+                    target = 0f;
+                    if (silenceLeft <= 0) silenceTimer = stacks > 1 ? Random.Range(5f, 10f) : Random.Range(6f, 12f);
+                }
+                else
+                {
+                    silenceTimer -= Time.deltaTime;
+                    if (silenceTimer <= 0) { silenceLeft = 1.5f + 0.5f * stacks; target = 0f; ui.Toast("SILENCE!"); }
+                }
+            }
+            SilenceMul = Mathf.MoveTowards(SilenceMul, target, Time.unscaledDeltaTime / 0.1f);
+        }
+
         private void UpdateFlicker()
         {
             float dur = stats.FlickerDuration;
@@ -987,7 +1017,7 @@ namespace PayWithPixels
             {
                 Add(EnemyType.Dasher, 2.5f);
                 Add(EnemyType.Swarm, 2f, 2);
-                Add(EnemyType.Guard, 1.8f, 3);
+                Add(EnemyType.Guard, 1.2f, 3);
             }
             if (zone >= 3)
             {
@@ -1107,7 +1137,7 @@ namespace PayWithPixels
         private int RerollCost => freeRerolls ? 0 : 3 + 2 * rerolls;
 
         /// <summary>Aktualny koszt oferty: +25% za kazdy wczesniejszy zakup w tej wizycie.</summary>
-        public int CostOf(Offer o) => o.free ? 0 : Mathf.CeilToInt(o.cost * (1f + 0.25f * purchases) * shopMarkup * (1f + 0.2f * stats.priceyShopStacks));
+        public int CostOf(Offer o) => o.free ? 0 : Mathf.Max(1, Mathf.RoundToInt(Mathf.CeilToInt(o.cost * (1f + 0.25f * purchases) * shopMarkup * (1f + 0.2f * stats.priceyShopStacks)) * Catalog.PriceDiscount(o.price)));
 
         private List<KeyValuePair<string, int>> RedeemOptions()
         {
@@ -1164,7 +1194,11 @@ namespace PayWithPixels
             coins -= 1;
             haggles++;
             foreach (var o in shopOffers)
-                if (!o.sold) o.price = Catalog.Prices[Random.Range(0, Catalog.Prices.Count)];
+                if (!o.sold)
+                {
+                    o.price = Catalog.Prices[Random.Range(0, Catalog.Prices.Count)];
+                    if (o.sell) o.reward = Catalog.SellReward(wave, o.price);
+                }
             Sfx.Play(Sound.Hurt);
             RefreshShopUi();
         }

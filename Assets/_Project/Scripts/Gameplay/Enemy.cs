@@ -186,7 +186,7 @@ namespace PayWithPixels
         public bool Blocks(Vector2 bulletVelocity)
         {
             if (type != EnemyType.Guard) return false;
-            return Vector2.Dot(-bulletVelocity.normalized, facing) > 0.45f;
+            return Vector2.Dot(-bulletVelocity.normalized, facing) > 0.55f;
         }
 
         public void Damage(int dmg, bool crit = false)
@@ -466,7 +466,7 @@ namespace PayWithPixels
 
                 case EnemyType.Guard:
                     move = dir;
-                    if (dir != Vector2.zero) facing = ((Vector2)Vector3.RotateTowards(facing, dir, 1.6f * dt, 0f)).normalized;   // tarcza obraca sie powoli: da sie go okrazyc
+                    if (dir != Vector2.zero) facing = ((Vector2)Vector3.RotateTowards(facing, dir, 1.0f * dt, 0f)).normalized;   // tarcza obraca sie powoli: da sie go okrazyc
                     break;
 
                 default:

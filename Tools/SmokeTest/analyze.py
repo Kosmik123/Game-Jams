@@ -48,5 +48,38 @@ def main(paths):
         print("   srednie monety w sklepie:", {f"Z{z}-{w}": round(statistics.mean(v)) for (z, w), v in sorted(coins.items())})
 
 
+def buys_report(paths):
+    """Zyski: ile razy wybrane, w ilu runach i jaki % takich runow zakonczyl sie wygrana (python analyze.py --buys a.csv b.csv; plik *.buys.csv obok)."""
+    import os
+    runs_win = {}
+    buys = []
+    for p in paths:
+        with open(p, newline='') as f:
+            for r in csv.DictReader(f):
+                if r['event'] in ('death', 'win', 'timeout'):
+                    runs_win[(r['strategy'], r['run'], p)] = r['event'] == 'win'
+        bp = p.replace('.csv', '.buys.csv')
+        if os.path.exists(bp):
+            with open(bp, newline='') as f:
+                for row in csv.reader(f):
+                    buys.append((row[0], row[1], p, row[2], row[3], int(row[4]), int(row[5])))
+    gains = defaultdict(lambda: [0, set()])
+    prices = defaultdict(lambda: [0, set()])
+    for strat, run, p, gain, price, wave, cost in buys:
+        gains[gain][0] += 1; gains[gain][1].add((strat, run, p))
+        prices[price][0] += 1; prices[price][1].add((strat, run, p))
+    base = sum(runs_win.values()) / max(1, len(runs_win))
+    print(f"\n== zakupy (wszystkie runy: {len(runs_win)}, wygrane {100 * base:.0f}%) ==")
+    for title, d in (("ZYSKI", gains), ("CENY", prices)):
+        print(f"-- {title}: nazwa, zakupy, runy z tym, % wygranych w runach z tym")
+        for name, (cnt, rs) in sorted(d.items(), key=lambda kv: -kv[1][0]):
+            w = sum(1 for k in rs if runs_win.get(k)) / max(1, len(rs))
+            print(f"   {name:18} {cnt:4}  {len(rs):3}  {100 * w:3.0f}%")
+
+
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    args = sys.argv[1:]
+    if args and args[0] == '--buys':
+        main(args[1:]); buys_report(args[1:])
+    else:
+        main(args)
