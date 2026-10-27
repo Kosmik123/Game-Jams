@@ -10,6 +10,7 @@ namespace PayWithPixels
     public class Contract
     {
         public string title, reward, finePrint;
+        public int value;            // "wartosc" w monetach do statystyki Total price paid
         public Action<Game> now;     // nagroda przy podpisaniu
         public Action<Game> later;   // maly druk
     }
@@ -20,30 +21,27 @@ namespace PayWithPixels
 
         public static readonly List<Contract> All = new List<Contract>
         {
-            new Contract { title = "ADVANCE", reward = "+30 COINS NOW", finePrint = "LOSE A RANDOM GAIN",
+            new Contract { title = "ADVANCE", reward = "+30 COINS", finePrint = "LOSE A RANDOM GAIN", value = 30,
                 now = g => g.coins += 30, later = g => g.ContractLoseGain() },
-            new Contract { title = "LOAN SHARK", reward = "+20 COINS NOW", finePrint = "DEBT +25",
-                now = g => g.coins += 20, later = g => g.debt += 25 },
-            new Contract { title = "BODY WORK", reward = "FULL HEAL +2 HP NOW", finePrint = "A RANDOM PRICE IS ADDED",
-                now = g => g.ContractHeal(2), later = g => g.ContractRandomPrice(1) },
-            new Contract { title = "LUCKY BREAK", reward = "A RANDOM GAIN LEVEL NOW", finePrint = "TWO RANDOM PRICES ARE ADDED",
-                now = g => g.ContractFreeGain(), later = g => g.ContractRandomPrice(2) },
-            new Contract { title = "DEBT RELIEF", reward = "DEBT -15 NOW", finePrint = "LOSE HALF YOUR COINS",
-                now = g => g.debt = Mathf.Max(0, g.debt - 15), later = g => g.coins /= 2 },
-            new Contract { title = "BLOOD MONEY", reward = "+40 COINS NOW", finePrint = "FRAGILITY: -1 MAX HP",
-                now = g => g.coins += 40, later = g => g.ContractAddPrice("FRAGILITY") },
-            new Contract { title = "INSURANCE", reward = "FULL HEAL NOW", finePrint = "LOSE 25 COINS OR GO INTO DEBT",
-                now = g => g.ContractHeal(0), later = g => g.ContractPay(25) },
-            new Contract { title = "SPONSOR", reward = "+25 COINS NOW", finePrint = "FOG: A PRICE YOU CAN SEE",
-                now = g => g.coins += 25, later = g => g.ContractAddPrice("FOG") },
+            new Contract { title = "FAT WALLET", reward = "+1 MAX HP", finePrint = "DEBT +10", value = 20,
+                now = g => g.ContractMaxHp(1), later = g => g.debt += 10 },
+            new Contract { title = "GOLD RUSH", reward = "DOUBLE COINS FOR 2 WAVES", finePrint = "FOG +2 STACKS TILL ZONE END", value = 25,
+                now = g => g.ContractCoinMul(2f, 2), later = g => g.ContractTempPrice("FOG", 2, 0, true) },
+            new Contract { title = "CHECKUP", reward = "FULL HEAL", finePrint = "NEXT BOSS +20% HP", value = 20,
+                now = g => g.ContractHeal(0), later = g => g.ContractBossBuff() },
+            new Contract { title = "REGULAR", reward = "FREE REROLLS THIS ZONE", finePrint = "ALL SHOP PRICES +30% NEXT SHOP", value = 20,
+                now = g => g.ContractFreeRerolls(), later = g => g.ContractNextShopMarkup(1.3f) },
+            new Contract { title = "OVERCLOCK", reward = "+25% FIRE RATE FOR 3 WAVES", finePrint = "HEAVY LEGS +2 STACKS FOR 3 WAVES", value = 25,
+                now = g => g.ContractFireBoost(1.25f, 3), later = g => g.ContractTempPrice("HEAVY LEGS", 2, 3, false) },
+            new Contract { title = "BOUNTY", reward = "ENEMIES DROP +1 COIN FOR 2 WAVES", finePrint = "ENEMIES +20% SPEED NEXT 2 WAVES", value = 25,
+                now = g => g.ContractBonusDrop(2), later = g => g.ContractEnemySpeed(1.2f, 2) },
+            new Contract { title = "BODYGUARD", reward = "GAIN A RANDOM SHIELD", finePrint = "PIXELATION +1 STACK PERMANENT", value = 25,
+                now = g => g.ContractShield(), later = g => g.ContractAddPrice("PIXELATION") },
         };
 
-        public static Contract Roll(Contract avoid = null)
+        public static Contract Roll()
         {
-            Contract c;
-            int guard = 0;
-            do { c = All[UnityEngine.Random.Range(0, All.Count)]; } while (c == avoid && ++guard < 8);
-            return c;
+            return All[UnityEngine.Random.Range(0, All.Count)];
         }
     }
 

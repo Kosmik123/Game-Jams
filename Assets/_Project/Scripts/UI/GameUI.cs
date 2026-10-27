@@ -183,7 +183,8 @@ namespace PayWithPixels
 
         public void ShowShop(List<Offer> offers, int coins, int debt, Action<Offer> onBuy, Action onSkip,
             int rerollCost, Action onReroll, bool haggleAvailable, Action onHaggle, Action onPayDebt,
-            string contractLabel = null, Action onContract = null, string signedLabel = null)
+            string contractLabel = null, Action onContract = null, string signedLabel = null, string debtInfo = null,
+            List<KeyValuePair<string, int>> redeemOptions = null, Action<string> onRedeem = null)
         {
             HideZone();
             HideTitle();
@@ -197,7 +198,12 @@ namespace PayWithPixels
             shopAnimStart = Time.unscaledTime;
 
             var title = NewText("Title", shopPanel.transform, "SHOP   COINS: " + coins + (debt > 0 ? "   DEBT: " + debt : ""), 30, TextAnchor.UpperCenter);
-            Stretch(title.rectTransform, new Vector2(0, 0.85f), new Vector2(1, 1), Vector2.zero, Vector2.zero);
+            Stretch(title.rectTransform, new Vector2(0, 0.88f), new Vector2(1, 1), Vector2.zero, Vector2.zero);
+            if (debtInfo != null)
+            {
+                var di = NewText("DebtInfo", shopPanel.transform, debtInfo, 16, TextAnchor.UpperCenter);
+                Stretch(di.rectTransform, new Vector2(0, 0.82f), new Vector2(1, 0.88f), Vector2.zero, Vector2.zero);
+            }
 
             for (int i = 0; i < offers.Count; i++)
             {
@@ -224,7 +230,7 @@ namespace PayWithPixels
                     : onCredit ? key + "CREDIT: DEBT +" + (cost - coins)
                     : key + "BUY: " + cost + " COINS";
                 var txt = NewText("Text", inner.transform,
-                    top + "\n\nPRICE\n" + o.price.name + "\n" + o.price.description +
+                    top + "\n\nPRICE" + (o.stacks > 1 && !o.sell ? " x" + o.stacks : "") + "\n" + o.price.name + "\n" + o.price.description +
                     (Catalog.SynergyText(o, Game.Instance.stats) is string syn ? "\n\n* SYNERGY *\n" + syn : "") + "\n\n" + bottom,
                     18, TextAnchor.MiddleCenter);
                 Stretch(txt.rectTransform, Vector2.zero, Vector2.one, new Vector2(8, 8), new Vector2(-8, -8));
@@ -257,15 +263,25 @@ namespace PayWithPixels
 
             MakeShopButton("[R] REROLL: " + rerollCost, 0.02f, 0.25f, coins >= rerollCost, onReroll);
             MakeShopButton(debt > 0 ? "[D] PAY DEBT: " + Mathf.Min(coins, debt) : "NO DEBT", 0.26f, 0.49f, debt > 0 && coins > 0, onPayDebt);
-            MakeShopButton(haggleAvailable ? "[H] HAGGLE: 1" : "HAGGLED", 0.50f, 0.73f, haggleAvailable && coins >= 1, onHaggle);
+            MakeShopButton(haggleAvailable ? "[H] NEW PRICES: 1" : "PRICES REROLLED", 0.50f, 0.73f, haggleAvailable && coins >= 1, onHaggle);
             MakeShopButton("[ENTER] NEXT WAVE", 0.74f, 0.98f, true, onSkip);
             if (contractLabel != null)
                 MakeButton(shopPanel.transform, "[C] CONTRACT - " + contractLabel, new Vector2(0.02f, 0.19f), new Vector2(0.98f, 0.25f), true, onContract);
-            if (signedLabel != null)
+            if (redeemOptions != null && redeemOptions.Count > 0)
             {
-                var st = NewText("Signed", shopPanel.transform, signedLabel, 16, TextAnchor.MiddleCenter);
-                Stretch(st.rectTransform, new Vector2(0, 0.0f), new Vector2(1, 0.07f), Vector2.zero, Vector2.zero);
+                int n = Mathf.Min(4, redeemOptions.Count);
+                float w = 0.96f / n;
+                for (int i = 0; i < n; i++)
+                {
+                    var opt = redeemOptions[i];
+                    bool ok = coins >= opt.Value;
+                    MakeButton(shopPanel.transform, "[" + (i + 4) + "] REDEEM " + opt.Key + ": " + opt.Value,
+                        new Vector2(0.02f + i * w, 0.19f), new Vector2(0.02f + (i + 1) * w - 0.01f, 0.25f), ok, () => onRedeem(opt.Key));
+                }
             }
+            var st = NewText("Hints", shopPanel.transform,
+                "NEW PRICES REROLLS THE PRICES OF UNSOLD OFFERS. COULD BE WORSE." + (signedLabel != null ? "\n" + signedLabel : ""), 14, TextAnchor.MiddleCenter);
+            Stretch(st.rectTransform, new Vector2(0, 0.0f), new Vector2(1, 0.075f), Vector2.zero, Vector2.zero);
 
             Recolor();
             shopPanel.SetActive(true);
@@ -411,15 +427,13 @@ namespace PayWithPixels
                 MakeButton(titleDynamic, "ASCENSION " + Meta.Ascension + "/" + Meta.AscensionUnlocked + "  [CLICK TO CHANGE]  SCORE x" + (1f + 0.25f * Meta.Ascension).ToString("0.00"),
                     new Vector2(0.2f, 0.135f), new Vector2(0.8f, 0.215f), true, onAscension);
 
-            var start = NewText("Start", titleDynamic,
-                "CLICK OR PRESS SPACE TO START\nBEST WAVE " + Meta.BestWave + "   BEST SCORE " + Meta.BestScore + "   WINS " + Meta.Wins, 20, TextAnchor.MiddleCenter);
-            Stretch(start.rectTransform, new Vector2(0, 0.01f), new Vector2(1, 0.13f), Vector2.zero, Vector2.zero);
+            MakeButton(titleDynamic, "START   [SPACE / ENTER]", new Vector2(0.25f, 0.035f), new Vector2(0.75f, 0.125f), true, onStart);
+            var stats = NewText("Stats", titleDynamic,
+                "BEST WAVE " + Meta.BestWave + "   BEST SCORE " + Meta.BestScore + "   WINS " + Meta.Wins, 16, TextAnchor.MiddleCenter);
+            Stretch(stats.rectTransform, new Vector2(0, 0.0f), new Vector2(1, 0.035f), Vector2.zero, Vector2.zero);
 
-            var btn = titlePanel.GetComponent<Button>() ?? titlePanel.AddComponent<Button>();
-            btn.transition = Selectable.Transition.None;
-            btn.targetGraphic = titlePanel.GetComponent<Image>();
-            btn.onClick.RemoveAllListeners();
-            btn.onClick.AddListener(() => onStart());
+            var btn = titlePanel.GetComponent<Button>();
+            if (btn != null) btn.onClick.RemoveAllListeners();   // klik poza przyciskami nie startuje
             titlePanel.transform.SetAsLastSibling();
             toastText.transform.SetAsLastSibling();
             Recolor();
@@ -514,7 +528,7 @@ namespace PayWithPixels
                 Stretch(bossLineText.rectTransform, Vector2.zero, Vector2.one, new Vector2(12, 8), new Vector2(-12, -8));
             }
             bossLineText.text = line;
-            bossLineUntil = Time.unscaledTime + 4f;
+            bossLineUntil = Time.unscaledTime + 2.5f;
             bossLinePanel.transform.SetAsLastSibling();
             toastText.transform.SetAsLastSibling();
             Recolor();

@@ -84,9 +84,10 @@ namespace PayWithPixels
         private string RunSummary(bool won)
         {
             int t = Mathf.RoundToInt(runTime);
-            string text = (won ? "ALL THREE ZONES CLEARED\n" : "YOU REACHED ZONE " + zone + ", WAVE " + wave + "\n") +
+            string text = (won ? "YOU HAVE BEEN SOLD.\n" : "PAID IN FULL.\nZONE " + zone + ", WAVE " + wave + "\n") +
+                "TOTAL PRICE PAID: " + TotalPricePaid + "\n" +
                 "KILLS " + kills + "    COINS EARNED " + coinsEarned + "    TIME " + (t / 60) + ":" + (t % 60).ToString("00") +
-                "\nTOTAL PRICE PAID " + TotalPricePaid + "    CONTRACTS SIGNED " + contractsSigned +
+                "\nCONTRACTS SIGNED " + contractsSigned +
                 "\nBEST WAVE " + Meta.BestWave + "    WINS " + Meta.Wins + "    DEBT LEFT " + debt;
             if (newAchievements.Count > 0)
             {
@@ -139,8 +140,8 @@ namespace PayWithPixels
         public int Ascension { get; private set; }
         public float InterestRate => Ascension >= 4 ? 0.3f : 0.2f;
         public float EnemyHpMul => Ascension >= 2 ? 1.25f : 1f;
-        public float EnemySpeedMul => Ascension >= 4 ? 1.15f : 1f;
-        public float BossHpMul => Ascension >= 5 ? 1.2f : 1f;
+        public float EnemySpeedMul => (Ascension >= 4 ? 1.15f : 1f) * enemySpeedContractMul;
+        public float BossHpMul => (Ascension >= 5 ? 1.2f : 1f) * ContractBossHpMul;
         public float ScoreMul => 1f + 0.25f * Ascension;
 
         private void ApplyStartPrice(string name, int n)
@@ -251,7 +252,7 @@ namespace PayWithPixels
         // ---- Kontrakty: nagroda teraz, maly druk po FineWaves falach ----
         private readonly List<ActiveContract> activeContracts = new List<ActiveContract>();
         private Contract shopContract;
-        private int shopVisits, contractsSigned, soldGains;
+        private int shopVisits, contractsSigned, soldGains, contractValue;
 
         public int TotalPricePaid
         {
@@ -259,7 +260,7 @@ namespace PayWithPixels
             {
                 int stacks = 0;
                 foreach (var kv in stats.priceCounts) stacks += kv.Value;
-                return stacks + debt + soldGains;
+                return stacks + debt + soldGains + contractValue;
             }
         }
 
@@ -299,27 +300,112 @@ namespace PayWithPixels
             if (player.hp > stats.maxHp) player.hp = stats.maxHp;
         }
 
-        public void ContractRandomPrice(int n)
+        // ---- efekty kontraktow (czasowe cofaja sie same po N falach albo na koncu strefy) ----
+        private class Temp { public int waves; public bool untilZoneEnd; public System.Action revert; }
+        private readonly List<Temp> temps = new List<Temp>();
+        private float coinMul = 1f, enemySpeedContractMul = 1f, nextShopMarkup = 1f, shopMarkup = 1f;
+        private int bonusDrop;
+        private bool bossBuff, freeRerolls;
+
+        private void AddTemp(int waves, bool untilZoneEnd, System.Action revert) =>
+            temps.Add(new Temp { waves = waves, untilZoneEnd = untilZoneEnd, revert = revert });
+
+        private void ResetContractEffects()
         {
-            for (int i = 0; i < n; i++)
-            {
-                var pool = Catalog.Prices.FindAll(p => p.available == null || p.available(stats));
-                if (pool.Count == 0) return;
-                var price = pool[Random.Range(0, pool.Count)];
-                ContractAddPrice(price.name);
-                ui.Toast("FINE PRINT: PRICE ADDED - " + price.name);
-            }
+            temps.Clear();
+            coinMul = enemySpeedContractMul = nextShopMarkup = shopMarkup = 1f;
+            bonusDrop = 0;
+            bossBuff = freeRerolls = false;
         }
 
-        public void ContractPay(int amount)
+        public float ContractEnemySpeedMul => enemySpeedContractMul;
+        public float ContractBossHpMul => bossBuff ? 1.2f : 1f;
+
+        public void ContractMaxHp(int n)
         {
-            int fromCoins = Mathf.Min(coins, amount);
-            coins -= fromCoins;
-            debt += amount - fromCoins;
+            stats.bonusMaxHp += n;
+            stats.Recompute();
+            player.hp += n;
+        }
+
+        public void ContractCoinMul(float mul, int waves)
+        {
+            coinMul = mul;
+            AddTemp(waves, false, () => coinMul = 1f);
+        }
+
+        public void ContractBonusDrop(int waves)
+        {
+            bonusDrop = 1;
+            AddTemp(waves, false, () => bonusDrop = 0);
+        }
+
+        public void ContractEnemySpeed(float mul, int waves)
+        {
+            enemySpeedContractMul = mul;
+            AddTemp(waves, false, () => enemySpeedContractMul = 1f);
+        }
+
+        public void ContractFireBoost(float mul, int waves)
+        {
+            stats.tempFireMul = mul;
+            AddTemp(waves, false, () => stats.tempFireMul = 1f);
+        }
+
+        public void ContractFreeRerolls()
+        {
+            freeRerolls = true;
+            AddTemp(0, true, () => freeRerolls = false);
+        }
+
+        public void ContractNextShopMarkup(float mul) => nextShopMarkup = mul;
+
+        public void ContractBossBuff()
+        {
+            bossBuff = true;
+            ui.Toast("THE NEXT BOSS HAS 20% MORE HP");
+        }
+
+        public void ContractShield()
+        {
+            var g = Catalog.Gains.Find(x => x.name == "SHIELD");
+            if (g == null || stats.Level(g.name) >= g.maxLevel) { coins += 20; return; }
+            stats.levels[g.name] = stats.Level(g.name) + 1;
+            stats.Recompute();
+            g.onBuy?.Invoke(stats, player);
+            player.RefillShield();
+        }
+
+        /// <summary>Cena czasowa: stacki wchodza od razu i znikaja po N falach albo na koncu strefy.</summary>
+        public void ContractTempPrice(string name, int n, int waves, bool untilZoneEnd)
+        {
+            for (int i = 0; i < n; i++) ContractAddPrice(name);
+            ui.Toast("FINE PRINT: " + name + " +" + n);
+            AddTemp(waves, untilZoneEnd, () =>
+            {
+                if (name == "FOG") stats.fogStacks = Mathf.Max(0, stats.fogStacks - n);
+                else if (name == "HEAVY LEGS") stats.legsStacks = Mathf.Max(0, stats.legsStacks - n);
+                stats.priceCounts[name] = Mathf.Max(0, stats.PriceCount(name) - n);
+                ApplyPrices();
+                ui.Toast(name + " STACKS GONE");
+            });
+        }
+
+        private void TickTemps(bool zoneEnd)
+        {
+            for (int i = temps.Count - 1; i >= 0; i--)
+            {
+                var t = temps[i];
+                bool done = t.untilZoneEnd ? zoneEnd : (!zoneEnd && --t.waves <= 0);
+                if (!done) continue;
+                temps.RemoveAt(i);
+                t.revert();
+            }
         }
 
         private void TickContracts()
         {
+            TickTemps(false);
             for (int i = activeContracts.Count - 1; i >= 0; i--)
             {
                 var ac = activeContracts[i];
@@ -338,6 +424,7 @@ namespace PayWithPixels
             var c = shopContract;
             shopContract = null;
             contractsSigned++;
+            contractValue += c.value;
             activeContracts.Add(new ActiveContract { contract = c, wavesLeft = Contracts.FineWaves });
             c.now(this);
             Sfx.Play(Sound.Buy);
@@ -349,6 +436,8 @@ namespace PayWithPixels
         private void StartRun()
         {
             activeContracts.Clear();
+            ResetContractEffects();
+            contractValue = 0;
             shopContract = null;
             shopVisits = contractsSigned = soldGains = 0;
             CleanupRun();
@@ -396,16 +485,16 @@ namespace PayWithPixels
         private static bool introSeen;
         private static readonly string[][] IntroSlides =
         {
-            new[] { "story_intro_1", "EVERYTHING YOU OWN WAS BOUGHT ON CREDIT." },
-            new[] { "story_intro_2", "NOW THE BILL HAS COME DUE." },
-            new[] { "story_intro_3", "THREE COLLECTORS BLOCK THE ROAD OUT." },
-            new[] { "story_intro_4", "PAY WITH WHAT YOU SEE. PAY WITH PIXELS." },
+            new[] { "story_intro_1", "" },   // podpisy sa w grafice kadrow
+            new[] { "story_intro_2", "" },
+            new[] { "story_intro_3", "" },
+            new[] { "story_intro_4", "" },
         };
         private static readonly string[] BossLines =
         {
-            "TOLL KEEPER: EVERY ROAD HAS A TOLL. PAY.",
-            "THE BANKER: YOUR DEBT HAS BEEN... RESTRUCTURED.",
-            "THE AUCTIONEER: GOING ONCE... GOING TWICE... YOU.",
+            "HALT. THE ROAD IS NOT FREE.",
+            "YOU OWE ME. SO WE CAN TALK.",
+            "GOING ONCE... GOING TWICE... SOLD!",
         };
         private int storyIndex;
         private string[][] storySlides;
@@ -448,6 +537,7 @@ namespace PayWithPixels
 
         private void BeginZone()
         {
+            TickTemps(true);
             state = State.ZoneIntro;
             introTimer = 2.6f;
             waveInZone = 0;
@@ -476,6 +566,7 @@ namespace PayWithPixels
             {
                 Enemy.SpawnBoss(world, new Vector2(0, ArenaHalf.y - 1.5f), zone);
                 ui.ShowBossLine(BossLines[Mathf.Clamp(zone - 1, 0, BossLines.Length - 1)]);
+                bossBuff = false;
                 Sfx.Play(Sound.Boss);
             }
             else if (debt > 0 && waveInZone == WavesPerZone)
@@ -487,6 +578,7 @@ namespace PayWithPixels
 
         public void AddCoins(int n)
         {
+            n = Mathf.RoundToInt(n * coinMul);
             coins += n;
             coinsEarned += n;
             Sfx.Play(Sound.Coin);
@@ -526,7 +618,8 @@ namespace PayWithPixels
         public void OnCollectorKilled()
         {
             debt = 0;
-            ui.Toast("DEBT PAID");
+            string removed = RemoveRandomPriceStack();
+            ui.Toast(removed != null ? "DEBT PAID - AND ONE STACK OF " + removed + " WIPED" : "DEBT PAID");
         }
 
         /// <summary>Poborca dotknal gracza: zabiera losowy zysk, zostawia cene.</summary>
@@ -561,6 +654,7 @@ namespace PayWithPixels
         {
             for (int i = 0; i < count; i++)
                 Coin.Spawn(world, pos + Random.insideUnitCircle * 0.4f);
+                for (int i = 0; i < bonusDrop; i++) Coin.Spawn(world, pos + Random.insideUnitCircle * 0.6f);
         }
 
         public void OnPlayerDied()
@@ -722,6 +816,13 @@ namespace PayWithPixels
             else if (Input.GetKeyDown(KeyCode.H)) Haggle();
             else if (Input.GetKeyDown(KeyCode.D)) PayDebt();
             else if (Input.GetKeyDown(KeyCode.C)) SignContract();
+            else if (shopRedeem)
+            {
+                var opts = RedeemOptions();
+                KeyCode[] rk = { KeyCode.Alpha4, KeyCode.Alpha5, KeyCode.Alpha6, KeyCode.Alpha7 };
+                for (int i = 0; i < rk.Length && opts != null && i < opts.Count; i++)
+                    if (Input.GetKeyDown(rk[i])) { Redeem(opts[i].Key); return; }
+            }
             else if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)) CloseShop();
         }
 
@@ -903,7 +1004,10 @@ namespace PayWithPixels
                 if (first != null) first.free = true;   // pierwszy zysk w runie jest za darmo, cena (zmysl) nie
             }
             shopVisits++;
-            shopContract = shopVisits % 2 == 0 ? Contracts.Roll() : null;   // kontrakt co 2. sklep
+            shopMarkup = nextShopMarkup;
+            nextShopMarkup = 1f;
+            shopRedeem = shopVisits % 3 == 0 && OwnedPrices().Count > 0;       // REDEEM co 3. sklep
+            shopContract = !shopRedeem && shopVisits % 2 == 0 ? Contracts.Roll() : null;   // kontrakt co 2. sklep
             ui.AnimateNextShop = true;
             if (!Meta.TutorialDone)
                 ui.Toast("THE FIRST GAIN IS FREE - ITS PRICE IS NOT. EVERY PRICE LASTS THE WHOLE RUN. NO COINS? BUY ON CREDIT, BUT DEBT GROWS", 10f);
@@ -918,10 +1022,71 @@ namespace PayWithPixels
         private int purchases;   // zakupy w tej wizycie: kazdy kolejny +25%
         private bool haggled;
 
-        private int RerollCost => 3 + 2 * rerolls;
+        // ---- REDEEM: zdejmij 1 stack wybranej ceny (co 3. sklep zamiast kontraktu) ----
+        private bool shopRedeem;
+
+        public int RedeemCost(string priceName) => 8 + 4 * stats.PriceCount(priceName);
+
+        private List<string> OwnedPrices()
+        {
+            var list = new List<string>();
+            foreach (var p in Catalog.Prices) if (stats.PriceCount(p.name) > 0) list.Add(p.name);
+            return list;
+        }
+
+        private bool RemovePriceStack(string name)
+        {
+            var price = Catalog.Prices.Find(p => p.name == name);
+            if (price == null || price.revert == null || stats.PriceCount(name) <= 0) return false;
+            price.revert(stats);
+            stats.priceCounts[name] = stats.PriceCount(name) - 1;
+            stats.Recompute();
+            ApplyPrices();
+            return true;
+        }
+
+        private string RemoveRandomPriceStack()
+        {
+            var owned = OwnedPrices();
+            if (owned.Count == 0) return null;
+            string name = owned[Random.Range(0, owned.Count)];
+            return RemovePriceStack(name) ? name : null;
+        }
+
+        private void Redeem(string name)
+        {
+            if (!shopRedeem || state != State.Shop) return;
+            int cost = RedeemCost(name);
+            if (coins < cost || !RemovePriceStack(name)) return;
+            coins -= cost;
+            shopRedeem = false;
+            Sfx.Play(Sound.Buy);
+            ui.Toast("REDEEMED: " + name + " -1 STACK");
+            RefreshShopUi();
+        }
+
+        private int RerollCost => freeRerolls ? 0 : 3 + 2 * rerolls;
 
         /// <summary>Aktualny koszt oferty: +25% za kazdy wczesniejszy zakup w tej wizycie.</summary>
-        public int CostOf(Offer o) => o.free ? 0 : Mathf.CeilToInt(o.cost * (1f + 0.25f * purchases));
+        public int CostOf(Offer o) => o.free ? 0 : Mathf.CeilToInt(o.cost * (1f + 0.25f * purchases) * shopMarkup);
+
+        private List<KeyValuePair<string, int>> RedeemOptions()
+        {
+            if (!shopRedeem) return null;
+            var list = new List<KeyValuePair<string, int>>();
+            foreach (var name in OwnedPrices()) list.Add(new KeyValuePair<string, int>(name, RedeemCost(name)));
+            return list;
+        }
+
+        private string DebtInfo()
+        {
+            if (debt <= 0) return null;
+            int toCollector = WavesPerZone - waveInZone;   // Poborca wchodzi w ostatniej zwyklej fali strefy
+            string info = "DEBT +" + Mathf.RoundToInt(InterestRate * 100) + "% EVERY WAVE";
+            if (!lastWaveWasBoss && toCollector >= 1)
+                info += "  -  COLLECTOR " + (toCollector == 1 ? "NEXT WAVE" : "IN " + toCollector + " WAVES");
+            return info;
+        }
 
         private void RefreshShopUi()
         {
@@ -929,7 +1094,7 @@ namespace PayWithPixels
             foreach (var ac in activeContracts) pending += (pending.Length > 0 ? ", " : "") + ac.contract.title + " (" + ac.wavesLeft + ")";
             ui.ShowShop(shopOffers, coins, debt, Buy, CloseShop, RerollCost, Reroll, !haggled, Haggle, PayDebt,
                 shopContract == null ? null : shopContract.title + ": " + shopContract.reward + " / FINE PRINT: ???", SignContract,
-                pending.Length > 0 ? "SIGNED: " + pending : null);
+                pending.Length > 0 ? "SIGNED: " + pending : null, DebtInfo(), RedeemOptions(), Redeem);
         }
 
         /// <summary>Splaca dlug dostepnymi monetami.</summary>
@@ -996,8 +1161,12 @@ namespace PayWithPixels
                 if (player.hp > stats.maxHp) player.hp = stats.maxHp;
             }
             Sfx.Play(Sound.Buy);
-            o.price.apply(stats);
-            stats.AddPrice(o.price.name);
+            for (int s = 0; s < o.stacks; s++)
+            {
+                if (s > 0 && o.price.available != null && !o.price.available(stats)) break;   // limity stackow (np. ZOOM IN)
+                o.price.apply(stats);
+                stats.AddPrice(o.price.name);
+            }
             stats.Recompute();
             if (player.hp > stats.maxHp) player.hp = stats.maxHp;
             ApplyPrices();
