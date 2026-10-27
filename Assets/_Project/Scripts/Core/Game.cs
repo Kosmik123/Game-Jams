@@ -592,11 +592,23 @@ namespace PayWithPixels
                 bossBuff = false;
                 Sfx.Play(Sound.Boss);
             }
-            else if (debt > 0 && waveInZone == WavesPerZone)
+            else if (CollectorComes())
             {
                 Enemy.SpawnCollector(world, PickSpawnPoint());
                 ui.Toast("THE COLLECTOR COMES FOR YOUR DEBT");
             }
+        }
+
+        /// <summary>
+        /// Poborca: od 2. fali strefy szansa = dlug / MaxDebt (min. 10% przy dlugu > 0), maks. jeden naraz;
+        /// pewny w ostatniej zwyklej fali strefy, gdy dlug >= polowy limitu.
+        /// </summary>
+        private bool CollectorComes()
+        {
+            if (debt <= 0 || waveInZone < 2) return false;
+            foreach (var e in Enemy.All) if (e != null && e.type == EnemyType.Collector) return false;
+            if (waveInZone == WavesPerZone && debt >= MaxDebt / 2) return true;
+            return Random.value < Mathf.Clamp(debt / (float)MaxDebt, 0.1f, 1f);
         }
 
         public void AddCoins(int n)
@@ -819,7 +831,7 @@ namespace PayWithPixels
                             if (!Meta.TutorialDone && !debtHintShown)
                             {
                                 debtHintShown = true;
-                                ui.Toast("DEBT GROWS 20% EVERY WAVE. PAY IT IN THE SHOP BEFORE THE COLLECTOR COMES (WAVE 5)", 7f);
+                                ui.Toast("DEBT GROWS 20% EVERY WAVE. THE COLLECTOR VISITS BIG DEBTS", 7f);
                             }
                         }
                     }
@@ -1165,11 +1177,7 @@ namespace PayWithPixels
         private string DebtInfo()
         {
             if (debt <= 0) return null;
-            int toCollector = WavesPerZone - waveInZone;   // Poborca wchodzi w ostatniej zwyklej fali strefy
-            string info = "DEBT +" + Mathf.RoundToInt(InterestRate * 100) + "% EVERY WAVE";
-            if (!lastWaveWasBoss && toCollector >= 1)
-                info += "  -  COLLECTOR " + (toCollector == 1 ? "NEXT WAVE" : "IN " + toCollector + " WAVES");
-            return info;
+            return "DEBT +" + Mathf.RoundToInt(InterestRate * 100) + "% EVERY WAVE";   // bez terminu Poborcy: pojawia sie losowo wg dlugu
         }
 
         private void RefreshShopUi()
