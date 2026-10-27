@@ -30,7 +30,19 @@ namespace PayWithPixels
         public readonly Dictionary<string, int> priceCounts = new Dictionary<string, int>();
         public int zoomStacks, fragileStacks, costlyHealStacks, hungerStacks, invertStacks;
 
-        public RunStats() => Recompute();
+        public readonly Weapon weapon;
+
+        public RunStats(Weapon weapon = Weapon.Pistol)
+        {
+            this.weapon = weapon;
+            Recompute();
+        }
+
+        // ---- parametry broni ----
+        public float BulletSpeed => weapon == Weapon.Laser ? 24f : weapon == Weapon.Shotgun ? 11f : 12f;
+        public float BulletLife => weapon == Weapon.Shotgun ? 0.5f : weapon == Weapon.Laser ? 1.4f : 2.5f;
+        public float SpreadStep => weapon == Weapon.Shotgun ? 8f : 12f;
+        public bool LongBullets => weapon == Weapon.Laser;
 
         public int PriceCount(string name) => priceCounts.TryGetValue(name, out var c) ? c : 0;
         public void AddPrice(string name) => priceCounts[name] = PriceCount(name) + 1;
@@ -41,9 +53,9 @@ namespace PayWithPixels
         public void Recompute()
         {
             maxHp = BaseHp - fragileStacks;
-            fireRateMul = 1f;
-            shotCount = 1;
-            pierce = 0;
+            fireRateMul = weapon == Weapon.Shotgun ? 0.5f : weapon == Weapon.Laser ? 0.7f : 1f;
+            shotCount = weapon == Weapon.Shotgun ? 5 : 1;
+            pierce = weapon == Weapon.Laser ? 3 : 0;
             dashLevel = 0;
             magnetRange = 1.8f;
             shieldMax = 0;

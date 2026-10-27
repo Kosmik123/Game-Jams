@@ -45,6 +45,12 @@ namespace PayWithPixels
         private bool freezeReady;
         private int kills;
         private float lingerTimer;
+        private float runTime;
+        private int coinsEarned;
+        private bool hitThisWave;
+        private int noHitWaves;
+        private bool coinHintShown, debtHintShown;
+        private readonly List<string> newAchievements = new List<string>();
         private readonly Drone[] drones = new Drone[3];
         public bool Frozen => freezeTimer > 0;
         public bool Paused { get; private set; }
@@ -56,6 +62,44 @@ namespace PayWithPixels
         private float auctionReturnTimer;
 
         public void Announce(string msg) => ui.Toast(msg);
+
+        public void NotifyHit() => hitThisWave = true;
+
+        private void Grant(string id)
+        {
+            if (!Meta.Unlock(id)) return;
+            newAchievements.Add(id);
+            var a = Meta.Find(id);
+            ui.Toast("ACHIEVEMENT: " + a.title + " - " + a.description, 4f);
+            Sfx.Play(Sound.Win);
+        }
+
+        private void CheckAchievements()
+        {
+            if (coins >= 100) Grant("rich");
+            if (stats.fogStacks >= 3) Grant("fog3");
+            if (zone >= 3) Grant("survivor");
+        }
+
+        private string RunSummary(bool won)
+        {
+            int t = Mathf.RoundToInt(runTime);
+            string text = (won ? "ALL THREE ZONES CLEARED\n" : "YOU REACHED ZONE " + zone + ", WAVE " + wave + "\n") +
+                "KILLS " + kills + "    COINS EARNED " + coinsEarned + "    TIME " + (t / 60) + ":" + (t % 60).ToString("00") +
+                "\nBEST WAVE " + Meta.BestWave + "    WINS " + Meta.Wins + "    DEBT LEFT " + debt;
+            if (newAchievements.Count > 0)
+            {
+                text += "\n\nNEW ACHIEVEMENTS:";
+                foreach (var id in newAchievements) text += "\n" + Meta.Find(id).title;
+            }
+            return text;
+        }
+
+        private void EndRun(bool won)
+        {
+            Meta.RecordRun(wave, won);
+            ui.ShowDeath(won, RunSummary(won), StartRun, GoToTitle);
+        }
 
         public void AuctionOffGain(float seconds)
         {
@@ -126,8 +170,7 @@ namespace PayWithPixels
             BuildArena();
             ui = GameUI.Create(transform);
 
-            state = State.Title;
-            ui.ShowTitle(StartRun);
+            GoToTitle();
         }
 
         private void BuildArena()
@@ -155,7 +198,20 @@ namespace PayWithPixels
 
         // ---------- run ----------
 
-        private void StartRun()
+        private void GoToTitle()
+        {
+            CleanupRun();
+            Palette.Reset();
+            state = State.Title;
+            ui.HideDeath();
+            ui.HideShop();
+            ui.HideZone();
+            GoToTitleRefresh();
+        }
+
+        private void GoToTitleRefresh() => ui.ShowTitle(StartRun, w => { Meta.Selected = w; GoToTitleRefresh(); });
+
+        private void CleanupRun()
         {
             foreach (var e in Enemy.All.ToArray()) if (e != null) Destroy(e.gameObject);
             foreach (var b in Bullet.All.ToArray()) if (b != null) Destroy(b.gameObject);
@@ -165,11 +221,22 @@ namespace PayWithPixels
             foreach (var x in Explosion.All.ToArray()) if (x != null) Destroy(x.gameObject);
             for (int i = 0; i < drones.Length; i++) { if (drones[i] != null) Destroy(drones[i].gameObject); drones[i] = null; }
             if (player != null) Destroy(player.gameObject);
+            player = null;
+        }
 
+        private void StartRun()
+        {
+            CleanupRun();
             Palette.Reset();
             flickerClock = 0;
             auctioned.Clear();
-            stats = new RunStats();
+            runTime = 0;
+            kills = 0;
+            coinsEarned = 0;
+            noHitWaves = 0;
+            hitThisWave = false;
+            newAchievements.Clear();
+            stats = new RunStats(Meta.Selected);
             zone = 1;
             waveInZone = 0;
             wave = 0;
@@ -201,6 +268,7 @@ namespace PayWithPixels
             introTimer = 2.6f;
             waveInZone = 0;
             Palette.SetZone(zone, 1);
+            Sfx.SetMusic(zone);
             Obstacles.Build(world, zone);
             ui.ShowZone(zone, ZoneNames[zone - 1]);
         }
@@ -209,6 +277,8 @@ namespace PayWithPixels
         {
             wave++;
             waveInZone++;
+            hitThisWave = false;
+            if (!Meta.TutorialDone && wave == 1) ui.Toast("WASD: MOVE    MOUSE: AIM    HOLD LEFT BUTTON: SHOOT", 7f);
             ui.HideZone();
             Palette.SetZone(zone, waveInZone);
             state = State.Playing;
@@ -233,7 +303,13 @@ namespace PayWithPixels
         public void AddCoins(int n)
         {
             coins += n;
+            coinsEarned += n;
             Sfx.Play(Sound.Coin);
+            if (!Meta.TutorialDone && !coinHintShown)
+            {
+                coinHintShown = true;
+                ui.Toast("COINS BUY GAINS IN THE SHOP AFTER EACH WAVE", 5f);
+            }
         }
 
         public void OnBossKilled()
@@ -245,11 +321,14 @@ namespace PayWithPixels
             RestoreAuctioned();
             HitStop(0.2f);
             Shake(0.6f);
+            Grant("boss" + zone);
             if (zone >= Zones)
             {
                 state = State.Won;
                 Sfx.Play(Sound.Win);
-                ui.ShowDeath(wave, StartRun, true);
+                if (debt == 0) Grant("debtfree");
+                if (runTime < 720f) Grant("speed");
+                EndRun(true);
             }
             else
             {
@@ -304,7 +383,7 @@ namespace PayWithPixels
             state = State.Dead;
             Sfx.Play(Sound.Death);
             Shake(0.6f);
-            ui.ShowDeath(wave, StartRun);
+            EndRun(false);
         }
 
         /// <summary>Krotkie zatrzymanie czasu przy trafieniu/zabiciu.</summary>
@@ -367,8 +446,13 @@ namespace PayWithPixels
             if (state == State.Title)
             {
                 if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return)) StartRun();
+                if (Input.GetKeyDown(KeyCode.Alpha1)) { Meta.Selected = Weapon.Pistol; GoToTitleRefresh(); }
+                if (Input.GetKeyDown(KeyCode.Alpha2) && Meta.IsWeaponUnlocked(Weapon.Shotgun)) { Meta.Selected = Weapon.Shotgun; GoToTitleRefresh(); }
+                if (Input.GetKeyDown(KeyCode.Alpha3) && Meta.IsWeaponUnlocked(Weapon.Laser)) { Meta.Selected = Weapon.Laser; GoToTitleRefresh(); }
                 return;
             }
+            if (state == State.ZoneIntro || state == State.Playing || state == State.Clearing || state == State.Shop) runTime += Time.deltaTime;
+            if (state == State.Playing || state == State.Clearing) CheckAchievements();
             if (DebugEnabled) UpdateDebugKeys();
             UpdateFreeze();
             UpdateFlicker();
@@ -387,10 +471,17 @@ namespace PayWithPixels
                     {
                         state = State.Clearing;
                         clearTimer = 1.2f;
+                        noHitWaves = hitThisWave ? 0 : noHitWaves + 1;
+                        if (noHitWaves >= 3) Grant("untouchable");
                         if (debt > 0)
                         {
                             debt = Mathf.CeilToInt(debt * (1f + InterestRate));
                             ui.Toast("INTEREST: DEBT IS NOW " + debt);
+                            if (!Meta.TutorialDone && !debtHintShown)
+                            {
+                                debtHintShown = true;
+                                ui.Toast("DEBT GROWS 20% EVERY WAVE. PAY IT IN THE SHOP BEFORE THE COLLECTOR COMES (WAVE 5)", 7f);
+                            }
                         }
                     }
                     break;
@@ -404,6 +495,7 @@ namespace PayWithPixels
                 case State.Won:
                 case State.Dead:
                     if (Input.GetKeyDown(KeyCode.R)) StartRun();
+                    if (Input.GetKeyDown(KeyCode.T)) GoToTitle();
                     break;
             }
         }
@@ -608,6 +700,8 @@ namespace PayWithPixels
             state = State.Shop;
             shopOffers = Catalog.Roll(3, wave, stats);
             ui.AnimateNextShop = true;
+            if (!Meta.TutorialDone)
+                ui.Toast("EVERY GAIN HAS A PRICE THAT LASTS THE WHOLE RUN. NO COINS? BUY ON CREDIT - BUT DEBT GROWS", 9f);
             rerolls = 0;
             purchases = 0;
             haggled = false;
@@ -704,6 +798,7 @@ namespace PayWithPixels
 
         private void CloseShop()
         {
+            Meta.TutorialDone = true;
             ui.HideShop();
             if (lastWaveWasBoss)
             {

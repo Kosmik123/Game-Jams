@@ -21,7 +21,6 @@ namespace PayWithPixels
         private RectTransform priceHud;
         private string priceHudKey = "";
         private float toastTimer;
-        private Text deathText;
         private RectTransform shopCards;
 
         public static GameUI Create(Transform parent)
@@ -81,8 +80,6 @@ namespace PayWithPixels
             toastText = NewText("Toast", transform, "", 22, TextAnchor.UpperCenter);
             Stretch(toastText.rectTransform, new Vector2(0, 0.80f), new Vector2(1, 0.9f), Vector2.zero, Vector2.zero);
 
-            deathText = NewText("DeathText", deathPanel.transform, "", 32, TextAnchor.MiddleCenter);
-            Stretch(deathText.rectTransform, new Vector2(0, 0), new Vector2(1, 1), Vector2.zero, Vector2.zero);
 
             Palette.Changed += Recolor;
             Recolor();
@@ -122,10 +119,10 @@ namespace PayWithPixels
             }
         }
 
-        public void Toast(string msg)
+        public void Toast(string msg, float seconds = 2.5f)
         {
             toastText.text = msg;
-            toastTimer = 2.5f;
+            toastTimer = seconds;
         }
 
         /// <summary>Lista zaplaconych cen: ikona + licznik stackow (prawy gorny rog).</summary>
@@ -301,6 +298,8 @@ namespace PayWithPixels
 
         public void HidePause() => pausePanel.SetActive(false);
 
+        private RectTransform titleDynamic;
+
         private void BuildTitle()
         {
             titlePanel = NewPanel("Title", transform);
@@ -313,12 +312,12 @@ namespace PayWithPixels
                 logo.sprite = logoSprite;
                 logo.preserveAspect = true;
                 logo.raycastTarget = false;
-                Stretch(logo.rectTransform, new Vector2(0.1f, 0.5f), new Vector2(0.9f, 0.92f), Vector2.zero, Vector2.zero);
+                Stretch(logo.rectTransform, new Vector2(0.1f, 0.60f), new Vector2(0.9f, 0.97f), Vector2.zero, Vector2.zero);
             }
             else
             {
                 var t = NewText("Name", titlePanel.transform, "PAY WITH PIXELS", 48, TextAnchor.MiddleCenter);
-                Stretch(t.rectTransform, new Vector2(0, 0.55f), new Vector2(1, 0.9f), Vector2.zero, Vector2.zero);
+                Stretch(t.rectTransform, new Vector2(0, 0.62f), new Vector2(1, 0.95f), Vector2.zero, Vector2.zero);
             }
 
             var tagSprite = Resources.Load<Sprite>("Sprites/title_tagline");
@@ -328,35 +327,86 @@ namespace PayWithPixels
                 tag.sprite = tagSprite;
                 tag.preserveAspect = true;
                 tag.raycastTarget = false;
-                Stretch(tag.rectTransform, new Vector2(0.2f, 0.32f), new Vector2(0.8f, 0.48f), Vector2.zero, Vector2.zero);
+                Stretch(tag.rectTransform, new Vector2(0.2f, 0.50f), new Vector2(0.8f, 0.60f), Vector2.zero, Vector2.zero);
             }
 
-            var start = NewText("Start", titlePanel.transform, "CLICK TO START\nWASD MOVE   MOUSE AIM + SHOOT", 22, TextAnchor.MiddleCenter);
-            Stretch(start.rectTransform, new Vector2(0, 0.08f), new Vector2(1, 0.28f), Vector2.zero, Vector2.zero);
+            titleDynamic = new GameObject("Dynamic", typeof(RectTransform)).GetComponent<RectTransform>();
+            titleDynamic.SetParent(titlePanel.transform, false);
+            Stretch(titleDynamic, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             titlePanel.SetActive(false);
         }
 
-        public void ShowTitle(Action onStart)
+        /// <summary>Ekran tytulowy: wybor broni, osiagniecia, rekord. Klik poza przyciskami = start.</summary>
+        public void ShowTitle(Action onStart, Action<Weapon> onWeapon)
         {
+            foreach (Transform c in titleDynamic) Destroy(c.gameObject);
+            tinted.RemoveAll(kv => kv.Key == null);
+
+            // bron
+            var weapons = new[] { Weapon.Pistol, Weapon.Shotgun, Weapon.Laser };
+            string[] names = { "PISTOL", "SHOTGUN", "LASER" };
+            for (int i = 0; i < weapons.Length; i++)
+            {
+                var w = weapons[i];
+                bool open = Meta.IsWeaponUnlocked(w);
+                string label = open ? (Meta.Selected == w ? "> " + names[i] + " <" : "[" + (i + 1) + "] " + names[i])
+                                    : "LOCKED: " + Meta.WeaponUnlockHint(w);
+                float x0 = 0.06f + i * 0.31f;
+                MakeButton(titleDynamic, label, new Vector2(x0, 0.37f), new Vector2(x0 + 0.29f, 0.47f), open, () => onWeapon(w));
+            }
+
+            // osiagniecia
+            int unlockedCount = 0;
+            for (int i = 0; i < Meta.Achievements.Length; i++)
+            {
+                var a = Meta.Achievements[i];
+                bool has = Meta.Has(a.id);
+                if (has) unlockedCount++;
+                var sprite = Resources.Load<Sprite>("Icons/" + (has ? a.icon : "ach_locked"));
+                if (sprite == null) continue;
+                var icon = NewImage("Ach", titleDynamic, true);
+                icon.sprite = sprite;
+                icon.raycastTarget = false;
+                float x0 = 0.5f - Meta.Achievements.Length * 0.0325f + i * 0.065f;
+                Stretch(icon.rectTransform, new Vector2(x0, 0.24f), new Vector2(x0 + 0.06f, 0.34f), Vector2.zero, Vector2.zero);
+                icon.preserveAspect = true;
+            }
+            var achText = NewText("AchText", titleDynamic, "ACHIEVEMENTS " + unlockedCount + "/" + Meta.Achievements.Length, 16, TextAnchor.MiddleCenter);
+            Stretch(achText.rectTransform, new Vector2(0, 0.17f), new Vector2(1, 0.24f), Vector2.zero, Vector2.zero);
+
+            var start = NewText("Start", titleDynamic,
+                "CLICK OR PRESS SPACE TO START\nBEST WAVE " + Meta.BestWave + "   WINS " + Meta.Wins + "   RUNS " + Meta.Runs, 20, TextAnchor.MiddleCenter);
+            Stretch(start.rectTransform, new Vector2(0, 0.03f), new Vector2(1, 0.17f), Vector2.zero, Vector2.zero);
+
             var btn = titlePanel.GetComponent<Button>() ?? titlePanel.AddComponent<Button>();
             btn.transition = Selectable.Transition.None;
             btn.targetGraphic = titlePanel.GetComponent<Image>();
             btn.onClick.RemoveAllListeners();
             btn.onClick.AddListener(() => onStart());
+            titlePanel.transform.SetAsLastSibling();
+            toastText.transform.SetAsLastSibling();
             Recolor();
             titlePanel.SetActive(true);
         }
 
         public void HideTitle() => titlePanel.SetActive(false);
 
-        public void ShowDeath(int wave, Action onRestart, bool won = false)
+        /// <summary>Koniec runu: naglowek, statystyki i przyciski (jeszcze raz / tytul).</summary>
+        public void ShowDeath(bool won, string details, Action onAgain, Action onTitle)
         {
-            deathText.text = (won ? "YOU WIN\nTHE BOSS PAID THE PRICE" : "GAME OVER\nYOU REACHED WAVE " + wave) + "\n\n[ CLICK OR PRESS R ]";
-            var btn = deathPanel.GetComponent<Button>() ?? deathPanel.AddComponent<Button>();
-            btn.transition = Selectable.Transition.None;
-            btn.targetGraphic = deathPanel.GetComponent<Image>();
-            btn.onClick.RemoveAllListeners();
-            btn.onClick.AddListener(() => onRestart());
+            foreach (Transform c in deathPanel.transform) Destroy(c.gameObject);
+            tinted.RemoveAll(kv => kv.Key == null);
+            deathPanel.transform.SetAsLastSibling();
+            toastText.transform.SetAsLastSibling();
+
+            var head = NewText("Head", deathPanel.transform, won ? "YOU WIN" : "GAME OVER", 48, TextAnchor.MiddleCenter);
+            Stretch(head.rectTransform, new Vector2(0, 0.74f), new Vector2(1, 0.94f), Vector2.zero, Vector2.zero);
+            var body = NewText("Body", deathPanel.transform, details, 20, TextAnchor.UpperCenter);
+            Stretch(body.rectTransform, new Vector2(0.1f, 0.34f), new Vector2(0.9f, 0.74f), Vector2.zero, Vector2.zero);
+
+            MakeButton(deathPanel.transform, "[R] AGAIN", new Vector2(0.15f, 0.12f), new Vector2(0.48f, 0.24f), true, onAgain);
+            MakeButton(deathPanel.transform, "[T] TITLE", new Vector2(0.52f, 0.12f), new Vector2(0.85f, 0.24f), true, onTitle);
+
             Recolor();
             deathPanel.SetActive(true);
         }

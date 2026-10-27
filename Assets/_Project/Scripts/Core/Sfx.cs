@@ -26,7 +26,10 @@ namespace PayWithPixels
             musicSource.playOnAwake = false;
             musicSource.loop = true;
             musicSource.volume = 0.35f;
-            musicSource.clip = BuildMusic();
+            musicSource.clip = null;
+            zoneMusic.Clear();
+            musicZone = -1;
+            SetMusic(1);
 
             clips[Sound.Shoot] = Sweep("shoot", 900, 300, 0.08f, Wave.Square, 0.25f);
             clips[Sound.Hit] = Sweep("hit", 300, 150, 0.06f, Wave.Noise, 0.3f);
@@ -113,32 +116,73 @@ namespace PayWithPixels
             return clip;
         }
 
-        private static AudioClip BuildMusic()
+        private static readonly Dictionary<int, AudioClip> zoneMusic = new Dictionary<int, AudioClip>();
+        private static int musicZone = -1;
+
+        /// <summary>Petla muzyczna per strefa (1-3), generowana leniwie.</summary>
+        public static void SetMusic(int zone)
         {
-            // a-moll, 16 krokow po 0.2 s: bas + arpeggio
-            float[] bass = { 110, 110, 165, 110, 87.3f, 87.3f, 130.8f, 87.3f, 98, 98, 146.8f, 98, 82.4f, 82.4f, 123.5f, 82.4f };
-            float[][] chords =
+            if (musicSource == null || zone == musicZone) return;
+            musicZone = zone;
+            if (!zoneMusic.TryGetValue(zone, out var clip)) zoneMusic[zone] = clip = BuildMusic(zone);
+            bool wasPlaying = musicSource.isPlaying;
+            musicSource.clip = clip;
+            if (wasPlaying) musicSource.Play();
+        }
+
+        private static AudioClip BuildMusic(int zone)
+        {
+            float step;
+            float[] bass;
+            float[][] chords;
+            float duty, bassVol, arpVol;
+            switch (zone)
             {
-                new[] { 220f, 261.6f, 329.6f }, new[] { 174.6f, 220f, 261.6f },
-                new[] { 196f, 246.9f, 293.7f }, new[] { 164.8f, 207.7f, 246.9f }
-            };
-            float step = 0.2f;
+                case 2:   // The Bank: d-moll, szybciej, waska fala w arpeggio
+                    step = 0.16f; duty = 0.125f; bassVol = 0.33f; arpVol = 0.2f;
+                    bass = new[] { 73.4f, 73.4f, 146.8f, 73.4f, 58.3f, 58.3f, 116.5f, 58.3f, 65.4f, 65.4f, 130.8f, 65.4f, 55f, 55f, 110f, 55f };
+                    chords = new[]
+                    {
+                        new[] { 293.7f, 349.2f, 440f }, new[] { 233.1f, 293.7f, 349.2f },
+                        new[] { 261.6f, 329.6f, 392f }, new[] { 220f, 277.2f, 329.6f }
+                    };
+                    break;
+                case 3:   // Auction House: napiecie, chromatyka, bardzo szybko
+                    step = 0.13f; duty = 0.25f; bassVol = 0.34f; arpVol = 0.2f;
+                    bass = new[] { 110f, 116.5f, 110f, 103.8f, 110f, 116.5f, 123.5f, 116.5f, 87.3f, 92.5f, 87.3f, 82.4f, 87.3f, 92.5f, 98f, 92.5f };
+                    chords = new[]
+                    {
+                        new[] { 220f, 261.6f, 311.1f }, new[] { 220f, 277.2f, 329.6f },
+                        new[] { 174.6f, 207.7f, 261.6f }, new[] { 185f, 220f, 277.2f }
+                    };
+                    break;
+                default:  // The Toll Road: a-moll
+                    step = 0.2f; duty = 0.25f; bassVol = 0.35f; arpVol = 0.18f;
+                    bass = new[] { 110, 110, 165, 110, 87.3f, 87.3f, 130.8f, 87.3f, 98, 98, 146.8f, 98, 82.4f, 82.4f, 123.5f, 82.4f };
+                    chords = new[]
+                    {
+                        new[] { 220f, 261.6f, 329.6f }, new[] { 174.6f, 220f, 261.6f },
+                        new[] { 196f, 246.9f, 293.7f }, new[] { 164.8f, 207.7f, 246.9f }
+                    };
+                    break;
+            }
+
             int stepSamples = (int)(Rate * step);
             var data = new float[stepSamples * 16];
-            for (int s = 0; s < 16; s++)
+            for (int st = 0; st < 16; st++)
             {
-                var chord = chords[s / 4];
-                float arp = chord[s % 3];
+                var chord = chords[st / 4];
+                float arp = chord[st % 3];
                 for (int i = 0; i < stepSamples; i++)
                 {
-                    float tt = (s * stepSamples + i) / (float)Rate;
+                    float tt = (st * stepSamples + i) / (float)Rate;
                     float env = 1f - i / (float)stepSamples;
-                    float b = Mathf.Repeat(tt * bass[s], 1f) < 0.5f ? 1f : -1f;
-                    float a = Mathf.Repeat(tt * arp, 1f) < 0.25f ? 1f : -1f;
-                    data[s * stepSamples + i] = (b * 0.35f + a * 0.18f) * (0.4f + 0.6f * env);
+                    float b = Mathf.Repeat(tt * bass[st], 1f) < 0.5f ? 1f : -1f;
+                    float a = Mathf.Repeat(tt * arp, 1f) < duty ? 1f : -1f;
+                    data[st * stepSamples + i] = (b * bassVol + a * arpVol) * (0.4f + 0.6f * env);
                 }
             }
-            var clip = AudioClip.Create("music", data.Length, 1, Rate, false);
+            var clip = AudioClip.Create("music" + zone, data.Length, 1, Rate, false);
             clip.SetData(data, 0);
             return clip;
         }
