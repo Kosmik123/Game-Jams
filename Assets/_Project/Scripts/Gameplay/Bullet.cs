@@ -11,15 +11,19 @@ namespace PayWithPixels
         private Vector2 velocity;
         private bool fromPlayer;
         private int pierceLeft;
+        private int bouncesLeft;
+        private int damage = 1;
         private float life = 2.5f;
         private readonly List<Enemy> hit = new List<Enemy>();
 
-        public static Bullet Spawn(Transform parent, Vector2 pos, Vector2 vel, bool fromPlayer, int pierce, string spriteName = null)
+        public static Bullet Spawn(Transform parent, Vector2 pos, Vector2 vel, bool fromPlayer, int pierce, string spriteName = null,
+            int damage = 1, int bounces = 0)
         {
             var go = new GameObject(fromPlayer ? "Bullet" : "Enemy Bullet");
             go.transform.SetParent(parent, false);
             go.transform.position = pos;
-            var sprite = fromPlayer ? Art.Square("bullet_player", 4)
+            var sprite = fromPlayer
+                ? (damage > 1 ? Art.Circle("bullet_boss", 8) : Art.Square("bullet_player", 4))
                 : spriteName != null ? Art.Circle(spriteName, 8) : Art.Diamond("bullet_enemy", 6);
             Art.MakeRenderer(go, sprite, 8);
             var b = go.AddComponent<Bullet>();
@@ -27,6 +31,8 @@ namespace PayWithPixels
             go.transform.rotation = Art.FaceRotation(vel);
             b.fromPlayer = fromPlayer;
             b.pierceLeft = pierce;
+            b.damage = damage;
+            b.bouncesLeft = bounces;
             return b;
         }
 
@@ -37,15 +43,32 @@ namespace PayWithPixels
         {
             var game = Game.Instance;
             if (game.state == Game.State.Shop || game.state == Game.State.Dead) return;
+            if (!fromPlayer && game.Frozen) return;
 
             Vector2 pos = (Vector2)transform.position + velocity * Time.deltaTime;
-            transform.position = pos;
             life -= Time.deltaTime;
-            if (life <= 0 || Mathf.Abs(pos.x) > Game.ArenaHalf.x + 1f || Mathf.Abs(pos.y) > Game.ArenaHalf.y + 1f)
+
+            // sciany areny: rykoszet albo koniec
+            bool outX = Mathf.Abs(pos.x) > Game.ArenaHalf.x + 0.5f;
+            bool outY = Mathf.Abs(pos.y) > Game.ArenaHalf.y + 0.5f;
+            if (outX || outY)
             {
-                Destroy(gameObject);
-                return;
+                if (fromPlayer && bouncesLeft > 0)
+                {
+                    bouncesLeft--;
+                    if (outX) { velocity.x = -velocity.x; pos.x = Mathf.Clamp(pos.x, -Game.ArenaHalf.x - 0.5f, Game.ArenaHalf.x + 0.5f); }
+                    if (outY) { velocity.y = -velocity.y; pos.y = Mathf.Clamp(pos.y, -Game.ArenaHalf.y - 0.5f, Game.ArenaHalf.y + 0.5f); }
+                    transform.rotation = Art.FaceRotation(velocity);
+                    life = Mathf.Max(life, 1.2f);
+                }
+                else if (Mathf.Abs(pos.x) > Game.ArenaHalf.x + 1f || Mathf.Abs(pos.y) > Game.ArenaHalf.y + 1f)
+                {
+                    Destroy(gameObject);
+                    return;
+                }
             }
+            transform.position = pos;
+            if (life <= 0) { Destroy(gameObject); return; }
 
             if (fromPlayer)
             {
@@ -56,7 +79,8 @@ namespace PayWithPixels
                     if (hit.Contains(e)) continue;
                     if (((Vector2)e.transform.position - pos).sqrMagnitude > (e.radius + Radius) * (e.radius + Radius)) continue;
                     hit.Add(e);
-                    e.Damage(1);
+                    if (e.Blocks(velocity)) { Sfx.Play(Sound.Hit); Destroy(gameObject); return; }
+                    e.Damage(damage);
                     if (pierceLeft-- <= 0) { Destroy(gameObject); return; }
                 }
             }

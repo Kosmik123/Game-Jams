@@ -7,13 +7,17 @@ namespace PayWithPixels
     {
         public static readonly List<Coin> All = new List<Coin>();
 
+        private float age;
+        private SpriteRenderer sr;
+
         public static Coin Spawn(Transform parent, Vector2 pos)
         {
             var go = new GameObject("Coin");
             go.transform.SetParent(parent, false);
             go.transform.position = pos;
-            Art.MakeRenderer(go, Art.Circle("coin", 6), 3);
-            return go.AddComponent<Coin>();
+            var c = go.AddComponent<Coin>();
+            c.sr = Art.MakeRenderer(go, Art.Circle("coin", 6), 3);
+            return c;
         }
 
         private void OnEnable() => All.Add(this);
@@ -23,6 +27,14 @@ namespace PayWithPixels
         {
             var game = Game.Instance;
             if (game.player == null || game.state == Game.State.Shop || game.state == Game.State.Dead) return;
+
+            float life = game.stats.CoinLifetime;
+            if (life > 0 && game.state == Game.State.Playing)
+            {
+                age += Time.deltaTime;
+                sr.enabled = age < life - 1.5f || Mathf.FloorToInt(age * 12f) % 2 == 0;
+                if (age >= life) { Destroy(gameObject); return; }
+            }
 
             Vector2 to = (Vector2)game.player.transform.position - (Vector2)transform.position;
             float dist = to.magnitude;

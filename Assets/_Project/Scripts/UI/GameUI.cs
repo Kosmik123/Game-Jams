@@ -105,17 +105,18 @@ namespace PayWithPixels
 
         public void HideZone() => zonePanel.SetActive(false);
 
-        public void SetHud(int hp, int maxHp, string zoneLabel, int coins, int debt)
+        public void SetHud(int hp, int maxHp, string zoneLabel, int coins, int debt, string extra = "")
         {
-            hud.text = "HP " + Mathf.Max(0, hp) + "/" + maxHp + "    " + zoneLabel + "    COINS " + coins + (debt > 0 ? "    DEBT " + debt : "") + "    [M] SOUND " + (Sfx.Muted ? "OFF" : "ON");
+            hud.text = "HP " + Mathf.Max(0, hp) + "/" + maxHp + "    " + zoneLabel + "    COINS " + coins + (debt > 0 ? "    DEBT " + debt : "") + (string.IsNullOrEmpty(extra) ? "" : "    " + extra) + "    [M] SOUND " + (Sfx.Muted ? "OFF" : "ON");
         }
 
-        public void ShowShop(List<Offer> offers, int coins, int debt, Action<Offer> onBuy, Action onSkip)
+        public void ShowShop(List<Offer> offers, int coins, int debt, Action<Offer> onBuy, Action onSkip,
+            int rerollCost, Action onReroll, bool haggleAvailable, Action onHaggle)
         {
             foreach (Transform c in shopPanel.transform) Destroy(c.gameObject);
             tinted.RemoveAll(kv => kv.Key == null);
 
-            var title = NewText("Title", shopPanel.transform, "SHOP   (COINS: " + coins + ")", 30, TextAnchor.UpperCenter);
+            var title = NewText("Title", shopPanel.transform, "SHOP   COINS: " + coins + (debt > 0 ? "   DEBT: " + debt : ""), 30, TextAnchor.UpperCenter);
             Stretch(title.rectTransform, new Vector2(0, 0.85f), new Vector2(1, 1), Vector2.zero, Vector2.zero);
 
             for (int i = 0; i < offers.Count; i++)
@@ -138,7 +139,8 @@ namespace PayWithPixels
                     : onCredit ? "CREDIT: DEBT +" + (o.cost - coins)
                     : "BUY: " + o.cost + " COINS";
                 var txt = NewText("Text", inner.transform,
-                    top + "\n\nPRICE\n" + o.price.name + "\n" + o.price.description + "\n\n" + bottom,
+                    top + "\n\nPRICE\n" + o.price.name + "\n" + o.price.description +
+                    (Catalog.SynergyText(o, Game.Instance.stats) is string syn ? "\n\n* SYNERGY *\n" + syn : "") + "\n\n" + bottom,
                     18, TextAnchor.MiddleCenter);
                 Stretch(txt.rectTransform, Vector2.zero, Vector2.one, new Vector2(8, 8), new Vector2(-8, -8));
 
@@ -168,19 +170,27 @@ namespace PayWithPixels
                 btn.onClick.AddListener(() => onBuy(offer));
             }
 
-            var skip = NewImage("Skip", shopPanel.transform, true);
-            Stretch(skip.rectTransform, new Vector2(0.35f, 0.08f), new Vector2(0.65f, 0.18f), Vector2.zero, Vector2.zero);
-            var skipIn = NewImage("Inner", skip.transform, false);
-            Stretch(skipIn.rectTransform, Vector2.zero, Vector2.one, new Vector2(3, 3), new Vector2(-3, -3));
-            var st = NewText("Text", skipIn.transform, "SKIP", 20, TextAnchor.MiddleCenter);
-            Stretch(st.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            var sb = skip.gameObject.AddComponent<Button>();
-            sb.transition = Selectable.Transition.None;
-            sb.targetGraphic = skip;
-            sb.onClick.AddListener(() => onSkip());
+            MakeShopButton("REROLL: " + rerollCost + " COINS", 0.04f, 0.30f, coins >= rerollCost, onReroll);
+            MakeShopButton("SKIP", 0.37f, 0.63f, true, onSkip);
+            MakeShopButton(haggleAvailable ? "HAGGLE: 1 COIN" : "HAGGLED", 0.70f, 0.96f, haggleAvailable && coins >= 1, onHaggle);
 
             Recolor();
             shopPanel.SetActive(true);
+        }
+
+        private void MakeShopButton(string label, float x0, float x1, bool interactable, Action onClick)
+        {
+            var b = NewImage("Button", shopPanel.transform, true);
+            Stretch(b.rectTransform, new Vector2(x0, 0.08f), new Vector2(x1, 0.18f), Vector2.zero, Vector2.zero);
+            var inner = NewImage("Inner", b.transform, false);
+            Stretch(inner.rectTransform, Vector2.zero, Vector2.one, new Vector2(3, 3), new Vector2(-3, -3));
+            var t = NewText("Text", inner.transform, label, 18, TextAnchor.MiddleCenter);
+            Stretch(t.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var btn = b.gameObject.AddComponent<Button>();
+            btn.transition = Selectable.Transition.None;
+            btn.targetGraphic = b;
+            btn.interactable = interactable;
+            btn.onClick.AddListener(() => onClick());
         }
 
         public void HideShop() => shopPanel.SetActive(false);

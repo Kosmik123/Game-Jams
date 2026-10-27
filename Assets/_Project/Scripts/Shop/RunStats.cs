@@ -23,12 +23,17 @@ namespace PayWithPixels
         public int dashLevel;
         public float magnetRange;
         public int shieldMax;
+        public int ricochet, explosion, vampire, slowAura, drones, crit, mines, freeze;
 
         // ---- ceny (stacki) ----
         public int fogStacks, pixelStacks, flickerStacks, aimLagStacks, legsStacks;
+        public readonly Dictionary<string, int> priceCounts = new Dictionary<string, int>();
         public int zoomStacks, fragileStacks, costlyHealStacks, hungerStacks, invertStacks;
 
         public RunStats() => Recompute();
+
+        public int PriceCount(string name) => priceCounts.TryGetValue(name, out var c) ? c : 0;
+        public void AddPrice(string name) => priceCounts[name] = PriceCount(name) + 1;
 
         public int Level(string gainName) => levels.TryGetValue(gainName, out var l) ? l : 0;
         public bool HasDash => dashLevel > 0;
@@ -42,6 +47,7 @@ namespace PayWithPixels
             dashLevel = 0;
             magnetRange = 1.8f;
             shieldMax = 0;
+            ricochet = explosion = vampire = slowAura = drones = crit = mines = freeze = 0;
 
             foreach (var g in Catalog.Gains)
             {
@@ -65,6 +71,17 @@ namespace PayWithPixels
 
         public float FireInterval => 0.35f / fireRateMul;
         public float MoveSpeed => 5f * Mathf.Pow(0.8f, legsStacks);
+        public float CritChance => crit * 0.12f + 0.06f * Mathf.Min(crit, 1);
+        public float CritMultiplier => fogStacks > 0 ? 5f : 3f;   // synergia: Mgla + Krytyk
+        public float ExplosionRadius => 1.1f + 0.4f * explosion;
+        public int ExplosionDamage => explosion >= 3 ? 2 : 1;
+        public int VampireKills => vampire >= 3 ? 5 : vampire == 2 ? 8 : 12;
+        public float SlowAuraRadius => 1.8f + 0.7f * slowAura;
+        public float SlowAuraFactor => slowAura >= 3 ? 0.5f : slowAura == 2 ? 0.62f : 0.75f;
+        public float DroneInterval => pixelStacks > 0 ? 0.75f : 1.1f;   // synergia: Pikselizacja + Pet-dron
+        public int DroneDamage => pixelStacks > 0 ? 2 : 1;
+        public float FreezeDuration => 1.5f + freeze * 1.0f;
+        public float ShieldRegen => legsStacks > 0 ? 10f : 0f;           // synergia: Ciezkie nogi + Tarcza
         public float DashCooldown => dashLevel >= 3 ? 0.7f : dashLevel == 2 ? 0.95f : 1.2f;
 
         /// <summary>Promien widocznosci w jednostkach swiata; 0 = brak mgly.</summary>
@@ -89,6 +106,7 @@ namespace PayWithPixels
         public Action<RunStats, Player> onBuy;   // natychmiastowy efekt przy zakupie
         public Func<RunStats, bool> available;   // dodatkowy warunek puli
         public bool consumable;                  // brak poziomow (np. leczenie)
+        public bool heal;                        // koszt rosnie przez cene "Drogie zycie"
     }
 
     public class Price
@@ -115,11 +133,11 @@ namespace PayWithPixels
         {
             new Gain { name = "FASTER SHOTS", icon = "icon_gain_firerate", description = "+35% FIRE RATE", cost = 5,
                 apply = s => s.fireRateMul *= 1.35f },
-            new Gain { name = "MORE HEALTH", icon = "icon_heart", description = "+2 MAX HP AND HEAL 2", cost = 5,
+            new Gain { name = "MORE HEALTH", heal = true, icon = "icon_heart", description = "+2 MAX HP AND HEAL 2", cost = 5,
                 apply = s => s.maxHp += 2, onBuy = (s, p) => p.Heal(2) },
             new Gain { name = "TRIPLE SHOT", icon = "icon_gain_triple", description = "MORE BULLETS PER SHOT", cost = 8, maxLevel = 2,
                 apply = s => s.shotCount += 2 },
-            new Gain { name = "HEALING", icon = "icon_gain_heal", description = "FULL HP", cost = 4, consumable = true,
+            new Gain { name = "HEALING", heal = true, icon = "icon_gain_heal", description = "FULL HP", cost = 4, consumable = true,
                 onBuy = (s, p) => p.Heal(99) },
             new Gain { name = "PIERCING", icon = "icon_gain_pierce", description = "BULLETS PIERCE +1 ENEMY", cost = 6,
                 apply = s => s.pierce += 1 },
@@ -127,6 +145,22 @@ namespace PayWithPixels
                 apply = s => s.dashLevel += 1 },
             new Gain { name = "MAGNET", icon = "icon_gain_magnet", description = "PULLS COINS FROM FAR AWAY", cost = 4,
                 apply = s => s.magnetRange += 2.5f },
+            new Gain { name = "RICOCHET", description = "BULLETS BOUNCE OFF WALLS", cost = 6,
+                apply = s => s.ricochet += 1 },
+            new Gain { name = "EXPLOSION", description = "DEAD ENEMIES BLOW UP", cost = 8,
+                apply = s => s.explosion += 1 },
+            new Gain { name = "VAMPIRISM", description = "KILLS HEAL YOU NOW AND THEN", cost = 7,
+                apply = s => s.vampire += 1 },
+            new Gain { name = "SLOW AURA", description = "ENEMIES NEAR YOU MOVE SLOWER", cost = 6,
+                apply = s => s.slowAura += 1 },
+            new Gain { name = "DRONE", description = "A COMPANION SHOOTS FOR YOU", cost = 8,
+                apply = s => s.drones += 1 },
+            new Gain { name = "CRITICAL", description = "CHANCE FOR TRIPLE DAMAGE", cost = 6,
+                apply = s => s.crit += 1 },
+            new Gain { name = "DASH MINES", description = "DASH DROPS MINES", cost = 7,
+                apply = s => s.mines += 1, available = s => s.dashLevel > 0 },
+            new Gain { name = "TIME FREEZE", description = "F: FREEZE ENEMIES ONCE PER WAVE", cost = 9,
+                apply = s => s.freeze += 1 },
             new Gain { name = "SHIELD", icon = "icon_gain_shield", description = "BLOCKS A HIT EACH WAVE", cost = 5,
                 apply = s => s.shieldMax += 1 },
         };
@@ -141,11 +175,46 @@ namespace PayWithPixels
                 apply = s => s.flickerStacks++ },
             new Price { name = "SLUGGISH AIM", icon = "icon_heavy_anchor", description = "AIM LAGS BEHIND THE MOUSE",
                 apply = s => s.aimLagStacks++ },
+            new Price { name = "ZOOM IN", description = "CAMERA CLOSER, ENEMIES APPEAR LATE",
+                apply = s => s.zoomStacks++, available = s => s.zoomStacks < 3 },
+            new Price { name = "FRAGILITY", description = "-1 MAX HP",
+                apply = s => s.fragileStacks++, available = s => s.maxHp > 2 },
+            new Price { name = "COSTLY LIFE", description = "HEALING GAINS COST DOUBLE",
+                apply = s => s.costlyHealStacks++, available = s => s.costlyHealStacks < 2 },
+            new Price { name = "HUNGER", description = "COINS VANISH FROM THE FLOOR",
+                apply = s => s.hungerStacks++, available = s => s.hungerStacks < 3 },
+            new Price { name = "REVERSED CONTROLS", description = "CONTROLS FLIP FOR SHORT MOMENTS",
+                apply = s => s.invertStacks++, available = s => s.invertStacks < 3 },
             new Price { name = "HEAVY LEGS", icon = "icon_legs_boot", description = "-20% MOVE SPEED",
                 apply = s => s.legsStacks++ },
         };
 
-        public static int GainCost(Gain g, int level, int wave) => g.cost + (level - 1) * 3 + wave / 4;
+        /// <summary>Synergie zysk+cena: (zysk, cena, opis efektu). Efekty sa w RunStats / Drone / Player.</summary>
+        private static readonly string[][] Synergies =
+        {
+            new[] { "CRITICAL", "FOG", "CRITS HIT x5 WHILE FOGGED" },
+            new[] { "DRONE", "PIXELATION", "DRONE SHOOTS FASTER AND HARDER" },
+            new[] { "SHIELD", "HEAVY LEGS", "SHIELD RECHARGES DURING A WAVE" },
+        };
+
+        /// <summary>Opis synergii dla oferty (z cena z tej karty albo z juz posiadana), inaczej null.</summary>
+        public static string SynergyText(Offer o, RunStats stats)
+        {
+            foreach (var s in Synergies)
+            {
+                bool gainHere = o.gain != null && o.gain.name == s[0];
+                bool priceHere = o.price.name == s[1];
+                if (gainHere && (priceHere || stats.PriceCount(s[1]) > 0)) return s[2];
+                if (priceHere && stats.Level(s[0]) > 0) return s[2];
+            }
+            return null;
+        }
+
+        public static int GainCost(Gain g, int level, int wave, RunStats stats)
+        {
+            int cost = g.cost + (level - 1) * 3 + wave / 4;
+            return g.heal ? cost * (1 + stats.costlyHealStacks) : cost;
+        }
 
         public static List<Offer> Roll(int count, int wave, RunStats stats)
         {
@@ -160,7 +229,7 @@ namespace PayWithPixels
                 gains.Remove(g);
                 var p = prices[UnityEngine.Random.Range(0, prices.Count)];
                 int level = g.consumable ? 1 : stats.Level(g.name) + 1;
-                offers.Add(new Offer { gain = g, price = p, level = level, cost = GainCost(g, level, wave) });
+                offers.Add(new Offer { gain = g, price = p, level = level, cost = GainCost(g, level, wave, stats) });
             }
             if (wave >= 2 && offers.Count >= 3 && UnityEngine.Random.value < 0.6f)
             {
