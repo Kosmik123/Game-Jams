@@ -732,7 +732,14 @@ namespace PayWithPixels
                     GoToTitle();
                     ui.Toast("PROGRESS RESET", 3f);
                 },
-                resetArmed ? "SURE? CLICK AGAIN (ERASES ALL)" : "RESET PROGRESS");
+                resetArmed ? "SURE? CLICK AGAIN (ERASES ALL)" : "RESET PROGRESS",
+                () => { Save.ShowExport(); ui.Toast("SAVE CODE COPIED", 3f); },
+                () =>
+                {
+                    bool ok = Save.AskImport();
+                    ShowPauseMenu();
+                    ui.Toast(ok ? "SAVE LOADED" : "INVALID SAVE CODE", 3f);
+                });
         }
 
         private bool resetArmed;

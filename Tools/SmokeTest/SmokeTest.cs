@@ -64,6 +64,16 @@ public class SmokeTest
             Set(game, "zone", 1);
         }
 
+        // kod zapisu: eksport -> import dziala, smieci sa odrzucane
+        {
+            var save = T("Save");
+            string code = (string)save.GetMethod("Export", All).Invoke(null, null);
+            Debug.Log("[smoke] save code " + code.Length + " chars");
+            Assert.IsTrue(code.StartsWith("PWP1:"), "export prefix");
+            Assert.IsTrue((bool)save.GetMethod("Import", All).Invoke(null, new object[] { code }), "import of own code");
+            Assert.IsFalse((bool)save.GetMethod("Import", All).Invoke(null, new object[] { "junk" }), "junk rejected");
+        }
+
         var rng = new System.Random(1);
         int lastZone = 0;
         string lastState = "";

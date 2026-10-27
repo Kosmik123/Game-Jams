@@ -21,38 +21,49 @@ namespace PayWithPixels
         public static float Volume
         {
             get { Load(); return volume; }
-            set { volume = Mathf.Clamp01(value); AudioListener.volume = volume; Save(); }
+            set { volume = Mathf.Clamp01(value); AudioListener.volume = volume; Persist(); }
         }
 
         /// <summary>Glosnosc muzyki 0..1 (mnoznik na glosnosc glowna).</summary>
         public static float MusicVolume
         {
             get { Load(); return music; }
-            set { music = Mathf.Clamp01(value); Save(); Sfx.ApplyVolumes(); }
+            set { music = Mathf.Clamp01(value); Persist(); Sfx.ApplyVolumes(); }
         }
 
         /// <summary>Glosnosc efektow 0..1.</summary>
         public static float SfxVolume
         {
             get { Load(); return sfx; }
-            set { sfx = Mathf.Clamp01(value); Save(); Sfx.ApplyVolumes(); }
+            set { sfx = Mathf.Clamp01(value); Persist(); Sfx.ApplyVolumes(); }
         }
 
         /// <summary>Wylacza inwersje palety (cena Migotanie) i jej odpowiedniki.</summary>
         public static bool ReduceFlicker
         {
             get { Load(); return reduceFlicker; }
-            set { reduceFlicker = value; Save(); }
+            set { reduceFlicker = value; Persist(); }
         }
 
         public static bool Shake
         {
             get { Load(); return shake; }
-            set { shake = value; Save(); }
+            set { shake = value; Persist(); }
         }
 
         public static void Apply()
         {
+            Load();
+            AudioListener.volume = volume;
+            Sfx.ApplyVolumes();
+        }
+
+        public static void Preload() => Load();
+
+        /// <summary>Wczytuje ustawienia od nowa (po imporcie kodu zapisu).</summary>
+        public static void Reload()
+        {
+            loaded = false;
             Load();
             AudioListener.volume = volume;
             Sfx.ApplyVolumes();
@@ -64,25 +75,25 @@ namespace PayWithPixels
             loaded = true;
             try
             {
-                volume = PlayerPrefs.GetFloat(KeyVolume, 0.8f);
-                music = PlayerPrefs.GetFloat(KeyMusic, 1f);
-                sfx = PlayerPrefs.GetFloat(KeySfx, 1f);
-                reduceFlicker = PlayerPrefs.GetInt(KeyReduceFlicker, 0) == 1;
-                shake = PlayerPrefs.GetInt(KeyShake, 1) == 1;
+                volume = Save.GetFloat(KeyVolume, 0.8f);
+                music = Save.GetFloat(KeyMusic, 1f);
+                sfx = Save.GetFloat(KeySfx, 1f);
+                reduceFlicker = Save.GetInt(KeyReduceFlicker, 0) == 1;
+                shake = Save.GetInt(KeyShake, 1) == 1;
             }
             catch { /* brak PlayerPrefs - zostaja domyslne */ }
         }
 
-        private static void Save()
+        private static void Persist()
         {
             try
             {
-                PlayerPrefs.SetFloat(KeyVolume, volume);
-                PlayerPrefs.SetFloat(KeyMusic, music);
-                PlayerPrefs.SetFloat(KeySfx, sfx);
-                PlayerPrefs.SetInt(KeyReduceFlicker, reduceFlicker ? 1 : 0);
-                PlayerPrefs.SetInt(KeyShake, shake ? 1 : 0);
-                PlayerPrefs.Save();
+                Save.SetFloat(KeyVolume, volume);
+                Save.SetFloat(KeyMusic, music);
+                Save.SetFloat(KeySfx, sfx);
+                Save.SetInt(KeyReduceFlicker, reduceFlicker ? 1 : 0);
+                Save.SetInt(KeyShake, shake ? 1 : 0);
+                Save.Flush();
             }
             catch { }
         }
