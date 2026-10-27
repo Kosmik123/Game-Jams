@@ -77,6 +77,14 @@ public class BalanceBot
             metaT.GetField("ascMax", All).SetValue(null, 5);
             metaT.GetField("ascSel", All).SetValue(null, asc);
             Call(game, "StartRun");
+            // wymuszone ceny na starcie, np. BOT_FORCE="FOG=3;ZOOM IN=3" (test czytelnosci)
+            foreach (var part in Env("BOT_FORCE", "").Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                var kv = part.Split('=');
+                Call(game, "ApplyStartPrice", kv[0], int.Parse(kv[1]));
+            }
+            Call(Get(game, "stats"), "Recompute");
+            Call(game, "ApplyPrices");
             float simTime = 0;
             int buys = 0;
             string lastState = "";

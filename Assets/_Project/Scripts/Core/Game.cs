@@ -164,7 +164,9 @@ namespace PayWithPixels
         private void Awake()
         {
             Instance = this;
-            Application.targetFrameRate = 60;
+#if !UNITY_WEBGL
+            Application.targetFrameRate = 60;   // w WebGL zostaje requestAnimationFrame
+#endif
 
             foreach (var c in FindObjectsByType<Camera>(FindObjectsSortMode.None))
                 c.gameObject.SetActive(false);
