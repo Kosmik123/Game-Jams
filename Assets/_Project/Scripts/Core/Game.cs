@@ -756,6 +756,7 @@ namespace PayWithPixels
                     if (introTimer <= 0) StartWave();
                     break;
                 case State.Playing:
+                    if (!Frozen) Enemy.Separate(Time.deltaTime);
                     UpdateSpawner();
                     UpdateLingerFailsafe();
                     if (spawnLeft <= 0 && Enemy.All.Count == 0)
@@ -983,7 +984,11 @@ namespace PayWithPixels
                 p = horizontal
                     ? new Vector2(Random.Range(-ArenaHalf.x, ArenaHalf.x), Random.value < 0.5f ? -ArenaHalf.y : ArenaHalf.y)
                     : new Vector2(Random.value < 0.5f ? -ArenaHalf.x : ArenaHalf.x, Random.Range(-ArenaHalf.y, ArenaHalf.y));
-                if (player == null || (p - (Vector2)player.transform.position).sqrMagnitude > 16f) break;
+                if (player != null && (p - (Vector2)player.transform.position).sqrMagnitude <= 16f) continue;
+                bool crowded = false;
+                foreach (var e in Enemy.All)
+                    if (e != null && ((Vector2)e.transform.position - p).sqrMagnitude < 1.3f * 1.3f) { crowded = true; break; }
+                if (!crowded) break;
             }
             return p;
         }
@@ -1008,8 +1013,8 @@ namespace PayWithPixels
             shopVisits++;
             shopMarkup = nextShopMarkup;
             nextShopMarkup = 1f;
-            shopRedeem = shopVisits % 3 == 0 && OwnedPrices().Count > 0;       // REDEEM co 3. sklep
-            shopContract = !shopRedeem && shopVisits % 2 == 0 ? Contracts.Roll() : null;   // kontrakt co 2. sklep
+            shopRedeem = OwnedPrices().Count > 0;                               // REDEEM w kazdym sklepie (1 na wizyte)
+            shopContract = shopVisits % 2 == 0 ? Contracts.Roll() : null;       // kontrakt co 2. sklep
             ui.AnimateNextShop = true;
             if (!Meta.TutorialDone)
                 ui.Toast("THE FIRST GAIN IS FREE - ITS PRICE IS NOT. EVERY PRICE LASTS THE WHOLE RUN. NO COINS? BUY ON CREDIT, BUT DEBT GROWS", 10f);
@@ -1027,7 +1032,7 @@ namespace PayWithPixels
         // ---- REDEEM: zdejmij 1 stack wybranej ceny (co 3. sklep zamiast kontraktu) ----
         private bool shopRedeem;
 
-        public int RedeemCost(string priceName) => 8 + 4 * stats.PriceCount(priceName);
+        public int RedeemCost(string priceName) => 10 + 5 * stats.PriceCount(priceName);
 
         private List<string> OwnedPrices()
         {

@@ -97,6 +97,8 @@ namespace PayWithPixels
 
         private void Update()
         {
+            if (nextIcon != null && nextFrames != null && shopPanel.activeSelf)
+                nextIcon.sprite = nextFrames[(int)(Time.unscaledTime / 0.4f) % 2];
             if (bossLinePanel != null && bossLinePanel.activeSelf && Time.unscaledTime > bossLineUntil) bossLinePanel.SetActive(false);
             if (logoFrames != null && titlePanel.activeSelf)
             {
@@ -210,7 +212,7 @@ namespace PayWithPixels
                 var o = offers[i];
                 float x0 = 0.04f + i * 0.32f;
                 var card = NewImage("Card", shopPanel.transform, true);
-                Stretch(card.rectTransform, new Vector2(x0, 0.25f), new Vector2(x0 + 0.28f, 0.8f), Vector2.zero, Vector2.zero);
+                Stretch(card.rectTransform, new Vector2(x0, 0.33f), new Vector2(x0 + 0.28f, 0.81f), Vector2.zero, Vector2.zero);
                 cardRects.Add(card.rectTransform);
                 if (shopAnimating) card.rectTransform.anchoredPosition = new Vector2(0, -320f);
                 var inner = NewImage("Inner", card.transform, false);
@@ -232,7 +234,7 @@ namespace PayWithPixels
                 var txt = NewText("Text", inner.transform,
                     top + "\n\nPRICE" + (o.stacks > 1 && !o.sell ? " x" + o.stacks : "") + "\n" + o.price.name + "\n" + o.price.description +
                     (Catalog.SynergyText(o, Game.Instance.stats) is string syn ? "\n\n* SYNERGY *\n" + syn : "") + "\n\n" + bottom,
-                    18, TextAnchor.MiddleCenter);
+                    16, TextAnchor.MiddleCenter);
                 Stretch(txt.rectTransform, Vector2.zero, Vector2.one, new Vector2(8, 8), new Vector2(-8, -8));
 
                 var iconSprite = string.IsNullOrEmpty(o.price.icon) ? null : Resources.Load<Sprite>("Icons/" + o.price.icon);
@@ -261,12 +263,12 @@ namespace PayWithPixels
                 btn.onClick.AddListener(() => onBuy(offer));
             }
 
-            MakeShopButton("[R] REROLL: " + rerollCost, 0.02f, 0.25f, coins >= rerollCost, onReroll);
-            MakeShopButton(debt > 0 ? "[D] PAY DEBT: " + Mathf.Min(coins, debt) : "NO DEBT", 0.26f, 0.49f, debt > 0 && coins > 0, onPayDebt);
-            MakeShopButton(haggleAvailable ? "[H] NEW PRICES: 1" : "PRICES REROLLED", 0.50f, 0.73f, haggleAvailable && coins >= 1, onHaggle);
-            MakeShopButton("[ENTER] NEXT WAVE", 0.74f, 0.98f, true, onSkip);
+            MakeShopButton("[R] REROLL: " + rerollCost, 0.02f, 0.33f, coins >= rerollCost, onReroll);
+            MakeShopButton(debt > 0 ? "[D] PAY DEBT: " + Mathf.Min(coins, debt) : "NO DEBT", 0.34f, 0.65f, debt > 0 && coins > 0, onPayDebt);
+            MakeShopButton(haggleAvailable ? "[H] NEW PRICES: 1" : "PRICES REROLLED", 0.66f, 0.98f, haggleAvailable && coins >= 1, onHaggle);
+            MakePrimaryButton("[ENTER] NEXT WAVE", new Vector2(0.02f, 0.05f), new Vector2(0.98f, 0.13f), onSkip);
             if (contractLabel != null)
-                MakeButton(shopPanel.transform, "[C] CONTRACT - " + contractLabel, new Vector2(0.02f, 0.19f), new Vector2(0.98f, 0.25f), true, onContract);
+                MakeButton(shopPanel.transform, "[C] CONTRACT - " + contractLabel, new Vector2(0.02f, 0.21f), new Vector2(0.98f, 0.26f), true, onContract);
             if (redeemOptions != null && redeemOptions.Count > 0)
             {
                 int n = Mathf.Min(4, redeemOptions.Count);
@@ -276,19 +278,55 @@ namespace PayWithPixels
                     var opt = redeemOptions[i];
                     bool ok = coins >= opt.Value;
                     MakeButton(shopPanel.transform, "[" + (i + 4) + "] REDEEM " + opt.Key + ": " + opt.Value,
-                        new Vector2(0.02f + i * w, 0.19f), new Vector2(0.02f + (i + 1) * w - 0.01f, 0.25f), ok, () => onRedeem(opt.Key));
+                        new Vector2(0.02f + i * w, 0.27f), new Vector2(0.02f + (i + 1) * w - 0.01f, 0.32f), ok, () => onRedeem(opt.Key));
                 }
             }
             var st = NewText("Hints", shopPanel.transform,
-                "NEW PRICES REROLLS THE PRICES OF UNSOLD OFFERS. COULD BE WORSE." + (signedLabel != null ? "\n" + signedLabel : ""), 14, TextAnchor.MiddleCenter);
-            Stretch(st.rectTransform, new Vector2(0, 0.0f), new Vector2(1, 0.075f), Vector2.zero, Vector2.zero);
+                "NEW PRICES REROLLS THE PRICES OF UNSOLD OFFERS. COULD BE WORSE." +
+                (redeemOptions != null && redeemOptions.Count > 0 ? "  REDEEM: REMOVE ONE STACK OF A PRICE." : "") + (signedLabel != null ? "\n" + signedLabel : ""), 14, TextAnchor.MiddleCenter);
+            Stretch(st.rectTransform, new Vector2(0, 0.0f), new Vector2(1, 0.05f), Vector2.zero, Vector2.zero);
 
             Recolor();
             shopPanel.SetActive(true);
         }
 
         private void MakeShopButton(string label, float x0, float x1, bool interactable, Action onClick) =>
-            MakeButton(shopPanel.transform, label, new Vector2(x0, 0.08f), new Vector2(x1, 0.18f), interactable, onClick);
+            MakeButton(shopPanel.transform, label, new Vector2(x0, 0.14f), new Vector2(x1, 0.20f), interactable, onClick);
+
+        private Image nextIcon;
+        private Sprite[] nextFrames;
+
+        /// <summary>Glowny przycisk sklepu: pelne wypelnienie, tekst w kolorze tla, migajace >>.</summary>
+        private void MakePrimaryButton(string label, Vector2 aMin, Vector2 aMax, Action onClick)
+        {
+            var b = NewImage("Primary", shopPanel.transform, true);
+            var sprite = Resources.Load<Sprite>("UI/ui_button_primary");
+            b.sprite = sprite;
+            if (sprite != null && sprite.border != Vector4.zero) b.type = Image.Type.Sliced;
+            Stretch(b.rectTransform, aMin, aMax, Vector2.zero, Vector2.zero);
+            var t = NewText("Text", b.transform, label, 26, TextAnchor.MiddleCenter);
+            tinted.RemoveAll(kv => kv.Key == t);
+            tinted.Add(new KeyValuePair<Graphic, bool>(t, false));   // tekst w kolorze tla
+            Stretch(t.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+
+            var f0 = Resources.Load<Sprite>("Icons/icon_next_0");
+            var f1 = Resources.Load<Sprite>("Icons/icon_next_1");
+            if (f0 != null && f1 != null)
+            {
+                nextFrames = new[] { f0, f1 };
+                nextIcon = NewImage("Next", b.transform, false);
+                nextIcon.sprite = f0;
+                nextIcon.raycastTarget = false;
+                nextIcon.preserveAspect = true;
+                Stretch(nextIcon.rectTransform, new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(-48, -16), new Vector2(-16, 16));
+            }
+            else nextIcon = null;
+
+            var btn = b.gameObject.AddComponent<Button>();
+            btn.transition = Selectable.Transition.None;
+            btn.targetGraphic = b;
+            btn.onClick.AddListener(() => onClick());
+        }
 
         private void MakeButton(Transform parent, string label, Vector2 aMin, Vector2 aMax, bool interactable, Action onClick)
         {
