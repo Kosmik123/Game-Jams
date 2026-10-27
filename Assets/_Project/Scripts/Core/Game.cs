@@ -26,6 +26,7 @@ namespace PayWithPixels
         private int spawnLeft;
         private float spawnTimer;
         private float clearTimer;
+        private float flickerClock;
 
         public static void Create()
         {
@@ -63,7 +64,9 @@ namespace PayWithPixels
 
         private void BuildArena()
         {
-            var floor = Art.Square("tile_floor", 16);
+            var bg = new GameObject("Arena BG");
+            bg.transform.SetParent(world, false);
+            Art.MakeRenderer(bg, Art.Square("arena_bg", 16), -10);
             var wall = Art.Square("tile_wall", 16);
             // ramka areny z kafli scian (jesli sa sprity od grafika) lub cienkich bialych pasow
             float w = ArenaHalf.x + 0.5f, h = ArenaHalf.y + 0.5f;
@@ -92,6 +95,7 @@ namespace PayWithPixels
             if (player != null) Destroy(player.gameObject);
 
             Palette.Reset();
+            flickerClock = 0;
             stats = new RunStats();
             wave = 0;
             coins = 0;
@@ -111,6 +115,7 @@ namespace PayWithPixels
         private void StartWave()
         {
             wave++;
+            Palette.SetIndex((wave - 1) / 2);
             state = State.Playing;
             spawnLeft = 4 + wave * 2;
             spawnTimer = 0.5f;
@@ -135,6 +140,8 @@ namespace PayWithPixels
             if (player != null) display.SetFogCenter(player.transform.position);
             if (player != null) ui.SetHud(player.hp, stats.maxHp, wave, coins);
 
+            UpdateFlicker();
+
             switch (state)
             {
                 case State.Playing:
@@ -153,6 +160,16 @@ namespace PayWithPixels
                     if (Input.GetKeyDown(KeyCode.R)) StartRun();
                     break;
             }
+        }
+
+        private void UpdateFlicker()
+        {
+            float dur = stats.FlickerDuration;
+            bool active = dur > 0 && (state == State.Playing || state == State.Clearing);
+            if (!active) { Palette.Inverted = false; flickerClock = 0; return; }
+            const float period = 8f;
+            flickerClock = (flickerClock + Time.deltaTime) % (period + dur);
+            Palette.Inverted = flickerClock > period;
         }
 
         private void UpdateSpawner()

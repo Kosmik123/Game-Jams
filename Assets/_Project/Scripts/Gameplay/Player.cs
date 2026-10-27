@@ -52,7 +52,9 @@ namespace PayWithPixels
 
             Vector2 aim = game.display.ScreenToWorld(Input.mousePosition) - pos;
             Vector2 dir = aim.sqrMagnitude > 0.0001f ? aim.normalized : Vector2.right;
-            aimMark.localPosition = dir * 0.75f;
+            transform.rotation = Quaternion.Euler(0, 0, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg - 90f); // sprity patrza w gore
+            aimMark.position = pos + dir * 0.75f;
+            aimMark.rotation = Quaternion.identity;
 
             fireTimer -= Time.deltaTime;
             if (Input.GetMouseButton(0) && fireTimer <= 0 && game.state == Game.State.Playing)

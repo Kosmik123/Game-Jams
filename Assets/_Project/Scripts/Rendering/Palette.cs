@@ -28,10 +28,26 @@ namespace PayWithPixels
             Changed?.Invoke();
         }
 
+        /// <summary>Pary (ciemny, jasny) zmieniane co kilka fal.</summary>
+        public static readonly string[][] Pairs =
+        {
+            new[] { "14121A", "F4F1DE" },
+            new[] { "0F380F", "9BBC0F" },
+            new[] { "000000", "FFFFFF" },
+            new[] { "2B0A3D", "FF5E9C" },
+            new[] { "1B1B1E", "FF9F1C" },
+        };
+
+        public static void SetIndex(int index)
+        {
+            var p = Pairs[((index % Pairs.Length) + Pairs.Length) % Pairs.Length];
+            SetPair(p[0], p[1]);
+        }
+
         public static void Reset()
         {
             inverted = false;
-            SetPair("14121A", "F4F1DE");
+            SetIndex(0);
         }
 
         private static Color Hex(string hex)

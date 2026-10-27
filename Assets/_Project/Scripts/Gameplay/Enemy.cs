@@ -88,6 +88,7 @@ namespace PayWithPixels
             pos.x = Mathf.Clamp(pos.x, -Game.ArenaHalf.x, Game.ArenaHalf.x);
             pos.y = Mathf.Clamp(pos.y, -Game.ArenaHalf.y, Game.ArenaHalf.y);
             transform.position = pos;
+            if (dir != Vector2.zero) transform.rotation = Quaternion.Euler(0, 0, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg - 90f);
 
             float r = radius + Player.Radius;
             if (dist < r) game.player.Hurt(contactDamage);
