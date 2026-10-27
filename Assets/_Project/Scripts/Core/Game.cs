@@ -103,6 +103,7 @@ namespace PayWithPixels
         {
             int score = Mathf.RoundToInt((wave * 100 + kills * 2 + coinsEarned + (won ? 1000 : 0)) * ScoreMul);
             Meta.RecordRun(wave, won, Ascension, score);
+            Online.Submit(score);
             ui.ShowDeath(won, RunSummary(won) + "\nSCORE " + score + (Ascension > 0 ? "  (ASCENSION " + Ascension + " x" + ScoreMul.ToString("0.00") + ")" : ""), StartRun, GoToTitle);
         }
 
@@ -171,6 +172,7 @@ namespace PayWithPixels
         private void Awake()
         {
             Instance = this;
+            Online.Init();   // anonimowe logowanie do tablicy wynikow w tle; bez sieci gra dziala normalnie
 #if !UNITY_WEBGL
             Application.targetFrameRate = 60;   // w WebGL zostaje requestAnimationFrame
 #endif
@@ -238,8 +240,18 @@ namespace PayWithPixels
             GoToTitleRefresh();
         }
 
-        private void GoToTitleRefresh() => ui.ShowTitle(StartRun, w => { Meta.Selected = w; GoToTitleRefresh(); },
-            () => { Meta.Ascension = (Meta.Ascension + 1) % (Meta.AscensionUnlocked + 1); GoToTitleRefresh(); });
+        private bool namePrompted;
+
+        private void GoToTitleRefresh()
+        {
+            ui.ShowTitle(StartRun, w => { Meta.Selected = w; GoToTitleRefresh(); },
+                () => { Meta.Ascension = (Meta.Ascension + 1) % (Meta.AscensionUnlocked + 1); GoToTitleRefresh(); });
+            if (!namePrompted && !Online.HasName && !Application.isBatchMode)
+            {
+                namePrompted = true;   // nazwa gracza raz, przy pierwszym uruchomieniu
+                ui.ShowLeaderboard(null, true);
+            }
+        }
 
         private void CleanupRun()
         {
@@ -763,10 +775,12 @@ namespace PayWithPixels
             if (player != null && state != State.Title)
                 ui.SetHud(player.hp, stats.maxHp, ZoneLabel(), coins, debt, FreezeHint());
 
+            if (ui.OverlayOpen) return;   // tablica wynikow przejmuje klawiature (wpisywanie nazwy)
             if (Input.GetKeyDown(KeyCode.M)) Sfx.ToggleMute();
             if (state == State.Story) { UpdateStory(); return; }
             if (state == State.Title)
             {
+                if (Input.GetKeyDown(KeyCode.L)) { ui.ShowLeaderboard(); return; }
                 if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return)) StartRun();
                 if (Input.GetKeyDown(KeyCode.Alpha1)) { Meta.Selected = Weapon.Pistol; GoToTitleRefresh(); }
                 if (Input.GetKeyDown(KeyCode.Alpha2) && Meta.IsWeaponUnlocked(Weapon.Shotgun)) { Meta.Selected = Weapon.Shotgun; GoToTitleRefresh(); }
@@ -819,6 +833,7 @@ namespace PayWithPixels
                     break;
                 case State.Won:
                 case State.Dead:
+                    if (Input.GetKeyDown(KeyCode.L)) { ui.ShowLeaderboard(); break; }
                     if (Input.GetKeyDown(KeyCode.R)) StartRun();
                     if (Input.GetKeyDown(KeyCode.T)) GoToTitle();
                     break;
