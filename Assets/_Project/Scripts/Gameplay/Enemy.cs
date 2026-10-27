@@ -112,6 +112,8 @@ namespace PayWithPixels
 
         private int bossZone = 1;
         private int phase;
+        private int tollPhase = 1;
+        private float wallTelegraph, wallGap;
         private float spawnAddsTimer;
         private float auctionTimer;
         private float spin;
@@ -286,6 +288,17 @@ namespace PayWithPixels
             }
         }
 
+        /// <summary>Sciana Toll Keepera: rzad pociskow przez cala arene z jedna przerwa wokol wallGap.</summary>
+        private void FireWall()
+        {
+            for (float x = -Game.ArenaHalf.x; x <= Game.ArenaHalf.x; x += 0.9f)
+            {
+                if (Mathf.Abs(x - wallGap) < 1.9f) continue;
+                Bullet.Spawn(transform.parent, new Vector2(x, Game.ArenaHalf.y + 0.3f), new Vector2(0, -4.2f), false, 0, bossBullet);
+            }
+            Sfx.Play(Sound.Boss);
+        }
+
         private Vector2 AimAngleDir(float deg) => new Vector2(Mathf.Cos(deg * Mathf.Deg2Rad), Mathf.Sin(deg * Mathf.Deg2Rad));
 
         private float AngleToPlayer(Game game, Vector2 from)
@@ -300,14 +313,39 @@ namespace PayWithPixels
             var pos = new Vector2(Mathf.Sin(clock * 0.6f) * (Game.ArenaHalf.x - 2f), Game.ArenaHalf.y - 1.6f);
             transform.position = pos;
 
+            // faza 2 (<= 50% HP): dochodzi sciana z przerwa; pierscienie rzadziej, szybszy wachlarz
+            if (tollPhase == 1 && hp * 2 <= maxHp)
+            {
+                tollPhase = 2;
+                shootTimer = 1f;                 // 1 s pauzy ostrzegawczej
+                wallTelegraph = 0f;
+                game.Announce("THE TOLL DOUBLES");
+            }
+            if (wallTelegraph > 0)
+            {
+                wallTelegraph -= Time.deltaTime;
+                if (wallTelegraph <= 0) FireWall();
+                return;
+            }
+
             shootTimer -= Time.deltaTime;
             if (shootTimer > 0) return;
-            bool enraged = hp * 2 < maxHp;
-            shootTimer = enraged ? 1.3f : 2.0f;
+            bool enraged = tollPhase == 2;
+            shootTimer = enraged ? 1.4f : 2.0f;
             pattern++;
 
+            if (enraged && pattern % 3 == 0)
+            {
+                // sciana: telegraf 0.8 s, przerwa blisko gracza (zawsze do uniku)
+                wallGap = Mathf.Clamp(game.player.transform.position.x + Random.Range(-5f, 5f), -Game.ArenaHalf.x + 2.5f, Game.ArenaHalf.x - 2.5f);
+                wallTelegraph = 0.8f;
+                shootTimer = 1.8f;
+                WarnLine.Spawn(transform.parent, Game.ArenaHalf.y - 0.4f, wallGap, 1.9f, 0.8f);
+                return;
+            }
+
             float baseAngle = AngleToPlayer(game, pos);
-            if (pattern % 2 == 0)
+            if (enraged ? pattern % 3 == 1 : pattern % 2 == 0)
             {
                 int n = enraged ? 14 : 10;
                 float offset = Random.Range(0f, 360f);

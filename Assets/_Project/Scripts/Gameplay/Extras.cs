@@ -85,6 +85,44 @@ namespace PayWithPixels
         }
     }
 
+    /// <summary>Telegraf sciany bossa: migajaca linia przez arene z widoczna przerwa (gap +- halfGap).</summary>
+    public class WarnLine : MonoBehaviour
+    {
+        private float t, life;
+        private readonly List<SpriteRenderer> segs = new List<SpriteRenderer>();
+
+        public static void Spawn(Transform parent, float y, float gapX, float halfGap, float life)
+        {
+            var go = new GameObject("WarnLine");
+            go.transform.SetParent(parent, false);
+            var w = go.AddComponent<WarnLine>();
+            w.life = life;
+            float left = -Game.ArenaHalf.x, right = Game.ArenaHalf.x;
+            w.AddSeg(go.transform, left, gapX - halfGap, y);
+            w.AddSeg(go.transform, gapX + halfGap, right, y);
+        }
+
+        private void AddSeg(Transform parent, float x0, float x1, float y)
+        {
+            if (x1 - x0 < 0.1f) return;
+            var seg = new GameObject("Seg");
+            seg.transform.SetParent(parent, false);
+            var sr = Art.MakeRenderer(seg, Art.Square("warn_line", 4), 9);
+            float unit = sr.sprite != null ? sr.sprite.bounds.size.x : 0.25f;
+            seg.transform.position = new Vector2((x0 + x1) / 2f, y);
+            seg.transform.localScale = new Vector3((x1 - x0) / unit, 0.18f / unit, 1f);
+            segs.Add(sr);
+        }
+
+        private void Update()
+        {
+            t += Time.deltaTime;
+            if (t >= life) { Destroy(gameObject); return; }
+            bool on = Mathf.FloorToInt(t * 14f) % 2 == 0;
+            foreach (var s in segs) s.enabled = on;
+        }
+    }
+
     /// <summary>Fala uderzeniowa po dashu (fx_shockwave_0..3): rosnacy pierscien, znika po ulamku sekundy.</summary>
     public class Shockwave : MonoBehaviour
     {
