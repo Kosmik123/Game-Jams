@@ -24,7 +24,7 @@ namespace PayWithPixels
             Art.MakeRenderer(go, sprite, 8);
             var b = go.AddComponent<Bullet>();
             b.velocity = vel;
-            go.transform.rotation = Quaternion.Euler(0, 0, Mathf.Atan2(vel.y, vel.x) * Mathf.Rad2Deg - 90f);
+            go.transform.rotation = Art.FaceRotation(vel);
             b.fromPlayer = fromPlayer;
             b.pierceLeft = pierce;
             return b;

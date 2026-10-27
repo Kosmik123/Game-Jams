@@ -14,7 +14,7 @@ namespace PayWithPixels
         private float walkClock;
         private float aimAngle;
         private bool aimInit;
-        private SpriteRenderer sr;
+        private SpriteRenderer sr, halo;
         private Transform aimMark;
 
         public static Player Create(Transform parent)
@@ -22,7 +22,13 @@ namespace PayWithPixels
             var go = new GameObject("Player");
             go.transform.SetParent(parent, false);
             var p = go.AddComponent<Player>();
+            // obrys w kolorze tla (czarny sprite = tlo po progu), zeby gracz odcinal sie od areny i wrogow
+            var halo = new GameObject("Halo");
+            halo.transform.SetParent(go.transform, false);
+            var haloSr = Art.MakeRenderer(halo, Art.Circle("player_halo", 22), 9);
+            haloSr.color = Color.black;
             p.sr = Art.MakeRenderer(go, Art.Circle("player", 16), 10);
+            p.halo = haloSr;
             var mark = new GameObject("Aim");
             mark.transform.SetParent(go.transform, false);
             Art.MakeRenderer(mark, Art.Square("aim", 3), 11);
@@ -54,6 +60,7 @@ namespace PayWithPixels
             var game = Game.Instance;
             invulnTimer -= Time.deltaTime;
             sr.enabled = invulnTimer <= 0 || Mathf.FloorToInt(Time.time * 12f) % 2 == 0;
+            halo.enabled = sr.enabled;
             if (game.state != Game.State.Playing && game.state != Game.State.Clearing) return;
 
             var move = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
@@ -86,7 +93,7 @@ namespace PayWithPixels
                 aimAngle = Mathf.LerpAngle(aimAngle, target, 1f - Mathf.Exp(-rate * Time.deltaTime));
             }
             Vector2 dir = new Vector2(Mathf.Cos(aimAngle * Mathf.Deg2Rad), Mathf.Sin(aimAngle * Mathf.Deg2Rad));
-            transform.rotation = Quaternion.Euler(0, 0, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg - 90f); // sprity patrza w gore
+            transform.rotation = Art.FaceRotation(dir); // sprity patrza w gore
             aimMark.position = pos + dir * 0.75f;
             aimMark.rotation = Quaternion.identity;
 
