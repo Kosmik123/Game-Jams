@@ -11,7 +11,7 @@ namespace PayWithPixels
 
         public float radius;
         public bool IsRegular => type != EnemyType.Boss && type != EnemyType.Collector;
-        private EnemyType type;
+        public EnemyType type { get; private set; }
         private int hp;
         private int maxHp;
         private float speed;
@@ -51,11 +51,14 @@ namespace PayWithPixels
                 case EnemyType.Tank: return new Spec { sprite = "enemy_tank", size = 24, radius = 0.7f, hp = 8 + d, speed = 1.2f, contact = 2, coins = 3, rotates = true };
                 case EnemyType.Dasher: return new Spec { sprite = "enemy_dasher", size = 16, radius = 0.45f, hp = 2 + d / 5, speed = 2.2f, contact = 1, coins = 2, rotates = true };
                 case EnemyType.Siege: return new Spec { sprite = "enemy_siege", size = 16, radius = 0.5f, hp = 4 + d / 4, speed = 1.6f, contact = 1, coins = 3, rotates = false };
-                case EnemyType.Swarm: return new Spec { sprite = "enemy_swarm", size = 6, radius = 0.3f, hp = 1, speed = 3.3f, contact = 1, coins = 0, rotates = false };
+                case EnemyType.Swarm: return new Spec { sprite = "enemy_swarm", size = 6, radius = 0.3f, hp = 1, speed = 2.8f, contact = 1, coins = 0, rotates = false };
                 case EnemyType.Guard: return new Spec { sprite = "enemy_guard", size = 16, radius = 0.5f, hp = 5 + d / 3, speed = 1.7f, contact = 1, coins = 3, rotates = true };
                 default: return new Spec { sprite = "enemy_spawner", size = 24, radius = 0.7f, hp = 8 + d / 2, speed = 0.7f, contact = 1, coins = 4, rotates = false };
             }
         }
+
+        /// <summary>Limit predkosci zwyklych wrogow: 0.8 predkosci gracza z 1 stackiem nog (5 * 0.92); rojowi nizej, bo goni tlumem.</summary>
+        public static float MaxSpeed(EnemyType t) => t == EnemyType.Swarm ? 2.7f :0.8f * 5f * 0.92f;
 
         public static Enemy Spawn(Transform parent, EnemyType type, Vector2 pos, int difficulty)
         {
@@ -69,7 +72,7 @@ namespace PayWithPixels
             float scale = 1f + 0.03f * difficulty;
             e.walkName = s.sprite; e.spriteSize = s.size; e.rotates = s.rotates;
             e.sr = Art.MakeRenderer(go, Art.Square(s.sprite + "_walk_0", s.size), 5);
-            e.radius = s.radius; e.hp = e.maxHp = Mathf.CeilToInt(s.hp * Game.Instance.EnemyHpMul); e.speed = s.speed * scale * Game.Instance.EnemySpeedMul;
+            e.radius = s.radius; e.hp = e.maxHp = Mathf.CeilToInt(s.hp * Game.Instance.EnemyHpMul); e.speed = Mathf.Min(s.speed * scale * Game.Instance.EnemySpeedMul, MaxSpeed(type));
             e.contactDamage = s.contact; e.coinDrop = s.coins;
 
             e.shootTimer = Random.Range(0.5f, 1.8f);
@@ -477,6 +480,8 @@ namespace PayWithPixels
             if (rotates && dir != Vector2.zero && dashLeft <= 0) transform.rotation = Art.FaceRotation(dir);
 
             float r = radius + Player.Radius;
+            if (dist < r * 0.85f && type != EnemyType.Collector)   // miekkie wypychanie: wrog nie zostaje "w srodku" gracza
+                transform.position = (Vector2)transform.position - (dir == Vector2.zero ? Vector2.right : dir) * ((r * 0.85f - dist) * Mathf.Min(1f, 10f * dt));
             if (dist < r)
             {
                 if (type == EnemyType.Collector)

@@ -218,6 +218,14 @@ namespace PayWithPixels
             var stats = Game.Instance.stats;
             Sfx.Play(stats.weapon == Weapon.Shotgun ? Sound.ShootShotgun : Sound.Shoot);
             MuzzleFlash(pos, dir);
+            // wrog stykajacy sie z graczem jest przed punktem startu pocisku: dostaje obrazenia od razu
+            foreach (var e in Enemy.All.ToArray())
+            {
+                if (e == null || e.type == EnemyType.Boss) continue;
+                Vector2 rel = (Vector2)e.transform.position - pos;
+                if (rel.magnitude > e.radius + Radius + 0.15f || e.Blocks(rel.normalized)) continue;
+                e.Damage(Random.value < stats.CritChance ? Mathf.RoundToInt(stats.CritMultiplier) : 1);
+            }
             for (int i = 0; i < stats.shotCount; i++)
             {
                 float a = (i - (stats.shotCount - 1) / 2f) * stats.SpreadStep;

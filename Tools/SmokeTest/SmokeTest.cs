@@ -44,6 +44,26 @@ public class SmokeTest
         QualitySettings.vSyncCount = 0;
         T("Game").GetField("DebugTimeScale", All).SetValue(null, 5f);
 
+        // scenariusz ucieczki: Heavy Legs x3 + rozny wrogowie w strefie 3 z maks. mnoznikami nie moga byc szybsi niz gracz
+        {
+            var stats = Get(game, "stats");
+            Set(stats, "legsStacks", 3);
+            float playerSpeed = (float)Get(stats, "MoveSpeed");
+            Set(game, "zone", 3);
+            var parent = ((Component)Get(game, "player")).transform.parent;
+            foreach (var name in new[] { "Swarm", "Chaser", "Tank" })
+            {
+                var e = T("Enemy").GetMethod("Spawn", All).Invoke(null, new object[] { parent, Enum.Parse(T("EnemyType"), name), Vector2.zero, 14 });
+                float es = (float)Get(e, "speed");
+                Debug.Log($"[smoke] escape {name} speed={es:F2} player(legs x3)={playerSpeed:F2}");
+                if (name == "Swarm") Assert.Less(es, playerSpeed, "Swarm catches player with Heavy Legs x3");
+                Assert.LessOrEqual(es, 0.8f * 5f * 0.92f + 0.01f, name + " faster than 0.8x player speed");
+                UnityEngine.Object.Destroy(((Component)e).gameObject);
+            }
+            Set(stats, "legsStacks", 0);
+            Set(game, "zone", 1);
+        }
+
         var rng = new System.Random(1);
         int lastZone = 0;
         string lastState = "";
