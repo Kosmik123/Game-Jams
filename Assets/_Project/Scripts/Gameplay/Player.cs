@@ -19,6 +19,9 @@ namespace PayWithPixels
         private float aimAngle;
         private bool aimInit;
         private SpriteRenderer sr, halo;
+        private float critUntil, dashWindow;   // DASH CRIT, DOUBLE DASH
+        private int rewindLeft;
+        private Vector2 moveSmoothed;         // INPUT DELAY
         private Transform aimMark;
 
         public static Player Create(Transform parent)
@@ -41,7 +44,11 @@ namespace PayWithPixels
             return p;
         }
 
-        public void RefillShield() => shieldLeft = Game.Instance.stats.shieldMax;
+        public void RefillShield()
+        {
+            shieldLeft = Game.Instance.stats.shieldMax;
+            rewindLeft = Game.Instance.stats.rewind;
+        }
 
         public void Heal(int amount) => hp = Mathf.Min(Game.Instance.stats.maxHp, hp + amount);
 
@@ -57,6 +64,15 @@ namespace PayWithPixels
                 return;
             }
             hp -= dmg;
+            if (hp <= 0 && rewindLeft > 0)
+            {
+                rewindLeft--;
+                hp = Mathf.Min(game.stats.maxHp, 2);
+                invulnTimer = 2f;
+                Sfx.Play(Sound.Win);
+                game.Announce("TIME REWOUND");
+                return;
+            }
             game.NotifyHit();
             invulnTimer = 1f;
             Sfx.Play(Sound.Hurt);
@@ -85,12 +101,17 @@ namespace PayWithPixels
             var move = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
             if (game.ControlsInverted) move = -move;
             if (move.sqrMagnitude > 1f) move.Normalize();
+            if (game.stats.InputDelay > 0f) { moveSmoothed = Vector2.MoveTowards(moveSmoothed, move, Time.deltaTime / game.stats.InputDelay); move = moveSmoothed; }
+            else moveSmoothed = move;
             dashCooldown -= Time.deltaTime;
-            if (game.stats.HasDash && dashCooldown <= 0 && Input.GetKeyDown(KeyCode.Space))
+            dashWindow -= Time.deltaTime;
+            bool second = game.stats.doubleDash > 0 && dashWindow > 0;
+            if (game.stats.HasDash && (dashCooldown <= 0 || second) && Input.GetKeyDown(KeyCode.Space))
             {
                 dashTimer = 0.15f;
                 Sfx.Play(Sound.Dash);
-                dashCooldown = game.stats.DashCooldown;
+                if (second) dashWindow = 0f;
+                else { dashCooldown = game.stats.DashCooldown; dashWindow = game.stats.doubleDash > 0 ? 0.8f : 0f; }
                 minesToDrop = game.stats.mines;
                 mineTimer = 0;
                 dashDir = move.sqrMagnitude > 0.01f ? move.normalized : (game.display.ScreenToWorld(Input.mousePosition) - (Vector2)transform.position).normalized;
@@ -99,6 +120,7 @@ namespace PayWithPixels
             if (dashTimer > 0)
             {
                 dashTimer -= Time.deltaTime;
+                if (dashTimer <= 0) EndDash(game);
                 step = dashDir * 20f;
                 mineTimer -= Time.deltaTime;
                 if (minesToDrop > 0 && mineTimer <= 0)
@@ -148,6 +170,29 @@ namespace PayWithPixels
                 fireTimer = game.stats.FireInterval;
                 Shoot(pos, dir);
             }
+        }
+
+        private void EndDash(Game game)
+        {
+            var st = game.stats;
+            if (st.dashCrit > 0) critUntil = Time.time + 2f;
+            if (st.shockwave <= 0) return;
+            Shockwave.Spawn(transform.parent, transform.position, st.ShockwaveRadius);
+            foreach (var e in Enemy.All.ToArray())
+            {
+                if (e == null) continue;
+                Vector2 rel = (Vector2)e.transform.position - (Vector2)transform.position;
+                if (rel.magnitude > st.ShockwaveRadius + e.radius) continue;
+                if (e.type != EnemyType.Boss) e.transform.position = (Vector2)e.transform.position + rel.normalized * 1.5f;
+                e.Damage(st.shockwave >= 2 ? 2 : 1);
+            }
+        }
+
+        /// <summary>Obrazenia strzalu: krytyk (szansa albo DASH CRIT) i bonus z DEBT WEAPON.</summary>
+        private int RollDamage(RunStats stats, out bool crit)
+        {
+            crit = Time.time < critUntil || Random.value < stats.CritChance;
+            return (crit ? Mathf.RoundToInt(stats.CritMultiplier) : 1) + stats.DebtDamageBonus(Game.Instance.debt);
         }
 
         private float heat;
@@ -208,8 +253,8 @@ namespace PayWithPixels
                 if (along < 0f || along > len + e.radius) continue;
                 if ((rel - dir * along).magnitude > e.radius + 0.12f) continue;
                 if (Random.value >= chance) continue;
-                int dmg = Random.value < stats.CritChance ? Mathf.RoundToInt(stats.CritMultiplier) : 1;
-                e.Damage(dmg);
+                int dmg = RollDamage(stats, out bool beamCrit);
+                e.Damage(dmg, beamCrit);
             }
         }
 
@@ -224,17 +269,18 @@ namespace PayWithPixels
                 if (e == null || e.type == EnemyType.Boss) continue;
                 Vector2 rel = (Vector2)e.transform.position - pos;
                 if (rel.magnitude > e.radius + Radius + 0.15f || e.Blocks(rel.normalized)) continue;
-                e.Damage(Random.value < stats.CritChance ? Mathf.RoundToInt(stats.CritMultiplier) : 1);
+                e.Damage(RollDamage(stats, out bool touchCrit), touchCrit);
             }
             for (int i = 0; i < stats.shotCount; i++)
             {
                 float a = (i - (stats.shotCount - 1) / 2f) * stats.SpreadStep;
                 if (stats.weapon == Weapon.Shotgun) a += Random.Range(-2.5f, 2.5f);   // nieregularny stozek ok. 30 st.
                 var d = (Vector2)(Quaternion.Euler(0, 0, a) * dir);
-                int dmg = Random.value < stats.CritChance ? Mathf.RoundToInt(stats.CritMultiplier) : 1;
+                int dmg = RollDamage(stats, out bool crit);
                 float speed = stats.BulletSpeed * (stats.weapon == Weapon.Shotgun ? Random.Range(0.9f, 1.1f) : 1f);
                 var b = Bullet.Spawn(transform.parent, pos + d * 0.6f, d * speed, true, stats.pierce, null, dmg, stats.ricochet, stats.BulletLife);
                 b.closeBonus = stats.weapon == Weapon.Shotgun;
+                b.crit = crit;
             }
         }
 

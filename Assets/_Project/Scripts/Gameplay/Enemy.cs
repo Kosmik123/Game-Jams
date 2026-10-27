@@ -189,7 +189,7 @@ namespace PayWithPixels
             return Vector2.Dot(-bulletVelocity.normalized, facing) > 0.45f;
         }
 
-        public void Damage(int dmg)
+        public void Damage(int dmg, bool crit = false)
         {
             hp -= dmg;
             if (hp > 0) { Sfx.Play(Sound.Hit); flash = 0.07f; return; }
@@ -200,6 +200,12 @@ namespace PayWithPixels
                 return;
             }
             Shard.Burst(transform.parent, transform.position, 5);
+            if (crit)
+            {
+                var st = Game.Instance.stats;
+                if (st.critBlast > 0) Explosion.Spawn(transform.parent, transform.position, 1.6f, 2);
+                if (st.critCoins > 0) Game.Instance.SpawnCoin(transform.position, st.critCoins);
+            }
             if (type != EnemyType.Collector) Game.Instance.OnEnemyKilled(transform.position);
             if (type == EnemyType.Collector)
             {

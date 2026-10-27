@@ -746,6 +746,7 @@ namespace PayWithPixels
 
         private void Update()
         {
+            Sfx.ApplyVolumes();   // SILENCE moze sie zmienic w kazdej chwili
             if ((Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.P)) && (CanPause || Paused)) TogglePause();
             if (Paused) return;
             Time.timeScale = (Time.unscaledTime < hitStopUntil ? 0.05f : 1f) * DebugTimeScale;
@@ -1050,14 +1051,15 @@ namespace PayWithPixels
                 ui.Toast("THE FIRST GAIN IS FREE - ITS PRICE IS NOT. EVERY PRICE LASTS THE WHOLE RUN. NO COINS? BUY ON CREDIT, BUT DEBT GROWS", 10f);
             rerolls = 0;
             purchases = 0;
-            haggled = false;
+            haggles = 0;
             RefreshShopUi();
         }
 
         private List<Offer> shopOffers;
         private int rerolls;
         private int purchases;   // zakupy w tej wizycie: kazdy kolejny +25%
-        private bool haggled;
+        private int haggles;
+        private int HaggleMax => 1 + stats.priceLock;
 
         // ---- REDEEM: zdejmij 1 stack wybranej ceny (co 3. sklep zamiast kontraktu) ----
         private bool shopRedeem;
@@ -1105,7 +1107,7 @@ namespace PayWithPixels
         private int RerollCost => freeRerolls ? 0 : 3 + 2 * rerolls;
 
         /// <summary>Aktualny koszt oferty: +25% za kazdy wczesniejszy zakup w tej wizycie.</summary>
-        public int CostOf(Offer o) => o.free ? 0 : Mathf.CeilToInt(o.cost * (1f + 0.25f * purchases) * shopMarkup);
+        public int CostOf(Offer o) => o.free ? 0 : Mathf.CeilToInt(o.cost * (1f + 0.25f * purchases) * shopMarkup * (1f + 0.2f * stats.priceyShopStacks));
 
         private List<KeyValuePair<string, int>> RedeemOptions()
         {
@@ -1129,7 +1131,7 @@ namespace PayWithPixels
         {
             string pending = "";
             foreach (var ac in activeContracts) pending += (pending.Length > 0 ? ", " : "") + ac.contract.title + " (" + ac.wavesLeft + ")";
-            ui.ShowShop(shopOffers, coins, debt, Buy, CloseShop, RerollCost, Reroll, !haggled, Haggle, PayDebt,
+            ui.ShowShop(shopOffers, coins, debt, Buy, CloseShop, RerollCost, Reroll, haggles < HaggleMax, Haggle, PayDebt,
                 shopContract == null ? null : shopContract.title + ": " + shopContract.reward + " / FINE PRINT: ???", SignContract,
                 pending.Length > 0 ? "SIGNED: " + pending : null, DebtInfo(), RedeemOptions(), Redeem);
         }
@@ -1158,9 +1160,9 @@ namespace PayWithPixels
         /// <summary>Targowanie: za 1 monete losuje nowe ceny dla ofert (moga byc gorsze).</summary>
         private void Haggle()
         {
-            if (haggled || coins < 1) return;
+            if (haggles >= HaggleMax || coins < 1) return;
             coins -= 1;
-            haggled = true;
+            haggles++;
             foreach (var o in shopOffers)
                 if (!o.sold) o.price = Catalog.Prices[Random.Range(0, Catalog.Prices.Count)];
             Sfx.Play(Sound.Hurt);

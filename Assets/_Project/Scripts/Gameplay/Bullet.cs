@@ -11,6 +11,7 @@ namespace PayWithPixels
         private Vector2 velocity;
         private bool fromPlayer;
         private int pierceLeft;
+        public bool crit;             // krytyk: zabicie moze dac wybuch / monety
         public bool closeBonus;       // strzelba: +1 obrazen z bliska
         private Vector2 startPos;
         private int bouncesLeft;
@@ -50,6 +51,7 @@ namespace PayWithPixels
             var game = Game.Instance;
             if (game.state == Game.State.Shop || game.state == Game.State.Dead) return;
             if (!fromPlayer && game.Frozen) return;
+            if (!fromPlayer && Drone.BlocksBullet(transform.position)) { Destroy(gameObject); return; }
 
             Vector2 pos = (Vector2)transform.position + velocity * Time.deltaTime;
             life -= Time.deltaTime;
@@ -95,7 +97,7 @@ namespace PayWithPixels
                     if (e == null) break;
                     hit.Add(e);
                     if (e.Blocks(velocity)) { Sfx.Play(Sound.Hit); Destroy(gameObject); return; }
-                    e.Damage(damage + (closeBonus && (pos - startPos).sqrMagnitude < 9f ? 1 : 0));
+                    e.Damage(damage + (closeBonus && (pos - startPos).sqrMagnitude < 9f ? 1 : 0), crit);
                     if (pierceLeft-- <= 0) { Destroy(gameObject); return; }
                 }
             }
