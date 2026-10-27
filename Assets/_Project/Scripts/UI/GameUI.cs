@@ -18,6 +18,8 @@ namespace PayWithPixels
         private bool shopAnimating;
         public bool AnimateNextShop { get; set; }
         private Text zoneText, toastText;
+        private RectTransform priceHud;
+        private string priceHudKey = "";
         private float toastTimer;
         private Text deathText;
         private RectTransform shopCards;
@@ -50,6 +52,13 @@ namespace PayWithPixels
                 var es = new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
                 es.transform.SetParent(transform.parent, false);
             }
+
+            priceHud = new GameObject("Price HUD", typeof(RectTransform)).GetComponent<RectTransform>();
+            priceHud.SetParent(transform, false);
+            priceHud.anchorMin = priceHud.anchorMax = new Vector2(1, 1);
+            priceHud.pivot = new Vector2(1, 1);
+            priceHud.sizeDelta = Vector2.zero;
+            priceHud.anchoredPosition = new Vector2(-8, -40);
 
             hud = NewText("HUD", transform, "", 20, TextAnchor.UpperLeft);
             Stretch(hud.rectTransform, new Vector2(0, 0), new Vector2(1, 1), new Vector2(16, 12), new Vector2(-16, -12));
@@ -117,6 +126,39 @@ namespace PayWithPixels
         {
             toastText.text = msg;
             toastTimer = 2.5f;
+        }
+
+        /// <summary>Lista zaplaconych cen: ikona + licznik stackow (prawy gorny rog).</summary>
+        public void SetPriceHud(List<KeyValuePair<string, int>> entries)
+        {
+            var sb = new System.Text.StringBuilder();
+            foreach (var e in entries) sb.Append(e.Key).Append(':').Append(e.Value).Append(';');
+            if (sb.ToString() == priceHudKey) return;
+            priceHudKey = sb.ToString();
+
+            foreach (Transform c in priceHud) Destroy(c.gameObject);
+            tinted.RemoveAll(kv => kv.Key == null);
+            for (int i = 0; i < entries.Count; i++)
+            {
+                var sprite = Resources.Load<Sprite>("Icons/" + entries[i].Key);
+                var holder = new GameObject("Entry", typeof(RectTransform)).GetComponent<RectTransform>();
+                holder.SetParent(priceHud, false);
+                holder.anchorMin = holder.anchorMax = new Vector2(1, 1);
+                holder.pivot = new Vector2(1, 1);
+                holder.sizeDelta = new Vector2(44, 44);
+                holder.anchoredPosition = new Vector2(-i * 48f, 0);
+
+                if (sprite != null)
+                {
+                    var icon = NewImage("Icon", holder, true);
+                    icon.sprite = sprite;
+                    icon.raycastTarget = false;
+                    Stretch(icon.rectTransform, Vector2.zero, Vector2.one, new Vector2(4, 12), new Vector2(-4, -4));
+                }
+                var count = NewText("Count", holder, "x" + entries[i].Value, 14, TextAnchor.LowerCenter);
+                Stretch(count.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            }
+            Recolor();
         }
 
         public void ShowZone(int zone, string name)

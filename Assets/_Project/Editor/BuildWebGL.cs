@@ -17,6 +17,8 @@ namespace PayWithPixels.Build
         [MenuItem("Jam/Build WebGL")]
         public static void BuildWebGL()
         {
+            PlayerSettings.defaultWebScreenWidth = 960;    // canvas 16:9 (zgodny z RT 320x180)
+            PlayerSettings.defaultWebScreenHeight = 540;
             PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Disabled;
             PlayerSettings.WebGL.decompressionFallback = false;
             PlayerSettings.WebGL.exceptionSupport = WebGLExceptionSupport.None;

@@ -319,6 +319,8 @@ namespace PayWithPixels
             if (cam != null) cam.orthographicSize = Mathf.MoveTowards(cam.orthographicSize, OrthoSize * (stats != null ? stats.CameraZoom : 1f), 4f * Time.deltaTime);
             if (player != null) display.SetFogCenter(player.transform.position);
             if (player != null && state != State.Title)
+                ui.SetPriceHud(PaidPrices());
+            if (player != null && state != State.Title)
                 ui.SetHud(player.hp, stats.maxHp, ZoneLabel(), coins, debt, FreezeHint());
 
             if (Input.GetKeyDown(KeyCode.M)) Sfx.ToggleMute();
@@ -364,6 +366,17 @@ namespace PayWithPixels
                     if (Input.GetKeyDown(KeyCode.R)) StartRun();
                     break;
             }
+        }
+
+        private List<KeyValuePair<string, int>> PaidPrices()
+        {
+            var list = new List<KeyValuePair<string, int>>();
+            foreach (var price in Catalog.Prices)
+            {
+                int n = stats.PriceCount(price.name);
+                if (n > 0 && !string.IsNullOrEmpty(price.icon)) list.Add(new KeyValuePair<string, int>(price.icon, n));
+            }
+            return list;
         }
 
         private string FreezeHint() => (stats.freeze > 0 ? (freezeReady ? "[F] FREEZE READY" : "FREEZE USED") : "") + (DebugEnabled ? (GodMode ? " [DEBUG GOD]" : " [DEBUG]") : "");
