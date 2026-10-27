@@ -97,6 +97,7 @@ namespace PayWithPixels
 
         private void Update()
         {
+            if (bossLinePanel != null && bossLinePanel.activeSelf && Time.unscaledTime > bossLineUntil) bossLinePanel.SetActive(false);
             if (logoFrames != null && titlePanel.activeSelf)
             {
                 // klatka 0 spokojna, 1-2 to glitch: ~0.12 s co kilka sekund
@@ -181,7 +182,8 @@ namespace PayWithPixels
         }
 
         public void ShowShop(List<Offer> offers, int coins, int debt, Action<Offer> onBuy, Action onSkip,
-            int rerollCost, Action onReroll, bool haggleAvailable, Action onHaggle, Action onPayDebt)
+            int rerollCost, Action onReroll, bool haggleAvailable, Action onHaggle, Action onPayDebt,
+            string contractLabel = null, Action onContract = null, string signedLabel = null)
         {
             HideZone();
             HideTitle();
@@ -257,6 +259,13 @@ namespace PayWithPixels
             MakeShopButton(debt > 0 ? "[D] PAY DEBT: " + Mathf.Min(coins, debt) : "NO DEBT", 0.26f, 0.49f, debt > 0 && coins > 0, onPayDebt);
             MakeShopButton(haggleAvailable ? "[H] HAGGLE: 1" : "HAGGLED", 0.50f, 0.73f, haggleAvailable && coins >= 1, onHaggle);
             MakeShopButton("[ENTER] NEXT WAVE", 0.74f, 0.98f, true, onSkip);
+            if (contractLabel != null)
+                MakeButton(shopPanel.transform, "[C] CONTRACT - " + contractLabel, new Vector2(0.02f, 0.19f), new Vector2(0.98f, 0.25f), true, onContract);
+            if (signedLabel != null)
+            {
+                var st = NewText("Signed", shopPanel.transform, signedLabel, 16, TextAnchor.MiddleCenter);
+                Stretch(st.rectTransform, new Vector2(0, 0.0f), new Vector2(1, 0.07f), Vector2.zero, Vector2.zero);
+            }
 
             Recolor();
             shopPanel.SetActive(true);
@@ -427,10 +436,21 @@ namespace PayWithPixels
             deathPanel.transform.SetAsLastSibling();
             toastText.transform.SetAsLastSibling();
 
-            var head = NewText("Head", deathPanel.transform, won ? "YOU WIN" : "GAME OVER", 48, TextAnchor.MiddleCenter);
-            Stretch(head.rectTransform, new Vector2(0, 0.74f), new Vector2(1, 0.94f), Vector2.zero, Vector2.zero);
-            var body = NewText("Body", deathPanel.transform, details, 20, TextAnchor.UpperCenter);
-            Stretch(body.rectTransform, new Vector2(0.1f, 0.34f), new Vector2(0.9f, 0.74f), Vector2.zero, Vector2.zero);
+            var head = NewText("Head", deathPanel.transform, won ? "SOLD" : "PAID IN FULL", 48, TextAnchor.MiddleCenter);
+            Stretch(head.rectTransform, new Vector2(0, 0.76f), new Vector2(1, 0.96f), Vector2.zero, Vector2.zero);
+            var ending = Resources.Load<Sprite>(won ? "Story/story_ending_sold" : "Story/story_ending_paid");
+            bool hasArt = ending != null;
+            if (hasArt)
+            {
+                var art = NewImage("Ending", deathPanel.transform, true);
+                art.sprite = ending;
+                art.preserveAspect = true;
+                art.raycastTarget = false;
+                Stretch(art.rectTransform, new Vector2(0.03f, 0.3f), new Vector2(0.45f, 0.75f), Vector2.zero, Vector2.zero);
+            }
+            var body = NewText("Body", deathPanel.transform, details, hasArt ? 18 : 20, hasArt ? TextAnchor.UpperLeft : TextAnchor.UpperCenter);
+            if (hasArt) Stretch(body.rectTransform, new Vector2(0.47f, 0.27f), new Vector2(0.98f, 0.75f), Vector2.zero, Vector2.zero);
+            else Stretch(body.rectTransform, new Vector2(0.1f, 0.34f), new Vector2(0.9f, 0.74f), Vector2.zero, Vector2.zero);
 
             MakeButton(deathPanel.transform, "[R] AGAIN", new Vector2(0.15f, 0.12f), new Vector2(0.48f, 0.24f), true, onAgain);
             MakeButton(deathPanel.transform, "[T] TITLE", new Vector2(0.52f, 0.12f), new Vector2(0.85f, 0.24f), true, onTitle);
@@ -440,6 +460,66 @@ namespace PayWithPixels
         }
 
         public void HideDeath() => deathPanel.SetActive(false);
+
+        // ---------- fabula ----------
+
+        private GameObject storyPanel, bossLinePanel;
+        private Image storyImage;
+        private Text storyText, storyHint, bossLineText;
+        private float bossLineUntil;
+
+        /// <summary>Pelnoekranowy slajd fabularny (kadr z Resources/Story + podpis). Brak kadru = sam tekst.</summary>
+        public void ShowStory(string sprite, string text, int index, int total)
+        {
+            if (storyPanel == null)
+            {
+                storyPanel = NewPanel("Story", transform);
+                storyImage = NewImage("Frame", storyPanel.transform, true);
+                storyImage.raycastTarget = false;
+                storyImage.preserveAspect = true;
+                Stretch(storyImage.rectTransform, new Vector2(0.1f, 0.3f), new Vector2(0.9f, 0.95f), Vector2.zero, Vector2.zero);
+                storyText = NewText("Text", storyPanel.transform, "", 24, TextAnchor.MiddleCenter);
+                Stretch(storyText.rectTransform, new Vector2(0.05f, 0.12f), new Vector2(0.95f, 0.3f), Vector2.zero, Vector2.zero);
+                storyHint = NewText("Hint", storyPanel.transform, "", 16, TextAnchor.MiddleCenter);
+                Stretch(storyHint.rectTransform, new Vector2(0, 0.01f), new Vector2(1, 0.1f), Vector2.zero, Vector2.zero);
+            }
+            var s = Resources.Load<Sprite>("Story/" + sprite);
+            storyImage.sprite = s;
+            storyImage.enabled = s != null;
+            storyText.text = text;
+            storyHint.text = index + "/" + total + "   CLICK / SPACE: NEXT    ESC: SKIP";
+            storyPanel.transform.SetAsLastSibling();
+            Recolor();
+            storyPanel.SetActive(true);
+        }
+
+        public void HideStory() { if (storyPanel != null) storyPanel.SetActive(false); }
+
+        /// <summary>Linijka bossa w ramce dialogu na dole ekranu (znika sama).</summary>
+        public void ShowBossLine(string line)
+        {
+            if (bossLinePanel == null)
+            {
+                var frame = NewImage("BossLine", transform, true);
+                var sprite = Resources.Load<Sprite>("UI/ui_dialog_frame");
+                frame.sprite = sprite;
+                if (sprite != null && sprite.border != Vector4.zero) frame.type = Image.Type.Sliced;
+                frame.raycastTarget = false;
+                Stretch(frame.rectTransform, new Vector2(0.08f, 0.04f), new Vector2(0.92f, 0.2f), Vector2.zero, Vector2.zero);
+                bossLinePanel = frame.gameObject;
+                var bg = NewImage("Bg", bossLinePanel.transform, false);
+                bg.raycastTarget = false;
+                Stretch(bg.rectTransform, Vector2.zero, Vector2.one, new Vector2(3, 3), new Vector2(-3, -3));
+                bossLineText = NewText("Text", bossLinePanel.transform, "", 20, TextAnchor.MiddleCenter);
+                Stretch(bossLineText.rectTransform, Vector2.zero, Vector2.one, new Vector2(12, 8), new Vector2(-12, -8));
+            }
+            bossLineText.text = line;
+            bossLineUntil = Time.unscaledTime + 4f;
+            bossLinePanel.transform.SetAsLastSibling();
+            toastText.transform.SetAsLastSibling();
+            Recolor();
+            bossLinePanel.SetActive(true);
+        }
 
         // ---------- helpery ----------
 

@@ -84,7 +84,8 @@ public class SmokeTest
                 var offers = (IList)Get(game, "shopOffers");
                 // czasem reroll / haggle, potem kup losowa oferte (lub pomin)
                 int choice = rng.Next(10);
-                if (choice == 0) Call(game, "Reroll");
+                if (Get(game, "shopContract") != null && rng.Next(3) > 0) Call(game, "SignContract");
+                else if (choice == 0) Call(game, "Reroll");
                 else if (choice == 1) Call(game, "Haggle");
                 else if (offers.Count > 0 && choice < 8)
                 {
