@@ -75,12 +75,20 @@ namespace PayWithPixels
 
             if (fromPlayer)
             {
+                // trafia kolejno najblizszych wrogow w zasiegu; bez PIERCE konczy sie na pierwszym
                 var enemies = Enemy.All;
-                for (int i = enemies.Count - 1; i >= 0; i--)
+                while (true)
                 {
-                    var e = enemies[i];
-                    if (hit.Contains(e)) continue;
-                    if (((Vector2)e.transform.position - pos).sqrMagnitude > (e.radius + Radius) * (e.radius + Radius)) continue;
+                    Enemy e = null; float best = float.MaxValue;
+                    for (int i = enemies.Count - 1; i >= 0; i--)
+                    {
+                        var c = enemies[i];
+                        if (hit.Contains(c)) continue;
+                        float sq = ((Vector2)c.transform.position - pos).sqrMagnitude;
+                        if (sq > (c.radius + Radius) * (c.radius + Radius) || sq >= best) continue;
+                        best = sq; e = c;
+                    }
+                    if (e == null) break;
                     hit.Add(e);
                     if (e.Blocks(velocity)) { Sfx.Play(Sound.Hit); Destroy(gameObject); return; }
                     e.Damage(damage);

@@ -133,12 +133,18 @@ namespace PayWithPixels
             aimMark.rotation = Quaternion.identity;
 
             fireTimer -= Time.deltaTime;
-            if (Input.GetMouseButton(0) && fireTimer <= 0 && game.state == Game.State.Playing)
+            bool firing = Input.GetMouseButton(0) && game.state == Game.State.Playing;
+            // laser: rozgrzewanie - wolny na starcie, szybki po ~1.5 s ciaglego ognia
+            heat = firing ? Mathf.Min(1f, heat + Time.deltaTime / 1.5f) : Mathf.Max(0f, heat - Time.deltaTime * 2.5f);
+            if (firing && fireTimer <= 0)
             {
-                fireTimer = game.stats.FireInterval;
+                float heatMul = game.stats.weapon == Weapon.Laser ? Mathf.Lerp(0.55f, 1.5f, heat) : 1f;
+                fireTimer = game.stats.FireInterval / heatMul;
                 Shoot(pos, dir);
             }
         }
+
+        private float heat;
 
         private void Shoot(Vector2 pos, Vector2 dir)
         {
@@ -147,6 +153,7 @@ namespace PayWithPixels
             for (int i = 0; i < stats.shotCount; i++)
             {
                 float a = (i - (stats.shotCount - 1) / 2f) * stats.SpreadStep;
+                if (stats.weapon == Weapon.Shotgun) a += Random.Range(-4f, 4f);   // szeroki, nieregularny stozek
                 var d = (Vector2)(Quaternion.Euler(0, 0, a) * dir);
                 int dmg = Random.value < stats.CritChance ? Mathf.RoundToInt(stats.CritMultiplier) : 1;
                 var b = Bullet.Spawn(transform.parent, pos + d * 0.6f, d * stats.BulletSpeed, true, stats.pierce, null, dmg, stats.ricochet, stats.BulletLife);

@@ -10,7 +10,7 @@ namespace PayWithPixels
     /// </summary>
     public class RunStats
     {
-        public const int BaseHp = 6;
+        public const int BaseHp = 7;
 
         // ---- zyski (poziomy) ----
         public readonly Dictionary<string, int> levels = new Dictionary<string, int>();
@@ -88,9 +88,9 @@ namespace PayWithPixels
 
         /// <summary>Krzywa nieliniowa stackow ceny: indeks = liczba stackow (0..3), dalej wartosc ostatnia.</summary>
         private static float Curve(int n, float s0, float s1, float s2, float s3) => n <= 0 ? s0 : n == 1 ? s1 : n == 2 ? s2 : s3;
-        public float CritChance => crit * 0.12f + 0.06f * Mathf.Min(crit, 1);
+        public float CritChance => crit * 0.12f + 0.06f * Mathf.Min(crit, 1) + (weapon == Weapon.Pistol ? 0.08f : 0f);   // pistolet: celny, krytyki
         public float CritMultiplier => fogStacks > 0 ? 5f : 3f;   // synergia: Mgla + Krytyk
-        public float ExplosionRadius => 1.1f + 0.4f * explosion;
+        public float ExplosionRadius => (1.1f + 0.4f * explosion) * (weapon == Weapon.Shotgun ? 1.25f : 1f);   // strzelba: wieksze wybuchy
         public int ExplosionDamage => explosion >= 3 ? 2 : 1;
         public int VampireKills => vampire >= 3 ? 5 : vampire == 2 ? 8 : 12;
         public float SlowAuraRadius => 1.8f + 0.7f * slowAura;

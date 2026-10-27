@@ -10,7 +10,9 @@ namespace PayWithPixels
         public enum State { Title, ZoneIntro, Playing, Clearing, Shop, Dead, Won, Story }
 
         public const float OrthoSize = 5.625f; // 180 px / 16 PPU / 2
-        public static readonly Vector2 ArenaHalf = new Vector2(9.5f, 5.2f);
+        public static readonly Vector2 ArenaHalf = new Vector2(9.5f, 4.7f);
+        /// <summary>Kamera i tlo areny sa przesuniete w gore o polowe paska HUD (14 px z 180 = 0.875 j.), zeby arena zaczynala sie pod paskiem.</summary>
+        public const float HudOffsetY = 0.4375f;
 
         public const int Zones = 3;
         public const int WavesPerZone = 5;           // + boss strefy
@@ -203,6 +205,7 @@ namespace PayWithPixels
         {
             var bg = new GameObject("Arena BG");
             bg.transform.SetParent(world, false);
+            bg.transform.position = new Vector3(0, HudOffsetY, 0);
             Art.MakeRenderer(bg, Art.Square("arena_bg", 16), -10);
             var wall = Art.Square("tile_wall", 16);
             // ramka areny z kafli scian (jesli sa sprity od grafika) lub cienkich bialych pasow
@@ -559,7 +562,7 @@ namespace PayWithPixels
             Palette.SetZone(zone, waveInZone);
             state = State.Playing;
             lastWaveWasBoss = IsBossWave;
-            spawnLeft = IsBossWave ? 6 : 8 + (zone == 1 ? 2 : 3) * waveInZone + 6 * (zone - 1) + wave / 3;
+            spawnLeft = IsBossWave ? 6 : (zone == 1 ? 6 : 8) + (zone == 1 ? 2 : 3) * waveInZone + 6 * (zone - 1) + wave / 3;
             spawnTimer = 0.5f;
             player.RefillShield();
             freezeReady = stats.freeze > 0;
@@ -675,12 +678,12 @@ namespace PayWithPixels
         private void LateUpdate()
         {
             if (cam == null) return;
-            Vector3 p = new Vector3(0, 0, -10);
+            Vector3 p = new Vector3(0, HudOffsetY, -10);
             if (Settings.Shake && shake > 0.01f && !Paused)
             {
                 // przesuniecie przyciete do 1/16 j. = 1 piksel RT, zeby obraz nie mazal
                 p.x = Mathf.Round(Random.Range(-shake, shake) * 16f) / 16f;
-                p.y = Mathf.Round(Random.Range(-shake, shake) * 16f) / 16f;
+                p.y += Mathf.Round(Random.Range(-shake, shake) * 16f) / 16f;
             }
             shake = Mathf.MoveTowards(shake, 0f, 1.6f * Time.unscaledDeltaTime);
             cam.transform.position = p;
@@ -698,6 +701,7 @@ namespace PayWithPixels
         private void TogglePause()
         {
             Paused = !Paused;
+            resetArmed = false;
             Time.timeScale = Paused ? 0f : 1f;
             if (Paused) ShowPauseMenu();
             else ui.HidePause();
@@ -711,8 +715,20 @@ namespace PayWithPixels
                 () => { Settings.ReduceFlicker = !Settings.ReduceFlicker; ShowPauseMenu(); },
                 () => { Settings.Shake = !Settings.Shake; ShowPauseMenu(); },
                 () => { Settings.MusicVolume = Settings.MusicVolume >= 0.99f ? 0f : Settings.MusicVolume + 0.1f; ShowPauseMenu(); },
-                () => { Settings.SfxVolume = Settings.SfxVolume >= 0.99f ? 0f : Settings.SfxVolume + 0.1f; ShowPauseMenu(); });
+                () => { Settings.SfxVolume = Settings.SfxVolume >= 0.99f ? 0f : Settings.SfxVolume + 0.1f; ShowPauseMenu(); },
+                () =>
+                {
+                    if (!resetArmed) { resetArmed = true; ShowPauseMenu(); return; }
+                    resetArmed = false;
+                    Meta.ResetAll();
+                    TogglePause();
+                    GoToTitle();
+                    ui.Toast("PROGRESS RESET", 3f);
+                },
+                resetArmed ? "SURE? CLICK AGAIN (ERASES ALL)" : "RESET PROGRESS");
         }
+
+        private bool resetArmed;
 
         private void Update()
         {
@@ -756,6 +772,7 @@ namespace PayWithPixels
                     if (introTimer <= 0) StartWave();
                     break;
                 case State.Playing:
+                    if (!Frozen) Enemy.Separate(Time.deltaTime);
                     UpdateSpawner();
                     UpdateLingerFailsafe();
                     if (spawnLeft <= 0 && Enemy.All.Count == 0)
@@ -983,7 +1000,11 @@ namespace PayWithPixels
                 p = horizontal
                     ? new Vector2(Random.Range(-ArenaHalf.x, ArenaHalf.x), Random.value < 0.5f ? -ArenaHalf.y : ArenaHalf.y)
                     : new Vector2(Random.value < 0.5f ? -ArenaHalf.x : ArenaHalf.x, Random.Range(-ArenaHalf.y, ArenaHalf.y));
-                if (player == null || (p - (Vector2)player.transform.position).sqrMagnitude > 16f) break;
+                if (player != null && (p - (Vector2)player.transform.position).sqrMagnitude <= 16f) continue;
+                bool crowded = false;
+                foreach (var e in Enemy.All)
+                    if (e != null && ((Vector2)e.transform.position - p).sqrMagnitude < 1.3f * 1.3f) { crowded = true; break; }
+                if (!crowded) break;
             }
             return p;
         }
@@ -1008,8 +1029,8 @@ namespace PayWithPixels
             shopVisits++;
             shopMarkup = nextShopMarkup;
             nextShopMarkup = 1f;
-            shopRedeem = shopVisits % 3 == 0 && OwnedPrices().Count > 0;       // REDEEM co 3. sklep
-            shopContract = !shopRedeem && shopVisits % 2 == 0 ? Contracts.Roll() : null;   // kontrakt co 2. sklep
+            shopRedeem = OwnedPrices().Count > 0;                               // REDEEM w kazdym sklepie (1 na wizyte)
+            shopContract = shopVisits % 2 == 0 ? Contracts.Roll() : null;       // kontrakt co 2. sklep
             ui.AnimateNextShop = true;
             if (!Meta.TutorialDone)
                 ui.Toast("THE FIRST GAIN IS FREE - ITS PRICE IS NOT. EVERY PRICE LASTS THE WHOLE RUN. NO COINS? BUY ON CREDIT, BUT DEBT GROWS", 10f);
@@ -1027,7 +1048,7 @@ namespace PayWithPixels
         // ---- REDEEM: zdejmij 1 stack wybranej ceny (co 3. sklep zamiast kontraktu) ----
         private bool shopRedeem;
 
-        public int RedeemCost(string priceName) => 8 + 4 * stats.PriceCount(priceName);
+        public int RedeemCost(string priceName) => 10 + 5 * stats.PriceCount(priceName);
 
         private List<string> OwnedPrices()
         {
