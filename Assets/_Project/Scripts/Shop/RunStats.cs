@@ -10,7 +10,7 @@ namespace PayWithPixels
     /// </summary>
     public class RunStats
     {
-        public const int BaseHp = 6;
+        public const int BaseHp = 7;
 
         // ---- zyski (poziomy) ----
         public readonly Dictionary<string, int> levels = new Dictionary<string, int>();

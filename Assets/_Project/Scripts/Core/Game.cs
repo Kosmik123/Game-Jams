@@ -562,7 +562,7 @@ namespace PayWithPixels
             Palette.SetZone(zone, waveInZone);
             state = State.Playing;
             lastWaveWasBoss = IsBossWave;
-            spawnLeft = IsBossWave ? 6 : 8 + (zone == 1 ? 2 : 3) * waveInZone + 6 * (zone - 1) + wave / 3;
+            spawnLeft = IsBossWave ? 6 : (zone == 1 ? 6 : 8) + (zone == 1 ? 2 : 3) * waveInZone + 6 * (zone - 1) + wave / 3;
             spawnTimer = 0.5f;
             player.RefillShield();
             freezeReady = stats.freeze > 0;
