@@ -99,3 +99,14 @@ Projekt: Unity 6000.4.9f1, kod i assety w `Assets/_Project` (Scripts, Graphics, 
 - [ ] Poborca: zabicie zmniejsza dług o połowę (zaokrąglenie w dół) + monety; NIE zdejmuje ceny. Poborca groźniejszy (HP, prędkość). Dotyk nadal kradnie zysk.
 - [ ] Bot NOBUY (nie kupuje nic) jako strategia kontrolna w balance.ps1. Cele: NOBUY śr. koniec <= Z2, 0-3% wygranych; RANDOM 5-15%; CAREFUL 30-50%.
 - [ ] Raport tabela (strategie, % wygranych, mediana fali końca, średni dług na końcu) przed i po zmianach.
+
+---
+# FAZA 7 — domknięcie rdzenia (designer, ok. godz. 7-24 jamu)
+## Programista
+- [ ] Zróżnicowanie broni: pistolet (celny, średnie tempo), shotgun (szeroki stożek, krótki zasięg, wolniejszy), laser (wiązka przebijająca, rozgrzewanie). Każda ma inny 'feeling' i inną synergię z zyskami.
+- [ ] Wydajność WebGL: profil przy 60+ wrogach + mgła + pikselizacja; zmniejszenie rozmiaru builda (stripping, kompresja tekstur, usuń nieużywane pakiety).
+- [ ] Zapis/reset: przycisk 'RESET PROGRESS' w ustawieniach pauzy.
+## Grafik
+- [ ] 3 screeny z buildu (po jednym na strefę) i krótki GIF do strony gry; sprawdzenie czytelności na małych oknach.
+## Designer
+- [ ] Opis strony gry, lista zmian, instrukcje testerów, zebranie uwag z testów zewnętrznych.
