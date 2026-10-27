@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace PayWithPixels
 {
-    public enum EnemyType { Chaser, Shooter, Tank, Boss, Collector }
+    public enum EnemyType { Chaser, Shooter, Tank, Dasher, Siege, Swarm, Guard, Spawner, Boss, Collector }
 
     public class Enemy : MonoBehaviour
     {
@@ -12,17 +12,71 @@ namespace PayWithPixels
         public float radius;
         private EnemyType type;
         private int hp;
+        private int maxHp;
         private float speed;
         private int contactDamage = 1;
+        private int coinDrop = 1;
         private float shootTimer;
         private float strafeSign = 1f;
-        private int maxHp;
         private float clock;
         private int pattern;
         private SpriteRenderer sr;
         private string walkName;
         private int spriteSize;
-        private bool diamond;
+        private bool rotates;
+
+        // Skaczek
+        private float dashTimer;
+        private float telegraph;
+        private Vector2 dashDir;
+        private float dashLeft;
+        // Straznik
+        private Vector2 facing = Vector2.down;
+        // Spawner
+        private int spawned;
+
+        private struct Spec
+        {
+            public string sprite; public int size; public float radius; public int hp; public float speed; public int contact; public int coins; public bool rotates;
+        }
+
+        private static Spec SpecFor(EnemyType t, int d)
+        {
+            switch (t)
+            {
+                case EnemyType.Chaser: return new Spec { sprite = "enemy_chaser", size = 16, radius = 0.45f, hp = 1 + d / 4, speed = 2.6f, contact = 1, coins = 1, rotates = true };
+                case EnemyType.Shooter: return new Spec { sprite = "enemy_shooter", size = 16, radius = 0.45f, hp = 2 + d / 4, speed = 2f, contact = 1, coins = 1, rotates = true };
+                case EnemyType.Tank: return new Spec { sprite = "enemy_tank", size = 24, radius = 0.7f, hp = 8 + d, speed = 1.2f, contact = 2, coins = 3, rotates = true };
+                case EnemyType.Dasher: return new Spec { sprite = "enemy_dasher", size = 16, radius = 0.45f, hp = 2 + d / 5, speed = 2.2f, contact = 1, coins = 2, rotates = true };
+                case EnemyType.Siege: return new Spec { sprite = "enemy_siege", size = 16, radius = 0.5f, hp = 4 + d / 4, speed = 1.6f, contact = 1, coins = 3, rotates = false };
+                case EnemyType.Swarm: return new Spec { sprite = "enemy_swarm", size = 6, radius = 0.3f, hp = 1, speed = 3.3f, contact = 1, coins = 0, rotates = false };
+                case EnemyType.Guard: return new Spec { sprite = "enemy_guard", size = 16, radius = 0.5f, hp = 5 + d / 3, speed = 1.7f, contact = 1, coins = 3, rotates = true };
+                default: return new Spec { sprite = "enemy_spawner", size = 24, radius = 0.7f, hp = 8 + d / 2, speed = 0.7f, contact = 1, coins = 4, rotates = false };
+            }
+        }
+
+        public static Enemy Spawn(Transform parent, EnemyType type, Vector2 pos, int difficulty)
+        {
+            var go = new GameObject(type.ToString());
+            go.transform.SetParent(parent, false);
+            go.transform.position = pos;
+            var e = go.AddComponent<Enemy>();
+            e.type = type;
+
+            var s = SpecFor(type, difficulty);
+            float scale = 1f + 0.03f * difficulty;
+            e.walkName = s.sprite; e.spriteSize = s.size; e.rotates = s.rotates;
+            e.sr = Art.MakeRenderer(go, Art.Square(s.sprite + "_walk_0", s.size), 5);
+            e.radius = s.radius; e.hp = e.maxHp = s.hp; e.speed = s.speed * scale;
+            e.contactDamage = s.contact; e.coinDrop = s.coins;
+
+            e.shootTimer = Random.Range(0.5f, 1.8f);
+            e.strafeSign = Random.value < 0.5f ? -1f : 1f;
+            e.dashTimer = Random.Range(1f, 2.4f);
+            if (type == EnemyType.Siege) e.shootTimer = Random.Range(1.5f, 3f);
+            if (type == EnemyType.Spawner) e.shootTimer = 3f;
+            return e;
+        }
 
         public static Enemy SpawnCollector(Transform parent, Vector2 pos)
         {
@@ -31,8 +85,8 @@ namespace PayWithPixels
             go.transform.position = pos;
             var e = go.AddComponent<Enemy>();
             e.type = EnemyType.Collector;
-            e.sr = Art.MakeRenderer(go, Art.Square("enemy_collector_walk_0", 20), 6);
-            e.walkName = "enemy_collector"; e.spriteSize = 20;
+            e.sr = Art.MakeRenderer(go, Art.Square("enemy_collector_walk_0", 24), 6);
+            e.walkName = "enemy_collector"; e.spriteSize = 24;
             e.radius = 0.6f;
             e.hp = e.maxHp = 25 + 3 * Game.Instance.zone;
             e.speed = 3.1f;
@@ -53,6 +107,39 @@ namespace PayWithPixels
             e.contactDamage = 2;
             e.shootTimer = 2f;
             return e;
+        }
+
+        private void OnEnable() => All.Add(this);
+        private void OnDisable() => All.Remove(this);
+
+        /// <summary>Straznik: pocisk lecacy z przodu (od strony gracza) jest blokowany.</summary>
+        public bool Blocks(Vector2 bulletVelocity)
+        {
+            if (type != EnemyType.Guard) return false;
+            return Vector2.Dot(-bulletVelocity.normalized, facing) > 0.45f;
+        }
+
+        public void Damage(int dmg)
+        {
+            hp -= dmg;
+            if (hp > 0) { Sfx.Play(Sound.Hit); return; }
+            Sfx.Play(Sound.Kill);
+            if (type == EnemyType.Boss)
+            {
+                Game.Instance.OnBossKilled();
+                return;
+            }
+            Shard.Burst(transform.parent, transform.position, 5);
+            if (type == EnemyType.Collector)
+            {
+                Game.Instance.OnCollectorKilled();
+                Game.Instance.SpawnCoin(transform.position, 6);
+                Destroy(gameObject);
+                return;
+            }
+            if (coinDrop > 0) Game.Instance.SpawnCoin(transform.position, coinDrop);
+            else if (Random.value < 0.5f) Game.Instance.SpawnCoin(transform.position, 1);
+            Destroy(gameObject);
         }
 
         private void UpdateBoss(Game game)
@@ -95,63 +182,6 @@ namespace PayWithPixels
             Bullet.Spawn(transform.parent, pos + d * 1.2f, d * speed, false, 0, "bullet_boss");
         }
 
-        public static Enemy Spawn(Transform parent, EnemyType type, Vector2 pos, int wave)
-        {
-            var go = new GameObject(type.ToString());
-            go.transform.SetParent(parent, false);
-            go.transform.position = pos;
-            var e = go.AddComponent<Enemy>();
-            e.type = type;
-            float scale = 1f + 0.03f * wave;
-
-            switch (type)
-            {
-                case EnemyType.Chaser:
-                    e.sr = Art.MakeRenderer(go, Art.Diamond("enemy_chaser", 16), 5);
-                    e.walkName = "enemy_chaser"; e.spriteSize = 16; e.diamond = true;
-                    e.radius = 0.45f; e.hp = 1 + wave / 4; e.speed = 2.6f * scale;
-                    break;
-                case EnemyType.Shooter:
-                    e.sr = Art.MakeRenderer(go, Art.Square("enemy_shooter", 16), 5);
-                    e.walkName = "enemy_shooter"; e.spriteSize = 16;
-                    e.radius = 0.45f; e.hp = 2 + wave / 4; e.speed = 2f * scale;
-                    e.shootTimer = Random.Range(0.5f, 1.8f);
-                    e.strafeSign = Random.value < 0.5f ? -1f : 1f;
-                    break;
-                default:
-                    e.sr = Art.MakeRenderer(go, Art.Square("enemy_tank", 24), 5);
-                    e.walkName = "enemy_tank"; e.spriteSize = 24;
-                    e.radius = 0.7f; e.hp = 8 + wave; e.speed = 1.2f * scale; e.contactDamage = 2;
-                    break;
-            }
-            return e;
-        }
-
-        private void OnEnable() => All.Add(this);
-        private void OnDisable() => All.Remove(this);
-
-        public void Damage(int dmg)
-        {
-            hp -= dmg;
-            if (hp > 0) { Sfx.Play(Sound.Hit); return; }
-            Sfx.Play(Sound.Kill);
-            if (type == EnemyType.Boss)
-            {
-                Game.Instance.OnBossKilled();
-                return;
-            }
-            Shard.Burst(transform.parent, transform.position, 5);
-            if (type == EnemyType.Collector)
-            {
-                Game.Instance.OnCollectorKilled();
-                Game.Instance.SpawnCoin(transform.position, 6);
-                Destroy(gameObject);
-                return;
-            }
-            Game.Instance.SpawnCoin(transform.position, type == EnemyType.Tank ? 3 : 1);
-            Destroy(gameObject);
-        }
-
         private void Update()
         {
             var game = Game.Instance;
@@ -171,34 +201,87 @@ namespace PayWithPixels
             float dist = toPlayer.magnitude;
             Vector2 dir = dist > 0.001f ? toPlayer / dist : Vector2.zero;
             Vector2 move = Vector2.zero;
+            float moveSpeed = speed;
+            bool attacking = game.state == Game.State.Playing;
+            float dt = Time.deltaTime;
 
-            if (type == EnemyType.Shooter)
+            switch (type)
             {
-                if (dist > 6f) move = dir;
-                else if (dist < 4f) move = -dir;
-                else move = new Vector2(-dir.y, dir.x) * strafeSign;
+                case EnemyType.Shooter:
+                    if (dist > 6f) move = dir;
+                    else if (dist < 4f) move = -dir;
+                    else move = new Vector2(-dir.y, dir.x) * strafeSign;
+                    shootTimer -= dt;
+                    if (shootTimer <= 0 && attacking)
+                    {
+                        shootTimer = 1.8f;
+                        Bullet.Spawn(transform.parent, pos + dir * 0.5f, dir * 5f, false, 0);
+                    }
+                    break;
 
-                shootTimer -= Time.deltaTime;
-                if (shootTimer <= 0 && game.state == Game.State.Playing)
-                {
-                    shootTimer = 1.8f;
-                    Bullet.Spawn(transform.parent, pos + dir * 0.5f, dir * 5f, false, 0);
-                }
+                case EnemyType.Dasher:
+                    if (dashLeft > 0)
+                    {
+                        dashLeft -= dt;
+                        move = dashDir;
+                        moveSpeed = 13f;
+                        if (dashLeft <= 0) dashTimer = 2.2f;
+                    }
+                    else if (telegraph > 0)
+                    {
+                        telegraph -= dt;
+                        sr.enabled = Mathf.FloorToInt(telegraph * 20f) % 2 == 0;   // miga przed skokiem
+                        if (telegraph <= 0) { sr.enabled = true; dashLeft = 0.32f; dashDir = dir; }
+                    }
+                    else
+                    {
+                        move = dir;
+                        dashTimer -= dt;
+                        if (dashTimer <= 0 && attacking && dist < 8f) { telegraph = 0.55f; move = Vector2.zero; }
+                    }
+                    break;
+
+                case EnemyType.Siege:
+                    if (dist < 6f) move = -dir;
+                    else if (dist > 9f) move = dir;
+                    shootTimer -= dt;
+                    if (shootTimer <= 0 && attacking)
+                    {
+                        shootTimer = 3.6f;
+                        AreaBlast.Spawn(transform.parent, game.player.transform.position, 1.3f, 1.7f, 2);
+                    }
+                    break;
+
+                case EnemyType.Spawner:
+                    move = dist < 5f ? -dir : Vector2.zero;
+                    shootTimer -= dt;
+                    if (shootTimer <= 0 && attacking && spawned < 8)
+                    {
+                        shootTimer = 4f;
+                        spawned++;
+                        Spawn(transform.parent, EnemyType.Chaser, pos, game.Difficulty);
+                    }
+                    break;
+
+                case EnemyType.Guard:
+                    move = dir;
+                    facing = dir == Vector2.zero ? facing : dir;
+                    break;
+
+                default:
+                    move = dir;
+                    break;
             }
-            else move = dir;
 
-            clock += Time.deltaTime;
-            if (walkName != null)
-            {
-                string frame = walkName + "_walk_" + (Mathf.FloorToInt(clock / 0.25f) % 2);
-                sr.sprite = diamond ? Art.Diamond(frame, spriteSize) : Art.Square(frame, spriteSize);
-            }
+            clock += dt;
+            if (walkName != null && sr != null)
+                sr.sprite = Art.Square(walkName + "_walk_" + (Mathf.FloorToInt(clock / 0.25f) % 2), spriteSize);
 
-            pos += move * (speed * Time.deltaTime);
+            pos += move * (moveSpeed * dt);
             pos.x = Mathf.Clamp(pos.x, -Game.ArenaHalf.x, Game.ArenaHalf.x);
             pos.y = Mathf.Clamp(pos.y, -Game.ArenaHalf.y, Game.ArenaHalf.y);
             transform.position = pos;
-            if (dir != Vector2.zero) transform.rotation = Art.FaceRotation(dir);
+            if (rotates && dir != Vector2.zero && dashLeft <= 0) transform.rotation = Art.FaceRotation(dir);
 
             float r = radius + Player.Radius;
             if (dist < r)

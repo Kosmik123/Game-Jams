@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -109,6 +110,7 @@ namespace PayWithPixels
         {
             foreach (var e in Enemy.All.ToArray()) if (e != null) Destroy(e.gameObject);
             foreach (var b in Bullet.All.ToArray()) if (b != null) Destroy(b.gameObject);
+            foreach (var a in AreaBlast.All.ToArray()) if (a != null) Destroy(a.gameObject);
             foreach (var c in Coin.All.ToArray()) if (c != null) Destroy(c.gameObject);
             if (player != null) Destroy(player.gameObject);
 
@@ -179,6 +181,7 @@ namespace PayWithPixels
         {
             foreach (var e in Enemy.All.ToArray()) if (e != null) Destroy(e.gameObject);
             foreach (var b in Bullet.All.ToArray()) if (b != null) Destroy(b.gameObject);
+            foreach (var a in AreaBlast.All.ToArray()) if (a != null) Destroy(a.gameObject);
             spawnLeft = 0;
             if (zone >= Zones)
             {
@@ -292,15 +295,49 @@ namespace PayWithPixels
                 spawnTimer = 4f;
                 return;
             }
-            Enemy.Spawn(world, PickEnemyType(), PickSpawnPoint(), Difficulty);
+            var type = PickEnemyType();
+            var at = PickSpawnPoint();
+            if (type == EnemyType.Swarm)
+            {
+                // roj: 5 malych naraz, liczy sie jako 2 miejsca w puli fali
+                for (int i = 0; i < 5; i++)
+                    Enemy.Spawn(world, type, at + Random.insideUnitCircle * 0.7f, Difficulty);
+                spawnLeft = Mathf.Max(0, spawnLeft - 1);
+                return;
+            }
+            Enemy.Spawn(world, type, at, Difficulty);
         }
 
         /// <summary>Pula wrogow zalezy od strefy i fali.</summary>
         private EnemyType PickEnemyType()
         {
-            float r = Random.value;
-            if (waveInZone >= 4 && r < 0.15f) return EnemyType.Tank;
-            if (waveInZone >= 2 && r < 0.45f) return EnemyType.Shooter;
+            // (typ, waga) - dostepnosc zalezy od strefy i numeru fali w strefie
+            var pool = new List<KeyValuePair<EnemyType, float>>();
+            void Add(EnemyType t, float w, int minWave = 1) { if (waveInZone >= minWave) pool.Add(new KeyValuePair<EnemyType, float>(t, w)); }
+
+            Add(EnemyType.Chaser, zone == 1 ? 5f : 3f);
+            Add(EnemyType.Shooter, 3f, zone == 1 ? 2 : 1);
+            Add(EnemyType.Tank, 1.2f, zone == 1 ? 4 : 3);
+            if (zone >= 2)
+            {
+                Add(EnemyType.Dasher, 2.5f);
+                Add(EnemyType.Swarm, 2f, 2);
+                Add(EnemyType.Guard, 1.8f, 3);
+            }
+            if (zone >= 3)
+            {
+                Add(EnemyType.Siege, 2f);
+                Add(EnemyType.Spawner, 0.8f, 3);
+            }
+
+            float total = 0;
+            foreach (var kv in pool) total += kv.Value;
+            float r = Random.value * total;
+            foreach (var kv in pool)
+            {
+                r -= kv.Value;
+                if (r <= 0) return kv.Key;
+            }
             return EnemyType.Chaser;
         }
 
@@ -325,6 +362,7 @@ namespace PayWithPixels
             // reszta monet wpada automatycznie
             foreach (var c in Coin.All.ToArray()) if (c != null) { coins++; Destroy(c.gameObject); }
             foreach (var b in Bullet.All.ToArray()) if (b != null) Destroy(b.gameObject);
+            foreach (var a in AreaBlast.All.ToArray()) if (a != null) Destroy(a.gameObject);
 
             state = State.Shop;
             ui.ShowShop(Catalog.Roll(3, wave, stats), coins, debt, Buy, CloseShop);

@@ -56,6 +56,7 @@ namespace PayWithPixels
                     if (hit.Contains(e)) continue;
                     if (((Vector2)e.transform.position - pos).sqrMagnitude > (e.radius + Radius) * (e.radius + Radius)) continue;
                     hit.Add(e);
+                    if (e.Blocks(velocity)) { Sfx.Play(Sound.Hit); Destroy(gameObject); return; }
                     e.Damage(1);
                     if (pierceLeft-- <= 0) { Destroy(gameObject); return; }
                 }
