@@ -90,8 +90,8 @@ namespace PayWithPixels
             e.sr = Art.MakeRenderer(go, Art.Square("enemy_collector_walk_0", 24), 6);
             e.walkName = "enemy_collector"; e.spriteSize = 24;
             e.radius = 0.6f;
-            e.hp = e.maxHp = 25 + 3 * Game.Instance.zone;
-            e.speed = 3.1f;
+            e.hp = e.maxHp = 35 + 6 * Game.Instance.zone;
+            e.speed = 3.5f;
             e.contactDamage = 0;
             return e;
         }
