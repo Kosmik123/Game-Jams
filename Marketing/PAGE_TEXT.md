@@ -1,4 +1,4 @@
-# PAY WITH PIXELS — tekst na stronę gry (itch.io)
+﻿# PAY WITH PIXELS — tekst na stronę gry (itch.io)
 
 Jam: 1-Bit Jam, temat **Everything Has a Price**. Cover: `cover_630x500.png` (2 kolory).
 
@@ -75,7 +75,7 @@ Zasada: strona jest ciemna jak gra, kolory z palety startowej gry. Jedyny dodatk
 | Button color (przyciski) | `#FFB000` | domyślnie jak link, zostaw |
 | Title color (tytuły) | `#F4F1DE` | domyślnie jak tekst, zostaw |
 | Font | pixelowy/monospace | jeśli lista itch.io ma pixel font (np. "Press Start 2P" albo "VT323"), wybrać go; jak nie, monospace (Courier). Nagłówki bez pogrubienia. |
-| Banner (u góry) | `itch_banner_960x240.png` | 2 kolory, logo + postacie |
+| Banner (u góry) | `itch_banner_1280x240.png` | 2 kolory, logo + postacie |
 | Cover | `cover_630x500.png` | 2 kolory |
 
-Pliki: `itch_banner_960x240.png`, `itch_bg_tile_24.png`, `cover_630x500.png`.
+Pliki: `itch_banner_1280x240.png`, `itch_bg_tile_24.png`, `cover_630x500.png`.

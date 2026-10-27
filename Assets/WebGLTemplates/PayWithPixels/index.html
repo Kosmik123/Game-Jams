@@ -3,6 +3,9 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>{{{ PRODUCT_NAME }}}</title>
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
     <link rel="stylesheet" href="TemplateData/style.css">
@@ -66,11 +69,13 @@
       };
 
       if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        var meta = document.createElement('meta');
-        meta.name = 'viewport';
-        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
-        document.getElementsByTagName('head')[0].appendChild(meta);
         document.querySelector("#unity-container").className = "unity-mobile";
+        document.body.className = "mobile";
+        // blokada zoomu (pinch / double-tap) i przewijania
+        ["gesturestart", "gesturechange", "gestureend"].forEach(function(e) {
+          document.addEventListener(e, function(ev) { ev.preventDefault(); });
+        });
+        document.addEventListener("touchmove", function(ev) { ev.preventDefault(); }, { passive: false });
         canvas.className = "unity-mobile";
       } else {
         // Desktop: rozmiar i skalowanie 16:9 robi style.css (canvas dopasowany do okna)
