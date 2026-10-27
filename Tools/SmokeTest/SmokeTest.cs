@@ -32,12 +32,14 @@ public class SmokeTest
         Assert.NotNull(gameGo, "Game object not created by Bootstrap");
         var game = gameGo.GetComponent(T("Game"));
         Call(game, "StartRun");
-        Time.timeScale = 4f;
+        Application.targetFrameRate = -1;
+        QualitySettings.vSyncCount = 0;
+        T("Game").GetField("DebugTimeScale", All).SetValue(null, 5f);
 
         var rng = new System.Random(1);
         int lastZone = 0;
         string lastState = "";
-        for (int frame = 0; frame < 20000; frame++)
+        for (int frame = 0; frame < 60000; frame++)
         {
             yield return null;
             string state = Get(game, "state").ToString();

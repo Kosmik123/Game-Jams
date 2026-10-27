@@ -48,6 +48,39 @@ namespace PayWithPixels
         private readonly Drone[] drones = new Drone[3];
         public bool Frozen => freezeTimer > 0;
         public bool Paused { get; private set; }
+        /// <summary>Tylko dla testow automatycznych (przyspieszenie symulacji).</summary>
+        public static float DebugTimeScale = 1f;
+
+        // ---- licytacja Aukcjonera: zabrane zyski wracaja po czasie albo po jego smierci ----
+        private readonly System.Collections.Generic.List<KeyValuePair<string, int>> auctioned = new System.Collections.Generic.List<KeyValuePair<string, int>>();
+        private float auctionReturnTimer;
+
+        public void Announce(string msg) => ui.Toast(msg);
+
+        public void AuctionOffGain(float seconds)
+        {
+            var owned = new System.Collections.Generic.List<string>();
+            foreach (var kv in stats.levels) if (kv.Value > 0) owned.Add(kv.Key);
+            if (owned.Count == 0) { ui.Toast("THE AUCTIONEER FINDS NOTHING TO SELL"); return; }
+            string name = owned[Random.Range(0, owned.Count)];
+            auctioned.Add(new KeyValuePair<string, int>(name, stats.levels[name]));
+            stats.levels.Remove(name);
+            stats.Recompute();
+            RefreshDrones();
+            auctionReturnTimer = seconds;
+            ui.Toast("SOLD! YOUR " + name + " GOES TO THE HIGHEST BIDDER");
+            Sfx.Play(Sound.Hurt);
+        }
+
+        private void RestoreAuctioned()
+        {
+            if (auctioned.Count == 0) return;
+            foreach (var kv in auctioned) stats.levels[kv.Key] = kv.Value;
+            auctioned.Clear();
+            stats.Recompute();
+            RefreshDrones();
+            ui.Toast("YOUR GAINS CAME BACK");
+        }
         private float hitStopUntil;
         private float shake;
 
@@ -135,6 +168,7 @@ namespace PayWithPixels
 
             Palette.Reset();
             flickerClock = 0;
+            auctioned.Clear();
             stats = new RunStats();
             zone = 1;
             waveInZone = 0;
@@ -208,6 +242,7 @@ namespace PayWithPixels
             foreach (var b in Bullet.All.ToArray()) if (b != null) Destroy(b.gameObject);
             foreach (var a in AreaBlast.All.ToArray()) if (a != null) Destroy(a.gameObject);
             spawnLeft = 0;
+            RestoreAuctioned();
             HitStop(0.2f);
             Shake(0.6f);
             if (zone >= Zones)
@@ -314,7 +349,12 @@ namespace PayWithPixels
         {
             if ((Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.P)) && (CanPause || Paused)) TogglePause();
             if (Paused) return;
-            Time.timeScale = Time.unscaledTime < hitStopUntil ? 0.05f : 1f;
+            Time.timeScale = (Time.unscaledTime < hitStopUntil ? 0.05f : 1f) * DebugTimeScale;
+            if (auctioned.Count > 0 && state == State.Playing)
+            {
+                auctionReturnTimer -= Time.deltaTime;
+                if (auctionReturnTimer <= 0) RestoreAuctioned();
+            }
 
             if (cam != null) cam.orthographicSize = Mathf.MoveTowards(cam.orthographicSize, OrthoSize * (stats != null ? stats.CameraZoom : 1f), 4f * Time.deltaTime);
             if (player != null) display.SetFogCenter(player.transform.position);
