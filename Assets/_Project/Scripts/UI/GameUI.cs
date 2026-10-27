@@ -275,7 +275,7 @@ namespace PayWithPixels
 
         // ---------- pauza ----------
 
-        public void ShowPause(Action onResume, Action onRestart, Action onVolume, Action onFlicker, Action onShake)
+        public void ShowPause(Action onResume, Action onRestart, Action onVolume, Action onFlicker, Action onShake, Action onMusic, Action onSfx)
         {
             foreach (Transform c in pausePanel.transform) Destroy(c.gameObject);
             tinted.RemoveAll(kv => kv.Key == null);
@@ -285,11 +285,15 @@ namespace PayWithPixels
             Stretch(title.rectTransform, new Vector2(0, 0.78f), new Vector2(1, 0.95f), Vector2.zero, Vector2.zero);
 
             int vol = Mathf.RoundToInt(Settings.Volume * 10f);
-            MakeButton(pausePanel.transform, "RESUME", new Vector2(0.3f, 0.64f), new Vector2(0.7f, 0.74f), true, onResume);
-            MakeButton(pausePanel.transform, "VOLUME " + vol + "/10  (CLICK +1)", new Vector2(0.3f, 0.52f), new Vector2(0.7f, 0.62f), true, onVolume);
-            MakeButton(pausePanel.transform, "REDUCE FLICKER: " + (Settings.ReduceFlicker ? "ON" : "OFF"), new Vector2(0.3f, 0.40f), new Vector2(0.7f, 0.50f), true, onFlicker);
-            MakeButton(pausePanel.transform, "SCREENSHAKE: " + (Settings.Shake ? "ON" : "OFF"), new Vector2(0.3f, 0.28f), new Vector2(0.7f, 0.38f), true, onShake);
-            MakeButton(pausePanel.transform, "RESTART RUN", new Vector2(0.3f, 0.16f), new Vector2(0.7f, 0.26f), true, onRestart);
+            int mus = Mathf.RoundToInt(Settings.MusicVolume * 10f);
+            int sfx = Mathf.RoundToInt(Settings.SfxVolume * 10f);
+            MakeButton(pausePanel.transform, "RESUME", new Vector2(0.3f, 0.66f), new Vector2(0.7f, 0.75f), true, onResume);
+            MakeButton(pausePanel.transform, "MASTER " + vol + "/10  (CLICK +1)", new Vector2(0.3f, 0.56f), new Vector2(0.7f, 0.65f), true, onVolume);
+            MakeButton(pausePanel.transform, "MUSIC " + mus + "/10  (CLICK +1)", new Vector2(0.3f, 0.46f), new Vector2(0.7f, 0.55f), true, onMusic);
+            MakeButton(pausePanel.transform, "SFX " + sfx + "/10  (CLICK +1)", new Vector2(0.3f, 0.36f), new Vector2(0.7f, 0.45f), true, onSfx);
+            MakeButton(pausePanel.transform, "REDUCE FLICKER: " + (Settings.ReduceFlicker ? "ON" : "OFF"), new Vector2(0.3f, 0.26f), new Vector2(0.7f, 0.35f), true, onFlicker);
+            MakeButton(pausePanel.transform, "SCREENSHAKE: " + (Settings.Shake ? "ON" : "OFF"), new Vector2(0.3f, 0.16f), new Vector2(0.7f, 0.25f), true, onShake);
+            MakeButton(pausePanel.transform, "RESTART RUN", new Vector2(0.3f, 0.06f), new Vector2(0.7f, 0.15f), true, onRestart);
 
             Recolor();
             pausePanel.SetActive(true);
@@ -337,7 +341,7 @@ namespace PayWithPixels
         }
 
         /// <summary>Ekran tytulowy: wybor broni, osiagniecia, rekord. Klik poza przyciskami = start.</summary>
-        public void ShowTitle(Action onStart, Action<Weapon> onWeapon)
+        public void ShowTitle(Action onStart, Action<Weapon> onWeapon, Action onAscension)
         {
             foreach (Transform c in titleDynamic) Destroy(c.gameObject);
             tinted.RemoveAll(kv => kv.Key == null);
@@ -368,15 +372,19 @@ namespace PayWithPixels
                 icon.sprite = sprite;
                 icon.raycastTarget = false;
                 float x0 = 0.5f - Meta.Achievements.Length * 0.0325f + i * 0.065f;
-                Stretch(icon.rectTransform, new Vector2(x0, 0.24f), new Vector2(x0 + 0.06f, 0.34f), Vector2.zero, Vector2.zero);
+                Stretch(icon.rectTransform, new Vector2(x0, 0.27f), new Vector2(x0 + 0.06f, 0.36f), Vector2.zero, Vector2.zero);
                 icon.preserveAspect = true;
             }
             var achText = NewText("AchText", titleDynamic, "ACHIEVEMENTS " + unlockedCount + "/" + Meta.Achievements.Length, 16, TextAnchor.MiddleCenter);
-            Stretch(achText.rectTransform, new Vector2(0, 0.17f), new Vector2(1, 0.24f), Vector2.zero, Vector2.zero);
+            Stretch(achText.rectTransform, new Vector2(0, 0.22f), new Vector2(1, 0.27f), Vector2.zero, Vector2.zero);
+
+            if (Meta.AscensionUnlocked > 0)
+                MakeButton(titleDynamic, "ASCENSION " + Meta.Ascension + "/" + Meta.AscensionUnlocked + "  [CLICK TO CHANGE]  SCORE x" + (1f + 0.25f * Meta.Ascension).ToString("0.00"),
+                    new Vector2(0.2f, 0.135f), new Vector2(0.8f, 0.215f), true, onAscension);
 
             var start = NewText("Start", titleDynamic,
-                "CLICK OR PRESS SPACE TO START\nBEST WAVE " + Meta.BestWave + "   WINS " + Meta.Wins + "   RUNS " + Meta.Runs, 20, TextAnchor.MiddleCenter);
-            Stretch(start.rectTransform, new Vector2(0, 0.03f), new Vector2(1, 0.17f), Vector2.zero, Vector2.zero);
+                "CLICK OR PRESS SPACE TO START\nBEST WAVE " + Meta.BestWave + "   BEST SCORE " + Meta.BestScore + "   WINS " + Meta.Wins, 20, TextAnchor.MiddleCenter);
+            Stretch(start.rectTransform, new Vector2(0, 0.01f), new Vector2(1, 0.13f), Vector2.zero, Vector2.zero);
 
             var btn = titlePanel.GetComponent<Button>() ?? titlePanel.AddComponent<Button>();
             btn.transition = Selectable.Transition.None;

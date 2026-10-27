@@ -69,7 +69,7 @@ namespace PayWithPixels
             float scale = 1f + 0.03f * difficulty;
             e.walkName = s.sprite; e.spriteSize = s.size; e.rotates = s.rotates;
             e.sr = Art.MakeRenderer(go, Art.Square(s.sprite + "_walk_0", s.size), 5);
-            e.radius = s.radius; e.hp = e.maxHp = s.hp; e.speed = s.speed * scale;
+            e.radius = s.radius; e.hp = e.maxHp = Mathf.CeilToInt(s.hp * Game.Instance.EnemyHpMul); e.speed = s.speed * scale * Game.Instance.EnemySpeedMul;
             e.contactDamage = s.contact; e.coinDrop = s.coins;
 
             e.shootTimer = Random.Range(0.5f, 1.8f);
@@ -116,7 +116,7 @@ namespace PayWithPixels
             e.bossBullet = zone == 1 ? "bullet_boss" : zone == 2 ? "bullet_boss2" : "bullet_boss3";
             e.sr = Art.MakeRenderer(go, Art.Square(e.bossSprite + "_0", 48), 6);
             e.radius = 1.4f;
-            e.hp = e.maxHp = zone == 1 ? 60 : zone == 2 ? 95 : 130;
+            e.hp = e.maxHp = Mathf.CeilToInt((zone == 1 ? 60 : zone == 2 ? 95 : 130) * Game.Instance.BossHpMul);
             e.contactDamage = 2;
             e.shootTimer = 2f;
             e.spawnAddsTimer = 6f;
@@ -162,6 +162,7 @@ namespace PayWithPixels
         {
             clock += Time.deltaTime;
             sr.sprite = Art.Square(bossSprite + "_" + (Mathf.FloorToInt(clock / 0.4f) % 2), 48);
+            sr.enabled = shootTimer > 0.25f || Mathf.FloorToInt(shootTimer * 24f) % 2 == 0;   // telegraf przed salwa
             switch (bossZone)
             {
                 case 1: UpdateTollKeeper(game); break;
@@ -320,6 +321,7 @@ namespace PayWithPixels
                 if (sr != null) sr.color = flash > 0 ? Color.black : Color.white;   // blysk: sprite w kolorze tla
             }
             if (game.state != Game.State.Playing && game.state != Game.State.Clearing) return;
+            if (game.Frozen && sr != null) sr.enabled = true;
             if (game.player == null || game.Frozen) return;
 
             if (type == EnemyType.Boss)
@@ -348,9 +350,11 @@ namespace PayWithPixels
                     else if (dist < 4f) move = -dir;
                     else move = new Vector2(-dir.y, dir.x) * strafeSign;
                     shootTimer -= dt;
+                    sr.enabled = shootTimer > 0.3f || Mathf.FloorToInt(shootTimer * 20f) % 2 == 0;   // telegraf: miga przed strzalem
                     if (shootTimer <= 0 && attacking)
                     {
                         shootTimer = 1.8f;
+                        sr.enabled = true;
                         Bullet.Spawn(transform.parent, pos + dir * 0.5f, dir * 5f, false, 0);
                     }
                     break;

@@ -25,7 +25,7 @@ namespace PayWithPixels
             musicSource = go.AddComponent<AudioSource>();
             musicSource.playOnAwake = false;
             musicSource.loop = true;
-            musicSource.volume = 0.35f;
+            ApplyVolumes();
             musicSource.clip = null;
             zoneMusic.Clear();
             musicZone = -1;
@@ -49,6 +49,13 @@ namespace PayWithPixels
         {
             if (sfxSource == null || muted) return;
             if (clips.TryGetValue(s, out var c)) sfxSource.PlayOneShot(c);
+        }
+
+        /// <summary>Ustawia glosnosc muzyki i SFX z ustawien.</summary>
+        public static void ApplyVolumes()
+        {
+            if (musicSource != null) musicSource.volume = 0.35f * Settings.MusicVolume;
+            if (sfxSource != null) sfxSource.volume = Settings.SfxVolume;
         }
 
         public static void StartMusic()

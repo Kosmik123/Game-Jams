@@ -19,6 +19,7 @@ namespace PayWithPixels
         public static Bullet Spawn(Transform parent, Vector2 pos, Vector2 vel, bool fromPlayer, int pierce, string spriteName = null,
             int damage = 1, int bounces = 0, float life = 2.5f)
         {
+            if (!fromPlayer && All.Count > 170) return null;   // limit pociskow na ekranie (czytelnosc, wydajnosc)
             var go = new GameObject(fromPlayer ? "Bullet" : "Enemy Bullet");
             go.transform.SetParent(parent, false);
             go.transform.position = pos;

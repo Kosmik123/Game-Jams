@@ -15,7 +15,6 @@ namespace PayWithPixels
         public const int Zones = 3;
         public const int WavesPerZone = 5;           // + boss strefy
         public const int MaxDebt = 30;
-        public const float InterestRate = 0.2f;
 
         private static readonly string[] ZoneNames = { "THE TOLL ROAD", "THE BANK", "THE AUCTION HOUSE" };
 
@@ -97,8 +96,9 @@ namespace PayWithPixels
 
         private void EndRun(bool won)
         {
-            Meta.RecordRun(wave, won);
-            ui.ShowDeath(won, RunSummary(won), StartRun, GoToTitle);
+            int score = Mathf.RoundToInt((wave * 100 + kills * 2 + coinsEarned + (won ? 1000 : 0)) * ScoreMul);
+            Meta.RecordRun(wave, won, Ascension, score);
+            ui.ShowDeath(won, RunSummary(won) + "\nSCORE " + score + (Ascension > 0 ? "  (ASCENSION " + Ascension + " x" + ScoreMul.ToString("0.00") + ")" : ""), StartRun, GoToTitle);
         }
 
         public void AuctionOffGain(float seconds)
@@ -132,6 +132,25 @@ namespace PayWithPixels
         public bool GodMode { get; private set; }
         public static bool DebugEnabled => Application.isEditor || Debug.isDebugBuild || Application.absoluteURL.Contains("debug=1");
         public bool ControlsInverted { get; private set; }
+
+        // ---- Ascension (po pierwszej wygranej): trudniejsze runy, mnoznik wyniku ----
+        public int Ascension { get; private set; }
+        public float InterestRate => Ascension >= 4 ? 0.3f : 0.2f;
+        public float EnemyHpMul => Ascension >= 2 ? 1.25f : 1f;
+        public float EnemySpeedMul => Ascension >= 4 ? 1.15f : 1f;
+        public float BossHpMul => Ascension >= 5 ? 1.2f : 1f;
+        public float ScoreMul => 1f + 0.25f * Ascension;
+
+        private void ApplyStartPrice(string name, int n)
+        {
+            var price = Catalog.Prices.Find(pr => pr.name == name);
+            if (price == null) return;
+            for (int i = 0; i < n; i++)
+            {
+                price.apply(stats);
+                stats.AddPrice(name);
+            }
+        }
 
         public bool IsBossWave => waveInZone > WavesPerZone;
         /// <summary>Trudnosc do skalowania wrogow (rosnie przez caly run).</summary>
@@ -209,7 +228,8 @@ namespace PayWithPixels
             GoToTitleRefresh();
         }
 
-        private void GoToTitleRefresh() => ui.ShowTitle(StartRun, w => { Meta.Selected = w; GoToTitleRefresh(); });
+        private void GoToTitleRefresh() => ui.ShowTitle(StartRun, w => { Meta.Selected = w; GoToTitleRefresh(); },
+            () => { Meta.Ascension = (Meta.Ascension + 1) % (Meta.AscensionUnlocked + 1); GoToTitleRefresh(); });
 
         private void CleanupRun()
         {
@@ -236,7 +256,12 @@ namespace PayWithPixels
             noHitWaves = 0;
             hitThisWave = false;
             newAchievements.Clear();
+            Ascension = Meta.Ascension;
             stats = new RunStats(Meta.Selected);
+            if (Ascension >= 1) ApplyStartPrice("FOG", 1);
+            if (Ascension >= 3) { ApplyStartPrice("HEAVY LEGS", 1); ApplyStartPrice("PIXELATION", 1); }
+            if (Ascension >= 5) { ApplyStartPrice("FLICKER", 1); ApplyStartPrice("ZOOM IN", 1); }
+            stats.Recompute();
             zone = 1;
             waveInZone = 0;
             wave = 0;
@@ -405,6 +430,13 @@ namespace PayWithPixels
             cam.transform.position = p;
         }
 
+        /// <summary>Utrata fokusu karty: wycisza dzwiek i pauzuje gre.</summary>
+        private void OnApplicationFocus(bool focused)
+        {
+            AudioListener.pause = !focused;
+            if (!focused && !Paused && CanPause && ui != null) TogglePause();
+        }
+
         private bool CanPause => state == State.ZoneIntro || state == State.Playing || state == State.Clearing || state == State.Shop;
 
         private void TogglePause()
@@ -421,7 +453,9 @@ namespace PayWithPixels
                 () => { TogglePause(); StartRun(); },
                 () => { Settings.Volume = Settings.Volume >= 0.99f ? 0f : Settings.Volume + 0.1f; ShowPauseMenu(); },
                 () => { Settings.ReduceFlicker = !Settings.ReduceFlicker; ShowPauseMenu(); },
-                () => { Settings.Shake = !Settings.Shake; ShowPauseMenu(); });
+                () => { Settings.Shake = !Settings.Shake; ShowPauseMenu(); },
+                () => { Settings.MusicVolume = Settings.MusicVolume >= 0.99f ? 0f : Settings.MusicVolume + 0.1f; ShowPauseMenu(); },
+                () => { Settings.SfxVolume = Settings.SfxVolume >= 0.99f ? 0f : Settings.SfxVolume + 0.1f; ShowPauseMenu(); });
         }
 
         private void Update()

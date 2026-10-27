@@ -19,6 +19,9 @@ namespace PayWithPixels
         private const string KeyAch = "pwp_ach";
         private const string KeyWeapon = "pwp_weapon";
         private const string KeyTutorial = "pwp_tutorial";
+        private const string KeyAscMax = "pwp_asc_max";
+        private const string KeyAscSel = "pwp_asc_sel";
+        private const string KeyBestScore = "pwp_best_score";
 
         public static readonly Achievement[] Achievements =
         {
@@ -39,7 +42,19 @@ namespace PayWithPixels
         public static int BestWave { get { Load(); return best; } }
         public static int Wins { get { Load(); return wins; } }
         public static int Runs { get { Load(); return runs; } }
-        private static int best, wins, runs;
+        private static int best, wins, runs, ascMax, ascSel, bestScore;
+
+        public const int MaxAscension = 5;
+
+        /// <summary>Najwyzszy odblokowany poziom Ascension (0 = brak, odblokowuje sie wygrana).</summary>
+        public static int AscensionUnlocked { get { Load(); return ascMax; } }
+        public static int BestScore { get { Load(); return bestScore; } }
+
+        public static int Ascension
+        {
+            get { Load(); return Mathf.Min(ascSel, ascMax); }
+            set { ascSel = Mathf.Clamp(value, 0, ascMax); Save(); }
+        }
 
         public static bool TutorialDone
         {
@@ -85,11 +100,16 @@ namespace PayWithPixels
 
         public static string WeaponUnlockHint(Weapon w) => w == Weapon.Shotgun ? "BEAT THE TOLL KEEPER" : w == Weapon.Laser ? "BEAT THE BANKER" : "";
 
-        public static void RecordRun(int waveReached, bool won)
+        public static void RecordRun(int waveReached, bool won, int ascension = 0, int score = 0)
         {
             Load();
             runs++;
-            if (won) wins++;
+            if (won)
+            {
+                wins++;
+                ascMax = Mathf.Min(MaxAscension, Mathf.Max(ascMax, ascension + 1));
+            }
+            if (score > bestScore) bestScore = score;
             if (waveReached > best) best = waveReached;
             Save();
         }
@@ -104,6 +124,9 @@ namespace PayWithPixels
                 wins = PlayerPrefs.GetInt(KeyWins, 0);
                 runs = PlayerPrefs.GetInt(KeyRuns, 0);
                 tutorial = PlayerPrefs.GetInt(KeyTutorial, 0) == 1;
+                ascMax = PlayerPrefs.GetInt(KeyAscMax, 0);
+                ascSel = PlayerPrefs.GetInt(KeyAscSel, 0);
+                bestScore = PlayerPrefs.GetInt(KeyBestScore, 0);
                 selected = (Weapon)PlayerPrefs.GetInt(KeyWeapon, 0);
                 foreach (var id in PlayerPrefs.GetString(KeyAch, "").Split(','))
                     if (!string.IsNullOrEmpty(id)) unlocked.Add(id);
@@ -119,6 +142,9 @@ namespace PayWithPixels
                 PlayerPrefs.SetInt(KeyWins, wins);
                 PlayerPrefs.SetInt(KeyRuns, runs);
                 PlayerPrefs.SetInt(KeyTutorial, tutorial ? 1 : 0);
+                PlayerPrefs.SetInt(KeyAscMax, ascMax);
+                PlayerPrefs.SetInt(KeyAscSel, ascSel);
+                PlayerPrefs.SetInt(KeyBestScore, bestScore);
                 PlayerPrefs.SetInt(KeyWeapon, (int)selected);
                 PlayerPrefs.SetString(KeyAch, string.Join(",", unlocked));
                 PlayerPrefs.Save();
