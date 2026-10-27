@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace PayWithPixels
 {
-    public enum EnemyType { Chaser, Shooter, Tank, Boss }
+    public enum EnemyType { Chaser, Shooter, Tank, Boss, Collector }
 
     public class Enemy : MonoBehaviour
     {
@@ -24,7 +24,23 @@ namespace PayWithPixels
         private int spriteSize;
         private bool diamond;
 
-        public static Enemy SpawnBoss(Transform parent, Vector2 pos)
+        public static Enemy SpawnCollector(Transform parent, Vector2 pos)
+        {
+            var go = new GameObject("Collector");
+            go.transform.SetParent(parent, false);
+            go.transform.position = pos;
+            var e = go.AddComponent<Enemy>();
+            e.type = EnemyType.Collector;
+            e.sr = Art.MakeRenderer(go, Art.Square("enemy_collector_walk_0", 20), 6);
+            e.walkName = "enemy_collector"; e.spriteSize = 20;
+            e.radius = 0.6f;
+            e.hp = e.maxHp = 25 + 3 * Game.Instance.zone;
+            e.speed = 3.1f;
+            e.contactDamage = 0;
+            return e;
+        }
+
+        public static Enemy SpawnBoss(Transform parent, Vector2 pos, int zone)
         {
             var go = new GameObject("Boss");
             go.transform.SetParent(parent, false);
@@ -33,7 +49,7 @@ namespace PayWithPixels
             e.type = EnemyType.Boss;
             e.sr = Art.MakeRenderer(go, Art.Square("boss_idle_0", 48), 6);
             e.radius = 1.4f;
-            e.hp = e.maxHp = 60;
+            e.hp = e.maxHp = 60 + 25 * (zone - 1);
             e.contactDamage = 2;
             e.shootTimer = 2f;
             return e;
@@ -125,6 +141,13 @@ namespace PayWithPixels
                 return;
             }
             Shard.Burst(transform.parent, transform.position, 5);
+            if (type == EnemyType.Collector)
+            {
+                Game.Instance.OnCollectorKilled();
+                Game.Instance.SpawnCoin(transform.position, 6);
+                Destroy(gameObject);
+                return;
+            }
             Game.Instance.SpawnCoin(transform.position, type == EnemyType.Tank ? 3 : 1);
             Destroy(gameObject);
         }
@@ -178,7 +201,16 @@ namespace PayWithPixels
             if (dir != Vector2.zero) transform.rotation = Art.FaceRotation(dir);
 
             float r = radius + Player.Radius;
-            if (dist < r) game.player.Hurt(contactDamage);
+            if (dist < r)
+            {
+                if (type == EnemyType.Collector)
+                {
+                    game.OnCollectorTouch();
+                    Destroy(gameObject);
+                    return;
+                }
+                game.player.Hurt(contactDamage);
+            }
         }
     }
 }

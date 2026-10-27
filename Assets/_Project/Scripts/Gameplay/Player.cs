@@ -12,6 +12,7 @@ namespace PayWithPixels
         private float dashTimer, dashCooldown;
         private Vector2 dashDir;
         private float walkClock;
+        public int shieldLeft;
         private float aimAngle;
         private bool aimInit;
         private SpriteRenderer sr, halo;
@@ -37,15 +38,17 @@ namespace PayWithPixels
             return p;
         }
 
+        public void RefillShield() => shieldLeft = Game.Instance.stats.shieldMax;
+
         public void Heal(int amount) => hp = Mathf.Min(Game.Instance.stats.maxHp, hp + amount);
 
         public void Hurt(int dmg)
         {
             var game = Game.Instance;
             if (invulnTimer > 0 || dashTimer > 0 || game.state == Game.State.Dead || game.state == Game.State.Won) return;
-            if (game.stats.shield > 0)
+            if (shieldLeft > 0)
             {
-                game.stats.shield--;
+                shieldLeft--;
                 invulnTimer = 0.6f;
                 return;
             }
@@ -66,11 +69,11 @@ namespace PayWithPixels
             var move = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
             if (move.sqrMagnitude > 1f) move.Normalize();
             dashCooldown -= Time.deltaTime;
-            if (game.stats.hasDash && dashCooldown <= 0 && Input.GetKeyDown(KeyCode.Space))
+            if (game.stats.HasDash && dashCooldown <= 0 && Input.GetKeyDown(KeyCode.Space))
             {
                 dashTimer = 0.15f;
                 Sfx.Play(Sound.Dash);
-                dashCooldown = 1.2f;
+                dashCooldown = game.stats.DashCooldown;
                 dashDir = move.sqrMagnitude > 0.01f ? move.normalized : (game.display.ScreenToWorld(Input.mousePosition) - (Vector2)transform.position).normalized;
             }
             Vector2 step = move * game.stats.MoveSpeed;
@@ -109,9 +112,9 @@ namespace PayWithPixels
         {
             var stats = Game.Instance.stats;
             Sfx.Play(Sound.Shoot);
-            float[] angles = stats.shotCount >= 3 ? new[] { -12f, 0f, 12f } : new[] { 0f };
-            foreach (float a in angles)
+            for (int i = 0; i < stats.shotCount; i++)
             {
+                float a = (i - (stats.shotCount - 1) / 2f) * 12f;
                 var d = (Vector2)(Quaternion.Euler(0, 0, a) * dir);
                 Bullet.Spawn(transform.parent, pos + d * 0.6f, d * 12f, true, stats.pierce);
             }

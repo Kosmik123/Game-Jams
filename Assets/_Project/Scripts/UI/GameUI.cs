@@ -12,7 +12,9 @@ namespace PayWithPixels
         private readonly List<KeyValuePair<Graphic, bool>> tinted = new List<KeyValuePair<Graphic, bool>>(); // true = foreground
         private Font font;
         private Text hud;
-        private GameObject shopPanel, deathPanel, titlePanel;
+        private GameObject shopPanel, deathPanel, titlePanel, zonePanel;
+        private Text zoneText, toastText;
+        private float toastTimer;
         private Text deathText;
         private RectTransform shopCards;
 
@@ -54,6 +56,14 @@ namespace PayWithPixels
             deathPanel.SetActive(false);
             BuildTitle();
 
+            zonePanel = NewPanel("Zone", transform);
+            zoneText = NewText("ZoneText", zonePanel.transform, "", 44, TextAnchor.MiddleCenter);
+            Stretch(zoneText.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            zonePanel.SetActive(false);
+
+            toastText = NewText("Toast", transform, "", 22, TextAnchor.UpperCenter);
+            Stretch(toastText.rectTransform, new Vector2(0, 0.80f), new Vector2(1, 0.9f), Vector2.zero, Vector2.zero);
+
             deathText = NewText("DeathText", deathPanel.transform, "", 32, TextAnchor.MiddleCenter);
             Stretch(deathText.rectTransform, new Vector2(0, 0), new Vector2(1, 1), Vector2.zero, Vector2.zero);
 
@@ -71,12 +81,36 @@ namespace PayWithPixels
 
         // ---------- publiczne API ----------
 
-        public void SetHud(int hp, int maxHp, int wave, int coins)
+        private void Update()
         {
-            hud.text = "HP " + Mathf.Max(0, hp) + "/" + maxHp + "    WAVE " + wave + "    COINS " + coins + "    [M] SOUND " + (Sfx.Muted ? "OFF" : "ON");
+            if (toastTimer > 0)
+            {
+                toastTimer -= Time.deltaTime;
+                if (toastTimer <= 0) toastText.text = "";
+            }
         }
 
-        public void ShowShop(List<Offer> offers, int coins, Action<Offer> onBuy, Action onSkip)
+        public void Toast(string msg)
+        {
+            toastText.text = msg;
+            toastTimer = 2.5f;
+        }
+
+        public void ShowZone(int zone, string name)
+        {
+            zoneText.text = "ZONE " + zone + "\n" + name;
+            zonePanel.transform.SetAsLastSibling();
+            zonePanel.SetActive(true);
+        }
+
+        public void HideZone() => zonePanel.SetActive(false);
+
+        public void SetHud(int hp, int maxHp, string zoneLabel, int coins, int debt)
+        {
+            hud.text = "HP " + Mathf.Max(0, hp) + "/" + maxHp + "    " + zoneLabel + "    COINS " + coins + (debt > 0 ? "    DEBT " + debt : "") + "    [M] SOUND " + (Sfx.Muted ? "OFF" : "ON");
+        }
+
+        public void ShowShop(List<Offer> offers, int coins, int debt, Action<Offer> onBuy, Action onSkip)
         {
             foreach (Transform c in shopPanel.transform) Destroy(c.gameObject);
             tinted.RemoveAll(kv => kv.Key == null);
@@ -93,13 +127,16 @@ namespace PayWithPixels
                 var inner = NewImage("Inner", card.transform, false);
                 Stretch(inner.rectTransform, Vector2.zero, Vector2.one, new Vector2(3, 3), new Vector2(-3, -3));
 
-                bool canBuy = o.sell || coins >= o.cost;
+                bool canBuy = Game.Instance.CanAfford(o);
+                bool onCredit = !o.sell && coins < o.cost;
                 string top = o.sell
                     ? "SELL\nGET " + o.reward + " COINS"
-                    : "GAIN\n" + o.gain.name + "\n" + o.gain.description;
+                    : "GAIN" + (o.level > 1 ? " LV" + o.level : "") + "\n" + o.gain.name + "\n" + o.gain.description;
                 string bottom = o.sell
                     ? "[ SELL ]"
-                    : (canBuy ? "BUY: " + o.cost + " COINS" : "NEED " + o.cost + " COINS");
+                    : !canBuy ? "NEED " + o.cost + " COINS"
+                    : onCredit ? "CREDIT: DEBT +" + (o.cost - coins)
+                    : "BUY: " + o.cost + " COINS";
                 var txt = NewText("Text", inner.transform,
                     top + "\n\nPRICE\n" + o.price.name + "\n" + o.price.description + "\n\n" + bottom,
                     18, TextAnchor.MiddleCenter);
