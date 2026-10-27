@@ -7,7 +7,7 @@ namespace PayWithPixels
     /// <summary>Caly stan runu: strefy, fale, monety, dlug, sklep, smierc. Wszystko budowane w kodzie (patrz Bootstrap).</summary>
     public class Game : MonoBehaviour
     {
-        public enum State { Title, ZoneIntro, Playing, Clearing, Shop, Dead, Won }
+        public enum State { Title, ZoneIntro, Playing, Clearing, Shop, Dead, Won, Story }
 
         public const float OrthoSize = 5.625f; // 180 px / 16 PPU / 2
         public static readonly Vector2 ArenaHalf = new Vector2(9.5f, 5.2f);
@@ -384,7 +384,60 @@ namespace PayWithPixels
             Sfx.StartMusic();
             ui.HideDeath();
             ui.HideShop();
-            BeginZone();
+            if (!introSeen && !Application.isBatchMode)
+            {
+                introSeen = true;   // intro raz na sesje strony; Esc/klik pomija
+                StartStory(IntroSlides, BeginZone);
+            }
+            else BeginZone();
+        }
+
+        // ---- fabula: intro (pomijalne) i linijki bossow ----
+        private static bool introSeen;
+        private static readonly string[][] IntroSlides =
+        {
+            new[] { "story_intro_1", "EVERYTHING YOU OWN WAS BOUGHT ON CREDIT." },
+            new[] { "story_intro_2", "NOW THE BILL HAS COME DUE." },
+            new[] { "story_intro_3", "THREE COLLECTORS BLOCK THE ROAD OUT." },
+            new[] { "story_intro_4", "PAY WITH WHAT YOU SEE. PAY WITH PIXELS." },
+        };
+        private static readonly string[] BossLines =
+        {
+            "TOLL KEEPER: EVERY ROAD HAS A TOLL. PAY.",
+            "THE BANKER: YOUR DEBT HAS BEEN... RESTRUCTURED.",
+            "THE AUCTIONEER: GOING ONCE... GOING TWICE... YOU.",
+        };
+        private int storyIndex;
+        private string[][] storySlides;
+        private System.Action storyDone;
+        private int storyFrame;
+
+        private void StartStory(string[][] slides, System.Action done)
+        {
+            storyFrame = Time.frameCount;
+            storySlides = slides;
+            storyDone = done;
+            storyIndex = 0;
+            state = State.Story;
+            ui.ShowStory(slides[0][0], slides[0][1], 1, slides.Length);
+        }
+
+        private void UpdateStory()
+        {
+            if (Time.frameCount <= storyFrame + 1) return;   // klik, ktory wystartowal run, nie przewija slajdu
+            if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.Backspace)) storyIndex = storySlides.Length;
+            else if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return) || Input.GetMouseButtonDown(0)) storyIndex++;
+            else return;
+
+            if (storyIndex < storySlides.Length)
+            {
+                ui.ShowStory(storySlides[storyIndex][0], storySlides[storyIndex][1], storyIndex + 1, storySlides.Length);
+                return;
+            }
+            ui.HideStory();
+            var done = storyDone;
+            storyDone = null;
+            done?.Invoke();
         }
 
         public void ApplyPrices()
@@ -422,6 +475,7 @@ namespace PayWithPixels
             if (IsBossWave)
             {
                 Enemy.SpawnBoss(world, new Vector2(0, ArenaHalf.y - 1.5f), zone);
+                ui.ShowBossLine(BossLines[Mathf.Clamp(zone - 1, 0, BossLines.Length - 1)]);
                 Sfx.Play(Sound.Boss);
             }
             else if (debt > 0 && waveInZone == WavesPerZone)
@@ -583,6 +637,7 @@ namespace PayWithPixels
                 ui.SetHud(player.hp, stats.maxHp, ZoneLabel(), coins, debt, FreezeHint());
 
             if (Input.GetKeyDown(KeyCode.M)) Sfx.ToggleMute();
+            if (state == State.Story) { UpdateStory(); return; }
             if (state == State.Title)
             {
                 if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return)) StartRun();
