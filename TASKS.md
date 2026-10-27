@@ -52,3 +52,23 @@ Projekt: Unity 6000.4.9f1, kod i assety w `Assets/_Project` (Scripts, Graphics, 
 
 ## Designer
 - [ ] Balans po testach, tuning kosztów, czasu runu (cel 12-15 min), build WebGL, QA.
+
+---
+# FAZA 3 — dodane przez designera (po bloku A/B)
+
+## Programista
+- [ ] Reszta bloku B: tutorial (3 podpowiedzi w fali 1 + wyjaśnienie sklepu), 3 pętle muzyczne (po jednej na strefę).
+- [ ] Balans na danych: rozszerz smoke bota o telemetrię (CSV: fala, czas, HP, monety, dług, liczba cen, zgon/wygrana) i uruchom 20+ runów z różnymi strategiami (losowy, ostrożny, 'kupuj wszystko'); cel: wygrana losowego bota 5-15%, ostrożnego 30-50%, runy 12-15 min. Raport do designera z propozycjami liczb.
+- [ ] Tryb ASCENSION po pierwszej wygranej: poziomy 1-5, każdy dodaje obowiązkową cenę na starcie lub mocniejszych wrogów, mnożnik wyniku. Zapis w PlayerPrefs, wybór na ekranie tytułowym.
+- [ ] Liczby obrażeń/ monet (małe, 5x7, bez AA) jeśli czytelne; inaczej pomiń.
+- [ ] Czytelność: ostrzeżenia przed atakami wrogów (telegraf), limit pocisków na ekranie, test z Mgłą x3 + Zbliżeniem (czy da się grać).
+- [ ] Dźwięk: wyciszenie po utracie fokusu karty, głośność z pauzy dla muzyki i SFX osobno.
+
+## Grafik
+- [ ] Ekran końca runu i 'ZONE N' (ramki), animowane logo na tytule (2-3 klatki), przejścia stref.
+- [ ] Efekty: błyski strzału, eksplozja (4-5 klatek), fala dashu, ikony Ascension (1-5).
+- [ ] Przegląd czytelności po testach, poprawki sprite'ów (gracz vs wrogowie vs pociski).
+- [ ] Okładka i 3 screeny pod stronę gry (630x500 okładka, 1-bit, dwa kolory) oraz animowany GIF/mockup do opisu.
+
+## Designer
+- [ ] Testy ręczne całego runu na WebGL, lista bugów do programisty, tuning wg telemetrii, tekst strony gry (opis, sterowanie).
