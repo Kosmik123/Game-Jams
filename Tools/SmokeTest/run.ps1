@@ -7,6 +7,6 @@ foreach ($d in 'Assets','Packages','ProjectSettings') { robocopy "$repo\$d" "$ds
 New-Item -ItemType Directory -Force "$dst\Assets\SmokeTests" | Out-Null
 Copy-Item "$PSScriptRoot\SmokeTest.cs","$PSScriptRoot\SmokeTests.asmdef" "$dst\Assets\SmokeTests" -Force
 $unity = "C:\Program Files\Unity\Hub\Editor\6000.3.27f1\Editor\Unity.exe"
-$p = Start-Process $unity -ArgumentList @('-batchmode','-projectPath',"`"$dst`"",'-runTests','-testPlatform','PlayMode','-testResults',"`"$dst\results.xml`"",'-logFile',"`"$dst\unity.log`"") -PassThru -Wait -NoNewWindow
+$p = Start-Process $unity -ArgumentList @('-batchmode','-noaudio','-projectPath',"`"$dst`"",'-runTests','-testPlatform','PlayMode','-testResults',"`"$dst\results.xml`"",'-logFile',"`"$dst\unity.log`"") -PassThru -Wait -NoNewWindow
 "exit $($p.ExitCode) (0 = OK)"
 Select-String -Path "$dst\unity.log" -Pattern '\[smoke\]|NullReference|Exception:' | Select -Last 25 | % Line
