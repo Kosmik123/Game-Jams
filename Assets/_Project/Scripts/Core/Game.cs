@@ -158,6 +158,7 @@ namespace PayWithPixels
             introTimer = 2.6f;
             waveInZone = 0;
             Palette.SetZone(zone, 1);
+            Obstacles.Build(world, zone);
             ui.ShowZone(zone, ZoneNames[zone - 1]);
         }
 

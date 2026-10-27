@@ -110,7 +110,9 @@ namespace PayWithPixels
             var pos = (Vector2)transform.position + step * Time.deltaTime;
             pos.x = Mathf.Clamp(pos.x, -Game.ArenaHalf.x, Game.ArenaHalf.x);
             pos.y = Mathf.Clamp(pos.y, -Game.ArenaHalf.y, Game.ArenaHalf.y);
+            pos = Obstacles.Push(pos, 0.38f);
             transform.position = pos;
+            if (dashTimer <= 0 && Obstacles.OnSpikes(pos, 0.3f)) Hurt(1);
 
             Vector2 aim = game.display.ScreenToWorld(Input.mousePosition) - pos;
             float target = aim.sqrMagnitude > 0.0001f ? Mathf.Atan2(aim.y, aim.x) * Mathf.Rad2Deg : aimAngle;
