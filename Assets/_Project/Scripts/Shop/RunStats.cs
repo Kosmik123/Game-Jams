@@ -31,7 +31,7 @@ namespace PayWithPixels
 
     public class Price
     {
-        public string name, description;
+        public string name, description, icon;
         public Action<RunStats> apply;
     }
 
@@ -47,25 +47,25 @@ namespace PayWithPixels
     {
         public static readonly List<Gain> Gains = new List<Gain>
         {
-            new Gain { name = "Szybsze strzały", description = "+35% szybkostrzelności", cost = 5,
+            new Gain { name = "FASTER SHOTS", description = "+35% FIRE RATE", cost = 5,
                 apply = (s, p) => s.fireRateMul *= 1.35f },
-            new Gain { name = "Więcej życia", description = "+2 max HP i leczenie o 2", cost = 5,
+            new Gain { name = "MORE HEALTH", description = "+2 MAX HP AND HEAL 2", cost = 5,
                 apply = (s, p) => { s.maxHp += 2; p.Heal(2); } },
-            new Gain { name = "Potrójny strzał", description = "3 pociski naraz", cost = 8,
+            new Gain { name = "TRIPLE SHOT", description = "FIRE 3 BULLETS AT ONCE", cost = 8,
                 apply = (s, p) => s.shotCount = 3 },
-            new Gain { name = "Leczenie", description = "Pełne HP", cost = 4,
+            new Gain { name = "HEALING", description = "FULL HP", cost = 4,
                 apply = (s, p) => p.Heal(99) },
-            new Gain { name = "Przebijanie", description = "Pociski przebijają +1 wroga", cost = 6,
+            new Gain { name = "PIERCING", description = "BULLETS PIERCE +1 ENEMY", cost = 6,
                 apply = (s, p) => s.pierce += 1 },
         };
 
         public static readonly List<Price> Prices = new List<Price>
         {
-            new Price { name = "Mgła", description = "Widzisz tylko okolicę gracza",
+            new Price { name = "FOG", icon = "icon_fog_eye", description = "YOU ONLY SEE NEAR YOURSELF",
                 apply = s => s.fogStacks++ },
-            new Price { name = "Pikselizacja", description = "Gorsza rozdzielczość obrazu",
+            new Price { name = "PIXELATION", icon = "icon_pixelation_grid", description = "WORSE PICTURE RESOLUTION",
                 apply = s => s.pixelStacks++ },
-            new Price { name = "Ciężkie nogi", description = "-20% prędkości ruchu",
+            new Price { name = "HEAVY LEGS", icon = "icon_legs_boot", description = "-20% MOVE SPEED",
                 apply = s => s.moveSpeedMul *= 0.8f },
         };
 

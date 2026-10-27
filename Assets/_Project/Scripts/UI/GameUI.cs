@@ -72,7 +72,7 @@ namespace PayWithPixels
 
         public void SetHud(int hp, int maxHp, int wave, int coins)
         {
-            hud.text = "HP " + Mathf.Max(0, hp) + "/" + maxHp + "    FALA " + wave + "    MONETY " + coins;
+            hud.text = "HP " + Mathf.Max(0, hp) + "/" + maxHp + "    WAVE " + wave + "    COINS " + coins;
         }
 
         public void ShowShop(List<Offer> offers, int coins, Action<Offer> onBuy, Action onSkip)
@@ -80,7 +80,7 @@ namespace PayWithPixels
             foreach (Transform c in shopPanel.transform) Destroy(c.gameObject);
             tinted.RemoveAll(kv => kv.Key == null);
 
-            var title = NewText("Title", shopPanel.transform, "SKLEP   (monety: " + coins + ")", 30, TextAnchor.UpperCenter);
+            var title = NewText("Title", shopPanel.transform, "SHOP   (COINS: " + coins + ")", 30, TextAnchor.UpperCenter);
             Stretch(title.rectTransform, new Vector2(0, 0.85f), new Vector2(1, 1), Vector2.zero, Vector2.zero);
 
             for (int i = 0; i < offers.Count; i++)
@@ -94,10 +94,19 @@ namespace PayWithPixels
 
                 bool canBuy = coins >= o.cost;
                 var txt = NewText("Text", inner.transform,
-                    "ZYSK\n" + o.gain.name + "\n" + o.gain.description + "\n\nCENA\n" + o.price.name + "\n" + o.price.description +
-                    "\n\n" + (canBuy ? "KUP: " + o.cost + " monet" : "brak monet (" + o.cost + ")"),
+                    "GAIN\n" + o.gain.name + "\n" + o.gain.description + "\n\nPRICE\n" + o.price.name + "\n" + o.price.description +
+                    "\n\n" + (canBuy ? "BUY: " + o.cost + " COINS" : "NEED " + o.cost + " COINS"),
                     18, TextAnchor.MiddleCenter);
                 Stretch(txt.rectTransform, Vector2.zero, Vector2.one, new Vector2(8, 8), new Vector2(-8, -8));
+
+                var iconSprite = string.IsNullOrEmpty(o.price.icon) ? null : Resources.Load<Sprite>("Icons/" + o.price.icon);
+                if (iconSprite != null)
+                {
+                    var icon = NewImage("Icon", inner.transform, true);
+                    icon.sprite = iconSprite;
+                    icon.raycastTarget = false;
+                    Stretch(icon.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(-24, -56), new Vector2(24, -8));
+                }
 
                 var btn = card.gameObject.AddComponent<Button>();
                 btn.transition = Selectable.Transition.None;
@@ -111,7 +120,7 @@ namespace PayWithPixels
             Stretch(skip.rectTransform, new Vector2(0.35f, 0.08f), new Vector2(0.65f, 0.18f), Vector2.zero, Vector2.zero);
             var skipIn = NewImage("Inner", skip.transform, false);
             Stretch(skipIn.rectTransform, Vector2.zero, Vector2.one, new Vector2(3, 3), new Vector2(-3, -3));
-            var st = NewText("Text", skipIn.transform, "DALEJ BEZ ZAKUPU", 20, TextAnchor.MiddleCenter);
+            var st = NewText("Text", skipIn.transform, "SKIP", 20, TextAnchor.MiddleCenter);
             Stretch(st.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             var sb = skip.gameObject.AddComponent<Button>();
             sb.transition = Selectable.Transition.None;
@@ -126,7 +135,7 @@ namespace PayWithPixels
 
         public void ShowDeath(int wave, Action onRestart)
         {
-            deathText.text = "KONIEC\nDotarłeś do fali " + wave + "\n\n[ kliknij lub naciśnij R ]";
+            deathText.text = "GAME OVER\nYOU REACHED WAVE " + wave + "\n\n[ CLICK OR PRESS R ]";
             var btn = deathPanel.GetComponent<Button>() ?? deathPanel.AddComponent<Button>();
             btn.transition = Selectable.Transition.None;
             btn.targetGraphic = deathPanel.GetComponent<Image>();
