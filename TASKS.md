@@ -196,3 +196,11 @@ Stan kodu: Toll Keeper (HP 50): 2 wzorce (pierścień / wachlarz) na przemian, o
 - [ ] AUCTIONEER: 4 etapy (100/75/50/25% HP), każdy z innym wzorcem: (1) wachlarz 3 pocisków celowanych 'oferta', (2) pierścień z licytacją (jak teraz), (3) pionowe/poziome linie z telegrafem, (4) łączenie dwóch wzorców naraz + licytacja co próg.
 - [ ] Strefy 4+ (FAZA 13): każdy boss min. 4 wzorce w 3 fazach, jeden wzorzec 'podpis' bossa.
 - [ ] Zmiany bossów do balansu FAZY 12: HP bossów bez zmian, tylko wzorce; test botem 'dużo uników' oraz ręcznie przez Kosmika.
+
+---
+# FAZA 10f — szansa pojawienia się Poborcy zależna od długu (pomysł Kosmika, zatwierdzone)
+- [ ] Zamiast gwarantowanego Poborcy w ostatniej zwykłej fali strefy: w każdej zwykłej fali (nie boss) od 2. fali strefy Poborca pojawia się z szansą dług / MaxDebt (MaxDebt = 20; dług 10 = 50%, dług 20 = 100%). Maks. jeden Poborca naraz na arenie.
+- [ ] Minimalna szansa 10% przy dowolnym długu > 0 (mały dług nie jest darmowy). Dług 0 = brak Poborcy.
+- [ ] Gwarancja: w ostatniej zwykłej fali strefy (przed bossem) Poborca pojawia się na pewno, jeśli dług >= MaxDebt/2.
+- [ ] BEZ nowej informacji w UI (decyzja Kosmika: za dużo informacji). Usuń/zmień komunikat 'COLLECTOR IN n WAVES' w pasku sklepu i tutorialowy toast 'COLLECTOR COMES (WAVE 5)' na krótszy bez konkretnej fali (np. 'THE COLLECTOR VISITS BIG DEBTS').
+- [ ] Do bota/balansu: przeliczyć krótko serię careful/human po zmianie (sprawdzić, czy gracze spłacają dług częściej i czy nie rośnie śmiertelność).
