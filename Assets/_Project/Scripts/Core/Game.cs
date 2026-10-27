@@ -6,7 +6,7 @@ namespace PayWithPixels
     /// <summary>Caly stan runu: fale, monety, sklep, smierc. Wszystko budowane w kodzie (patrz Bootstrap).</summary>
     public class Game : MonoBehaviour
     {
-        public enum State { Playing, Clearing, Shop, Dead }
+        public enum State { Playing, Clearing, Shop, Dead, Won }
 
         public const float OrthoSize = 5.625f; // 180 px / 16 PPU / 2
         public static readonly Vector2 ArenaHalf = new Vector2(9.5f, 5.2f);
@@ -117,11 +117,23 @@ namespace PayWithPixels
             wave++;
             Palette.SetIndex((wave - 1) / 2);
             state = State.Playing;
-            spawnLeft = 4 + wave * 2;
+            spawnLeft = IsBossWave ? 6 : 4 + wave * 2;
             spawnTimer = 0.5f;
+            if (IsBossWave) Enemy.SpawnBoss(world, new Vector2(0, ArenaHalf.y - 1.5f));
         }
 
+        public const int BossWave = 8;
+        public bool IsBossWave => wave == BossWave;
+
         public void AddCoins(int n) => coins += n;
+
+        public void OnBossKilled()
+        {
+            foreach (var e in Enemy.All.ToArray()) if (e != null) Destroy(e.gameObject);
+            foreach (var b in Bullet.All.ToArray()) if (b != null) Destroy(b.gameObject);
+            state = State.Won;
+            ui.ShowDeath(wave, StartRun, true);
+        }
 
         public void SpawnCoin(Vector2 pos, int count)
         {
@@ -146,7 +158,7 @@ namespace PayWithPixels
             {
                 case State.Playing:
                     UpdateSpawner();
-                    if (spawnLeft <= 0 && Enemy.All.Count == 0)
+                    if (spawnLeft <= 0 && Enemy.All.Count == 0 && !IsBossWave)
                     {
                         state = State.Clearing;
                         clearTimer = 1.2f;
@@ -156,6 +168,7 @@ namespace PayWithPixels
                     clearTimer -= Time.deltaTime;
                     if (clearTimer <= 0) OpenShop();
                     break;
+                case State.Won:
                 case State.Dead:
                     if (Input.GetKeyDown(KeyCode.R)) StartRun();
                     break;
@@ -180,6 +193,7 @@ namespace PayWithPixels
             spawnTimer = Mathf.Max(0.35f, 0.8f - wave * 0.04f);
             spawnLeft--;
 
+            if (IsBossWave) { Enemy.Spawn(world, EnemyType.Chaser, PickSpawnPoint(), wave); spawnTimer = 4f; return; }
             EnemyType type = EnemyType.Chaser;
             float r = Random.value;
             if (wave >= 4 && r < 0.15f) type = EnemyType.Tank;
@@ -210,7 +224,7 @@ namespace PayWithPixels
             foreach (var b in Bullet.All.ToArray()) if (b != null) Destroy(b.gameObject);
 
             state = State.Shop;
-            ui.ShowShop(Catalog.Roll(3, wave), coins, Buy, CloseShop);
+            ui.ShowShop(Catalog.Roll(3, wave, stats), coins, Buy, CloseShop);
         }
 
         private void Buy(Offer o)

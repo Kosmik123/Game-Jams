@@ -15,6 +15,9 @@ namespace PayWithPixels
         public int fogStacks;
         public int pixelStacks;
         public int flickerStacks;
+        public bool hasDash;
+        public int shield;            // ile trafien pochlania tarcza
+        public float magnetRange = 1.8f;
 
         /// <summary>Cena "Migotanie": co 8 s paleta odwraca sie na (1 + 0.5*stack) s.</summary>
         public float FlickerDuration => flickerStacks <= 0 ? 0f : 1f + 0.5f * flickerStacks;
@@ -28,9 +31,10 @@ namespace PayWithPixels
 
     public class Gain
     {
-        public string name, description;
+        public string name, description, icon;
         public int cost;
         public Action<RunStats, Player> apply;
+        public Func<RunStats, bool> available; // null = zawsze
     }
 
     public class Price
@@ -51,16 +55,22 @@ namespace PayWithPixels
     {
         public static readonly List<Gain> Gains = new List<Gain>
         {
-            new Gain { name = "FASTER SHOTS", description = "+35% FIRE RATE", cost = 5,
+            new Gain { name = "FASTER SHOTS", icon = "icon_gain_firerate", description = "+35% FIRE RATE", cost = 5,
                 apply = (s, p) => s.fireRateMul *= 1.35f },
-            new Gain { name = "MORE HEALTH", description = "+2 MAX HP AND HEAL 2", cost = 5,
+            new Gain { name = "MORE HEALTH", icon = "icon_heart", description = "+2 MAX HP AND HEAL 2", cost = 5,
                 apply = (s, p) => { s.maxHp += 2; p.Heal(2); } },
-            new Gain { name = "TRIPLE SHOT", description = "FIRE 3 BULLETS AT ONCE", cost = 8,
-                apply = (s, p) => s.shotCount = 3 },
-            new Gain { name = "HEALING", description = "FULL HP", cost = 4,
+            new Gain { name = "TRIPLE SHOT", icon = "icon_gain_triple", description = "FIRE 3 BULLETS AT ONCE", cost = 8,
+                apply = (s, p) => s.shotCount = 3, available = s => s.shotCount < 3 },
+            new Gain { name = "HEALING", icon = "icon_gain_heal", description = "FULL HP", cost = 4,
                 apply = (s, p) => p.Heal(99) },
-            new Gain { name = "PIERCING", description = "BULLETS PIERCE +1 ENEMY", cost = 6,
+            new Gain { name = "PIERCING", icon = "icon_gain_pierce", description = "BULLETS PIERCE +1 ENEMY", cost = 6,
                 apply = (s, p) => s.pierce += 1 },
+            new Gain { name = "DASH", icon = "icon_gain_dash", description = "SPACE: QUICK DASH, INVULNERABLE", cost = 7,
+                apply = (s, p) => s.hasDash = true, available = s => !s.hasDash },
+            new Gain { name = "MAGNET", icon = "icon_gain_magnet", description = "PULLS COINS FROM FAR AWAY", cost = 4,
+                apply = (s, p) => s.magnetRange += 2.5f, available = s => s.magnetRange < 6f },
+            new Gain { name = "SHIELD", icon = "icon_gain_shield", description = "BLOCKS THE NEXT HIT", cost = 5,
+                apply = (s, p) => s.shield++ },
         };
 
         public static readonly List<Price> Prices = new List<Price>
@@ -75,9 +85,9 @@ namespace PayWithPixels
                 apply = s => s.moveSpeedMul *= 0.8f },
         };
 
-        public static List<Offer> Roll(int count, int wave)
+        public static List<Offer> Roll(int count, int wave, RunStats stats)
         {
-            var gains = new List<Gain>(Gains);
+            var gains = Gains.FindAll(g => g.available == null || g.available(stats));
             var offers = new List<Offer>();
             for (int i = 0; i < count && gains.Count > 0; i++)
             {

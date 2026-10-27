@@ -9,6 +9,8 @@ namespace PayWithPixels
         public int hp;
         private float fireTimer;
         private float invulnTimer;
+        private float dashTimer, dashCooldown;
+        private Vector2 dashDir;
         private SpriteRenderer sr;
         private Transform aimMark;
 
@@ -30,7 +32,14 @@ namespace PayWithPixels
 
         public void Hurt(int dmg)
         {
-            if (invulnTimer > 0 || Game.Instance.state == Game.State.Dead) return;
+            var game = Game.Instance;
+            if (invulnTimer > 0 || dashTimer > 0 || game.state == Game.State.Dead || game.state == Game.State.Won) return;
+            if (game.stats.shield > 0)
+            {
+                game.stats.shield--;
+                invulnTimer = 0.6f;
+                return;
+            }
             hp -= dmg;
             invulnTimer = 1f;
             if (hp <= 0) Game.Instance.OnPlayerDied();
@@ -45,7 +54,16 @@ namespace PayWithPixels
 
             var move = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
             if (move.sqrMagnitude > 1f) move.Normalize();
-            var pos = (Vector2)transform.position + move * (game.stats.MoveSpeed * Time.deltaTime);
+            dashCooldown -= Time.deltaTime;
+            if (game.stats.hasDash && dashCooldown <= 0 && Input.GetKeyDown(KeyCode.Space))
+            {
+                dashTimer = 0.15f;
+                dashCooldown = 1.2f;
+                dashDir = move.sqrMagnitude > 0.01f ? move.normalized : (game.display.ScreenToWorld(Input.mousePosition) - (Vector2)transform.position).normalized;
+            }
+            Vector2 step = move * game.stats.MoveSpeed;
+            if (dashTimer > 0) { dashTimer -= Time.deltaTime; step = dashDir * 20f; }
+            var pos = (Vector2)transform.position + step * Time.deltaTime;
             pos.x = Mathf.Clamp(pos.x, -Game.ArenaHalf.x, Game.ArenaHalf.x);
             pos.y = Mathf.Clamp(pos.y, -Game.ArenaHalf.y, Game.ArenaHalf.y);
             transform.position = pos;

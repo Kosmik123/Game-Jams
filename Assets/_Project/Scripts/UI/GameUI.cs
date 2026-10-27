@@ -105,7 +105,16 @@ namespace PayWithPixels
                     var icon = NewImage("Icon", inner.transform, true);
                     icon.sprite = iconSprite;
                     icon.raycastTarget = false;
-                    Stretch(icon.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(-24, -56), new Vector2(24, -8));
+                    Stretch(icon.rectTransform, new Vector2(1, 1), new Vector2(1, 1), new Vector2(-56, -56), new Vector2(-8, -8));
+                }
+
+                var gainSprite = string.IsNullOrEmpty(o.gain.icon) ? null : Resources.Load<Sprite>("Icons/" + o.gain.icon);
+                if (gainSprite != null)
+                {
+                    var gi = NewImage("GainIcon", inner.transform, true);
+                    gi.sprite = gainSprite;
+                    gi.raycastTarget = false;
+                    Stretch(gi.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(8, -56), new Vector2(56, -8));
                 }
 
                 var btn = card.gameObject.AddComponent<Button>();
@@ -133,9 +142,9 @@ namespace PayWithPixels
 
         public void HideShop() => shopPanel.SetActive(false);
 
-        public void ShowDeath(int wave, Action onRestart)
+        public void ShowDeath(int wave, Action onRestart, bool won = false)
         {
-            deathText.text = "GAME OVER\nYOU REACHED WAVE " + wave + "\n\n[ CLICK OR PRESS R ]";
+            deathText.text = (won ? "YOU WIN\nTHE BOSS PAID THE PRICE" : "GAME OVER\nYOU REACHED WAVE " + wave) + "\n\n[ CLICK OR PRESS R ]";
             var btn = deathPanel.GetComponent<Button>() ?? deathPanel.AddComponent<Button>();
             btn.transition = Selectable.Transition.None;
             btn.targetGraphic = deathPanel.GetComponent<Image>();

@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace PayWithPixels
 {
-    public enum EnemyType { Chaser, Shooter, Tank }
+    public enum EnemyType { Chaser, Shooter, Tank, Boss }
 
     public class Enemy : MonoBehaviour
     {
@@ -16,6 +16,65 @@ namespace PayWithPixels
         private int contactDamage = 1;
         private float shootTimer;
         private float strafeSign = 1f;
+        private int maxHp;
+        private float clock;
+        private int pattern;
+        private SpriteRenderer sr;
+
+        public static Enemy SpawnBoss(Transform parent, Vector2 pos)
+        {
+            var go = new GameObject("Boss");
+            go.transform.SetParent(parent, false);
+            go.transform.position = pos;
+            var e = go.AddComponent<Enemy>();
+            e.type = EnemyType.Boss;
+            e.sr = Art.MakeRenderer(go, Art.Square("boss_idle_0", 48), 6);
+            e.radius = 1.4f;
+            e.hp = e.maxHp = 60;
+            e.contactDamage = 2;
+            e.shootTimer = 2f;
+            return e;
+        }
+
+        private void UpdateBoss(Game game)
+        {
+            clock += Time.deltaTime;
+            sr.sprite = Art.Square(Mathf.FloorToInt(clock / 0.4f) % 2 == 0 ? "boss_idle_0" : "boss_idle_1", 48);
+
+            // wolno patroluje przy gornej krawedzi
+            var pos = new Vector2(Mathf.Sin(clock * 0.6f) * (Game.ArenaHalf.x - 2f), Game.ArenaHalf.y - 1.6f);
+            transform.position = pos;
+
+            shootTimer -= Time.deltaTime;
+            if (shootTimer > 0) return;
+            bool enraged = hp * 2 < maxHp;
+            shootTimer = enraged ? 1.1f : 1.7f;
+            pattern++;
+
+            Vector2 toPlayer = (Vector2)game.player.transform.position - pos;
+            float baseAngle = Mathf.Atan2(toPlayer.y, toPlayer.x) * Mathf.Rad2Deg;
+            if (pattern % 2 == 0)
+            {
+                // pierscien
+                int n = enraged ? 18 : 12;
+                float offset = Random.Range(0f, 360f);
+                for (int i = 0; i < n; i++)
+                    FireBoss(pos, offset + i * 360f / n, 4f);
+            }
+            else
+            {
+                // wachlarz w gracza
+                int n = enraged ? 7 : 5;
+                for (int i = 0; i < n; i++)
+                    FireBoss(pos, baseAngle + (i - (n - 1) / 2f) * 12f, 6f);
+            }
+        }
+
+        private void FireBoss(Vector2 pos, float angleDeg, float speed)
+        {
+            var d = new Vector2(Mathf.Cos(angleDeg * Mathf.Deg2Rad), Mathf.Sin(angleDeg * Mathf.Deg2Rad));
+            Bullet.Spawn(transform.parent, pos + d * 1.2f, d * speed, false, 0, "bullet_boss");
+        }
 
         public static Enemy Spawn(Transform parent, EnemyType type, Vector2 pos, int wave)
         {
@@ -53,6 +112,11 @@ namespace PayWithPixels
         {
             hp -= dmg;
             if (hp > 0) return;
+            if (type == EnemyType.Boss)
+            {
+                Game.Instance.OnBossKilled();
+                return;
+            }
             Game.Instance.SpawnCoin(transform.position, type == EnemyType.Tank ? 3 : 1);
             Destroy(gameObject);
         }
@@ -62,6 +126,14 @@ namespace PayWithPixels
             var game = Game.Instance;
             if (game.state != Game.State.Playing && game.state != Game.State.Clearing) return;
             if (game.player == null) return;
+
+            if (type == EnemyType.Boss)
+            {
+                UpdateBoss(game);
+                if (((Vector2)game.player.transform.position - (Vector2)transform.position).magnitude < radius + Player.Radius)
+                    game.player.Hurt(contactDamage);
+                return;
+            }
 
             Vector2 pos = transform.position;
             Vector2 toPlayer = (Vector2)game.player.transform.position - pos;
