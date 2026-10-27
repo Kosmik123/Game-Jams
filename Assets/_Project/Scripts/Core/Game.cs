@@ -14,7 +14,7 @@ namespace PayWithPixels
 
         public const int Zones = 3;
         public const int WavesPerZone = 5;           // + boss strefy
-        public const int MaxDebt = 30;
+        public const int MaxDebt = 20;
 
         private static readonly string[] ZoneNames = { "THE TOLL ROAD", "THE BANK", "THE AUCTION HOUSE" };
 
@@ -44,6 +44,7 @@ namespace PayWithPixels
         private bool freezeReady;
         private int kills;
         private float lingerTimer;
+        private bool firstShopPending;
         private float runTime;
         private int coinsEarned;
         private bool hitThisWave;
@@ -258,6 +259,7 @@ namespace PayWithPixels
             noHitWaves = 0;
             hitThisWave = false;
             newAchievements.Clear();
+            firstShopPending = true;
             Ascension = Meta.Ascension;
             stats = new RunStats(Meta.Selected);
             if (Ascension >= 1) ApplyStartPrice("FOG", 1);
@@ -310,7 +312,7 @@ namespace PayWithPixels
             Palette.SetZone(zone, waveInZone);
             state = State.Playing;
             lastWaveWasBoss = IsBossWave;
-            spawnLeft = IsBossWave ? 6 : 5 + 2 * waveInZone + 4 * (zone - 1);
+            spawnLeft = IsBossWave ? 6 : 8 + 3 * waveInZone + 5 * (zone - 1);
             spawnTimer = 0.5f;
             player.RefillShield();
             freezeReady = stats.freeze > 0;
@@ -655,7 +657,7 @@ namespace PayWithPixels
             if (spawnLeft <= 0) return;
             spawnTimer -= Time.deltaTime;
             if (spawnTimer > 0) return;
-            spawnTimer = Mathf.Max(0.35f, 0.8f - Difficulty * 0.03f);
+            spawnTimer = Mathf.Max(0.5f, 1.0f - Difficulty * 0.03f);
             spawnLeft--;
 
             if (IsBossWave)
@@ -735,9 +737,15 @@ namespace PayWithPixels
 
             state = State.Shop;
             shopOffers = Catalog.Roll(3, wave, stats);
+            if (firstShopPending)
+            {
+                firstShopPending = false;
+                var first = shopOffers.Find(o => !o.sell);
+                if (first != null) first.free = true;   // pierwszy zysk w runie jest za darmo, cena (zmysl) nie
+            }
             ui.AnimateNextShop = true;
             if (!Meta.TutorialDone)
-                ui.Toast("EVERY GAIN HAS A PRICE THAT LASTS THE WHOLE RUN. NO COINS? BUY ON CREDIT - BUT DEBT GROWS", 9f);
+                ui.Toast("THE FIRST GAIN IS FREE - ITS PRICE IS NOT. EVERY PRICE LASTS THE WHOLE RUN. NO COINS? BUY ON CREDIT, BUT DEBT GROWS", 10f);
             rerolls = 0;
             purchases = 0;
             haggled = false;
@@ -752,7 +760,7 @@ namespace PayWithPixels
         private int RerollCost => 3 + 2 * rerolls;
 
         /// <summary>Aktualny koszt oferty: +25% za kazdy wczesniejszy zakup w tej wizycie.</summary>
-        public int CostOf(Offer o) => Mathf.CeilToInt(o.cost * (1f + 0.25f * purchases));
+        public int CostOf(Offer o) => o.free ? 0 : Mathf.CeilToInt(o.cost * (1f + 0.25f * purchases));
 
         private void RefreshShopUi()
         {
@@ -814,7 +822,7 @@ namespace PayWithPixels
                     debt += c - coins;   // brak monet: reszta na kredyt
                     coins = 0;
                 }
-                purchases++;
+                if (!o.free) purchases++;
                 var g = o.gain;
                 if (!g.consumable) stats.levels[g.name] = o.level;
                 stats.Recompute();

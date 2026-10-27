@@ -10,7 +10,7 @@ namespace PayWithPixels
     /// </summary>
     public class RunStats
     {
-        public const int BaseHp = 5;
+        public const int BaseHp = 6;
 
         // ---- zyski (poziomy) ----
         public readonly Dictionary<string, int> levels = new Dictionary<string, int>();
@@ -135,6 +135,7 @@ namespace PayWithPixels
         public int cost;
         public int level;   // poziom zysku po zakupie
         public bool sold;   // kupiona w tej wizycie
+        public bool free;   // pierwszy zakup w runie
         public bool sell;   // oferta "Sprzedaj": bierzesz cene, dostajesz monety
         public int reward;
     }
@@ -225,7 +226,7 @@ namespace PayWithPixels
 
         public static int GainCost(Gain g, int level, int wave, RunStats stats)
         {
-            int cost = g.cost + (level - 1) * 3 + wave / 4;
+            int cost = g.cost + (level - 1) * 3 + (wave >= 13 ? wave / 3 : wave / 4);
             return g.heal ? cost * (1 + stats.costlyHealStacks) : cost;
         }
 

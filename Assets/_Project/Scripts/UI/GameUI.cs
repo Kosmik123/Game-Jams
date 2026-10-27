@@ -209,6 +209,7 @@ namespace PayWithPixels
                 string key = "[" + (i + 1) + "] ";
                 string bottom = o.sold ? "* SOLD *"
                     : o.sell ? key + "SELL"
+                    : o.free ? key + "FIRST ONE IS FREE!"
                     : !canBuy ? "NEED " + cost + " COINS"
                     : onCredit ? key + "CREDIT: DEBT +" + (cost - coins)
                     : key + "BUY: " + cost + " COINS";

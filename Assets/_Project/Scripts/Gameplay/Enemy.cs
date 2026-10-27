@@ -116,7 +116,7 @@ namespace PayWithPixels
             e.bossBullet = zone == 1 ? "bullet_boss" : zone == 2 ? "bullet_boss2" : "bullet_boss3";
             e.sr = Art.MakeRenderer(go, Art.Square(e.bossSprite + "_0", 48), 6);
             e.radius = 1.4f;
-            e.hp = e.maxHp = Mathf.CeilToInt((zone == 1 ? 60 : zone == 2 ? 95 : 130) * Game.Instance.BossHpMul);
+            e.hp = e.maxHp = Mathf.CeilToInt((zone == 1 ? 50 : zone == 2 ? 95 : 130) * Game.Instance.BossHpMul);
             e.contactDamage = 2;
             e.shootTimer = 2f;
             e.spawnAddsTimer = 6f;
@@ -188,13 +188,13 @@ namespace PayWithPixels
             shootTimer -= Time.deltaTime;
             if (shootTimer > 0) return;
             bool enraged = hp * 2 < maxHp;
-            shootTimer = enraged ? 1.1f : 1.7f;
+            shootTimer = enraged ? 1.3f : 2.0f;
             pattern++;
 
             float baseAngle = AngleToPlayer(game, pos);
             if (pattern % 2 == 0)
             {
-                int n = enraged ? 18 : 12;
+                int n = enraged ? 14 : 10;
                 float offset = Random.Range(0f, 360f);
                 for (int i = 0; i < n; i++) FireBoss(pos, offset + i * 360f / n, 4f);
             }
@@ -405,7 +405,7 @@ namespace PayWithPixels
 
                 case EnemyType.Guard:
                     move = dir;
-                    facing = dir == Vector2.zero ? facing : dir;
+                    if (dir != Vector2.zero) facing = ((Vector2)Vector3.RotateTowards(facing, dir, 1.6f * dt, 0f)).normalized;   // tarcza obraca sie powoli: da sie go okrazyc
                     break;
 
                 default:
