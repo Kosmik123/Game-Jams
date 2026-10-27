@@ -31,6 +31,14 @@ public class SmokeTest
         var gameGo = GameObject.Find("Game");
         Assert.NotNull(gameGo, "Game object not created by Bootstrap");
         var game = gameGo.GetComponent(T("Game"));
+        string weaponEnv = Environment.GetEnvironmentVariable("SMOKE_WEAPON");   // 0 pistol, 1 shotgun, 2 laser
+        int weaponId = string.IsNullOrEmpty(weaponEnv) ? 0 : int.Parse(weaponEnv);
+        if (weaponId > 0)
+        {
+            T("Meta").GetMethod("Unlock", All).Invoke(null, new object[] { "boss1" });
+            T("Meta").GetMethod("Unlock", All).Invoke(null, new object[] { "boss2" });
+            T("Meta").GetProperty("Selected", All).SetValue(null, Enum.ToObject(T("Weapon"), weaponId));
+        }
         Call(game, "StartRun");
         Application.targetFrameRate = -1;
         QualitySettings.vSyncCount = 0;
@@ -75,7 +83,8 @@ public class SmokeTest
                     if (d < best) { best = d; target = e.transform.position; }
                 }
                 Vector2 dir = best < 1e8f ? (target - (Vector2)playerTr.position).normalized : Vector2.right;
-                Call(player, "Shoot", (Vector2)playerTr.position, dir);
+                if (weaponId == 2) Call(player, "UpdateBeam", game, (Vector2)playerTr.position, dir, true);
+                else Call(player, "Shoot", (Vector2)playerTr.position, dir);
                 if (frame % 120 == 0) playerTr.position = new Vector3((float)(rng.NextDouble() * 12 - 6), (float)(rng.NextDouble() * 6 - 3), 0);
             }
 

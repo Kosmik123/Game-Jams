@@ -57,30 +57,28 @@ namespace PayWithPixels.Build
             string indexPath = Path.Combine(dir, "index.html");
             if (!File.Exists(indexPath)) { Debug.LogError("index.html missing in " + dir); return false; }
             string html = File.ReadAllText(indexPath);
+
+            // wszystkie nazwy plikow w katalogu buildu (rekurencyjnie), z prawdziwa wielkoscia liter
+            var actualNames = new System.Collections.Generic.List<string>();
+            foreach (var path in Directory.GetFiles(dir, "*", SearchOption.AllDirectories))
+                actualNames.Add(Path.GetFileName(path));
+
             bool ok = true, changed = false;
-            var rx = new Regex("([\"'])((?:[\\w./-]+/)?[\\w.-]+\\.(?:js|data|wasm|json|css|ttf|ico|png|jpg|svg|unityweb))\\1");
+            // literaly typu "Build/WebGL.loader.js" albo "/WebGL.data" (sciezka skladana w JS z buildUrl + "/" + nazwa)
+            var rx = new Regex("([\"'])((?:[\\w./-]*/)?)([\\w.-]+\\.(?:js|data|wasm|json|css|ttf|ico|png|jpg|svg|unityweb))\\1");
             foreach (Match m in rx.Matches(html))
             {
-                string rel = m.Groups[2].Value;
-                if (rel.StartsWith("http") || rel.Contains("..")) continue;
-                string full = Path.Combine(dir, rel);
-                string folder = Path.GetDirectoryName(full);
-                string name = Path.GetFileName(full);
-                string actual = null;
-                if (Directory.Exists(folder))
-                    foreach (var f in Directory.GetFiles(folder))
-                        if (string.Equals(Path.GetFileName(f), name, StringComparison.OrdinalIgnoreCase)) { actual = Path.GetFileName(f); break; }
-                if (actual == null) { Debug.LogError("index.html references missing file: " + rel); ok = false; }
-                else if (actual != name)
-                {
-                    string fixedRel = rel.Substring(0, rel.Length - name.Length) + actual;
-                    Debug.LogWarning("Fixing case in index.html: " + rel + " -> " + fixedRel);
-                    html = html.Replace(m.Value, m.Groups[1].Value + fixedRel + m.Groups[1].Value);
-                    changed = true;
-                }
+                string prefix = m.Groups[2].Value, name = m.Groups[3].Value;
+                if (prefix.StartsWith("http") || prefix.Contains("..")) continue;
+                if (actualNames.Contains(name)) continue;   // dokladne dopasowanie (Ordinal)
+                string actual = actualNames.Find(n => string.Equals(n, name, StringComparison.OrdinalIgnoreCase));
+                if (actual == null) { Debug.LogError("index.html references missing file: " + name); ok = false; continue; }
+                Debug.LogWarning("Fixing case in index.html: " + name + " -> " + actual);
+                html = html.Replace(m.Value, m.Groups[1].Value + prefix + actual + m.Groups[1].Value);
+                changed = true;
             }
             if (changed) File.WriteAllText(indexPath, html);
-            Debug.Log("index.html path check: " + (ok ? "OK" : "FAILED"));
+            Debug.Log("index.html path check: " + (ok ? "OK" : "FAILED") + (changed ? " (fixed case)" : ""));
             return ok;
         }
     }
