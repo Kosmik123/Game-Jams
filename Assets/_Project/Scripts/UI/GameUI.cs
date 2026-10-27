@@ -97,6 +97,14 @@ namespace PayWithPixels
 
         private void Update()
         {
+            if (logoFrames != null && titlePanel.activeSelf)
+            {
+                // klatka 0 spokojna, 1-2 to glitch: ~0.12 s co kilka sekund
+                float cycle = Time.unscaledTime % 3.2f;
+                int f = cycle > 2.9f ? 1 : cycle > 2.78f ? 2 : 0;
+                if (logoImage.sprite != logoFrames[f]) logoImage.sprite = logoFrames[f];
+            }
+
             if (shopAnimating && shopPanel.activeSelf)
             {
                 float t = Time.unscaledTime - shopAnimStart;
@@ -304,6 +312,8 @@ namespace PayWithPixels
         public void HidePause() => pausePanel.SetActive(false);
 
         private RectTransform titleDynamic;
+        private Sprite[] logoFrames;
+        private Image logoImage;
 
         private void BuildTitle()
         {
@@ -315,6 +325,15 @@ namespace PayWithPixels
             {
                 var logo = NewImage("Logo", titlePanel.transform, true);
                 logo.sprite = logoSprite;
+                var f0 = Resources.Load<Sprite>("Sprites/title_logo_0");
+                var f1 = Resources.Load<Sprite>("Sprites/title_logo_1");
+                var f2 = Resources.Load<Sprite>("Sprites/title_logo_2");
+                if (f0 != null && f1 != null && f2 != null)
+                {
+                    logoFrames = new[] { f0, f1, f2 };
+                    logoImage = logo;
+                    logo.sprite = f0;
+                }
                 logo.preserveAspect = true;
                 logo.raycastTarget = false;
                 Stretch(logo.rectTransform, new Vector2(0.1f, 0.60f), new Vector2(0.9f, 0.97f), Vector2.zero, Vector2.zero);
