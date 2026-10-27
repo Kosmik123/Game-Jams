@@ -57,6 +57,7 @@ namespace PayWithPixels
             BuildTitle();
 
             zonePanel = NewPanel("Zone", transform);
+            zonePanel.GetComponent<Image>().raycastTarget = false;   // ekran strefy nigdy nie blokuje klikniec
             zoneText = NewText("ZoneText", zonePanel.transform, "", 44, TextAnchor.MiddleCenter);
             Stretch(zoneText.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             zonePanel.SetActive(false);
@@ -113,6 +114,10 @@ namespace PayWithPixels
         public void ShowShop(List<Offer> offers, int coins, int debt, Action<Offer> onBuy, Action onSkip,
             int rerollCost, Action onReroll, bool haggleAvailable, Action onHaggle, Action onPayDebt)
         {
+            HideZone();
+            HideTitle();
+            shopPanel.transform.SetAsLastSibling();
+            toastText.transform.SetAsLastSibling();
             foreach (Transform c in shopPanel.transform) Destroy(c.gameObject);
             tinted.RemoveAll(kv => kv.Key == null);
 
@@ -134,11 +139,12 @@ namespace PayWithPixels
                 string top = o.sell
                     ? "SELL\nGET " + o.reward + " COINS"
                     : "GAIN" + (o.level > 1 ? " LV" + o.level : "") + "\n" + o.gain.name + "\n" + o.gain.description;
+                string key = "[" + (i + 1) + "] ";
                 string bottom = o.sold ? "* SOLD *"
-                    : o.sell ? "[ SELL ]"
+                    : o.sell ? key + "SELL"
                     : !canBuy ? "NEED " + cost + " COINS"
-                    : onCredit ? "CREDIT: DEBT +" + (cost - coins)
-                    : "BUY: " + cost + " COINS";
+                    : onCredit ? key + "CREDIT: DEBT +" + (cost - coins)
+                    : key + "BUY: " + cost + " COINS";
                 var txt = NewText("Text", inner.transform,
                     top + "\n\nPRICE\n" + o.price.name + "\n" + o.price.description +
                     (Catalog.SynergyText(o, Game.Instance.stats) is string syn ? "\n\n* SYNERGY *\n" + syn : "") + "\n\n" + bottom,
@@ -171,10 +177,10 @@ namespace PayWithPixels
                 btn.onClick.AddListener(() => onBuy(offer));
             }
 
-            MakeShopButton("REROLL: " + rerollCost, 0.02f, 0.25f, coins >= rerollCost, onReroll);
-            MakeShopButton(debt > 0 ? "PAY DEBT: " + Mathf.Min(coins, debt) : "NO DEBT", 0.26f, 0.49f, debt > 0 && coins > 0, onPayDebt);
-            MakeShopButton(haggleAvailable ? "HAGGLE: 1" : "HAGGLED", 0.50f, 0.73f, haggleAvailable && coins >= 1, onHaggle);
-            MakeShopButton("NEXT WAVE", 0.74f, 0.98f, true, onSkip);
+            MakeShopButton("[R] REROLL: " + rerollCost, 0.02f, 0.25f, coins >= rerollCost, onReroll);
+            MakeShopButton(debt > 0 ? "[D] PAY DEBT: " + Mathf.Min(coins, debt) : "NO DEBT", 0.26f, 0.49f, debt > 0 && coins > 0, onPayDebt);
+            MakeShopButton(haggleAvailable ? "[H] HAGGLE: 1" : "HAGGLED", 0.50f, 0.73f, haggleAvailable && coins >= 1, onHaggle);
+            MakeShopButton("[ENTER] NEXT WAVE", 0.74f, 0.98f, true, onSkip);
 
             Recolor();
             shopPanel.SetActive(true);

@@ -305,6 +305,9 @@ namespace PayWithPixels
                     clearTimer -= Time.deltaTime;
                     if (clearTimer <= 0) OpenShop();
                     break;
+                case State.Shop:
+                    UpdateShopKeys();
+                    break;
                 case State.Won:
                 case State.Dead:
                     if (Input.GetKeyDown(KeyCode.R)) StartRun();
@@ -315,6 +318,19 @@ namespace PayWithPixels
         private string FreezeHint() => (stats.freeze > 0 ? (freezeReady ? "[F] FREEZE READY" : "FREEZE USED") : "") + (DebugEnabled ? (GodMode ? " [DEBUG GOD]" : " [DEBUG]") : "");
 
         private string ZoneLabel() => IsBossWave ? "ZONE " + zone + " BOSS" : "ZONE " + zone + "-" + Mathf.Max(1, waveInZone);
+
+        /// <summary>Skroty klawiszowe sklepu (odporne na zgubione klikniecia): 1-3 zakup, R reroll, H haggle, D splata, Enter dalej.</summary>
+        private void UpdateShopKeys()
+        {
+            if (shopOffers == null) return;
+            KeyCode[] keys = { KeyCode.Alpha1, KeyCode.Alpha2, KeyCode.Alpha3 };
+            for (int i = 0; i < keys.Length && i < shopOffers.Count; i++)
+                if (Input.GetKeyDown(keys[i])) { Buy(shopOffers[i]); return; }
+            if (Input.GetKeyDown(KeyCode.R)) Reroll();
+            else if (Input.GetKeyDown(KeyCode.H)) Haggle();
+            else if (Input.GetKeyDown(KeyCode.D)) PayDebt();
+            else if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)) CloseShop();
+        }
 
         private void KillAllEnemies()
         {
