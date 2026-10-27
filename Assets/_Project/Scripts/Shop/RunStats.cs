@@ -189,6 +189,27 @@ namespace PayWithPixels
                 apply = s => s.legsStacks++ },
         };
 
+        /// <summary>Synergie zysk+cena: (zysk, cena, opis efektu). Efekty sa w RunStats / Drone / Player.</summary>
+        private static readonly string[][] Synergies =
+        {
+            new[] { "CRITICAL", "FOG", "CRITS HIT x5 WHILE FOGGED" },
+            new[] { "DRONE", "PIXELATION", "DRONE SHOOTS FASTER AND HARDER" },
+            new[] { "SHIELD", "HEAVY LEGS", "SHIELD RECHARGES DURING A WAVE" },
+        };
+
+        /// <summary>Opis synergii dla oferty (z cena z tej karty albo z juz posiadana), inaczej null.</summary>
+        public static string SynergyText(Offer o, RunStats stats)
+        {
+            foreach (var s in Synergies)
+            {
+                bool gainHere = o.gain != null && o.gain.name == s[0];
+                bool priceHere = o.price.name == s[1];
+                if (gainHere && (priceHere || stats.PriceCount(s[1]) > 0)) return s[2];
+                if (priceHere && stats.Level(s[0]) > 0) return s[2];
+            }
+            return null;
+        }
+
         public static int GainCost(Gain g, int level, int wave, RunStats stats)
         {
             int cost = g.cost + (level - 1) * 3 + wave / 4;

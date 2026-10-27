@@ -431,7 +431,43 @@ namespace PayWithPixels
             foreach (var a in AreaBlast.All.ToArray()) if (a != null) Destroy(a.gameObject);
 
             state = State.Shop;
-            ui.ShowShop(Catalog.Roll(3, wave, stats), coins, debt, Buy, CloseShop);
+            shopOffers = Catalog.Roll(3, wave, stats);
+            rerolls = 0;
+            haggled = false;
+            RefreshShopUi();
+        }
+
+        private List<Offer> shopOffers;
+        private int rerolls;
+        private bool haggled;
+
+        private int RerollCost => 2 + 2 * rerolls;
+
+        private void RefreshShopUi()
+        {
+            ui.ShowShop(shopOffers, coins, debt, Buy, CloseShop, RerollCost, Reroll, !haggled, Haggle);
+        }
+
+        private void Reroll()
+        {
+            if (coins < RerollCost) return;
+            coins -= RerollCost;
+            rerolls++;
+            shopOffers = Catalog.Roll(3, wave, stats);
+            Sfx.Play(Sound.Coin);
+            RefreshShopUi();
+        }
+
+        /// <summary>Targowanie: za 1 monete losuje nowe ceny dla ofert (moga byc gorsze).</summary>
+        private void Haggle()
+        {
+            if (haggled || coins < 1) return;
+            coins -= 1;
+            haggled = true;
+            foreach (var o in shopOffers)
+                o.price = Catalog.Prices[Random.Range(0, Catalog.Prices.Count)];
+            Sfx.Play(Sound.Hurt);
+            RefreshShopUi();
         }
 
         /// <summary>Czy oferta jest do kupienia (za monety albo na kredyt).</summary>
