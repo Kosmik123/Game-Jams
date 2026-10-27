@@ -16,7 +16,8 @@ namespace PayWithPixels
     public static class Online
     {
         public const string BoardId = "pay_with_pixels_score";
-        public const string EnvName = "production";
+        /// <summary>Puste = srodowisko domyslne (production); Leaderboards i Authentication nie maja wlasnych srodowisk w panelu.</summary>
+        public const string EnvName = "";
         /// <summary>Unity Cloud Project ID; puste, gdy projekt jest polaczony z chmura w Edytorze (Project Settings > Services).</summary>
         public const string ProjectId = "";
         public const int MaxSaneScore = 200000;   // wyniki powyzej to blad albo oszustwo: nie wysylamy
@@ -64,7 +65,8 @@ namespace PayWithPixels
             {
                 if (UnityServices.State != ServicesInitializationState.Initialized)
                 {
-                    var options = new InitializationOptions().SetEnvironmentName(EnvName);
+                    var options = new InitializationOptions();
+                    if (!string.IsNullOrEmpty(EnvName)) options.SetEnvironmentName(EnvName);
                     if (!string.IsNullOrEmpty(ProjectId)) options.SetOption("com.unity.services.core.cloud-project-id", ProjectId);
                     if (!await WithTimeout(UnityServices.InitializeAsync(options))) throw new TimeoutException("init timeout");
                 }
