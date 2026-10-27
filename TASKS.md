@@ -112,7 +112,7 @@ Projekt: Unity 6000.4.9f1, kod i assety w `Assets/_Project` (Scripts, Graphics, 
 - [ ] Opis strony gry, lista zmian, instrukcje testerów, zebranie uwag z testów zewnętrznych.
 
 ---
-# FAZA 8 — mobile (designer, po rdzeniu: 480x270, bronie, build)
+# FAZA 8 — mobile — ANULOWANE przez Kosmika (nieczytelne). Nie robić.
 ## Programista
 - [ ] Sterowanie dotykowe, włączane po pierwszym dotyku (Input.touchSupported / pierwszy touch): lewa wirtualna gałka = ruch, prawa = celowanie + strzał w kierunku gałki (przytrzymanie = ogień), przycisk DASH i przycisk FREEZE (widoczne tylko gdy zysk jest posiadany), ikona pauzy w rogu.
 - [ ] Wszystkie ekrany (tytuł, wybór broni, intro, sklep, kontrakty, REDEEM, pauza, koniec runu) obsługiwane tapem; przyciski min. 24 px wysokości w RT 480x270 dla palca; skróty klawiszowe zostają na PC.
