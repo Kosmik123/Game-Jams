@@ -117,7 +117,8 @@ namespace PayWithPixels
         public void Damage(int dmg)
         {
             hp -= dmg;
-            if (hp > 0) return;
+            if (hp > 0) { Sfx.Play(Sound.Hit); return; }
+            Sfx.Play(Sound.Kill);
             if (type == EnemyType.Boss)
             {
                 Game.Instance.OnBossKilled();

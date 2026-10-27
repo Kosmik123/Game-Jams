@@ -15,6 +15,7 @@ namespace PayWithPixels
         public int fogStacks;
         public int pixelStacks;
         public int flickerStacks;
+        public int aimLagStacks;
         public bool hasDash;
         public int shield;            // ile trafien pochlania tarcza
         public float magnetRange = 1.8f;
@@ -48,6 +49,8 @@ namespace PayWithPixels
         public Gain gain;
         public Price price;
         public int cost;
+        public bool sell;   // oferta "Sprzedaj": bierzesz cene, dostajesz monety
+        public int reward;
     }
 
     /// <summary>Katalog ofert. Dodanie zysku lub ceny = jedna pozycja na liscie.</summary>
@@ -81,6 +84,8 @@ namespace PayWithPixels
                 apply = s => s.pixelStacks++ },
             new Price { name = "FLICKER", icon = "icon_flicker_flash", description = "PALETTE INVERTS EVERY FEW SECONDS",
                 apply = s => s.flickerStacks++ },
+            new Price { name = "SLUGGISH AIM", icon = "icon_heavy_anchor", description = "AIM LAGS BEHIND THE MOUSE",
+                apply = s => s.aimLagStacks++ },
             new Price { name = "HEAVY LEGS", icon = "icon_legs_boot", description = "-20% MOVE SPEED",
                 apply = s => s.moveSpeedMul *= 0.8f },
         };
@@ -95,6 +100,11 @@ namespace PayWithPixels
                 gains.Remove(g);
                 var p = Prices[UnityEngine.Random.Range(0, Prices.Count)];
                 offers.Add(new Offer { gain = g, price = p, cost = g.cost + wave / 3 });
+            }
+            if (wave >= 2 && offers.Count >= 3 && UnityEngine.Random.value < 0.6f)
+            {
+                var sp = Prices[UnityEngine.Random.Range(0, Prices.Count)];
+                offers[offers.Count - 1] = new Offer { gain = null, price = sp, sell = true, reward = 5 + wave / 2 };
             }
             return offers;
         }

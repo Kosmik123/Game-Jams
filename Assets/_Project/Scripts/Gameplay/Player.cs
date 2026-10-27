@@ -12,6 +12,8 @@ namespace PayWithPixels
         private float dashTimer, dashCooldown;
         private Vector2 dashDir;
         private float walkClock;
+        private float aimAngle;
+        private bool aimInit;
         private SpriteRenderer sr;
         private Transform aimMark;
 
@@ -43,6 +45,7 @@ namespace PayWithPixels
             }
             hp -= dmg;
             invulnTimer = 1f;
+            Sfx.Play(Sound.Hurt);
             if (hp <= 0) Game.Instance.OnPlayerDied();
         }
 
@@ -59,6 +62,7 @@ namespace PayWithPixels
             if (game.stats.hasDash && dashCooldown <= 0 && Input.GetKeyDown(KeyCode.Space))
             {
                 dashTimer = 0.15f;
+                Sfx.Play(Sound.Dash);
                 dashCooldown = 1.2f;
                 dashDir = move.sqrMagnitude > 0.01f ? move.normalized : (game.display.ScreenToWorld(Input.mousePosition) - (Vector2)transform.position).normalized;
             }
@@ -74,7 +78,14 @@ namespace PayWithPixels
             transform.position = pos;
 
             Vector2 aim = game.display.ScreenToWorld(Input.mousePosition) - pos;
-            Vector2 dir = aim.sqrMagnitude > 0.0001f ? aim.normalized : Vector2.right;
+            float target = aim.sqrMagnitude > 0.0001f ? Mathf.Atan2(aim.y, aim.x) * Mathf.Rad2Deg : aimAngle;
+            if (!aimInit || game.stats.aimLagStacks <= 0) { aimAngle = target; aimInit = true; }
+            else
+            {
+                float rate = 18f / (1f + 1.5f * game.stats.aimLagStacks);
+                aimAngle = Mathf.LerpAngle(aimAngle, target, 1f - Mathf.Exp(-rate * Time.deltaTime));
+            }
+            Vector2 dir = new Vector2(Mathf.Cos(aimAngle * Mathf.Deg2Rad), Mathf.Sin(aimAngle * Mathf.Deg2Rad));
             transform.rotation = Quaternion.Euler(0, 0, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg - 90f); // sprity patrza w gore
             aimMark.position = pos + dir * 0.75f;
             aimMark.rotation = Quaternion.identity;
@@ -90,6 +101,7 @@ namespace PayWithPixels
         private void Shoot(Vector2 pos, Vector2 dir)
         {
             var stats = Game.Instance.stats;
+            Sfx.Play(Sound.Shoot);
             float[] angles = stats.shotCount >= 3 ? new[] { -12f, 0f, 12f } : new[] { 0f };
             foreach (float a in angles)
             {

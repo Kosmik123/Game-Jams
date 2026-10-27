@@ -54,6 +54,7 @@ namespace PayWithPixels
             camGo.AddComponent<AudioListener>();
 
             display = TwoColorDisplay.Create(transform, cam);
+            Sfx.Init(transform);
             world = new GameObject("World").transform;
             world.SetParent(transform, false);
             BuildArena();
@@ -103,6 +104,7 @@ namespace PayWithPixels
             ApplyPrices();
             player = Player.Create(world);
             ui.HideTitle();
+            Sfx.StartMusic();
             ui.HideDeath();
             ui.HideShop();
             StartWave();
@@ -121,19 +123,28 @@ namespace PayWithPixels
             state = State.Playing;
             spawnLeft = IsBossWave ? 6 : 4 + wave * 2;
             spawnTimer = 0.5f;
-            if (IsBossWave) Enemy.SpawnBoss(world, new Vector2(0, ArenaHalf.y - 1.5f));
+            if (IsBossWave)
+            {
+                Enemy.SpawnBoss(world, new Vector2(0, ArenaHalf.y - 1.5f));
+                Sfx.Play(Sound.Boss);
+            }
         }
 
         public const int BossWave = 8;
         public bool IsBossWave => wave == BossWave;
 
-        public void AddCoins(int n) => coins += n;
+        public void AddCoins(int n)
+        {
+            coins += n;
+            Sfx.Play(Sound.Coin);
+        }
 
         public void OnBossKilled()
         {
             foreach (var e in Enemy.All.ToArray()) if (e != null) Destroy(e.gameObject);
             foreach (var b in Bullet.All.ToArray()) if (b != null) Destroy(b.gameObject);
             state = State.Won;
+            Sfx.Play(Sound.Win);
             ui.ShowDeath(wave, StartRun, true);
         }
 
@@ -146,6 +157,7 @@ namespace PayWithPixels
         public void OnPlayerDied()
         {
             state = State.Dead;
+            Sfx.Play(Sound.Death);
             ui.ShowDeath(wave, StartRun);
         }
 
@@ -154,6 +166,7 @@ namespace PayWithPixels
             if (player != null) display.SetFogCenter(player.transform.position);
             if (player != null && state != State.Title) ui.SetHud(player.hp, stats.maxHp, wave, coins);
 
+            if (Input.GetKeyDown(KeyCode.M)) Sfx.ToggleMute();
             if (state == State.Title)
             {
                 if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return)) StartRun();
@@ -236,9 +249,14 @@ namespace PayWithPixels
 
         private void Buy(Offer o)
         {
-            if (coins < o.cost) return;
-            coins -= o.cost;
-            o.gain.apply(stats, player);
+            if (o.sell) coins += o.reward;
+            else
+            {
+                if (coins < o.cost) return;
+                coins -= o.cost;
+                o.gain.apply(stats, player);
+            }
+            Sfx.Play(Sound.Buy);
             o.price.apply(stats);
             ApplyPrices();
             CloseShop();

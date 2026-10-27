@@ -73,7 +73,7 @@ namespace PayWithPixels
 
         public void SetHud(int hp, int maxHp, int wave, int coins)
         {
-            hud.text = "HP " + Mathf.Max(0, hp) + "/" + maxHp + "    WAVE " + wave + "    COINS " + coins;
+            hud.text = "HP " + Mathf.Max(0, hp) + "/" + maxHp + "    WAVE " + wave + "    COINS " + coins + "    [M] SOUND " + (Sfx.Muted ? "OFF" : "ON");
         }
 
         public void ShowShop(List<Offer> offers, int coins, Action<Offer> onBuy, Action onSkip)
@@ -93,10 +93,15 @@ namespace PayWithPixels
                 var inner = NewImage("Inner", card.transform, false);
                 Stretch(inner.rectTransform, Vector2.zero, Vector2.one, new Vector2(3, 3), new Vector2(-3, -3));
 
-                bool canBuy = coins >= o.cost;
+                bool canBuy = o.sell || coins >= o.cost;
+                string top = o.sell
+                    ? "SELL\nGET " + o.reward + " COINS"
+                    : "GAIN\n" + o.gain.name + "\n" + o.gain.description;
+                string bottom = o.sell
+                    ? "[ SELL ]"
+                    : (canBuy ? "BUY: " + o.cost + " COINS" : "NEED " + o.cost + " COINS");
                 var txt = NewText("Text", inner.transform,
-                    "GAIN\n" + o.gain.name + "\n" + o.gain.description + "\n\nPRICE\n" + o.price.name + "\n" + o.price.description +
-                    "\n\n" + (canBuy ? "BUY: " + o.cost + " COINS" : "NEED " + o.cost + " COINS"),
+                    top + "\n\nPRICE\n" + o.price.name + "\n" + o.price.description + "\n\n" + bottom,
                     18, TextAnchor.MiddleCenter);
                 Stretch(txt.rectTransform, Vector2.zero, Vector2.one, new Vector2(8, 8), new Vector2(-8, -8));
 
@@ -109,7 +114,7 @@ namespace PayWithPixels
                     Stretch(icon.rectTransform, new Vector2(1, 1), new Vector2(1, 1), new Vector2(-56, -56), new Vector2(-8, -8));
                 }
 
-                var gainSprite = string.IsNullOrEmpty(o.gain.icon) ? null : Resources.Load<Sprite>("Icons/" + o.gain.icon);
+                var gainSprite = o.gain == null || string.IsNullOrEmpty(o.gain.icon) ? null : Resources.Load<Sprite>("Icons/" + o.gain.icon);
                 if (gainSprite != null)
                 {
                     var gi = NewImage("GainIcon", inner.transform, true);
