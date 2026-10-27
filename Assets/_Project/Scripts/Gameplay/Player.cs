@@ -57,14 +57,18 @@ namespace PayWithPixels
                 return;
             }
             hp -= dmg;
+            game.NotifyHit();
             invulnTimer = 1f;
             Sfx.Play(Sound.Hurt);
+            game.HitStop(0.07f);
+            game.Shake(0.3f);
             if (hp <= 0) Game.Instance.OnPlayerDied();
         }
 
         private void Update()
         {
             var game = Game.Instance;
+            if (game.Paused) return;
             invulnTimer -= Time.deltaTime;
             sr.enabled = invulnTimer <= 0 || Mathf.FloorToInt(Time.time * 12f) % 2 == 0;
             halo.enabled = sr.enabled;
@@ -142,10 +146,11 @@ namespace PayWithPixels
             Sfx.Play(Sound.Shoot);
             for (int i = 0; i < stats.shotCount; i++)
             {
-                float a = (i - (stats.shotCount - 1) / 2f) * 12f;
+                float a = (i - (stats.shotCount - 1) / 2f) * stats.SpreadStep;
                 var d = (Vector2)(Quaternion.Euler(0, 0, a) * dir);
                 int dmg = Random.value < stats.CritChance ? Mathf.RoundToInt(stats.CritMultiplier) : 1;
-                Bullet.Spawn(transform.parent, pos + d * 0.6f, d * 12f, true, stats.pierce, null, dmg, stats.ricochet);
+                var b = Bullet.Spawn(transform.parent, pos + d * 0.6f, d * stats.BulletSpeed, true, stats.pierce, null, dmg, stats.ricochet, stats.BulletLife);
+                if (stats.LongBullets) b.transform.localScale = new Vector3(1f, 3f, 1f);
             }
         }
     }

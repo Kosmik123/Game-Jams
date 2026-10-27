@@ -35,6 +35,7 @@ namespace PayWithPixels
 
             Shard.Burst(transform.parent, transform.position, 6);
             Sfx.Play(Sound.Kill);
+            Game.Instance.Shake(0.12f);
             var list = Enemy.All.ToArray();
             foreach (var e in list)
             {

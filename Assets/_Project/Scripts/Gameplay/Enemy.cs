@@ -10,6 +10,7 @@ namespace PayWithPixels
         public static readonly List<Enemy> All = new List<Enemy>();
 
         public float radius;
+        public bool IsRegular => type != EnemyType.Boss && type != EnemyType.Collector;
         private EnemyType type;
         private int hp;
         private int maxHp;
@@ -34,6 +35,7 @@ namespace PayWithPixels
         private Vector2 facing = Vector2.down;
         // Spawner
         private int spawned;
+        private float flash;
 
         private struct Spec
         {
@@ -67,7 +69,7 @@ namespace PayWithPixels
             float scale = 1f + 0.03f * difficulty;
             e.walkName = s.sprite; e.spriteSize = s.size; e.rotates = s.rotates;
             e.sr = Art.MakeRenderer(go, Art.Square(s.sprite + "_walk_0", s.size), 5);
-            e.radius = s.radius; e.hp = e.maxHp = s.hp; e.speed = s.speed * scale;
+            e.radius = s.radius; e.hp = e.maxHp = Mathf.CeilToInt(s.hp * Game.Instance.EnemyHpMul); e.speed = s.speed * scale * Game.Instance.EnemySpeedMul;
             e.contactDamage = s.contact; e.coinDrop = s.coins;
 
             e.shootTimer = Random.Range(0.5f, 1.8f);
@@ -94,6 +96,14 @@ namespace PayWithPixels
             return e;
         }
 
+        private int bossZone = 1;
+        private int phase;
+        private float spawnAddsTimer;
+        private float auctionTimer;
+        private float spin;
+        private string bossSprite = "boss_idle";
+        private string bossBullet = "bullet_boss";
+
         public static Enemy SpawnBoss(Transform parent, Vector2 pos, int zone)
         {
             var go = new GameObject("Boss");
@@ -101,11 +111,16 @@ namespace PayWithPixels
             go.transform.position = pos;
             var e = go.AddComponent<Enemy>();
             e.type = EnemyType.Boss;
-            e.sr = Art.MakeRenderer(go, Art.Square("boss_idle_0", 48), 6);
+            e.bossZone = zone;
+            e.bossSprite = zone == 1 ? "boss_idle" : zone == 2 ? "boss2_idle" : "boss3_idle";
+            e.bossBullet = zone == 1 ? "bullet_boss" : zone == 2 ? "bullet_boss2" : "bullet_boss3";
+            e.sr = Art.MakeRenderer(go, Art.Square(e.bossSprite + "_0", 48), 6);
             e.radius = 1.4f;
-            e.hp = e.maxHp = 60 + 25 * (zone - 1);
+            e.hp = e.maxHp = Mathf.CeilToInt((zone == 1 ? 50 : zone == 2 ? 95 : 130) * Game.Instance.BossHpMul);
             e.contactDamage = 2;
             e.shootTimer = 2f;
+            e.spawnAddsTimer = 6f;
+            e.auctionTimer = 8f;
             return e;
         }
 
@@ -122,7 +137,7 @@ namespace PayWithPixels
         public void Damage(int dmg)
         {
             hp -= dmg;
-            if (hp > 0) { Sfx.Play(Sound.Hit); return; }
+            if (hp > 0) { Sfx.Play(Sound.Hit); flash = 0.07f; return; }
             Sfx.Play(Sound.Kill);
             if (type == EnemyType.Boss)
             {
@@ -146,47 +161,167 @@ namespace PayWithPixels
         private void UpdateBoss(Game game)
         {
             clock += Time.deltaTime;
-            sr.sprite = Art.Square(Mathf.FloorToInt(clock / 0.4f) % 2 == 0 ? "boss_idle_0" : "boss_idle_1", 48);
+            sr.sprite = Art.Square(bossSprite + "_" + (Mathf.FloorToInt(clock / 0.4f) % 2), 48);
+            sr.enabled = shootTimer > 0.25f || Mathf.FloorToInt(shootTimer * 24f) % 2 == 0;   // telegraf przed salwa
+            switch (bossZone)
+            {
+                case 1: UpdateTollKeeper(game); break;
+                case 2: UpdateBanker(game); break;
+                default: UpdateAuctioneer(game); break;
+            }
+        }
 
-            // wolno patroluje przy gornej krawedzi
+        private Vector2 AimAngleDir(float deg) => new Vector2(Mathf.Cos(deg * Mathf.Deg2Rad), Mathf.Sin(deg * Mathf.Deg2Rad));
+
+        private float AngleToPlayer(Game game, Vector2 from)
+        {
+            Vector2 d = (Vector2)game.player.transform.position - from;
+            return Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg;
+        }
+
+        /// <summary>Strefa 1: Toll Keeper - pierscienie i wachlarze.</summary>
+        private void UpdateTollKeeper(Game game)
+        {
             var pos = new Vector2(Mathf.Sin(clock * 0.6f) * (Game.ArenaHalf.x - 2f), Game.ArenaHalf.y - 1.6f);
             transform.position = pos;
 
             shootTimer -= Time.deltaTime;
             if (shootTimer > 0) return;
             bool enraged = hp * 2 < maxHp;
-            shootTimer = enraged ? 1.1f : 1.7f;
+            shootTimer = enraged ? 1.3f : 2.0f;
             pattern++;
 
-            Vector2 toPlayer = (Vector2)game.player.transform.position - pos;
-            float baseAngle = Mathf.Atan2(toPlayer.y, toPlayer.x) * Mathf.Rad2Deg;
+            float baseAngle = AngleToPlayer(game, pos);
             if (pattern % 2 == 0)
             {
-                // pierscien
-                int n = enraged ? 18 : 12;
+                int n = enraged ? 14 : 10;
                 float offset = Random.Range(0f, 360f);
-                for (int i = 0; i < n; i++)
-                    FireBoss(pos, offset + i * 360f / n, 4f);
+                for (int i = 0; i < n; i++) FireBoss(pos, offset + i * 360f / n, 4f);
             }
             else
             {
-                // wachlarz w gracza
                 int n = enraged ? 7 : 5;
-                for (int i = 0; i < n; i++)
-                    FireBoss(pos, baseAngle + (i - (n - 1) / 2f) * 12f, 6f);
+                for (int i = 0; i < n; i++) FireBoss(pos, baseAngle + (i - (n - 1) / 2f) * 12f, 6f);
+            }
+        }
+
+        /// <summary>Strefa 2: The Banker - 3 fazy: deszcz monet, poscig z wachlarzem, zamkniety skarbiec ze spirala.</summary>
+        private void UpdateBanker(Game game)
+        {
+            int newPhase = hp * 3 > maxHp * 2 ? 1 : hp * 3 > maxHp ? 2 : 3;
+            if (newPhase != phase)
+            {
+                phase = newPhase;
+                shootTimer = 1f;
+                spawnAddsTimer = 4f;
+                if (phase == 2) game.Announce("THE BANKER CALLS IN YOUR LOAN");
+                if (phase == 3) game.Announce("THE VAULT IS SEALED");
+            }
+
+            Vector2 pos = transform.position;
+            float topY = Game.ArenaHalf.y - 1.6f;
+            if (phase == 1) pos = new Vector2(Mathf.Sin(clock * 0.5f) * (Game.ArenaHalf.x - 2f), topY);
+            else if (phase == 2)
+            {
+                float px = game.player.transform.position.x;
+                pos.x = Mathf.MoveTowards(pos.x, Mathf.Clamp(px, -Game.ArenaHalf.x + 2f, Game.ArenaHalf.x - 2f), 2.6f * Time.deltaTime);
+                pos.y = topY;
+            }
+            else pos = Vector2.MoveTowards(pos, new Vector2(0, 1.8f), 3f * Time.deltaTime);
+            transform.position = pos;
+
+            shootTimer -= Time.deltaTime;
+            if (shootTimer <= 0)
+            {
+                if (phase == 1)
+                {
+                    shootTimer = 1.5f;
+                    // deszcz monet: kolumny pociskow spadajacych w dol z losowych miejsc
+                    for (int i = 0; i < 7; i++)
+                    {
+                        float x = Random.Range(-Game.ArenaHalf.x, Game.ArenaHalf.x);
+                        Bullet.Spawn(transform.parent, new Vector2(x, Game.ArenaHalf.y + 0.3f), new Vector2(0, -4.5f), false, 0, bossBullet);
+                    }
+                }
+                else if (phase == 2)
+                {
+                    shootTimer = 1.3f;
+                    float a = AngleToPlayer(game, pos);
+                    for (int i = 0; i < 5; i++) FireBoss(pos, a + (i - 2) * 11f, 6f);
+                }
+                else
+                {
+                    shootTimer = 0.55f;
+                    spin += 23f;
+                    for (int i = 0; i < 6; i++) FireBoss(pos, spin + i * 60f, 4.2f);
+                }
+            }
+
+            if (phase >= 2)
+            {
+                spawnAddsTimer -= Time.deltaTime;
+                if (spawnAddsTimer <= 0)
+                {
+                    spawnAddsTimer = phase == 2 ? 7f : 8f;
+                    for (int i = 0; i < 2; i++) Spawn(transform.parent, EnemyType.Chaser, pos + Random.insideUnitCircle, game.Difficulty);
+                }
+            }
+        }
+
+        /// <summary>Strefa 3: The Auctioneer - sprzedaje Twoje zyski podczas walki (wracaja po czasie albo po jego smierci).</summary>
+        private void UpdateAuctioneer(Game game)
+        {
+            Vector2 pos = new Vector2(Mathf.Sin(clock * 0.45f) * (Game.ArenaHalf.x - 2.5f), 2.2f + Mathf.Sin(clock * 0.9f) * 1.6f);
+            transform.position = pos;
+
+            int stage = hp * 4 > maxHp * 3 ? 0 : hp * 2 > maxHp ? 1 : hp * 4 > maxHp ? 2 : 3;
+            if (stage != phase)
+            {
+                phase = stage;
+                if (phase > 0) auctionTimer = 0.5f;   // kazdy prog HP = licytacja
+            }
+
+            auctionTimer -= Time.deltaTime;
+            if (auctionTimer <= 0)
+            {
+                auctionTimer = 22f;
+                game.AuctionOffGain(14f);
+            }
+
+            shootTimer -= Time.deltaTime;
+            if (shootTimer > 0) return;
+            pattern++;
+            shootTimer = phase >= 2 ? 1.0f : 1.35f;
+            float a = AngleToPlayer(game, pos);
+            if (pattern % 3 == 0)
+            {
+                int n = phase >= 2 ? 18 : 12;
+                float offset = Random.Range(0f, 360f);
+                for (int i = 0; i < n; i++) FireBoss(pos, offset + i * 360f / n, 4.2f);
+            }
+            else
+            {
+                int n = phase >= 1 ? 4 : 3;
+                for (int i = 0; i < n; i++) FireBoss(pos, a + (i - (n - 1) / 2f) * 9f, 7.5f);
             }
         }
 
         private void FireBoss(Vector2 pos, float angleDeg, float speed)
         {
-            var d = new Vector2(Mathf.Cos(angleDeg * Mathf.Deg2Rad), Mathf.Sin(angleDeg * Mathf.Deg2Rad));
-            Bullet.Spawn(transform.parent, pos + d * 1.2f, d * speed, false, 0, "bullet_boss");
+            var d = AimAngleDir(angleDeg);
+            Bullet.Spawn(transform.parent, pos + d * 1.2f, d * speed, false, 0, bossBullet);
         }
 
         private void Update()
         {
             var game = Game.Instance;
+            if (flash > 0)
+            {
+                flash -= Time.deltaTime;
+                if (sr != null) sr.color = flash > 0 ? Color.black : Color.white;   // blysk: sprite w kolorze tla
+            }
             if (game.state != Game.State.Playing && game.state != Game.State.Clearing) return;
+            if (game.Frozen && sr != null) sr.enabled = true;
             if (game.player == null || game.Frozen) return;
 
             if (type == EnemyType.Boss)
@@ -215,9 +350,11 @@ namespace PayWithPixels
                     else if (dist < 4f) move = -dir;
                     else move = new Vector2(-dir.y, dir.x) * strafeSign;
                     shootTimer -= dt;
+                    sr.enabled = shootTimer > 0.3f || Mathf.FloorToInt(shootTimer * 20f) % 2 == 0;   // telegraf: miga przed strzalem
                     if (shootTimer <= 0 && attacking)
                     {
                         shootTimer = 1.8f;
+                        sr.enabled = true;
                         Bullet.Spawn(transform.parent, pos + dir * 0.5f, dir * 5f, false, 0);
                     }
                     break;
@@ -268,7 +405,7 @@ namespace PayWithPixels
 
                 case EnemyType.Guard:
                     move = dir;
-                    facing = dir == Vector2.zero ? facing : dir;
+                    if (dir != Vector2.zero) facing = ((Vector2)Vector3.RotateTowards(facing, dir, 1.6f * dt, 0f)).normalized;   // tarcza obraca sie powoli: da sie go okrazyc
                     break;
 
                 default:

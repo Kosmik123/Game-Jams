@@ -19,7 +19,7 @@ public class SmokeTest
     private static void Set(object o, string f, object v) => o.GetType().GetField(f, All).SetValue(o, v);
     private static object Call(object o, string m, params object[] a) => o.GetType().GetMethod(m, All).Invoke(o, a);
 
-    [UnityTest]
+    [UnityTest, Timeout(900000)]
     public IEnumerator PlayThroughRun()
     {
         yield return EditorSceneManager.LoadSceneInPlayMode("Assets/_Project/Scenes/Game/Game.unity", new LoadSceneParameters(LoadSceneMode.Single));
@@ -32,12 +32,14 @@ public class SmokeTest
         Assert.NotNull(gameGo, "Game object not created by Bootstrap");
         var game = gameGo.GetComponent(T("Game"));
         Call(game, "StartRun");
-        Time.timeScale = 4f;
+        Application.targetFrameRate = -1;
+        QualitySettings.vSyncCount = 0;
+        T("Game").GetField("DebugTimeScale", All).SetValue(null, 5f);
 
         var rng = new System.Random(1);
         int lastZone = 0;
         string lastState = "";
-        for (int frame = 0; frame < 20000; frame++)
+        for (int frame = 0; frame < 60000; frame++)
         {
             yield return null;
             string state = Get(game, "state").ToString();
@@ -46,6 +48,14 @@ public class SmokeTest
             {
                 Debug.Log($"[smoke] frame {frame} state={state} zone={zone} wave={Get(game, "waveInZone")} coins={Get(game, "coins")} debt={Get(game, "debt")}");
                 lastState = state; lastZone = zone;
+            }
+
+            if (frame % 1500 == 0 && state == "Playing")
+            {
+                var list = (System.Collections.IList)T("Enemy").GetField("All", All).GetValue(null);
+                var sb = new System.Text.StringBuilder();
+                foreach (Component e in list) sb.Append(e.name + "@" + e.transform.position.ToString("F1") + " ");
+                Debug.Log($"[smoke] frame {frame} playing, enemies: {sb}");
             }
 
             var player = Get(game, "player");
