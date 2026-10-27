@@ -86,6 +86,7 @@ namespace PayWithPixels
             int t = Mathf.RoundToInt(runTime);
             string text = (won ? "ALL THREE ZONES CLEARED\n" : "YOU REACHED ZONE " + zone + ", WAVE " + wave + "\n") +
                 "KILLS " + kills + "    COINS EARNED " + coinsEarned + "    TIME " + (t / 60) + ":" + (t % 60).ToString("00") +
+                "\nTOTAL PRICE PAID " + TotalPricePaid + "    CONTRACTS SIGNED " + contractsSigned +
                 "\nBEST WAVE " + Meta.BestWave + "    WINS " + Meta.Wins + "    DEBT LEFT " + debt;
             if (newAchievements.Count > 0)
             {
@@ -247,8 +248,109 @@ namespace PayWithPixels
             player = null;
         }
 
+        // ---- Kontrakty: nagroda teraz, maly druk po FineWaves falach ----
+        private readonly List<ActiveContract> activeContracts = new List<ActiveContract>();
+        private Contract shopContract;
+        private int shopVisits, contractsSigned, soldGains;
+
+        public int TotalPricePaid
+        {
+            get
+            {
+                int stacks = 0;
+                foreach (var kv in stats.priceCounts) stacks += kv.Value;
+                return stacks + debt + soldGains;
+            }
+        }
+
+        public void ContractLoseGain()
+        {
+            var name = stats.StealRandomGain();
+            RefreshDrones();
+            ui.Toast("FINE PRINT: YOU LOST " + (name ?? "NOTHING (YOU HAD NO GAINS)"));
+        }
+
+        public void ContractHeal(int bonusHp)
+        {
+            player.hp = stats.maxHp;
+            if (bonusHp > 0) player.hp += bonusHp;
+        }
+
+        public void ContractFreeGain()
+        {
+            var pool = Catalog.Gains.FindAll(g => !g.consumable && stats.Level(g.name) < g.maxLevel && (g.available == null || g.available(stats)));
+            if (pool.Count == 0) { coins += 20; return; }
+            var gain = pool[Random.Range(0, pool.Count)];
+            stats.levels[gain.name] = stats.Level(gain.name) + 1;
+            stats.Recompute();
+            gain.onBuy?.Invoke(stats, player);
+            RefreshDrones();
+            ui.Toast("CONTRACT GAIN: " + gain.name);
+        }
+
+        public void ContractAddPrice(string name)
+        {
+            var price = Catalog.Prices.Find(pr => pr.name == name);
+            if (price == null) return;
+            price.apply(stats);
+            stats.AddPrice(name);
+            stats.Recompute();
+            ApplyPrices();
+            if (player.hp > stats.maxHp) player.hp = stats.maxHp;
+        }
+
+        public void ContractRandomPrice(int n)
+        {
+            for (int i = 0; i < n; i++)
+            {
+                var pool = Catalog.Prices.FindAll(p => p.available == null || p.available(stats));
+                if (pool.Count == 0) return;
+                var price = pool[Random.Range(0, pool.Count)];
+                ContractAddPrice(price.name);
+                ui.Toast("FINE PRINT: PRICE ADDED - " + price.name);
+            }
+        }
+
+        public void ContractPay(int amount)
+        {
+            int fromCoins = Mathf.Min(coins, amount);
+            coins -= fromCoins;
+            debt += amount - fromCoins;
+        }
+
+        private void TickContracts()
+        {
+            for (int i = activeContracts.Count - 1; i >= 0; i--)
+            {
+                var ac = activeContracts[i];
+                if (--ac.wavesLeft > 0) continue;
+                activeContracts.RemoveAt(i);
+                ui.Toast("FINE PRINT KICKS IN: " + ac.contract.finePrint, 5f);
+                ac.contract.later(this);
+                Sfx.Play(Sound.Hurt);
+                Grant("fineprint");
+            }
+        }
+
+        private void SignContract()
+        {
+            if (shopContract == null || state != State.Shop) return;
+            var c = shopContract;
+            shopContract = null;
+            contractsSigned++;
+            activeContracts.Add(new ActiveContract { contract = c, wavesLeft = Contracts.FineWaves });
+            c.now(this);
+            Sfx.Play(Sound.Buy);
+            ui.Toast("SIGNED: " + c.title + ". FINE PRINT IN " + Contracts.FineWaves + " WAVES: " + c.finePrint, 6f);
+            if (contractsSigned >= 3) Grant("signed");
+            RefreshShopUi();
+        }
+
         private void StartRun()
         {
+            activeContracts.Clear();
+            shopContract = null;
+            shopVisits = contractsSigned = soldGains = 0;
             CleanupRun();
             Palette.Reset();
             flickerClock = 0;
@@ -509,6 +611,7 @@ namespace PayWithPixels
                     {
                         state = State.Clearing;
                         clearTimer = 1.2f;
+                        TickContracts();
                         noHitWaves = hitThisWave ? 0 : noHitWaves + 1;
                         if (noHitWaves >= 3) Grant("untouchable");
                         if (debt > 0)
@@ -563,6 +666,7 @@ namespace PayWithPixels
             if (Input.GetKeyDown(KeyCode.R)) Reroll();
             else if (Input.GetKeyDown(KeyCode.H)) Haggle();
             else if (Input.GetKeyDown(KeyCode.D)) PayDebt();
+            else if (Input.GetKeyDown(KeyCode.C)) SignContract();
             else if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)) CloseShop();
         }
 
@@ -743,6 +847,8 @@ namespace PayWithPixels
                 var first = shopOffers.Find(o => !o.sell);
                 if (first != null) first.free = true;   // pierwszy zysk w runie jest za darmo, cena (zmysl) nie
             }
+            shopVisits++;
+            shopContract = shopVisits % 2 == 0 ? Contracts.Roll() : null;   // kontrakt co 2. sklep
             ui.AnimateNextShop = true;
             if (!Meta.TutorialDone)
                 ui.Toast("THE FIRST GAIN IS FREE - ITS PRICE IS NOT. EVERY PRICE LASTS THE WHOLE RUN. NO COINS? BUY ON CREDIT, BUT DEBT GROWS", 10f);
@@ -764,7 +870,11 @@ namespace PayWithPixels
 
         private void RefreshShopUi()
         {
-            ui.ShowShop(shopOffers, coins, debt, Buy, CloseShop, RerollCost, Reroll, !haggled, Haggle, PayDebt);
+            string pending = "";
+            foreach (var ac in activeContracts) pending += (pending.Length > 0 ? ", " : "") + ac.contract.title + " (" + ac.wavesLeft + ")";
+            ui.ShowShop(shopOffers, coins, debt, Buy, CloseShop, RerollCost, Reroll, !haggled, Haggle, PayDebt,
+                shopContract == null ? null : shopContract.title + ": " + shopContract.reward + " / FINE PRINT: ???", SignContract,
+                pending.Length > 0 ? "SIGNED: " + pending : null);
         }
 
         /// <summary>Splaca dlug dostepnymi monetami.</summary>
@@ -812,7 +922,7 @@ namespace PayWithPixels
         private void Buy(Offer o)
         {
             if (!CanAfford(o)) return;
-            if (o.sell) coins += o.reward;
+            if (o.sell) { coins += o.reward; soldGains++; }
             else
             {
                 int c = CostOf(o);

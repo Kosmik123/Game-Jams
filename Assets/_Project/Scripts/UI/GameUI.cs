@@ -181,7 +181,8 @@ namespace PayWithPixels
         }
 
         public void ShowShop(List<Offer> offers, int coins, int debt, Action<Offer> onBuy, Action onSkip,
-            int rerollCost, Action onReroll, bool haggleAvailable, Action onHaggle, Action onPayDebt)
+            int rerollCost, Action onReroll, bool haggleAvailable, Action onHaggle, Action onPayDebt,
+            string contractLabel = null, Action onContract = null, string signedLabel = null)
         {
             HideZone();
             HideTitle();
@@ -257,6 +258,13 @@ namespace PayWithPixels
             MakeShopButton(debt > 0 ? "[D] PAY DEBT: " + Mathf.Min(coins, debt) : "NO DEBT", 0.26f, 0.49f, debt > 0 && coins > 0, onPayDebt);
             MakeShopButton(haggleAvailable ? "[H] HAGGLE: 1" : "HAGGLED", 0.50f, 0.73f, haggleAvailable && coins >= 1, onHaggle);
             MakeShopButton("[ENTER] NEXT WAVE", 0.74f, 0.98f, true, onSkip);
+            if (contractLabel != null)
+                MakeButton(shopPanel.transform, "[C] CONTRACT - " + contractLabel, new Vector2(0.02f, 0.19f), new Vector2(0.98f, 0.25f), true, onContract);
+            if (signedLabel != null)
+            {
+                var st = NewText("Signed", shopPanel.transform, signedLabel, 16, TextAnchor.MiddleCenter);
+                Stretch(st.rectTransform, new Vector2(0, 0.0f), new Vector2(1, 0.07f), Vector2.zero, Vector2.zero);
+            }
 
             Recolor();
             shopPanel.SetActive(true);

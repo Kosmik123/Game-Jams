@@ -33,6 +33,8 @@ namespace PayWithPixels
             new Achievement { id = "rich", title = "FILTHY RICH", description = "HOLD 100 COINS", icon = "ach_rich" },
             new Achievement { id = "untouchable", title = "UNTOUCHABLE", description = "CLEAR 3 WAVES IN A ROW WITHOUT A HIT", icon = "ach_shield" },
             new Achievement { id = "speed", title = "TIME IS MONEY", description = "WIN IN UNDER 12 MINUTES", icon = "ach_speed" },
+            new Achievement { id = "fineprint", title = "READ THE FINE PRINT", description = "SEE A CONTRACT'S FINE PRINT KICK IN", icon = "ach_fineprint" },
+            new Achievement { id = "signed", title = "SIGNED AND SEALED", description = "SIGN 3 CONTRACTS IN ONE RUN", icon = "ach_signed" },
             new Achievement { id = "survivor", title = "SURVIVOR", description = "REACH ZONE 3", icon = "ach_survivor" },
         };
 
