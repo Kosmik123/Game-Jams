@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace PayWithPixels
 {
-    public enum Sound { Shoot, ShootShotgun, LaserTick, Hit, Kill, Coin, Buy, Hurt, Death, Boss, Dash, Win }
+    public enum Sound { Shoot, ShootShotgun, LaserTick, Hit, Block, Kill, Coin, Buy, Hurt, Death, Boss, Dash, Win }
 
     /// <summary>Dzwiek generowany w kodzie (bez assetow): bipy 8-bit i petla z fali kwadratowej. M = wyciszenie.</summary>
     public static class Sfx
@@ -37,6 +37,7 @@ namespace PayWithPixels
             clips[Sound.ShootShotgun] = Join("shotgun", Sweep("sg1", 220, 70, 0.14f, Wave.Noise, 0.5f), Sweep("sg2", 120, 50, 0.1f, Wave.Square, 0.3f));
             clips[Sound.LaserTick] = Sweep("laser", 1500, 1300, 0.05f, Wave.Square, 0.12f);
             clips[Sound.Hit] = Sweep("hit", 300, 150, 0.06f, Wave.Noise, 0.3f);
+            clips[Sound.Block] = Join("block", Sweep("bl1", 2200, 2200, 0.025f, Wave.Square, 0.3f), Sweep("bl2", 1500, 1000, 0.07f, Wave.Square, 0.25f));   // tink o tarcze
             clips[Sound.Kill] = Sweep("kill", 400, 80, 0.18f, Wave.Noise, 0.4f);
             clips[Sound.Coin] = Join("coin", Sweep("c1", 988, 988, 0.05f, Wave.Square, 0.25f), Sweep("c2", 1319, 1319, 0.12f, Wave.Square, 0.25f));
             clips[Sound.Buy] = Join("buy", Sweep("b1", 523, 523, 0.07f, Wave.Square, 0.3f), Sweep("b2", 659, 659, 0.07f, Wave.Square, 0.3f), Sweep("b3", 784, 784, 0.14f, Wave.Square, 0.3f));

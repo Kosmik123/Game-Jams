@@ -96,7 +96,7 @@ namespace PayWithPixels
                     }
                     if (e == null) break;
                     hit.Add(e);
-                    if (e.Blocks(velocity)) { Sfx.Play(Sound.Hit); Destroy(gameObject); return; }
+                    if (e.Blocks(velocity)) { Sfx.Play(Sound.Block); Shard.Burst(transform.parent, pos, 3); Destroy(gameObject); return; }
                     e.Damage(damage + (closeBonus && (pos - startPos).sqrMagnitude < 9f ? 1 : 0), crit);
                     if (pierceLeft-- <= 0) { Destroy(gameObject); return; }
                 }

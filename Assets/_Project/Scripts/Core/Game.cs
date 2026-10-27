@@ -142,7 +142,7 @@ namespace PayWithPixels
         public int Ascension { get; private set; }
         public float InterestRate => Ascension >= 4 ? 0.3f : 0.2f;
         /// <summary>Wrogowie rosna z fala (co 3 fale +10% HP) i ze strefa (2: +15%, 3: +30% HP oraz predkosci).</summary>
-        private float ZoneScale => zone >= 3 ? 1.3f : zone == 2 ? 1.15f : 1f;
+        private float ZoneScale => zone >= 3 ? 1.2f : zone == 2 ? 1.15f : 1f;
         public float EnemyHpMul => (Ascension >= 2 ? 1.25f : 1f) * ZoneScale * (1f + 0.1f * (wave / 4));
         public float EnemySpeedMul => (Ascension >= 4 ? 1.15f : 1f) * enemySpeedContractMul * ZoneScale;
         public float BossHpMul => (Ascension >= 5 ? 1.2f : 1f) * ContractBossHpMul;
@@ -555,7 +555,7 @@ namespace PayWithPixels
         /// <summary>Liczba wrogow w fali; x1.5 po powiekszeniu areny do 480x270 (2.25x powierzchni). Z1-1..3 lagodniej.</summary>
         private int SpawnCount()
         {
-            int n = zone == 1 ? (waveInZone <= 3 ? 5 : 8) + 2 * waveInZone : 8 + 3 * waveInZone + 6 * (zone - 1);
+            int n = zone == 1 ? (waveInZone <= 3 ? 5 : 8) + 2 * waveInZone : 8 + 3 * waveInZone + 5 * (zone - 1);
             return Mathf.RoundToInt((n + wave / 3) * 1.5f);
         }
         private void StartWave()
@@ -1021,7 +1021,7 @@ namespace PayWithPixels
             }
             if (zone >= 3)
             {
-                Add(EnemyType.Siege, 2f);
+                Add(EnemyType.Siege, 1.4f);
                 Add(EnemyType.Spawner, 0.8f, 3);
             }
 

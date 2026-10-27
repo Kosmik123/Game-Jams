@@ -22,6 +22,10 @@ namespace PayWithPixels
         private float clock;
         private int pattern;
         private SpriteRenderer sr;
+        private Transform barRoot, barFill;
+        private float barWidth;
+        private static Sprite pixelMid, pixelLeft;
+        private static bool guardHintShown;
         private string walkName;
         private int spriteSize;
         private bool rotates;
@@ -48,7 +52,7 @@ namespace PayWithPixels
             {
                 case EnemyType.Chaser: return new Spec { sprite = "enemy_chaser", size = 16, radius = 0.45f, hp = 1 + d / 4, speed = 2.6f, contact = 1, coins = 1, rotates = true };
                 case EnemyType.Shooter: return new Spec { sprite = "enemy_shooter", size = 16, radius = 0.45f, hp = 2 + d / 4, speed = 2f, contact = 1, coins = 1, rotates = true };
-                case EnemyType.Tank: return new Spec { sprite = "enemy_tank", size = 24, radius = 0.7f, hp = 8 + d, speed = 1.2f, contact = 2, coins = 3, rotates = true };
+                case EnemyType.Tank: return new Spec { sprite = "enemy_tank", size = 24, radius = 0.7f, hp = 6 + d * 3 / 4, speed = 1.2f, contact = 2, coins = 3, rotates = true };
                 case EnemyType.Dasher: return new Spec { sprite = "enemy_dasher", size = 16, radius = 0.45f, hp = 2 + d / 5, speed = 2.2f, contact = 1, coins = 2, rotates = true };
                 case EnemyType.Siege: return new Spec { sprite = "enemy_siege", size = 16, radius = 0.5f, hp = 4 + d / 4, speed = 1.6f, contact = 1, coins = 3, rotates = false };
                 case EnemyType.Swarm: return new Spec { sprite = "enemy_swarm", size = 6, radius = 0.3f, hp = 1, speed = 2.8f, contact = 1, coins = 0, rotates = false };
@@ -74,6 +78,12 @@ namespace PayWithPixels
             e.sr = Art.MakeRenderer(go, Art.Square(s.sprite + "_walk_0", s.size), 5);
             e.radius = s.radius; e.hp = e.maxHp = Mathf.CeilToInt(s.hp * Game.Instance.EnemyHpMul); e.speed = Mathf.Min(s.speed * scale * Game.Instance.EnemySpeedMul, MaxSpeed(type));
             e.contactDamage = s.contact; e.coinDrop = s.coins;
+            if (e.maxHp >= 8 && type != EnemyType.Guard) e.CreateBar();
+            if (type == EnemyType.Guard && !guardHintShown)
+            {
+                guardHintShown = true;
+                Game.Instance.Announce("GUARD: SHOOT FROM THE SIDE");
+            }
 
             e.shootTimer = Random.Range(0.5f, 1.8f);
             e.strafeSign = Random.value < 0.5f ? -1f : 1f;
@@ -95,6 +105,7 @@ namespace PayWithPixels
             e.radius = 0.6f;
             e.hp = e.maxHp = 35 + 6 * Game.Instance.zone;
             e.speed = 3.5f;
+            e.CreateBar();
             e.contactDamage = 0;
             return e;
         }
@@ -183,6 +194,49 @@ namespace PayWithPixels
         private void OnDisable() => All.Remove(this);
 
         /// <summary>Straznik: pocisk lecacy z przodu (od strony gracza) jest blokowany.</summary>
+        private static Sprite Pixel(bool left)
+        {
+            ref Sprite cache = ref (left ? ref pixelLeft : ref pixelMid);
+            if (cache == null)
+            {
+                var t = new Texture2D(1, 1, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point };
+                t.SetPixel(0, 0, Color.white);
+                t.Apply();
+                cache = Sprite.Create(t, new Rect(0, 0, 1, 1), new Vector2(left ? 0f : 0.5f, 0.5f), 1f);
+            }
+            return cache;
+        }
+
+        /// <summary>Cienki pasek HP nad wrogiem z duza iloscia zdrowia (czarna ramka, biale wypelnienie).</summary>
+        private void CreateBar()
+        {
+            barWidth = Mathf.Max(1.2f, radius * 2.2f);
+            var root = new GameObject("HpBar");
+            root.transform.SetParent(transform.parent, false);
+            var bg = new GameObject("Back");
+            bg.transform.SetParent(root.transform, false);
+            Art.MakeRenderer(bg, Pixel(false), 12).color = Color.black;
+            bg.transform.localScale = new Vector3(barWidth + 0.16f, 0.3f, 1f);
+            var fill = new GameObject("Fill");
+            fill.transform.SetParent(root.transform, false);
+            Art.MakeRenderer(fill, Pixel(true), 13).color = Color.white;
+            fill.transform.localPosition = new Vector3(-barWidth / 2f, 0f, 0f);
+            barRoot = root.transform;
+            barFill = fill.transform;
+        }
+
+        private void LateUpdate()
+        {
+            if (barRoot == null) return;
+            barRoot.position = transform.position + Vector3.up * (radius + 0.5f);
+            barFill.localScale = new Vector3(barWidth * Mathf.Clamp01(hp / (float)maxHp), 0.14f, 1f);
+        }
+
+        private void OnDestroy()
+        {
+            if (barRoot != null) Destroy(barRoot.gameObject);
+        }
+
         public bool Blocks(Vector2 bulletVelocity)
         {
             if (type != EnemyType.Guard) return false;
