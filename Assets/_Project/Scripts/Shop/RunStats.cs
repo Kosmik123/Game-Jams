@@ -84,7 +84,10 @@ namespace PayWithPixels
         public int bonusMaxHp;              // kontrakty
         public float tempFireMul = 1f;      // kontrakty (czasowe)
         public float FireInterval => 0.35f / (fireRateMul * tempFireMul);
-        public float MoveSpeed => 5f * Mathf.Pow(0.8f, legsStacks);
+        public float MoveSpeed => 5f * Curve(legsStacks, 1f, 0.92f, 0.76f, 0.58f);
+
+        /// <summary>Krzywa nieliniowa stackow ceny: indeks = liczba stackow (0..3), dalej wartosc ostatnia.</summary>
+        private static float Curve(int n, float s0, float s1, float s2, float s3) => n <= 0 ? s0 : n == 1 ? s1 : n == 2 ? s2 : s3;
         public float CritChance => crit * 0.12f + 0.06f * Mathf.Min(crit, 1);
         public float CritMultiplier => fogStacks > 0 ? 5f : 3f;   // synergia: Mgla + Krytyk
         public float ExplosionRadius => 1.1f + 0.4f * explosion;
@@ -99,16 +102,16 @@ namespace PayWithPixels
         public float DashCooldown => dashLevel >= 3 ? 0.7f : dashLevel == 2 ? 0.95f : 1.2f;
 
         /// <summary>Promien widocznosci w jednostkach swiata; 0 = brak mgly.</summary>
-        public float FogRadius => fogStacks <= 0 ? 0f : Mathf.Max(2.2f, 8.5f - 1.8f * (fogStacks - 1));
+        public float FogRadius => fogStacks <= 0 ? 0f : Mathf.Max(2.2f, Curve(fogStacks, 0f, 9f, 6.2f, 3.8f) - 0.6f * Mathf.Max(0, fogStacks - 3));
 
         /// <summary>Cena "Migotanie": co 8 s paleta odwraca sie na (1 + 0.5*stack) s.</summary>
-        public float FlickerDuration => flickerStacks <= 0 ? 0f : 1f + 0.5f * flickerStacks;
+        public float FlickerDuration => flickerStacks <= 0 ? 0f : Curve(flickerStacks, 0f, 0.8f, 1.7f, 2.8f);
 
         /// <summary>Cena "Zblizenie": mnoznik rozmiaru ortograficznego kamery.</summary>
-        public float CameraZoom => zoomStacks <= 0 ? 1f : Mathf.Max(0.55f, 1f - 0.15f * zoomStacks);
+        public float CameraZoom => Curve(zoomStacks, 1f, 0.93f, 0.76f, 0.58f);
 
         /// <summary>Cena "Glod": monety znikaja po tylu sekundach (0 = nigdy).</summary>
-        public float CoinLifetime => hungerStacks <= 0 ? 0f : Mathf.Max(2.5f, 9f - 2.5f * (hungerStacks - 1));
+        public float CoinLifetime => hungerStacks <= 0 ? 0f : Curve(hungerStacks, 0f, 10f, 6.5f, 3.5f);
     }
 
     public class Gain
@@ -127,6 +130,7 @@ namespace PayWithPixels
     {
         public string name, description, icon;
         public Action<RunStats> apply;
+        public Action<RunStats> revert;   // REDEEM: zdejmuje 1 stack
         public Func<RunStats, bool> available;
     }
 
@@ -140,6 +144,7 @@ namespace PayWithPixels
         public bool free;   // pierwszy zakup w runie
         public bool sell;   // oferta "Sprzedaj": bierzesz cene, dostajesz monety
         public int reward;
+        public int stacks = 1;   // ile stackow ceny wchodzi (potezne zyski = 2)
     }
 
     /// <summary>Katalog ofert. Dodanie zysku lub ceny = jedna pozycja na liscie.</summary>
@@ -184,25 +189,25 @@ namespace PayWithPixels
         public static readonly List<Price> Prices = new List<Price>
         {
             new Price { name = "FOG", icon = "icon_fog_eye", description = "YOU ONLY SEE NEAR YOURSELF",
-                apply = s => s.fogStacks++ },
+                apply = s => s.fogStacks++, revert = s => s.fogStacks-- },
             new Price { name = "PIXELATION", icon = "icon_pixelation_grid", description = "WORSE PICTURE RESOLUTION",
-                apply = s => s.pixelStacks++ },
+                apply = s => s.pixelStacks++, revert = s => s.pixelStacks-- },
             new Price { name = "FLICKER", icon = "icon_flicker_flash", description = "PALETTE INVERTS EVERY FEW SECONDS",
-                apply = s => s.flickerStacks++ },
+                apply = s => s.flickerStacks++, revert = s => s.flickerStacks-- },
             new Price { name = "SLUGGISH AIM", icon = "icon_heavy_anchor", description = "AIM LAGS BEHIND THE MOUSE",
-                apply = s => s.aimLagStacks++ },
+                apply = s => s.aimLagStacks++, revert = s => s.aimLagStacks-- },
             new Price { name = "ZOOM IN", icon = "icon_zoom", description = "CAMERA CLOSER, ENEMIES APPEAR LATE",
-                apply = s => s.zoomStacks++, available = s => s.zoomStacks < 3 },
+                apply = s => s.zoomStacks++, revert = s => s.zoomStacks--, available = s => s.zoomStacks < 3 },
             new Price { name = "FRAGILITY", icon = "icon_fragile", description = "-1 MAX HP",
-                apply = s => s.fragileStacks++, available = s => s.maxHp > 2 },
+                apply = s => s.fragileStacks++, revert = s => s.fragileStacks--, available = s => s.maxHp > 2 },
             new Price { name = "COSTLY LIFE", icon = "icon_costly", description = "HEALING GAINS COST DOUBLE",
-                apply = s => s.costlyHealStacks++, available = s => s.costlyHealStacks < 2 },
+                apply = s => s.costlyHealStacks++, revert = s => s.costlyHealStacks--, available = s => s.costlyHealStacks < 2 },
             new Price { name = "HUNGER", icon = "icon_hunger", description = "COINS VANISH FROM THE FLOOR",
-                apply = s => s.hungerStacks++, available = s => s.hungerStacks < 3 },
+                apply = s => s.hungerStacks++, revert = s => s.hungerStacks--, available = s => s.hungerStacks < 3 },
             new Price { name = "REVERSED CONTROLS", icon = "icon_reversed", description = "CONTROLS FLIP FOR SHORT MOMENTS",
-                apply = s => s.invertStacks++, available = s => s.invertStacks < 3 },
-            new Price { name = "HEAVY LEGS", icon = "icon_legs_boot", description = "-20% MOVE SPEED",
-                apply = s => s.legsStacks++ },
+                apply = s => s.invertStacks++, revert = s => s.invertStacks--, available = s => s.invertStacks < 3 },
+            new Price { name = "HEAVY LEGS", icon = "icon_legs_boot", description = "SLOWER MOVEMENT",
+                apply = s => s.legsStacks++, revert = s => s.legsStacks-- },
         };
 
         /// <summary>Synergie zysk+cena: (zysk, cena, opis efektu). Efekty sa w RunStats / Drone / Player.</summary>
@@ -245,7 +250,7 @@ namespace PayWithPixels
                 gains.Remove(g);
                 var p = prices[UnityEngine.Random.Range(0, prices.Count)];
                 int level = g.consumable ? 1 : stats.Level(g.name) + 1;
-                offers.Add(new Offer { gain = g, price = p, level = level, cost = GainCost(g, level, wave, stats) });
+                offers.Add(new Offer { gain = g, price = p, level = level, cost = GainCost(g, level, wave, stats), stacks = g.cost >= 8 ? 2 : 1 });
             }
             if (wave >= 2 && offers.Count >= 3 && UnityEngine.Random.value < 0.6f)
             {

@@ -276,6 +276,16 @@ public class BalanceBot
         // careful: najpierw splac dlug, kupuj tylko za monety, preferuj przezycie, unikaj najgorszych cen
         if (debt > 0 && coins > 0) { Call(game, "PayDebt"); return 0; }
 
+        // REDEEM: zdejmij najgorsza cene, jesli stac nas (po splacie dlugu)
+        if ((bool)Get(game, "shopRedeem"))
+        {
+            var opts = (IList)Call(game, "RedeemOptions");
+            string[] worst = { "FOG", "ZOOM IN", "REVERSED CONTROLS", "FRAGILITY", "PIXELATION", "SLUGGISH AIM", "HUNGER" };
+            foreach (var w in worst)
+                foreach (var kv in opts)
+                    if ((string)Get(kv, "Key") == w && (int)Get(kv, "Value") <= coins) { Call(game, "Redeem", w); return 0; }
+        }
+
         object pick = null; float bestScore = 0;
         foreach (var o in candidates)
         {
