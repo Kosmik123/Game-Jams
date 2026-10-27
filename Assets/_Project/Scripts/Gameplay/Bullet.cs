@@ -26,12 +26,13 @@ namespace PayWithPixels
             go.transform.SetParent(parent, false);
             go.transform.position = pos;
             var sprite = fromPlayer
-                ? (damage > 1 ? Art.Circle("bullet_boss", 8) : Art.Square("bullet_player", 4))
+                ? Art.Square("bullet_player", 4)   // krytyk to wiekszy pocisk gracza, nie sprite wroga (bullet_boss to piorun)
                 : spriteName != null ? Art.Circle(spriteName, 8) : Art.Diamond("bullet_enemy", 6);
             Art.MakeRenderer(go, sprite, 8);
             var b = go.AddComponent<Bullet>();
             b.velocity = vel;
             go.transform.rotation = Art.FaceRotation(vel);
+            if (fromPlayer && damage > 1) go.transform.localScale = Vector3.one * 2f;
             b.fromPlayer = fromPlayer;
             b.pierceLeft = pierce;
             b.startPos = pos;
