@@ -83,3 +83,11 @@ Projekt: Unity 6000.4.9f1, kod i assety w `Assets/_Project` (Scripts, Graphics, 
 
 ## Grafik
 - [ ] 3-4 kadry intro i kadr zakończenia (1-bit, 320x180, bez półprzezroczystości), ramka dialogu bossa, ikona kontraktu (pergamin z gwiazdką), ikona 'mały druk'.
+
+---
+# FAZA 5 — Ulgi i łagodniejsze ceny (designer)
+- [ ] REDEEM: w co 3. sklepie oferta 'zdejmij 1 stack ceny' (wybór ceny, koszt 8 + 4*stacks), ikona/label 'REDEEM'.
+- [ ] Nieliniowe stacki cen (1. łagodny, 2.-3. mocniejsze) dla wszystkich cen.
+- [ ] Poborca: zabicie zdejmuje 1 stack losowej ceny (dodatkowo do spłaty długu).
+- [ ] Siła ceny zależna od mocy zysku (proste zyski łagodniejsze, potężne mocniejsze).
+- [ ] Przestaw bota i puść balans ponownie; raport z liczbami (cele: random 5-15%, careful 30-50%).
