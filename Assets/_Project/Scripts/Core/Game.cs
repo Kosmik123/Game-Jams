@@ -46,6 +46,10 @@ namespace PayWithPixels
         private int kills;
         private readonly Drone[] drones = new Drone[3];
         public bool Frozen => freezeTimer > 0;
+
+        // ---- narzedzia testowe: Edytor, Development Build albo WebGL z ?debug=1 ----
+        public bool GodMode { get; private set; }
+        public static bool DebugEnabled => Application.isEditor || Debug.isDebugBuild || Application.absoluteURL.Contains("debug=1");
         public bool ControlsInverted { get; private set; }
 
         public bool IsBossWave => waveInZone > WavesPerZone;
@@ -271,6 +275,7 @@ namespace PayWithPixels
                 if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return)) StartRun();
                 return;
             }
+            if (DebugEnabled) UpdateDebugKeys();
             UpdateFreeze();
             UpdateFlicker();
             UpdateInvertedControls();
@@ -305,9 +310,42 @@ namespace PayWithPixels
             }
         }
 
-        private string FreezeHint() => stats.freeze > 0 ? (freezeReady ? "[F] FREEZE READY" : "FREEZE USED") : "";
+        private string FreezeHint() => (stats.freeze > 0 ? (freezeReady ? "[F] FREEZE READY" : "FREEZE USED") : "") + (DebugEnabled ? (GodMode ? " [DEBUG GOD]" : " [DEBUG]") : "");
 
         private string ZoneLabel() => IsBossWave ? "ZONE " + zone + " BOSS" : "ZONE " + zone + "-" + Mathf.Max(1, waveInZone);
+
+        private void KillAllEnemies()
+        {
+            foreach (var e in Enemy.All.ToArray()) if (e != null) e.Damage(99999);
+        }
+
+        /// <summary>F1 god mode, F2 +50 monet, F3 nastepna fala, F4 nastepna strefa, F5 sklep, F6 zabij wrogow.</summary>
+        private void UpdateDebugKeys()
+        {
+            if (Input.GetKeyDown(KeyCode.F1)) { GodMode = !GodMode; ui.Toast("DEBUG: GOD MODE " + (GodMode ? "ON" : "OFF")); }
+            if (Input.GetKeyDown(KeyCode.F2)) { coins += 50; ui.Toast("DEBUG: +50 COINS"); }
+            if (Input.GetKeyDown(KeyCode.F6) && state == State.Playing) KillAllEnemies();
+            if (Input.GetKeyDown(KeyCode.F3) && state == State.Playing)
+            {
+                spawnLeft = 0;
+                KillAllEnemies();
+            }
+            if (Input.GetKeyDown(KeyCode.F5) && (state == State.Playing || state == State.Clearing))
+            {
+                spawnLeft = 0;
+                foreach (var e in Enemy.All.ToArray()) if (e != null) Destroy(e.gameObject);
+                OpenShop();
+            }
+            if (Input.GetKeyDown(KeyCode.F4) && (state == State.Playing || state == State.Clearing || state == State.Shop))
+            {
+                spawnLeft = 0;
+                foreach (var e in Enemy.All.ToArray()) if (e != null) Destroy(e.gameObject);
+                foreach (var b in Bullet.All.ToArray()) if (b != null) Destroy(b.gameObject);
+                ui.HideShop();
+                if (zone < Zones) { zone++; lastWaveWasBoss = false; BeginZone(); }
+                else ui.Toast("DEBUG: ALREADY IN THE LAST ZONE");
+            }
+        }
 
         private void UpdateFreeze()
         {
