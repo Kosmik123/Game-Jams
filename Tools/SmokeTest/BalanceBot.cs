@@ -258,6 +258,12 @@ public class BalanceBot
         foreach (var o in offers)
             if (!(bool)Get(o, "sold") && (bool)Call(game, "CanAfford", o)) candidates.Add(o);
 
+        if (strategy == "nobuy")
+        {
+            Call(game, "CloseShop");   // nic nie kupuje: ma byc wyraznie slabszy od kupujacych
+            return 0;
+        }
+
         if (strategy == "buyall")
         {
             if (candidates.Count > 0) { Call(game, "Buy", candidates[0]); return 1; }

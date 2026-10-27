@@ -152,10 +152,10 @@ namespace PayWithPixels
     {
         public static readonly List<Gain> Gains = new List<Gain>
         {
-            new Gain { name = "FASTER SHOTS", icon = "icon_gain_firerate", description = "+35% FIRE RATE", cost = 5,
-                apply = s => s.fireRateMul *= 1.35f },
-            new Gain { name = "MORE HEALTH", heal = true, icon = "icon_heart", description = "+2 MAX HP AND HEAL 2", cost = 5,
-                apply = s => s.maxHp += 2, onBuy = (s, p) => p.Heal(2) },
+            new Gain { name = "FASTER SHOTS", icon = "icon_gain_firerate", description = "+50% FIRE RATE", cost = 5,
+                apply = s => s.fireRateMul *= 1.5f },
+            new Gain { name = "MORE HEALTH", heal = true, icon = "icon_heart", description = "+3 MAX HP AND HEAL 3", cost = 5,
+                apply = s => s.maxHp += 3, onBuy = (s, p) => p.Heal(3) },
             new Gain { name = "TRIPLE SHOT", icon = "icon_gain_triple", description = "MORE BULLETS PER SHOT", cost = 8, maxLevel = 2,
                 apply = s => s.shotCount += 2 },
             new Gain { name = "HEALING", heal = true, icon = "icon_gain_heal", description = "FULL HP", cost = 4, consumable = true,
@@ -250,7 +250,7 @@ namespace PayWithPixels
                 gains.Remove(g);
                 var p = prices[UnityEngine.Random.Range(0, prices.Count)];
                 int level = g.consumable ? 1 : stats.Level(g.name) + 1;
-                offers.Add(new Offer { gain = g, price = p, level = level, cost = GainCost(g, level, wave, stats), stacks = g.cost >= 8 ? 2 : 1 });
+                offers.Add(new Offer { gain = g, price = p, level = level, cost = GainCost(g, level, wave, stats), stacks = g.cost >= 9 && wave >= 7 ? 2 : 1 });
             }
             if (wave >= 2 && offers.Count >= 3 && UnityEngine.Random.value < 0.6f)
             {
