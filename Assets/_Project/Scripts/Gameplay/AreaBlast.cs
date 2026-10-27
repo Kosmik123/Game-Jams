@@ -36,6 +36,7 @@ namespace PayWithPixels
             var game = Game.Instance;
             if (game.state != Game.State.Playing && game.state != Game.State.Clearing) return;
 
+            if (game.Frozen) return;
             timer -= Time.deltaTime;
             sr.enabled = timer > 0.35f || Mathf.FloorToInt(timer * 24f) % 2 == 0;
             if (timer > 0) return;

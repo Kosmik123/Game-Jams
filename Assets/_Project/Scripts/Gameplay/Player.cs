@@ -13,6 +13,9 @@ namespace PayWithPixels
         private Vector2 dashDir;
         private float walkClock;
         public int shieldLeft;
+        private float shieldRegenTimer;
+        private int minesToDrop;
+        private float mineTimer;
         private float aimAngle;
         private bool aimInit;
         private SpriteRenderer sr, halo;
@@ -66,7 +69,16 @@ namespace PayWithPixels
             halo.enabled = sr.enabled;
             if (game.state != Game.State.Playing && game.state != Game.State.Clearing) return;
 
+            // synergia Ciezkie nogi + Tarcza: tarcza odnawia sie w trakcie fali
+            float regen = game.stats.ShieldRegen;
+            if (regen > 0 && shieldLeft < game.stats.shieldMax)
+            {
+                shieldRegenTimer += Time.deltaTime;
+                if (shieldRegenTimer >= regen) { shieldRegenTimer = 0; shieldLeft++; }
+            }
+
             var move = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
+            if (game.ControlsInverted) move = -move;
             if (move.sqrMagnitude > 1f) move.Normalize();
             dashCooldown -= Time.deltaTime;
             if (game.stats.HasDash && dashCooldown <= 0 && Input.GetKeyDown(KeyCode.Space))
@@ -74,10 +86,23 @@ namespace PayWithPixels
                 dashTimer = 0.15f;
                 Sfx.Play(Sound.Dash);
                 dashCooldown = game.stats.DashCooldown;
+                minesToDrop = game.stats.mines;
+                mineTimer = 0;
                 dashDir = move.sqrMagnitude > 0.01f ? move.normalized : (game.display.ScreenToWorld(Input.mousePosition) - (Vector2)transform.position).normalized;
             }
             Vector2 step = move * game.stats.MoveSpeed;
-            if (dashTimer > 0) { dashTimer -= Time.deltaTime; step = dashDir * 20f; }
+            if (dashTimer > 0)
+            {
+                dashTimer -= Time.deltaTime;
+                step = dashDir * 20f;
+                mineTimer -= Time.deltaTime;
+                if (minesToDrop > 0 && mineTimer <= 0)
+                {
+                    Mine.Spawn(transform.parent, transform.position);
+                    minesToDrop--;
+                    mineTimer = 0.045f;
+                }
+            }
             if (move.sqrMagnitude > 0.01f) walkClock += Time.deltaTime;
             sr.sprite = move.sqrMagnitude > 0.01f
                 ? Art.Circle("player_walk_" + (Mathf.FloorToInt(walkClock / 0.15f) % 2), 16)
@@ -116,7 +141,8 @@ namespace PayWithPixels
             {
                 float a = (i - (stats.shotCount - 1) / 2f) * 12f;
                 var d = (Vector2)(Quaternion.Euler(0, 0, a) * dir);
-                Bullet.Spawn(transform.parent, pos + d * 0.6f, d * 12f, true, stats.pierce);
+                int dmg = Random.value < stats.CritChance ? Mathf.RoundToInt(stats.CritMultiplier) : 1;
+                Bullet.Spawn(transform.parent, pos + d * 0.6f, d * 12f, true, stats.pierce, null, dmg, stats.ricochet);
             }
         }
     }

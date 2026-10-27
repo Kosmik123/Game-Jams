@@ -38,6 +38,29 @@ namespace PayWithPixels
             new[] { "1A0A00", "FFB000" },
         };
 
+        /// <summary>Paleta glowna strefy (1-3) + zapasowe zmieniane co 2 fale w obrebie strefy.</summary>
+        private static readonly string[][] ZoneMain =
+        {
+            new[] { "14121A", "F4F1DE" },   // Toll Road
+            new[] { "0A1F1A", "E6C84A" },   // The Bank
+            new[] { "2B0A3D", "FF5E9C" },   // Auction House
+        };
+
+        private static readonly string[][] Backups =
+        {
+            new[] { "0F380F", "9BBC0F" },
+            new[] { "1A0A00", "FFB000" },
+            new[] { "000000", "FFFFFF" },
+        };
+
+        public static void SetZone(int zone, int waveInZone)
+        {
+            int z = Mathf.Clamp(zone, 1, ZoneMain.Length) - 1;
+            int group = Mathf.Max(0, waveInZone - 1) / 2;   // 0,0,1,1,2,2(boss)
+            string[] p = group == 0 || waveInZone > 5 ? ZoneMain[z] : Backups[(z + group - 1) % Backups.Length];
+            SetPair(p[0], p[1]);
+        }
+
         public static void SetIndex(int index)
         {
             var p = Pairs[((index % Pairs.Length) + Pairs.Length) % Pairs.Length];

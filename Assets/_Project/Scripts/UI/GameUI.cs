@@ -105,9 +105,9 @@ namespace PayWithPixels
 
         public void HideZone() => zonePanel.SetActive(false);
 
-        public void SetHud(int hp, int maxHp, string zoneLabel, int coins, int debt)
+        public void SetHud(int hp, int maxHp, string zoneLabel, int coins, int debt, string extra = "")
         {
-            hud.text = "HP " + Mathf.Max(0, hp) + "/" + maxHp + "    " + zoneLabel + "    COINS " + coins + (debt > 0 ? "    DEBT " + debt : "") + "    [M] SOUND " + (Sfx.Muted ? "OFF" : "ON");
+            hud.text = "HP " + Mathf.Max(0, hp) + "/" + maxHp + "    " + zoneLabel + "    COINS " + coins + (debt > 0 ? "    DEBT " + debt : "") + (string.IsNullOrEmpty(extra) ? "" : "    " + extra) + "    [M] SOUND " + (Sfx.Muted ? "OFF" : "ON");
         }
 
         public void ShowShop(List<Offer> offers, int coins, int debt, Action<Offer> onBuy, Action onSkip)

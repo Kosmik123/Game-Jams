@@ -130,6 +130,7 @@ namespace PayWithPixels
                 return;
             }
             Shard.Burst(transform.parent, transform.position, 5);
+            if (type != EnemyType.Collector) Game.Instance.OnEnemyKilled(transform.position);
             if (type == EnemyType.Collector)
             {
                 Game.Instance.OnCollectorKilled();
@@ -186,7 +187,7 @@ namespace PayWithPixels
         {
             var game = Game.Instance;
             if (game.state != Game.State.Playing && game.state != Game.State.Clearing) return;
-            if (game.player == null) return;
+            if (game.player == null || game.Frozen) return;
 
             if (type == EnemyType.Boss)
             {
@@ -202,6 +203,8 @@ namespace PayWithPixels
             Vector2 dir = dist > 0.001f ? toPlayer / dist : Vector2.zero;
             Vector2 move = Vector2.zero;
             float moveSpeed = speed;
+            if (game.stats.slowAura > 0 && dist < game.stats.SlowAuraRadius && type != EnemyType.Boss)
+                moveSpeed *= game.stats.SlowAuraFactor;   // zysk Spowolnienie
             bool attacking = game.state == Game.State.Playing;
             float dt = Time.deltaTime;
 

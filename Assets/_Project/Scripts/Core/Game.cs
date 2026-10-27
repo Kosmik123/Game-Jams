@@ -40,6 +40,13 @@ namespace PayWithPixels
         private float introTimer;
         private float flickerClock;
         private bool lastWaveWasBoss;
+        private float invertClock;
+        private float freezeTimer;
+        private bool freezeReady;
+        private int kills;
+        private readonly Drone[] drones = new Drone[3];
+        public bool Frozen => freezeTimer > 0;
+        public bool ControlsInverted { get; private set; }
 
         public bool IsBossWave => waveInZone > WavesPerZone;
         /// <summary>Trudnosc do skalowania wrogow (rosnie przez caly run).</summary>
@@ -112,6 +119,9 @@ namespace PayWithPixels
             foreach (var b in Bullet.All.ToArray()) if (b != null) Destroy(b.gameObject);
             foreach (var a in AreaBlast.All.ToArray()) if (a != null) Destroy(a.gameObject);
             foreach (var c in Coin.All.ToArray()) if (c != null) Destroy(c.gameObject);
+            foreach (var m in Mine.All.ToArray()) if (m != null) Destroy(m.gameObject);
+            foreach (var x in Explosion.All.ToArray()) if (x != null) Destroy(x.gameObject);
+            for (int i = 0; i < drones.Length; i++) { if (drones[i] != null) Destroy(drones[i].gameObject); drones[i] = null; }
             if (player != null) Destroy(player.gameObject);
 
             Palette.Reset();
@@ -123,6 +133,10 @@ namespace PayWithPixels
             coins = 0;
             debt = 0;
             lastWaveWasBoss = false;
+            kills = 0;
+            freezeTimer = 0;
+            invertClock = 0;
+            ControlsInverted = false;
             ApplyPrices();
             player = Player.Create(world);
             ui.HideTitle();
@@ -143,7 +157,7 @@ namespace PayWithPixels
             state = State.ZoneIntro;
             introTimer = 2.6f;
             waveInZone = 0;
-            Palette.SetIndex((zone - 1) * 2);
+            Palette.SetZone(zone, 1);
             ui.ShowZone(zone, ZoneNames[zone - 1]);
         }
 
@@ -152,12 +166,13 @@ namespace PayWithPixels
             wave++;
             waveInZone++;
             ui.HideZone();
-            Palette.SetIndex((zone - 1) * 2 + (waveInZone - 1) / 3);
+            Palette.SetZone(zone, waveInZone);
             state = State.Playing;
             lastWaveWasBoss = IsBossWave;
             spawnLeft = IsBossWave ? 6 : 5 + 2 * waveInZone + 4 * (zone - 1);
             spawnTimer = 0.5f;
             player.RefillShield();
+            freezeReady = stats.freeze > 0;
 
             if (IsBossWave)
             {
@@ -207,8 +222,26 @@ namespace PayWithPixels
         public void OnCollectorTouch()
         {
             string taken = stats.StealRandomGain();
+            RefreshDrones();
             if (player.hp > stats.maxHp) player.hp = stats.maxHp;
             ui.Toast(taken != null ? "THE COLLECTOR TOOK: " + taken : "THE COLLECTOR FOUND NOTHING TO TAKE");
+        }
+
+        public void OnEnemyKilled(Vector2 pos)
+        {
+            kills++;
+            if (stats.vampire > 0 && kills % stats.VampireKills == 0 && player.hp < stats.maxHp)
+                player.Heal(1);
+            if (stats.explosion > 0)
+                Explosion.Spawn(world, pos, stats.ExplosionRadius, stats.ExplosionDamage);
+        }
+
+        /// <summary>Dolacza/odlacza dronow po zmianie zyskow.</summary>
+        public void RefreshDrones()
+        {
+            for (int i = 0; i < drones.Length; i++)
+                if (i < stats.drones && drones[i] == null)
+                    drones[i] = Drone.Create(world, i);
         }
 
         public void SpawnCoin(Vector2 pos, int count)
@@ -229,7 +262,7 @@ namespace PayWithPixels
             if (cam != null) cam.orthographicSize = Mathf.MoveTowards(cam.orthographicSize, OrthoSize * (stats != null ? stats.CameraZoom : 1f), 4f * Time.deltaTime);
             if (player != null) display.SetFogCenter(player.transform.position);
             if (player != null && state != State.Title)
-                ui.SetHud(player.hp, stats.maxHp, ZoneLabel(), coins, debt);
+                ui.SetHud(player.hp, stats.maxHp, ZoneLabel(), coins, debt, FreezeHint());
 
             if (Input.GetKeyDown(KeyCode.M)) Sfx.ToggleMute();
             if (state == State.Title)
@@ -237,7 +270,9 @@ namespace PayWithPixels
                 if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return)) StartRun();
                 return;
             }
+            UpdateFreeze();
             UpdateFlicker();
+            UpdateInvertedControls();
 
             switch (state)
             {
@@ -269,16 +304,47 @@ namespace PayWithPixels
             }
         }
 
+        private string FreezeHint() => stats.freeze > 0 ? (freezeReady ? "[F] FREEZE READY" : "FREEZE USED") : "";
+
         private string ZoneLabel() => IsBossWave ? "ZONE " + zone + " BOSS" : "ZONE " + zone + "-" + Mathf.Max(1, waveInZone);
+
+        private void UpdateFreeze()
+        {
+            if (freezeTimer > 0) freezeTimer -= Time.deltaTime;
+            if (state == State.Playing && freezeReady && stats.freeze > 0 && Input.GetKeyDown(KeyCode.F))
+            {
+                freezeReady = false;
+                freezeTimer = stats.FreezeDuration;
+                Sfx.Play(Sound.Boss);
+                ui.Toast("TIME FROZEN");
+            }
+        }
+
+        private void UpdateInvertedControls()
+        {
+            int stacks = stats.invertStacks;
+            bool active = stacks > 0 && state == State.Playing;
+            if (!active) { ControlsInverted = false; invertClock = 0; return; }
+            float period = 11f, dur = 1.5f + 0.5f * stacks;
+            float prev = invertClock;
+            invertClock = (invertClock + Time.deltaTime) % (period + dur);
+            ControlsInverted = invertClock > period;
+            if (ControlsInverted && prev <= period) ui.Toast("CONTROLS INVERTED!");
+        }
 
         private void UpdateFlicker()
         {
             float dur = stats.FlickerDuration;
             bool active = dur > 0 && (state == State.Playing || state == State.Clearing);
-            if (!active) { Palette.Inverted = false; flickerClock = 0; return; }
             const float period = 8f;
-            flickerClock = (flickerClock + Time.deltaTime) % (period + dur);
-            Palette.Inverted = flickerClock > period;
+            bool flick = false;
+            if (!active) flickerClock = 0;
+            else
+            {
+                flickerClock = (flickerClock + Time.deltaTime) % (period + dur);
+                flick = flickerClock > period;
+            }
+            Palette.Inverted = flick != Frozen;   // zamrozenie czasu tez odwraca palete
         }
 
         private void UpdateSpawner()
@@ -387,10 +453,12 @@ namespace PayWithPixels
                 if (!g.consumable) stats.levels[g.name] = o.level;
                 stats.Recompute();
                 g.onBuy?.Invoke(stats, player);
+                RefreshDrones();
                 if (player.hp > stats.maxHp) player.hp = stats.maxHp;
             }
             Sfx.Play(Sound.Buy);
             o.price.apply(stats);
+            stats.AddPrice(o.price.name);
             stats.Recompute();
             if (player.hp > stats.maxHp) player.hp = stats.maxHp;
             ApplyPrices();
