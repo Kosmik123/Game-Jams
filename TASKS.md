@@ -72,3 +72,14 @@ Projekt: Unity 6000.4.9f1, kod i assety w `Assets/_Project` (Scripts, Graphics, 
 
 ## Designer
 - [ ] Testy ręczne całego runu na WebGL, lista bugów do programisty, tuning wg telemetrii, tekst strony gry (opis, sterowanie).
+
+---
+# FAZA 4 — fabuła i Kontrakty (designer)
+
+## Programista
+- [ ] Kontrakty w sklepie (co 2. sklep, 4. opcja), mały druk po 2 falach, 6-8 kontraktów w danych, UI z "???" i podglądem po podpisaniu, osiągnięcia READ THE FINE PRINT / SIGNED AND SEALED.
+- [ ] Fabuła: intro (3-4 kadry, pomijalne), dialogi przed bossami (1 linijka w ramce), zakończenie SOLD z łączną ceną runu, ekran PAID IN FULL przy zgonie.
+- [ ] Statystyka końcowa 'Total price paid' (stacki cen + dług + sprzedane zyski).
+
+## Grafik
+- [ ] 3-4 kadry intro i kadr zakończenia (1-bit, 320x180, bez półprzezroczystości), ramka dialogu bossa, ikona kontraktu (pergamin z gwiazdką), ikona 'mały druk'.

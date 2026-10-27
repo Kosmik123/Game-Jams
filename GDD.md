@@ -107,3 +107,24 @@ Obecni: Goniec, Strzelec, Tank. Dodać: Skaczek (dash na gracza), Oblężnik (po
 - Dzień 1 (reszta): dług+Poborca, 3 nowe wrogowie, ceny rozszerzone, strefa 1 dopracowana, balans po testach.
 - Dzień 2: strefy 2-3, bossy 2-3, meta/odblokowania, osiągnięcia, tutorial, pauza/ustawienia, polish, QA, build WebGL + deploy na itch.io.
 - Ostatnie 3-4 godziny: tylko poprawki błędów, balans i wypolerowanie. Zero nowych funkcji.
+
+---
+
+# GDD v3 — fabuła i Kontrakty (decyzja designera po uwadze Kosmika)
+
+## Fabuła (lekka)
+- Gracz to Dłużnik: wszedł na Drogę Opłat, żeby spłacić dług, którego nie pamięta. Każdy boss to etap "rozliczenia": Toll Keeper (myto), Banker (kredyt), Auctioneer (licytuje Ciebie).
+- Intro: 3-4 kadry 1-bit na tytule (po pierwszym uruchomieniu, pomijalne klawiszem).
+- Przed każdym bossem 1 linijka dialogu w ramce. Po Auctioneerze zakończenie: "SOLD." i ekran z łączną ceną runu (suma stacków cen, długu, sprzedanych zysków).
+- Zakończenie złe (zgon): "PAID IN FULL" z liczbą fal.
+
+## Kontrakty (nowa mechanika)
+- Przed falą (w sklepie, jako czwarta opcja co 2. sklep) można podpisać kontrakt: nagroda teraz, **mały druk** ujawniany po 2 falach.
+- Przykłady: "+30 monet teraz / po 2 falach tracisz 1 losowy zysk"; "+1 max HP / po 2 falach dług +10"; "podwójne monety przez 2 fale / po nich Mgła x2 do końca strefy"; "leczenie do pełna / następny boss +20% HP".
+- Mały druk jest ukryty do czasu, ale kontrakty z tego samego typu są znane z doświadczenia (UI pokazuje "???"). Kontrakt można odrzucić.
+- Osiągnięcie: "READ THE FINE PRINT" (podpisz 0 kontraktów w runie), "SIGNED AND SEALED" (podpisz 5).
+
+## Harmonogram (48 h)
+- Do 24. godziny: rdzeń i treść zamknięte (fabuła, Kontrakty, balans, czytelność).
+- 24-40: testy ręczne, balans, bugi, polish, strona gry.
+- 40-48: bufor, build finalny, publikacja (tylko gdy Kosmik założy stronę).
