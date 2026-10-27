@@ -233,7 +233,10 @@ namespace PayWithPixels
 
         public static int GainCost(Gain g, int level, int wave, RunStats stats)
         {
-            int cost = g.cost + (level - 1) * 3 + (wave >= 13 ? wave / 3 : wave / 4);
+            // x1.5 po powiekszeniu areny (dochod ~+50%); drozeje z liczba posiadanych zyskow (+2 za poziom) i z fala (wave/3)
+            int owned = 0;
+            foreach (var kv in stats.levels) owned += kv.Value;
+            int cost = Mathf.RoundToInt((g.cost + (level - 1) * 3 + 2 * owned + wave / 3) * 1.5f);
             return g.heal ? cost * (1 + stats.costlyHealStacks) : cost;
         }
 
