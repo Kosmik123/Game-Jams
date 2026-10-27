@@ -254,6 +254,19 @@ public class BalanceBot
         if ((bool)Get(game, "ControlsInverted")) dir = -dir;   // odwrocone sterowanie: czlowiek by tez pomylil kierunek
         if (dir.sqrMagnitude > 0.0001f) dir.Normalize();
 
+        // dash: ucieczka, gdy wrog jest tuz-tuz (zasieg kontaktu) albo pocisk leci prosto w gracza
+        if (dir.sqrMagnitude > 0.0001f && stats.GetType().GetProperty("InputDelay") != null && (int)Get(stats, "dashLevel") > 0)
+        {
+            bool danger = nearest < 1.5f;
+            foreach (var b in bullets)
+            {
+                if ((bool)Get(b.comp, "fromPlayer")) continue;
+                Vector2 v = (Vector2)Get(b.comp, "velocity");
+                Vector2 rel = pos - b.pos;
+                if (rel.magnitude < 1.3f && Vector2.Dot(v.normalized, rel.normalized) > 0.8f) { danger = true; break; }
+            }
+            if (danger) Call(player, "TryDash", game, dir.normalized, dir.normalized);
+        }
         float delay = stats.GetType().GetProperty("InputDelay") != null ? (float)Get(stats, "InputDelay") : 0f;   // starsze wersje nie maja tej ceny
         float inertia = stats.GetType().GetProperty("InertiaTime") != null ? (float)Get(stats, "InertiaTime") : 0f;
         float startT = Mathf.Max(delay, inertia), stopT = inertia * 1.3f;
@@ -370,7 +383,7 @@ public class BalanceBot
                 case "FASTER SHOTS": score = 5; break;
                 case "PIERCING": score = 4; break;
                 case "TRIPLE SHOT": score = 4; break;
-                case "DASH": case "SHOCKWAVE": case "DOUBLE DASH": case "DASH CRIT": case "DASH MINES": score = 0; break;   // bot nie uzywa dasha
+                case "DASH": case "SHOCKWAVE": case "DOUBLE DASH": case "DASH CRIT": case "DASH MINES": score = 3; break;
                 case "SELL": score = 0.5f; break;
                 default: score = 3; break;
             }

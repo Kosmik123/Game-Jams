@@ -86,11 +86,20 @@ namespace PayWithPixels
             }
         }
 
+        /// <summary>Czeka na zadanie najwyzej TimeoutMs. Bez Task.Delay (w WebGL nie ma watkow/timerow): odpytuje w kolejnych klatkach.</summary>
         private static async Task<bool> WithTimeout(Task t)
         {
-            var done = await Task.WhenAny(t, Task.Delay(TimeoutMs));
-            if (done != t) return false;
-            await t;   // przenosi wyjatek
+            float start = Time.realtimeSinceStartup;
+            while (!t.IsCompleted)
+            {
+                if (Time.realtimeSinceStartup - start > TimeoutMs / 1000f)
+                {
+                    t.ContinueWith(x => { var ignored = x.Exception; }, TaskContinuationOptions.OnlyOnFaulted);   // spozniony blad nie trafia do logu
+                    return false;
+                }
+                await Task.Yield();
+            }
+            await t;   // przenosi wyjatek (np. brak sieci) do wywolujacego catch
             return true;
         }
 
@@ -176,7 +185,9 @@ namespace PayWithPixels
             Changed();
             try
             {
-                var page = await LeaderboardsService.Instance.GetScoresAsync(BoardId, new GetScoresOptions { Limit = 10 });
+                var pageTask = LeaderboardsService.Instance.GetScoresAsync(BoardId, new GetScoresOptions { Limit = 10 });
+                if (!await WithTimeout(pageTask)) throw new TimeoutException("scores timeout");
+                var page = pageTask.Result;
                 string myId = AuthenticationService.Instance.PlayerId;
                 Top.Clear();
                 foreach (var e in page.Results)
@@ -187,7 +198,9 @@ namespace PayWithPixels
                 {
                     try
                     {
-                        var me = await LeaderboardsService.Instance.GetPlayerScoreAsync(BoardId);
+                        var meTask = LeaderboardsService.Instance.GetPlayerScoreAsync(BoardId);
+                        if (!await WithTimeout(meTask)) throw new TimeoutException("player score timeout");
+                        var me = meTask.Result;
                         Mine = new Row { rank = me.Rank + 1, name = Strip(me.PlayerName), score = (int)me.Score, mine = true };
                     }
                     catch (Exception) { /* brak wyniku gracza na tablicy */ }

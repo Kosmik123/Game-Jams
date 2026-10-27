@@ -113,17 +113,7 @@ namespace PayWithPixels
             else moveSmoothed = move;
             dashCooldown -= Time.deltaTime;
             dashWindow -= Time.deltaTime;
-            bool second = game.stats.doubleDash > 0 && dashWindow > 0;
-            if (game.stats.HasDash && (dashCooldown <= 0 || second) && Input.GetKeyDown(KeyCode.Space))
-            {
-                dashTimer = 0.15f;
-                Sfx.Play(Sound.Dash);
-                if (second) dashWindow = 0f;
-                else { dashCooldown = game.stats.DashCooldown; dashWindow = game.stats.doubleDash > 0 ? 0.8f : 0f; }
-                minesToDrop = game.stats.mines;
-                mineTimer = 0;
-                dashDir = move.sqrMagnitude > 0.01f ? move.normalized : (game.display.ScreenToWorld(Input.mousePosition) - (Vector2)transform.position).normalized;
-            }
+            if (Input.GetKeyDown(KeyCode.Space)) TryDash(game, move, game.display.ScreenToWorld(Input.mousePosition) - (Vector2)transform.position);
             Vector2 step = move * game.stats.MoveSpeed;
             if (dashTimer > 0)
             {
@@ -178,6 +168,21 @@ namespace PayWithPixels
                 fireTimer = game.stats.FireInterval;
                 Shoot(pos, dir);
             }
+        }
+
+        /// <summary>Dash (spacja albo bot): wymaga zysku DASH i odnowionego cooldownu (albo okna DOUBLE DASH).</summary>
+        public bool TryDash(Game game, Vector2 move, Vector2 fallbackDir)
+        {
+            bool second = game.stats.doubleDash > 0 && dashWindow > 0;
+            if (!game.stats.HasDash || dashTimer > 0 || (dashCooldown > 0 && !second)) return false;
+            dashTimer = 0.15f;
+            Sfx.Play(Sound.Dash);
+            if (second) dashWindow = 0f;
+            else { dashCooldown = game.stats.DashCooldown; dashWindow = game.stats.doubleDash > 0 ? 0.8f : 0f; }
+            minesToDrop = game.stats.mines;
+            mineTimer = 0;
+            dashDir = move.sqrMagnitude > 0.01f ? move.normalized : fallbackDir.normalized;
+            return true;
         }
 
         private void EndDash(Game game)
