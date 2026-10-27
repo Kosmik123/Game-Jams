@@ -35,6 +35,7 @@ namespace PayWithPixels
         private Vector2 facing = Vector2.down;
         // Spawner
         private int spawned;
+        private float flash;
 
         private struct Spec
         {
@@ -123,7 +124,7 @@ namespace PayWithPixels
         public void Damage(int dmg)
         {
             hp -= dmg;
-            if (hp > 0) { Sfx.Play(Sound.Hit); return; }
+            if (hp > 0) { Sfx.Play(Sound.Hit); flash = 0.07f; return; }
             Sfx.Play(Sound.Kill);
             if (type == EnemyType.Boss)
             {
@@ -187,6 +188,11 @@ namespace PayWithPixels
         private void Update()
         {
             var game = Game.Instance;
+            if (flash > 0)
+            {
+                flash -= Time.deltaTime;
+                if (sr != null) sr.color = flash > 0 ? Color.black : Color.white;   // blysk: sprite w kolorze tla
+            }
             if (game.state != Game.State.Playing && game.state != Game.State.Clearing) return;
             if (game.player == null || game.Frozen) return;
 

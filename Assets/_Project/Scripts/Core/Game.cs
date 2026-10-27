@@ -47,6 +47,9 @@ namespace PayWithPixels
         private float lingerTimer;
         private readonly Drone[] drones = new Drone[3];
         public bool Frozen => freezeTimer > 0;
+        public bool Paused { get; private set; }
+        private float hitStopUntil;
+        private float shake;
 
         // ---- narzedzia testowe: Edytor, Development Build albo WebGL z ?debug=1 ----
         public bool GodMode { get; private set; }
@@ -84,6 +87,7 @@ namespace PayWithPixels
 
             display = TwoColorDisplay.Create(transform, cam);
             Sfx.Init(transform);
+            Settings.Apply();
             world = new GameObject("World").transform;
             world.SetParent(transform, false);
             BuildArena();
@@ -204,6 +208,8 @@ namespace PayWithPixels
             foreach (var b in Bullet.All.ToArray()) if (b != null) Destroy(b.gameObject);
             foreach (var a in AreaBlast.All.ToArray()) if (a != null) Destroy(a.gameObject);
             spawnLeft = 0;
+            HitStop(0.2f);
+            Shake(0.6f);
             if (zone >= Zones)
             {
                 state = State.Won;
@@ -236,6 +242,8 @@ namespace PayWithPixels
         public void OnEnemyKilled(Vector2 pos)
         {
             kills++;
+            HitStop(0.03f);
+            Shake(0.05f);
             if (stats.vampire > 0 && kills % stats.VampireKills == 0 && player.hp < stats.maxHp)
                 player.Heal(1);
             if (stats.explosion > 0)
@@ -260,11 +268,54 @@ namespace PayWithPixels
         {
             state = State.Dead;
             Sfx.Play(Sound.Death);
+            Shake(0.6f);
             ui.ShowDeath(wave, StartRun);
+        }
+
+        /// <summary>Krotkie zatrzymanie czasu przy trafieniu/zabiciu.</summary>
+        public void HitStop(float seconds) => hitStopUntil = Mathf.Max(hitStopUntil, Time.unscaledTime + seconds);
+
+        public void Shake(float amount) => shake = Mathf.Max(shake, amount);
+
+        private void LateUpdate()
+        {
+            if (cam == null) return;
+            Vector3 p = new Vector3(0, 0, -10);
+            if (Settings.Shake && shake > 0.01f && !Paused)
+            {
+                // przesuniecie przyciete do 1/16 j. = 1 piksel RT, zeby obraz nie mazal
+                p.x = Mathf.Round(Random.Range(-shake, shake) * 16f) / 16f;
+                p.y = Mathf.Round(Random.Range(-shake, shake) * 16f) / 16f;
+            }
+            shake = Mathf.MoveTowards(shake, 0f, 1.6f * Time.unscaledDeltaTime);
+            cam.transform.position = p;
+        }
+
+        private bool CanPause => state == State.ZoneIntro || state == State.Playing || state == State.Clearing || state == State.Shop;
+
+        private void TogglePause()
+        {
+            Paused = !Paused;
+            Time.timeScale = Paused ? 0f : 1f;
+            if (Paused) ShowPauseMenu();
+            else ui.HidePause();
+        }
+
+        private void ShowPauseMenu()
+        {
+            ui.ShowPause(TogglePause,
+                () => { TogglePause(); StartRun(); },
+                () => { Settings.Volume = Settings.Volume >= 0.99f ? 0f : Settings.Volume + 0.1f; ShowPauseMenu(); },
+                () => { Settings.ReduceFlicker = !Settings.ReduceFlicker; ShowPauseMenu(); },
+                () => { Settings.Shake = !Settings.Shake; ShowPauseMenu(); });
         }
 
         private void Update()
         {
+            if ((Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.P)) && (CanPause || Paused)) TogglePause();
+            if (Paused) return;
+            Time.timeScale = Time.unscaledTime < hitStopUntil ? 0.05f : 1f;
+
             if (cam != null) cam.orthographicSize = Mathf.MoveTowards(cam.orthographicSize, OrthoSize * (stats != null ? stats.CameraZoom : 1f), 4f * Time.deltaTime);
             if (player != null) display.SetFogCenter(player.transform.position);
             if (player != null && state != State.Title)
@@ -395,13 +446,13 @@ namespace PayWithPixels
             bool active = dur > 0 && (state == State.Playing || state == State.Clearing);
             const float period = 8f;
             bool flick = false;
-            if (!active) flickerClock = 0;
+            if (!active || Settings.ReduceFlicker) flickerClock = 0;
             else
             {
                 flickerClock = (flickerClock + Time.deltaTime) % (period + dur);
                 flick = flickerClock > period;
             }
-            Palette.Inverted = flick != Frozen;   // zamrozenie czasu tez odwraca palete
+            Palette.Inverted = flick != (Frozen && !Settings.ReduceFlicker);   // zamrozenie czasu tez odwraca palete
         }
 
         /// <summary>Zabezpieczenie: jesli po koncu spawnu wrogowie (poza bossem i Poborca) zaciely sie dlugo na planszy, odchodza.</summary>
@@ -503,6 +554,7 @@ namespace PayWithPixels
 
             state = State.Shop;
             shopOffers = Catalog.Roll(3, wave, stats);
+            ui.AnimateNextShop = true;
             rerolls = 0;
             purchases = 0;
             haggled = false;

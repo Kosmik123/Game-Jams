@@ -12,7 +12,11 @@ namespace PayWithPixels
         private readonly List<KeyValuePair<Graphic, bool>> tinted = new List<KeyValuePair<Graphic, bool>>(); // true = foreground
         private Font font;
         private Text hud;
-        private GameObject shopPanel, deathPanel, titlePanel, zonePanel;
+        private GameObject shopPanel, deathPanel, titlePanel, zonePanel, pausePanel;
+        private readonly List<RectTransform> cardRects = new List<RectTransform>();
+        private float shopAnimStart;
+        private bool shopAnimating;
+        public bool AnimateNextShop { get; set; }
         private Text zoneText, toastText;
         private float toastTimer;
         private Text deathText;
@@ -62,6 +66,9 @@ namespace PayWithPixels
             Stretch(zoneText.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             zonePanel.SetActive(false);
 
+            pausePanel = NewPanel("Pause", transform);
+            pausePanel.SetActive(false);
+
             toastText = NewText("Toast", transform, "", 22, TextAnchor.UpperCenter);
             Stretch(toastText.rectTransform, new Vector2(0, 0.80f), new Vector2(1, 0.9f), Vector2.zero, Vector2.zero);
 
@@ -84,6 +91,21 @@ namespace PayWithPixels
 
         private void Update()
         {
+            if (shopAnimating && shopPanel.activeSelf)
+            {
+                float t = Time.unscaledTime - shopAnimStart;
+                bool done = true;
+                for (int i = 0; i < cardRects.Count; i++)
+                {
+                    if (cardRects[i] == null) continue;
+                    float k = Mathf.Clamp01((t - i * 0.1f) / 0.25f);
+                    float ease = 1f - (1f - k) * (1f - k) * (1f - k);
+                    cardRects[i].anchoredPosition = new Vector2(0, -320f * (1f - ease));
+                    if (k < 1f) done = false;
+                }
+                if (done) shopAnimating = false;
+            }
+
             if (toastTimer > 0)
             {
                 toastTimer -= Time.deltaTime;
@@ -120,6 +142,10 @@ namespace PayWithPixels
             toastText.transform.SetAsLastSibling();
             foreach (Transform c in shopPanel.transform) Destroy(c.gameObject);
             tinted.RemoveAll(kv => kv.Key == null);
+            cardRects.Clear();
+            shopAnimating = AnimateNextShop;
+            AnimateNextShop = false;
+            shopAnimStart = Time.unscaledTime;
 
             var title = NewText("Title", shopPanel.transform, "SHOP   COINS: " + coins + (debt > 0 ? "   DEBT: " + debt : ""), 30, TextAnchor.UpperCenter);
             Stretch(title.rectTransform, new Vector2(0, 0.85f), new Vector2(1, 1), Vector2.zero, Vector2.zero);
@@ -130,6 +156,8 @@ namespace PayWithPixels
                 float x0 = 0.04f + i * 0.32f;
                 var card = NewImage("Card", shopPanel.transform, true);
                 Stretch(card.rectTransform, new Vector2(x0, 0.25f), new Vector2(x0 + 0.28f, 0.8f), Vector2.zero, Vector2.zero);
+                cardRects.Add(card.rectTransform);
+                if (shopAnimating) card.rectTransform.anchoredPosition = new Vector2(0, -320f);
                 var inner = NewImage("Inner", card.transform, false);
                 Stretch(inner.rectTransform, Vector2.zero, Vector2.one, new Vector2(3, 3), new Vector2(-3, -3));
 
@@ -186,10 +214,13 @@ namespace PayWithPixels
             shopPanel.SetActive(true);
         }
 
-        private void MakeShopButton(string label, float x0, float x1, bool interactable, Action onClick)
+        private void MakeShopButton(string label, float x0, float x1, bool interactable, Action onClick) =>
+            MakeButton(shopPanel.transform, label, new Vector2(x0, 0.08f), new Vector2(x1, 0.18f), interactable, onClick);
+
+        private void MakeButton(Transform parent, string label, Vector2 aMin, Vector2 aMax, bool interactable, Action onClick)
         {
-            var b = NewImage("Button", shopPanel.transform, true);
-            Stretch(b.rectTransform, new Vector2(x0, 0.08f), new Vector2(x1, 0.18f), Vector2.zero, Vector2.zero);
+            var b = NewImage("Button", parent, true);
+            Stretch(b.rectTransform, aMin, aMax, Vector2.zero, Vector2.zero);
             var inner = NewImage("Inner", b.transform, false);
             Stretch(inner.rectTransform, Vector2.zero, Vector2.one, new Vector2(3, 3), new Vector2(-3, -3));
             var t = NewText("Text", inner.transform, label, 18, TextAnchor.MiddleCenter);
@@ -202,6 +233,31 @@ namespace PayWithPixels
         }
 
         public void HideShop() => shopPanel.SetActive(false);
+
+        // ---------- pauza ----------
+
+        public void ShowPause(Action onResume, Action onRestart, Action onVolume, Action onFlicker, Action onShake)
+        {
+            foreach (Transform c in pausePanel.transform) Destroy(c.gameObject);
+            tinted.RemoveAll(kv => kv.Key == null);
+            pausePanel.transform.SetAsLastSibling();
+
+            var title = NewText("Title", pausePanel.transform, "PAUSED", 40, TextAnchor.MiddleCenter);
+            Stretch(title.rectTransform, new Vector2(0, 0.78f), new Vector2(1, 0.95f), Vector2.zero, Vector2.zero);
+
+            int vol = Mathf.RoundToInt(Settings.Volume * 10f);
+            MakeButton(pausePanel.transform, "RESUME", new Vector2(0.3f, 0.64f), new Vector2(0.7f, 0.74f), true, onResume);
+            MakeButton(pausePanel.transform, "VOLUME " + vol + "/10  (CLICK +1)", new Vector2(0.3f, 0.52f), new Vector2(0.7f, 0.62f), true, onVolume);
+            MakeButton(pausePanel.transform, "REDUCE FLICKER: " + (Settings.ReduceFlicker ? "ON" : "OFF"), new Vector2(0.3f, 0.40f), new Vector2(0.7f, 0.50f), true, onFlicker);
+            MakeButton(pausePanel.transform, "SCREENSHAKE: " + (Settings.Shake ? "ON" : "OFF"), new Vector2(0.3f, 0.28f), new Vector2(0.7f, 0.38f), true, onShake);
+            MakeButton(pausePanel.transform, "RESTART RUN", new Vector2(0.3f, 0.16f), new Vector2(0.7f, 0.26f), true, onRestart);
+
+            Recolor();
+            pausePanel.SetActive(true);
+            toastText.transform.SetAsLastSibling();
+        }
+
+        public void HidePause() => pausePanel.SetActive(false);
 
         private void BuildTitle()
         {

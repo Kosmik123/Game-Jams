@@ -59,12 +59,15 @@ namespace PayWithPixels
             hp -= dmg;
             invulnTimer = 1f;
             Sfx.Play(Sound.Hurt);
+            game.HitStop(0.07f);
+            game.Shake(0.3f);
             if (hp <= 0) Game.Instance.OnPlayerDied();
         }
 
         private void Update()
         {
             var game = Game.Instance;
+            if (game.Paused) return;
             invulnTimer -= Time.deltaTime;
             sr.enabled = invulnTimer <= 0 || Mathf.FloorToInt(Time.time * 12f) % 2 == 0;
             halo.enabled = sr.enabled;
