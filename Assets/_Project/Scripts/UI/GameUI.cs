@@ -525,7 +525,6 @@ namespace PayWithPixels
                     new Vector2(0.2f, 0.135f), new Vector2(0.8f, 0.215f), true, onAscension);
 
             MakeButton(titleDynamic, "START   [SPACE / ENTER]", new Vector2(0.25f, 0.035f), new Vector2(0.75f, 0.125f), true, onStart);
-            MakeButton(titleDynamic, "[L] TOP 10", new Vector2(0.78f, 0.035f), new Vector2(0.98f, 0.125f), true, () => ShowLeaderboard());
             var stats = NewText("Stats", titleDynamic,
                 "BEST WAVE " + Meta.BestWave + "   BEST SCORE " + Meta.BestScore + "   WINS " + Meta.Wins, 16, TextAnchor.MiddleCenter);
             Stretch(stats.rectTransform, new Vector2(0, 0.0f), new Vector2(1, 0.035f), Vector2.zero, Vector2.zero);
@@ -587,6 +586,11 @@ namespace PayWithPixels
 
         public void ShowLeaderboard(Action onClose = null, bool editName = false)
         {
+            if (Online.State != Online.Status.Ready)
+            {
+                Toast("LEADERBOARD OFFLINE");   // brak polaczenia lub blad konfiguracji: tablicy nie pokazujemy
+                return;
+            }
             leaderOnClose = onClose;
             if (leaderPanel == null) leaderPanel = NewPanel("Leaderboard", transform);
             nameEditing = editName;
@@ -608,6 +612,13 @@ namespace PayWithPixels
         private void UpdateLeaderboard()
         {
             if (!OverlayOpen) return;
+            if (Online.State == Online.Status.Error)
+            {
+                if (Online.HasName == false) Online.SetName("PLAYER");
+                HideLeaderboard();   // blad w trakcie: zamknij tablice i wroc do poprzedniego ekranu
+                Toast("LEADERBOARD OFFLINE");
+                return;
+            }
             if (leaderVersion != Online.Version) RebuildLeaderboard();
             if (nameEditing)
             {
