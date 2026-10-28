@@ -41,7 +41,10 @@ namespace PayWithPixels
         public static string PlayerName => Save.GetString(KeyName, "");
         public static bool HasName => PlayerName.Length > 0;
 
-        private static bool Disabled => Application.isBatchMode;   // testy i boty nie lacza sie z siecia
+        /// <summary>Wylacznik tablicy wynikow: false = gra w ogole nie laczy sie z Unity Services (build WebGL padal na wyjatku przy Init).</summary>
+        public const bool Enabled = false;
+
+        private static bool Disabled => Enabled == false || Application.isBatchMode;   // testy i boty nie lacza sie z siecia
 
         /// <summary>False w batchmode (testy, boty): wtedy tablica nie jest nigdy pokazywana.</summary>
         public static bool IsAvailable => Disabled == false;
