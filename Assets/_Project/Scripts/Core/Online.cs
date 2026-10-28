@@ -35,11 +35,16 @@ namespace PayWithPixels
         public static readonly List<Row> Top = new List<Row>();
         public static Row? Mine { get; private set; }
         public static bool Busy { get; private set; }
+        /// <summary>True, gdy wynik czeka w kolejce na wyslanie.</summary>
+        public static bool HasPendingScore => Save.GetInt(KeyPending, 0) > 0;
 
         public static string PlayerName => Save.GetString(KeyName, "");
         public static bool HasName => PlayerName.Length > 0;
 
         private static bool Disabled => Application.isBatchMode;   // testy i boty nie lacza sie z siecia
+
+        /// <summary>False w batchmode (testy, boty): wtedy tablica nie jest nigdy pokazywana.</summary>
+        public static bool IsAvailable => Disabled == false;
 
         private static void Changed() => Version++;
 
@@ -170,7 +175,7 @@ namespace PayWithPixels
                     Save.Flush();
                 }
             }
-            catch (Exception e) { Debug.Log("[online] submit: " + e.Message); }
+            catch (Exception e) { Fail("submit: " + e.Message); }
         }
 
         public static void Refresh()
@@ -208,9 +213,17 @@ namespace PayWithPixels
                     catch (Exception) { /* brak wyniku gracza na tablicy */ }
                 }
             }
-            catch (Exception e) { Debug.Log("[online] refresh: " + e.Message); }
+            catch (Exception e) { Fail("refresh: " + e.Message); }
             Busy = false;
             Changed();
+        }
+
+        /// <summary>Blad uslugi (np. zla konfiguracja tablicy): stan Error, UI nie pokazuje tablicy.</summary>
+        private static void Fail(string message)
+        {
+            State = Status.Error;
+            Message = message;
+            Debug.Log("[online] " + message);
         }
 
         private static string Strip(string n)

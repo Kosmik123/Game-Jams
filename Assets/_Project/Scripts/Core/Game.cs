@@ -104,6 +104,7 @@ namespace PayWithPixels
             int score = Mathf.RoundToInt((wave * 100 + kills * 2 + coinsEarned + (won ? 1000 : 0)) * ScoreMul);
             Meta.RecordRun(wave, won, Ascension, score);
             Online.Submit(score);
+            boardPromptAt = Online.IsAvailable && score > 0 ? Time.unscaledTime : -1f;
             ui.ShowDeath(won, RunSummary(won) + "\nSCORE " + score + (Ascension > 0 ? "  (ASCENSION " + Ascension + " x" + ScoreMul.ToString("0.00") + ")" : ""), StartRun, GoToTitle);
         }
 
@@ -240,21 +241,32 @@ namespace PayWithPixels
             GoToTitleRefresh();
         }
 
-        private bool namePrompted;
+        private float boardPromptAt = -1f;
+        private const float BoardPromptTimeout = 12f;
+
+        /// <summary>Po zgonie/wygranej: gdy wynik zostal wyslany, otwiera tablice (z wpisaniem nazwy przy pierwszym razie). Blad lub timeout = tablica sie nie pojawia.</summary>
+        private void UpdateBoardPrompt()
+        {
+            if (boardPromptAt < 0f) return;
+            if (Online.State == Online.Status.Error || Time.unscaledTime - boardPromptAt > BoardPromptTimeout)
+            {
+                boardPromptAt = -1f;
+                return;
+            }
+            if (Online.State != Online.Status.Ready || Online.Busy || Online.HasPendingScore) return;
+            boardPromptAt = -1f;
+            ui.ShowLeaderboard(null, Online.HasName == false);
+        }
 
         private void GoToTitleRefresh()
         {
             ui.ShowTitle(StartRun, w => { Meta.Selected = w; GoToTitleRefresh(); },
                 () => { Meta.Ascension = (Meta.Ascension + 1) % (Meta.AscensionUnlocked + 1); GoToTitleRefresh(); });
-            if (!namePrompted && !Online.HasName && !Application.isBatchMode)
-            {
-                namePrompted = true;   // nazwa gracza raz, przy pierwszym uruchomieniu
-                ui.ShowLeaderboard(null, true);
-            }
         }
 
         private void CleanupRun()
         {
+            boardPromptAt = -1f;
             foreach (var e in Enemy.All.ToArray()) if (e != null) Destroy(e.gameObject);
             foreach (var b in Bullet.All.ToArray()) if (b != null) Destroy(b.gameObject);
             foreach (var a in AreaBlast.All.ToArray()) if (a != null) Destroy(a.gameObject);
@@ -792,7 +804,6 @@ namespace PayWithPixels
             if (state == State.Story) { UpdateStory(); return; }
             if (state == State.Title)
             {
-                if (Input.GetKeyDown(KeyCode.L)) { ui.ShowLeaderboard(); return; }
                 if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return)) StartRun();
                 if (Input.GetKeyDown(KeyCode.Alpha1)) { Meta.Selected = Weapon.Pistol; GoToTitleRefresh(); }
                 if (Input.GetKeyDown(KeyCode.Alpha2) && Meta.IsWeaponUnlocked(Weapon.Shotgun)) { Meta.Selected = Weapon.Shotgun; GoToTitleRefresh(); }
@@ -845,6 +856,8 @@ namespace PayWithPixels
                     break;
                 case State.Won:
                 case State.Dead:
+                    UpdateBoardPrompt();
+                    if (ui.OverlayOpen) break;
                     if (Input.GetKeyDown(KeyCode.L)) { ui.ShowLeaderboard(); break; }
                     if (Input.GetKeyDown(KeyCode.R)) StartRun();
                     if (Input.GetKeyDown(KeyCode.T)) GoToTitle();
