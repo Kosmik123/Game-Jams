@@ -525,6 +525,8 @@ namespace PayWithPixels
                     new Vector2(0.2f, 0.135f), new Vector2(0.8f, 0.215f), true, onAscension);
 
             MakeButton(titleDynamic, "START   [SPACE / ENTER]", new Vector2(0.25f, 0.035f), new Vector2(0.75f, 0.125f), true, onStart);
+            if (Online.IsAvailable)
+                MakeButton(titleDynamic, "[L] TOP 10", new Vector2(0.77f, 0.035f), new Vector2(0.97f, 0.125f), true, () => ShowLeaderboard());
             var stats = NewText("Stats", titleDynamic,
                 "BEST WAVE " + Meta.BestWave + "   BEST SCORE " + Meta.BestScore + "   WINS " + Meta.Wins, 16, TextAnchor.MiddleCenter);
             Stretch(stats.rectTransform, new Vector2(0, 0.0f), new Vector2(1, 0.035f), Vector2.zero, Vector2.zero);

@@ -42,7 +42,7 @@ namespace PayWithPixels
         public static bool HasName => PlayerName.Length > 0;
 
         /// <summary>Wylacznik tablicy wynikow: false = gra w ogole nie laczy sie z Unity Services (build WebGL padal na wyjatku przy Init).</summary>
-        public const bool Enabled = false;
+        public const bool Enabled = true;
 
         private static bool Disabled => Enabled == false || Application.isBatchMode;   // testy i boty nie lacza sie z siecia
 

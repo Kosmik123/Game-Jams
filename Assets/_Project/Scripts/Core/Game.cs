@@ -804,6 +804,8 @@ namespace PayWithPixels
             if (state == State.Story) { UpdateStory(); return; }
             if (state == State.Title)
             {
+                if (ui.OverlayOpen) return;   // tablica wynikow otwarta: Enter/Spacja nie startuja runu
+                if (Input.GetKeyDown(KeyCode.L) && Online.IsAvailable) { ui.ShowLeaderboard(); return; }
                 if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return)) StartRun();
                 if (Input.GetKeyDown(KeyCode.Alpha1)) { Meta.Selected = Weapon.Pistol; GoToTitleRefresh(); }
                 if (Input.GetKeyDown(KeyCode.Alpha2) && Meta.IsWeaponUnlocked(Weapon.Shotgun)) { Meta.Selected = Weapon.Shotgun; GoToTitleRefresh(); }
