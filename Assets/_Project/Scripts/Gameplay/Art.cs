@@ -23,6 +23,15 @@ namespace PayWithPixels
 
         private static float Sq(float v) => v * v;
 
+        /// <summary>Tarcza Straznika: luk +-46 stopni (zgodny ze strefa blokowania) w jednym z 8 kierunkow co 45 stopni; 0 = prawo, 2 = gora.</summary>
+        public static Sprite ShieldArc(int dir8) => Get("guard_shield_" + dir8, 32, (x, y, s) =>
+        {
+            float dx = x + 0.5f - s / 2f, dy = y + 0.5f - s / 2f;
+            float r = Mathf.Sqrt(dx * dx + dy * dy);
+            if (r < 9f || r > 11f) return false;
+            return Mathf.Abs(Mathf.DeltaAngle(Mathf.Atan2(dy, dx) * Mathf.Rad2Deg, dir8 * 45f)) <= 46f;
+        });
+
         private static Sprite Get(string name, int size, Func<int, int, int, bool> shape)
         {
             if (cache.TryGetValue(name, out var s) && s != null) return s;

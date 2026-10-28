@@ -37,6 +37,8 @@ namespace PayWithPixels
         private float dashLeft;
         // Straznik
         private Vector2 facing = Vector2.down;
+        private SpriteRenderer shieldSr;   // Straznik: tarcza jako osobny sprite, niezalezny od obrotu korpusu (kierunek ruchu)
+        private int shieldDir = -1;
         // Spawner
         private int spawned;
         private float flash;
@@ -79,6 +81,13 @@ namespace PayWithPixels
             e.radius = s.radius; e.hp = e.maxHp = Mathf.CeilToInt(s.hp * Game.Instance.EnemyHpMul); e.speed = Mathf.Min(s.speed * scale * Game.Instance.EnemySpeedMul, MaxSpeed(type));
             e.contactDamage = s.contact; e.coinDrop = s.coins;
             if (e.maxHp >= 8 && type != EnemyType.Guard) e.CreateBar();
+            if (type == EnemyType.Guard)
+            {
+                var sh = new GameObject("Shield");
+                sh.transform.SetParent(go.transform, false);
+                e.shieldSr = Art.MakeRenderer(sh, Art.ShieldArc(6), 6);
+                e.UpdateShield();
+            }
             if (type == EnemyType.Guard && !guardHintShown)
             {
                 guardHintShown = true;
@@ -245,7 +254,18 @@ namespace PayWithPixels
         public bool Blocks(Vector2 bulletVelocity)
         {
             if (type != EnemyType.Guard) return false;
-            return Vector2.Dot(-bulletVelocity.normalized, facing) > 0.7f;
+            return Vector2.Dot(-bulletVelocity.normalized, ShieldVector) > 0.695f;   // 46 stopni wokol kierunku tarczy (8 kierunkow), tak jak rysowany luk
+        }
+
+        private int FacingDir8 => (Mathf.RoundToInt(Mathf.Atan2(facing.y, facing.x) * Mathf.Rad2Deg / 45f) + 8) % 8;
+        private Vector2 ShieldVector { get { float a = FacingDir8 * 45f * Mathf.Deg2Rad; return new Vector2(Mathf.Cos(a), Mathf.Sin(a)); } }
+
+        private void UpdateShield()
+        {
+            if (shieldSr == null) return;
+            shieldSr.transform.rotation = Quaternion.identity;   // korpus obraca sie do ruchu, tarcza nie
+            int d = FacingDir8;
+            if (d != shieldDir) { shieldDir = d; shieldSr.sprite = Art.ShieldArc(d); }
         }
 
         public void Damage(int dmg, bool crit = false)
@@ -268,8 +288,7 @@ namespace PayWithPixels
             if (type != EnemyType.Collector) Game.Instance.OnEnemyKilled(transform.position);
             if (type == EnemyType.Collector)
             {
-                Game.Instance.OnCollectorKilled();
-                Game.Instance.SpawnCoin(transform.position, 6);
+                Game.Instance.OnCollectorKilled();   // nagroda to zmniejszenie dlugu, bez monet
                 Destroy(gameObject);
                 return;
             }
@@ -661,6 +680,7 @@ namespace PayWithPixels
             pos = Obstacles.Push(pos, radius * 0.8f);
             transform.position = pos;
             if (rotates && dir != Vector2.zero && dashLeft <= 0) transform.rotation = Art.FaceRotation(dir);
+            UpdateShield();
 
             float r = radius + Player.Radius;
             if (dist < r * 0.85f && type != EnemyType.Collector)   // miekkie wypychanie: wrog nie zostaje "w srodku" gracza
