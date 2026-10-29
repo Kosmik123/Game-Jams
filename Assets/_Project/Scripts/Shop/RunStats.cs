@@ -164,6 +164,7 @@ namespace PayWithPixels
         public bool sell;   // oferta "Sprzedaj": bierzesz cene, dostajesz monety
         public int reward;
         public int stacks = 1;   // ile stackow ceny wchodzi (potezne zyski = 2)
+        public int shownCost = -1;   // cena zamrozona w chwili pokazania oferty (-1 = jeszcze nie policzona)
     }
 
     /// <summary>Katalog ofert. Dodanie zysku lub ceny = jedna pozycja na liscie.</summary>

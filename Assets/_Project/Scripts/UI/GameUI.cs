@@ -269,7 +269,7 @@ namespace PayWithPixels
                     : o.free ? key + "FIRST ONE IS FREE!"
                     : !canBuy ? "NEED " + cost + " COINS"
                     : onCredit ? key + "CREDIT: DEBT +" + (cost - coins)
-                    : key + "BUY: " + cost + " COINS" + (o.price.severity >= 2 ? " (-" + (o.price.severity >= 3 ? 30 : 15) + "%)" : "");
+                    : key + "BUY: " + cost + " COINS";
                 var txt = NewText("Text", inner.transform,
                     top + "\n\nPRICE " + new string('*', o.price.severity) + (o.stacks > 1 && !o.sell ? " x" + o.stacks : "") + "\n" + o.price.name + "\n" + o.price.description +
                     (Catalog.SynergyText(o, Game.Instance.stats) is string syn ? "\n\n* SYNERGY *\n" + syn : "") + "\n\n" + bottom,

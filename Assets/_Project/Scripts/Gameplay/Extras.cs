@@ -166,13 +166,10 @@ namespace PayWithPixels
     {
         public static readonly List<Drone> All = new List<Drone>();
         private int index;
-        private float angleOffset;
         private float fireTimer;
 
         private void OnEnable() => All.Add(this);
         private void OnDisable() => All.Remove(this);
-
-        private float sharedAngle;
 
         /// <summary>Zysk DRONE ORBIT: dron zestrzeliwuje pociski wroga, ktore do niego dolecza.</summary>
         public static bool BlocksBullet(Vector2 pos)
@@ -191,7 +188,6 @@ namespace PayWithPixels
             Art.MakeRenderer(go, Art.Diamond("drone", 6), 10);
             var d = go.AddComponent<Drone>();
             d.index = index;
-            d.angleOffset = index * 2.1f;
             return d;
         }
 
@@ -202,8 +198,7 @@ namespace PayWithPixels
             if (index >= game.stats.drones) { Destroy(gameObject); return; }
             if (game.state != Game.State.Playing && game.state != Game.State.Clearing) return;
 
-            sharedAngle += Time.deltaTime * 2.2f;
-            float angle = sharedAngle + angleOffset;
+            float angle = Mathf.PI / game.stats.drones * index + Time.time % Mathf.PI;
             Vector2 center = game.player.transform.position;
             transform.position = center + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * (game.stats.droneOrbit > 0 ? 1.5f : 1.2f);
 

@@ -470,6 +470,7 @@ namespace PayWithPixels
             contractValue = 0;
             shopContract = null;
             shopVisits = contractsSigned = soldGains = 0;
+            purchases = carriedPurchases = 0;
             CleanupRun();
             Palette.Reset();
             flickerClock = 0;
@@ -1150,6 +1151,8 @@ namespace PayWithPixels
             foreach (var a in AreaBlast.All.ToArray()) if (a != null) Destroy(a.gameObject);
 
             state = State.Shop;
+            carriedPurchases = purchases;   // zakupy z poprzedniego sklepu podnosza ceny w tym; w trakcie wizyty ceny sa stale
+            purchases = 0;
             shopOffers = Catalog.Roll(3, wave, stats);
             if (firstShopPending)
             {
@@ -1165,15 +1168,18 @@ namespace PayWithPixels
             ui.AnimateNextShop = true;
             if (!Meta.TutorialDone)
                 ui.Toast("THE FIRST GAIN IS FREE - ITS PRICE IS NOT. EVERY PRICE LASTS THE WHOLE RUN. NO COINS? BUY ON CREDIT, BUT DEBT GROWS", 10f);
+            FreezeCosts();
             rerolls = 0;
-            purchases = 0;
             haggles = 0;
             RefreshShopUi();
         }
 
         private List<Offer> shopOffers;
         private int rerolls;
-        private int purchases;   // zakupy w tej wizycie: kazdy kolejny +25%
+        private int purchases;          // zakupy w tej wizycie
+        private int carriedPurchases;   // zakupy z poprzedniej wizyty: kazdy +10% do cen w tym sklepie (maks. +30%)
+        private const float CarryStep = 0.10f, CarryCap = 0.30f;
+        private float CarryMul => 1f + Mathf.Min(CarryCap, CarryStep * carriedPurchases);
         private int haggles;
         private int HaggleMax => 1 + stats.priceLock;
 
@@ -1222,8 +1228,18 @@ namespace PayWithPixels
 
         private int RerollCost => freeRerolls ? 0 : 3 + 2 * rerolls;
 
-        /// <summary>Aktualny koszt oferty: +25% za kazdy wczesniejszy zakup w tej wizycie.</summary>
-        public int CostOf(Offer o) => o.free ? 0 : Mathf.Max(1, Mathf.RoundToInt(Mathf.CeilToInt(o.cost * (1f + 0.25f * purchases) * shopMarkup * (1f + 0.2f * stats.priceyShopStacks)) * Catalog.PriceDiscount(o.price)));
+        private const float GainCostMul = 1.1f;   // globalna skala cen zyskow w sklepie
+
+        /// <summary>Cena oferty: zamrozona w chwili pokazania (FreezeCosts), wiec nie zmienia sie w trakcie jednego sklepu.</summary>
+        public int CostOf(Offer o) => o.shownCost >= 0 ? o.shownCost : ComputeCost(o);
+
+        private int ComputeCost(Offer o) => o.free ? 0 : Mathf.Max(1, Mathf.RoundToInt(Mathf.CeilToInt(o.cost * GainCostMul * CarryMul * shopMarkup * (1f + 0.2f * stats.priceyShopStacks)) * Catalog.PriceDiscount(o.price)));
+
+        /// <summary>Liczy i zapisuje ceny niesprzedanych ofert (otwarcie sklepu, reroll, targowanie).</summary>
+        private void FreezeCosts()
+        {
+            foreach (var o in shopOffers) if (!o.sold) o.shownCost = ComputeCost(o);
+        }
 
         private List<KeyValuePair<string, int>> RedeemOptions()
         {
@@ -1265,6 +1281,7 @@ namespace PayWithPixels
             coins -= RerollCost;
             rerolls++;
             shopOffers = Catalog.Roll(3, wave, stats);
+            FreezeCosts();
             Sfx.Play(Sound.Coin);
             RefreshShopUi();
         }
@@ -1281,6 +1298,7 @@ namespace PayWithPixels
                     o.price = Catalog.Prices[Random.Range(0, Catalog.Prices.Count)];
                     if (o.sell) o.reward = Catalog.SellReward(wave, o.price);
                 }
+            FreezeCosts();   // targowanie zmienia ceny (kary) ofert: to jedyny moment, gdy cena moze sie zmienic w trakcie sklepu
             Sfx.Play(Sound.Hurt);
             RefreshShopUi();
         }
