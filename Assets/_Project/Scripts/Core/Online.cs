@@ -90,7 +90,7 @@ namespace PayWithPixels
             catch (Exception e)
             {
                 State = Status.Error;
-                Message = e.Message;
+                Message = e.GetType().Name + ": " + e.Message;
                 Debug.Log("[online] " + e.Message);
                 Changed();
             }
