@@ -660,8 +660,21 @@ namespace PayWithPixels
             var title = NewText("Title", leaderPanel.transform, "TOP 10", 36, TextAnchor.MiddleCenter);
             Stretch(title.rectTransform, A(0.07f, 39f), A(0.93f, 20f), Vector2.zero, Vector2.zero);
             string status = Online.StatusLine();
-            var heads = NewText("Heads", leaderPanel.transform, status.Length > 0 ? status : "RANK   NAME   SCORE", 14, TextAnchor.MiddleCenter);
-            Stretch(heads.rectTransform, A(0.07f, 58f), A(0.93f, 43f), Vector2.zero, Vector2.zero);
+            if (status.Length > 0)
+            {
+                var heads = NewText("Heads", leaderPanel.transform, status, 14, TextAnchor.MiddleCenter);
+                Stretch(heads.rectTransform, A(0.07f, 58f), A(0.93f, 43f), Vector2.zero, Vector2.zero);
+            }
+            else
+            {
+                // tytuly kolumn w tych samych polach co wiersze (rank / nazwa / wynik)
+                var hr = NewText("HR", leaderPanel.transform, "RANK", 14, TextAnchor.MiddleCenter);
+                Stretch(hr.rectTransform, A(0.0667f, 58f), A(0.1667f, 43f), Vector2.zero, Vector2.zero);
+                var hn = NewText("HN", leaderPanel.transform, "NAME", 14, TextAnchor.MiddleLeft);
+                Stretch(hn.rectTransform, A(0.18f, 58f), A(0.7f, 43f), Vector2.zero, Vector2.zero);
+                var hs = NewText("HS", leaderPanel.transform, "SCORE", 14, TextAnchor.MiddleRight);
+                Stretch(hs.rectTransform, A(0.7f, 58f), A(0.92f, 43f), Vector2.zero, Vector2.zero);
+            }
 
             if (Online.Top.Count == 0)
             {
