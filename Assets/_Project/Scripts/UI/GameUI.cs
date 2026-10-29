@@ -196,7 +196,7 @@ namespace PayWithPixels
         public void ShowShop(List<Offer> offers, int coins, int debt, Action<Offer> onBuy, Action onSkip,
             int rerollCost, Action onReroll, bool haggleAvailable, Action onHaggle, Action onPayDebt,
             string contractLabel = null, Action onContract = null, string signedLabel = null, string debtInfo = null,
-            List<KeyValuePair<string, int>> redeemOptions = null, Action<string> onRedeem = null, bool contractSigned = false)
+            List<KeyValuePair<string, int>> redeemOptions = null, Action<string> onRedeem = null)
         {
             HideZone();
             HideTitle();
@@ -278,7 +278,7 @@ namespace PayWithPixels
             MakeShopButton(haggleAvailable ? "[H] NEW PRICES: 1" : "PRICES REROLLED", 0.66f, 0.98f, haggleAvailable && coins >= 1, onHaggle);
             MakePrimaryButton("[ENTER] NEXT WAVE", new Vector2(0.02f, 0.05f), new Vector2(0.98f, 0.13f), onSkip);
             if (contractLabel != null)
-                MakeButton(shopPanel.transform, contractSigned ? contractLabel : "[C] CONTRACT - " + contractLabel, new Vector2(0.02f, 0.21f), new Vector2(0.98f, 0.26f), !contractSigned, onContract);
+                MakeButton(shopPanel.transform, "[C] CONTRACT - " + contractLabel, new Vector2(0.02f, 0.21f), new Vector2(0.98f, 0.26f), true, onContract);
             if (redeemOptions != null && redeemOptions.Count > 0)
             {
                 int n = Mathf.Min(4, redeemOptions.Count);
