@@ -598,6 +598,7 @@ namespace PayWithPixels
                 return;
             }
             leaderOnClose = onClose;
+            leaderOpenedFrame = Time.frameCount;   // ten sam klawisz L, ktory otworzyl tablice, nie moze jej w tej klatce zamknac
             if (leaderPanel == null) leaderPanel = NewPanel("Leaderboard", transform);
             nameEditing = editName;
             nameBuffer = Online.PlayerName;
@@ -615,9 +616,12 @@ namespace PayWithPixels
             leaderOnClose?.Invoke();
         }
 
+        private int leaderOpenedFrame = -1;
+
         private void UpdateLeaderboard()
         {
             if (!OverlayOpen) return;
+            if (Time.frameCount == leaderOpenedFrame) return;
             if (Online.State == Online.Status.Error)
             {
                 if (Online.HasName == false) Online.SetName("PLAYER");
