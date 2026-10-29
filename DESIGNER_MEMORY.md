@@ -37,3 +37,8 @@ Gra "Pay With Pixels" (temat Everything Has a Price), 1-bit Jam 15, branch `1-bi
 ## Uwagi
 - Panel przeglądarki dławi FPS i gra dźwięk w tle: zamykaj kartę po teście.
 - Pamięć sesji (poza repo): `C:\Users\Michas\.claude\projects\C--Projekty-gier-Unity-Game-Jams\memory\` (plik `one-bit-jam-state.md`).
+
+## Aktualizacja 29.10.2026
+- Poborca: szansa od długu (10f), ucieczka po kradzieży, zwrot zysku po zabiciu, +12% HP na spotkanie, spawn po losowej liczbie wrogów; zabicie nie zmniejsza długu ani nie daje monet (decyzja Kosmika). Szczegóły w GDD.md (STAN AKTUALNY).
+- Toast: ramka z wypełnieniem poza areną; w sklepie wiersz długu jest w tytule, pas y 0.82-0.90 wolny. Tablica wyników działa na itch (naprawy: wyjątki WebGL, klawisz L w tej samej klatce, kolumny nagłówka). Aktualny deploy: `b3d37833-toast-box`.
+- Kontrakty: 14 (6 dodanych), tymczasowe ceny cofają się generycznie. Skrypt buildu czeka na zamknięcie Unity na głównym projekcie.

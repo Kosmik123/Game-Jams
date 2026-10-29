@@ -157,7 +157,7 @@ Obecni: Goniec, Strzelec, Tank. Dodać: Skaczek (dash na gracza), Oblężnik (po
 ## Zmienione względem wcześniejszych zapisów
 - Rozdzielczość wewnętrzna **480x270** (nie 320x180), canvas WebGL 1280x720, HUD w osobnym pasku 14 px.
 - Limit kredytu **20** monet (nie 30). Odsetki 20% (30% od Ascension 4).
-- Zabicie Poborcy **zmniejsza dług o połowę** (nie zeruje), daje monety, nie zdejmuje ceny.
+- **Poborca (stan z 29.10.2026, zastępuje wcześniejsze zapisy):** szansa pojawienia się w fali = dług / limit (min. 10%, od 2. fali strefy, max 1 naraz, gwarancja w ostatniej fali przy długu >= połowy limitu), wchodzi po losowej liczbie zespawnowanych wrogów. Po dotknięciu gracza **zabiera losowy zysk i ucieka** za brzeg areny (zysk przepada, jeśli ucieknie); **zabity w ucieczce oddaje zysk** (z poziomem). W trakcie ucieczki zamiast dolara pokazuje ikonę zabranego zysku. Każde kolejne spotkanie w runie ma +12% HP. **Zabicie NIE zmniejsza długu i NIE daje monet** (nagrodą jest obrona zysku).
 - Koszt zysku: round((baza + 3*(poziom-1) + 1*posiadane_poziomy + fala/3) * 1.3). Strefy 2-3: +25% monet. Pierwszy zysk w pierwszym sklepie darmowy (cena zmysłu nadal się dolicza).
 - Reroll 3+2n monety; kolejny zakup w tej samej wizycie +25%; REDEEM w każdym sklepie (1/wizytę), koszt 10+5*stacki; kontrakt co 2. sklep.
 - Haggle: 1 moneta, raz na sklep, przelosowuje CENY ZMYSŁÓW niekupionych ofert (etykieta w UI: NEW PRICES).
