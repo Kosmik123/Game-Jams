@@ -675,9 +675,7 @@ namespace PayWithPixels
         /// <summary>Poborca zabity: dlug splacony.</summary>
         public void OnCollectorKilled()
         {
-            int before = debt;
-            debt = debt / 2;   // zabicie Poborcy tylko zmniejsza dlug o polowe
-            ui.Toast("COLLECTOR DOWN: DEBT " + before + " -> " + debt);
+            ui.Toast("COLLECTOR DOWN");
         }
 
         /// <summary>Poborca dotknal gracza: zabiera losowy zysk, zostawia cene.</summary>
@@ -1221,7 +1219,7 @@ namespace PayWithPixels
         private string DebtInfo()
         {
             if (debt <= 0) return null;
-            return "DEBT +" + Mathf.RoundToInt(InterestRate * 100) + "% EVERY WAVE";   // bez terminu Poborcy: pojawia sie losowo wg dlugu
+            return "+" + Mathf.RoundToInt(InterestRate * 100) + "% EVERY WAVE";   // bez terminu Poborcy: pojawia sie losowo wg dlugu
         }
 
         private void RefreshShopUi()

@@ -18,6 +18,8 @@ namespace PayWithPixels
         private bool shopAnimating;
         public bool AnimateNextShop { get; set; }
         private Text zoneText, toastText;
+        private RectTransform toastRoot;   // pas toastu (y 0.82-0.90): w sklepie jest wolny, nic pod nim nie lezy
+        private Image toastBorder, toastFill;   // prostokat pod toastem poza arena: zaslania to, co jest pod spodem
         private RectTransform priceHud;
         private string priceHudKey = "";
         private float toastTimer;
@@ -85,8 +87,16 @@ namespace PayWithPixels
             pausePanel = NewPanel("Pause", transform);
             pausePanel.SetActive(false);
 
-            toastText = NewText("Toast", transform, "", 22, TextAnchor.UpperCenter);
-            Stretch(toastText.rectTransform, new Vector2(0, 0.80f), new Vector2(1, 0.9f), Vector2.zero, Vector2.zero);
+            toastRoot = new GameObject("ToastRoot", typeof(RectTransform)).GetComponent<RectTransform>();
+            toastRoot.SetParent(transform, false);
+            Stretch(toastRoot, new Vector2(0, 0.82f), new Vector2(1, 0.9f), Vector2.zero, Vector2.zero);
+            toastBorder = NewImage("ToastBorder", toastRoot, true);
+            toastBorder.raycastTarget = false;
+            toastFill = NewImage("ToastFill", toastRoot, false);
+            toastFill.raycastTarget = false;
+            toastBorder.enabled = toastFill.enabled = false;
+            toastText = NewText("Toast", toastRoot, "", 22, TextAnchor.MiddleCenter);
+            Stretch(toastText.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
 
 
             Palette.Changed += Recolor;
@@ -138,6 +148,29 @@ namespace PayWithPixels
                 toastTimer -= Time.deltaTime;
                 if (toastTimer <= 0) toastText.text = "";
             }
+            UpdateToastBox();
+        }
+
+        private bool OverArena => !(titlePanel.activeSelf || shopPanel.activeSelf || deathPanel.activeSelf || pausePanel.activeSelf
+            || (leaderPanel != null && leaderPanel.activeSelf) || (storyPanel != null && storyPanel.activeSelf));
+
+        /// <summary>Poza arena (sklep, tytul, ustawienia, tablica, koniec runu) toast ma prostokat z ramka, ktory zaslania tekst pod spodem.</summary>
+        private void UpdateToastBox()
+        {
+            bool show = toastText.text.Length > 0 && !OverArena;
+            toastBorder.enabled = toastFill.enabled = show;
+            if (!show) return;
+            float w = Mathf.Min(toastText.preferredWidth + 28f, toastRoot.rect.width - 8f);
+            float h = toastRoot.rect.height;
+            SetCentered(toastBorder.rectTransform, w, h);
+            SetCentered(toastFill.rectTransform, w - 4f, h - 4f);
+        }
+
+        private static void SetCentered(RectTransform rt, float w, float h)
+        {
+            rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.anchoredPosition = Vector2.zero;
+            rt.sizeDelta = new Vector2(w, h);
         }
 
         public void Toast(string msg, float seconds = 2.5f)
@@ -201,7 +234,7 @@ namespace PayWithPixels
             HideZone();
             HideTitle();
             shopPanel.transform.SetAsLastSibling();
-            toastText.transform.SetAsLastSibling();
+            toastRoot.SetAsLastSibling();
             foreach (Transform c in shopPanel.transform) Destroy(c.gameObject);
             tinted.RemoveAll(kv => kv.Key == null);
             cardRects.Clear();
@@ -209,13 +242,9 @@ namespace PayWithPixels
             AnimateNextShop = false;
             shopAnimStart = Time.unscaledTime;
 
-            var title = NewText("Title", shopPanel.transform, "SHOP   COINS: " + coins + (debt > 0 ? "   DEBT: " + debt : ""), 30, TextAnchor.UpperCenter);
-            Stretch(title.rectTransform, new Vector2(0, 0.88f), new Vector2(1, 1), Vector2.zero, Vector2.zero);
-            if (debtInfo != null)
-            {
-                var di = NewText("DebtInfo", shopPanel.transform, debtInfo, 16, TextAnchor.UpperCenter);
-                Stretch(di.rectTransform, new Vector2(0, 0.82f), new Vector2(1, 0.88f), Vector2.zero, Vector2.zero);
-            }
+            // wiersz tytulu zawiera tez info o dlugu; pas y 0.82-0.90 zostaje pusty dla toastu
+            var title = NewText("Title", shopPanel.transform, "SHOP   COINS: " + coins + (debt > 0 ? "   DEBT: " + debt : "") + (debtInfo != null ? "  (" + debtInfo + ")" : ""), 30, TextAnchor.UpperCenter);
+            Stretch(title.rectTransform, new Vector2(0, 0.9f), new Vector2(1, 1), Vector2.zero, Vector2.zero);
 
             for (int i = 0; i < offers.Count; i++)
             {
@@ -387,7 +416,7 @@ namespace PayWithPixels
             if (onReset != null) PauseButton(resetLabel, onReset);
             Recolor();
             pausePanel.SetActive(true);
-            toastText.transform.SetAsLastSibling();
+            toastRoot.SetAsLastSibling();
         }
 
         public void HidePause() => pausePanel.SetActive(false);
@@ -534,7 +563,7 @@ namespace PayWithPixels
             var btn = titlePanel.GetComponent<Button>();
             if (btn != null) btn.onClick.RemoveAllListeners();   // klik poza przyciskami nie startuje
             titlePanel.transform.SetAsLastSibling();
-            toastText.transform.SetAsLastSibling();
+            toastRoot.SetAsLastSibling();
             Recolor();
             titlePanel.SetActive(true);
         }
@@ -547,7 +576,7 @@ namespace PayWithPixels
             foreach (Transform c in deathPanel.transform) Destroy(c.gameObject);
             tinted.RemoveAll(kv => kv.Key == null);
             deathPanel.transform.SetAsLastSibling();
-            toastText.transform.SetAsLastSibling();
+            toastRoot.SetAsLastSibling();
 
             var head = NewText("Head", deathPanel.transform, won ? "SOLD" : "PAID IN FULL", 48, TextAnchor.MiddleCenter);
             Stretch(head.rectTransform, new Vector2(0, 0.76f), new Vector2(1, 0.96f), Vector2.zero, Vector2.zero);
@@ -606,7 +635,7 @@ namespace PayWithPixels
             RebuildLeaderboard();
             leaderPanel.SetActive(true);
             leaderPanel.transform.SetAsLastSibling();
-            toastText.transform.SetAsLastSibling();
+            toastRoot.SetAsLastSibling();
         }
 
         public void HideLeaderboard()
@@ -787,7 +816,7 @@ namespace PayWithPixels
             bossLineText.text = line;
             bossLineUntil = Time.unscaledTime + 2.5f;
             bossLinePanel.transform.SetAsLastSibling();
-            toastText.transform.SetAsLastSibling();
+            toastRoot.SetAsLastSibling();
             Recolor();
             bossLinePanel.SetActive(true);
         }
