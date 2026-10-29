@@ -634,7 +634,7 @@ namespace PayWithPixels
 
         public void AddCoins(int n)
         {
-            float v = n * coinMul * (zone >= 2 ? 1.25f : 1f);   // strefy 2-3: +25% monet (losowe zaokraglenie, zeby 1 moneta tez zyskiwala)
+            float v = n * coinMul;   // bez bonusu stref 2-3 (byl +25%): dochod rosl szybciej niz ceny
             n = Mathf.FloorToInt(v) + (Random.value < v - Mathf.Floor(v) ? 1 : 0);
             coins += n;
             coinsEarned += n;
@@ -777,14 +777,15 @@ namespace PayWithPixels
 
         private void ShowPauseMenu()
         {
-            ui.ShowPause(TogglePause,
-                () => { TogglePause(); StartRun(); },
-                () => { Settings.Volume = Settings.Volume >= 0.99f ? 0f : Settings.Volume + 0.1f; ShowPauseMenu(); },
-                () => { Settings.ReduceFlicker = !Settings.ReduceFlicker; ShowPauseMenu(); },
-                () => { Settings.Shake = !Settings.Shake; ShowPauseMenu(); },
-                () => { Settings.MusicVolume = Settings.MusicVolume >= 0.99f ? 0f : Settings.MusicVolume + 0.1f; ShowPauseMenu(); },
-                () => { Settings.SfxVolume = Settings.SfxVolume >= 0.99f ? 0f : Settings.SfxVolume + 0.1f; ShowPauseMenu(); },
-                () =>
+            ui.ShowPause(
+                onResume: TogglePause,
+                onRestart: () => { TogglePause(); StartRun(); },
+                onVolume: () => { Settings.Volume = Settings.Volume >= 0.99f ? 0f : Settings.Volume + 0.1f; ShowPauseMenu(); },
+                onFlicker: () => { Settings.ReduceFlicker = !Settings.ReduceFlicker; ShowPauseMenu(); },
+                onShake: () => { Settings.Shake = !Settings.Shake; ShowPauseMenu(); },
+                onMusic: () => { Settings.MusicVolume = Settings.MusicVolume >= 0.99f ? 0f : Settings.MusicVolume + 0.1f; ShowPauseMenu(); },
+                onSfx: () => { Settings.SfxVolume = Settings.SfxVolume >= 0.99f ? 0f : Settings.SfxVolume + 0.1f; ShowPauseMenu(); },
+                onReset: () =>
                 {
                     if (!resetArmed) { resetArmed = true; ShowPauseMenu(); return; }
                     resetArmed = false;
@@ -793,9 +794,9 @@ namespace PayWithPixels
                     GoToTitle();
                     ui.Toast("PROGRESS RESET", 3f);
                 },
-                resetArmed ? "SURE? CLICK AGAIN (ERASES ALL)" : "RESET PROGRESS",
-                () => { Save.ShowExport(); ui.Toast("SAVE CODE COPIED", 3f); },
-                () =>
+                resetLabel: resetArmed ? "SURE? CLICK AGAIN (ERASES ALL)" : "RESET PROGRESS",
+                onExport: () => { Save.ShowExport(); ui.Toast("SAVE CODE COPIED", 3f); },
+                onImport: () =>
                 {
                     bool ok = Save.AskImport();
                     ShowPauseMenu();
@@ -921,7 +922,7 @@ namespace PayWithPixels
             else if (shopRedeem)
             {
                 var opts = RedeemOptions();
-                KeyCode[] rk = { KeyCode.Alpha4, KeyCode.Alpha5, KeyCode.Alpha6, KeyCode.Alpha7 };
+                KeyCode[] rk = { KeyCode.Alpha4, KeyCode.Alpha5, KeyCode.Alpha6 };
                 for (int i = 0; i < rk.Length && opts != null && i < opts.Count; i++)
                     if (Input.GetKeyDown(rk[i])) { Redeem(opts[i].Key); return; }
             }
@@ -978,9 +979,10 @@ namespace PayWithPixels
             int stacks = stats.invertStacks;
             bool active = stacks > 0 && state == State.Playing;
             if (!active) { ControlsInverted = false; invertClock = 0; return; }
-            float period = 11f, dur = 1.5f + 0.5f * stacks;
+            float period = 11f - 0.5f * stacks, duration = 2f;
             float prev = invertClock;
-            invertClock = (invertClock + Time.deltaTime) % (period + dur);
+            invertClock += Time.deltaTime;
+            invertClock %= (period + duration);
             ControlsInverted = invertClock > period;
             if (ControlsInverted && prev <= period) ui.Toast("CONTROLS INVERTED!");
         }

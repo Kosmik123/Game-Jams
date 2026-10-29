@@ -304,7 +304,9 @@ namespace PayWithPixels
             // x1.3 (dochod czlowieka ~65% dochodu bota); drozeje z liczba posiadanych zyskow (+1 za poziom) i z fala (wave/3)
             int owned = 0;
             foreach (var kv in stats.levels) owned += kv.Value;
-            int cost = Mathf.RoundToInt((g.cost + (level - 1) * 3 + owned + wave / 3) * 1.3f);
+            // mnoznik ceny rosnie ze strefa (6 fal na strefe): dochod rosnie szybciej niz ceny, wiec strefy 2-3 drozeja
+            float zoneMul = wave <= 6 ? 1.3f : wave <= 12 ? 1.5f : 1.7f;
+            int cost = Mathf.RoundToInt((g.cost + (level - 1) * 3 + owned + wave / 3) * zoneMul);
             return g.heal ? cost * (1 + stats.costlyHealStacks) : cost;
         }
 
