@@ -253,7 +253,7 @@ def auctioneer():
     S = tr.step
     pat = [0, 0, 12, 0, 0, 0, 7, 0, 0, 12, 0, 0, 7, 0, 0, 0]       # paplanina licytatora (polprzesuniecia nuty bazowej)
     pat2 = [0, None, 0, 12, 0, 7, 0, None, 0, 12, 0, 7, 0, 0, 12, None]
-    bases = [76, 77, 79, 81,   79, 81, 83, 84,   76, 77, 79, 81,   81, 83, 84, 88]   # kolejne, rosnace oferty
+    bases = [76, 77, 79, 81,   79, 81, 83, 84,   76, 77, 79, 81,   81, 83, 81, 76]   # kolejne, rosnace oferty
     roots = [40, 41, 43, 45,   43, 45, 47, 48,   40, 41, 43, 45,   45, 47, 48, 52]
     for b in range(16):
         t0 = b * 16 * S
