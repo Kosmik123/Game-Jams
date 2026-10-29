@@ -282,6 +282,7 @@ namespace PayWithPixels
         private readonly List<ActiveContract> activeContracts = new List<ActiveContract>();
         private Contract shopContract;
         private int shopVisits, contractsSigned, soldGains, contractValue;
+        private string signedThisShop;   // tytul kontraktu podpisanego w tym sklepie (przycisk pokazuje potwierdzenie zamiast toasta)
 
         public int TotalPricePaid
         {
@@ -452,12 +453,12 @@ namespace PayWithPixels
             if (shopContract == null || state != State.Shop) return;
             var c = shopContract;
             shopContract = null;
+            signedThisShop = c.title;
             contractsSigned++;
             contractValue += c.value;
             activeContracts.Add(new ActiveContract { contract = c, wavesLeft = Contracts.FineWaves });
             c.now(this);
             Sfx.Play(Sound.Buy);
-            ui.Toast("SIGNED: " + c.title + ". FINE PRINT IN " + Contracts.FineWaves + " WAVES: " + c.finePrint, 6f);
             if (contractsSigned >= 3) Grant("signed");
             RefreshShopUi();
         }
@@ -1146,6 +1147,7 @@ namespace PayWithPixels
             shopMarkup = nextShopMarkup;
             nextShopMarkup = 1f;
             shopRedeem = OwnedPrices().Count > 0;                               // REDEEM w kazdym sklepie (1 na wizyte)
+            signedThisShop = null;
             shopContract = shopVisits % 2 == 0 ? Contracts.Roll() : null;       // kontrakt co 2. sklep
             ui.AnimateNextShop = true;
             if (!Meta.TutorialDone)
@@ -1229,8 +1231,9 @@ namespace PayWithPixels
             string pending = "";
             foreach (var ac in activeContracts) pending += (pending.Length > 0 ? ", " : "") + ac.contract.title + " (" + ac.wavesLeft + ")";
             ui.ShowShop(shopOffers, coins, debt, Buy, CloseShop, RerollCost, Reroll, haggles < HaggleMax, Haggle, PayDebt,
-                shopContract == null ? null : shopContract.title + ": " + shopContract.reward + " / FINE PRINT: ???", SignContract,
-                pending.Length > 0 ? "SIGNED: " + pending : null, DebtInfo(), RedeemOptions(), Redeem);
+                shopContract != null ? shopContract.title + ": " + shopContract.reward + " / FINE PRINT: ???"
+                    : signedThisShop != null ? "SIGNED: " + signedThisShop + " - FINE PRINT IN " + Contracts.FineWaves + " WAVES" : null, SignContract,
+                pending.Length > 0 ? "SIGNED: " + pending : null, DebtInfo(), RedeemOptions(), Redeem, shopContract == null && signedThisShop != null);
         }
 
         /// <summary>Splaca dlug dostepnymi monetami.</summary>
