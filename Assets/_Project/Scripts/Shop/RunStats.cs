@@ -276,8 +276,8 @@ namespace PayWithPixels
         public static float PriceDiscount(Price p) => p.severity >= 3 ? 0.7f : p.severity == 2 ? 0.85f : 1f;
 
         /// <summary>Nagroda za sprzedaz ceny: (5 + fala/2) * 0.8 / 1.0 / 1.3 zaleznie od dotkliwosci.</summary>
-        public static int SellReward(int wave, Price p) =>
-            Mathf.RoundToInt((5 + wave / 2) * (p.severity >= 3 ? 1.3f : p.severity == 2 ? 1f : 0.8f));
+        public static int SellReward(float difficulty, Price p) =>
+            Mathf.RoundToInt((5 + difficulty / 2) * (p.severity >= 3 ? 1.3f : p.severity == 2 ? 1f : 0.8f));
 
         /// <summary>Synergie zysk+cena: (zysk, cena, opis efektu). Efekty sa w RunStats / Drone / Player.</summary>
         private static readonly string[][] Synergies =
@@ -300,18 +300,18 @@ namespace PayWithPixels
             return null;
         }
 
-        public static int GainCost(Gain g, int level, int wave, RunStats stats)
+        public static int GainCost(Gain g, int level, float difficulty, RunStats stats)
         {
             // x1.3 (dochod czlowieka ~65% dochodu bota); drozeje z liczba posiadanych zyskow (+1 za poziom) i z fala (wave/3)
             int owned = 0;
             foreach (var kv in stats.levels) owned += kv.Value;
             // mnoznik ceny rosnie ze strefa (6 fal na strefe): dochod rosnie szybciej niz ceny, wiec strefy 2-3 drozeja
-            float zoneMul = wave <= 6 ? 1.3f : wave <= 12 ? 1.5f : 1.7f;
-            int cost = Mathf.RoundToInt((g.cost + (level - 1) * 3 + owned + wave / 3) * zoneMul);
+            float zoneMul = 1.3f; // wave <= 6 ? 1.3f : wave <= 12 ? 1.5f : 1.7f;
+            int cost = Mathf.RoundToInt((g.cost + (level - 1) * 3 + owned + difficulty / 3) * zoneMul);
             return g.heal ? cost * (1 + stats.costlyHealStacks) : cost;
         }
 
-        public static List<Offer> Roll(int count, int wave, RunStats stats)
+        public static List<Offer> Roll(int count, float difficulty, RunStats stats)
         {
             var gains = Gains.FindAll(g =>
                 (g.available == null || g.available(stats)) &&
@@ -327,12 +327,12 @@ namespace PayWithPixels
                 pool.RemoveAll(x => x == g);
                 var p = prices[UnityEngine.Random.Range(0, prices.Count)];
                 int level = g.consumable ? 1 : stats.Level(g.name) + 1;
-                offers.Add(new Offer { gain = g, price = p, level = level, cost = GainCost(g, level, wave, stats), stacks = g.cost >= 9 && wave >= 7 ? 2 : 1 });
+                offers.Add(new Offer { gain = g, price = p, level = level, cost = GainCost(g, level, difficulty, stats), stacks = g.cost >= 9 && difficulty >= 7 ? 2 : 1 });
             }
-            if (wave >= 2 && offers.Count >= 3 && UnityEngine.Random.value < 0.6f)
+            if (difficulty >= 2 && offers.Count >= 3 && UnityEngine.Random.value < 0.6f)
             {
                 var sp = prices[UnityEngine.Random.Range(0, prices.Count)];
-                offers[offers.Count - 1] = new Offer { gain = null, price = sp, sell = true, reward = SellReward(wave, sp) };
+                offers[offers.Count - 1] = new Offer { gain = null, price = sp, sell = true, reward = SellReward(difficulty, sp) };
             }
             return offers;
         }

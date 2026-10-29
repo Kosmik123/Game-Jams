@@ -48,28 +48,28 @@ namespace PayWithPixels
 
         private struct Spec
         {
-            public string sprite; public int size; public float radius; public int hp; public float speed; public int contact; public int coins; public bool rotates;
+            public string sprite; public int size; public float radius; public int hpBase; public float speed; public int contact; public int coins; public bool rotates;
         }
 
-        private static Spec SpecFor(EnemyType t, int d)
+        private static Spec SpecFor(EnemyType t, float d)
         {
             switch (t)
             {
-                case EnemyType.Chaser: return new Spec { sprite = "enemy_chaser", size = 16, radius = 0.45f, hp = 1 + d / 4, speed = 2.6f, contact = 1, coins = 1, rotates = true };
-                case EnemyType.Shooter: return new Spec { sprite = "enemy_shooter", size = 16, radius = 0.45f, hp = 2 + d / 4, speed = 2f, contact = 1, coins = 1, rotates = true };
-                case EnemyType.Tank: return new Spec { sprite = "enemy_tank", size = 24, radius = 0.7f, hp = 6 + d * 3 / 4, speed = 1.2f, contact = 2, coins = 3, rotates = true };
-                case EnemyType.Dasher: return new Spec { sprite = "enemy_dasher", size = 16, radius = 0.45f, hp = 2 + d / 5, speed = 2.2f, contact = 1, coins = 2, rotates = true };
-                case EnemyType.Siege: return new Spec { sprite = "enemy_siege", size = 16, radius = 0.5f, hp = 4 + d / 4, speed = 1.6f, contact = 1, coins = 3, rotates = false };
-                case EnemyType.Swarm: return new Spec { sprite = "enemy_swarm", size = 6, radius = 0.3f, hp = 1, speed = 2.8f, contact = 1, coins = 0, rotates = false };
-                case EnemyType.Guard: return new Spec { sprite = "enemy_guard", size = 16, radius = 0.5f, hp = 4 + d / 4, speed = 1.7f, contact = 1, coins = 3, rotates = true };
-                default: return new Spec { sprite = "enemy_spawner", size = 24, radius = 0.7f, hp = 8 + d / 2, speed = 0.7f, contact = 1, coins = 4, rotates = false };
+                case EnemyType.Chaser: return new Spec { sprite = "enemy_chaser", size = 16, radius = 0.45f, hpBase = Mathf.FloorToInt(1 + d / 3), speed = 2.6f, contact = 1, coins = 1, rotates = true };
+                case EnemyType.Shooter: return new Spec { sprite = "enemy_shooter", size = 16, radius = 0.45f, hpBase = Mathf.FloorToInt(2 + d / 4), speed = 2f, contact = 1, coins = 1, rotates = true };
+                case EnemyType.Tank: return new Spec { sprite = "enemy_tank", size = 24, radius = 0.7f, hpBase = Mathf.FloorToInt(6 + d * 3 / 4), speed = 1.2f, contact = 2, coins = 3, rotates = true };
+                case EnemyType.Dasher: return new Spec { sprite = "enemy_dasher", size = 16, radius = 0.45f, hpBase = Mathf.FloorToInt(2 + d / 5), speed = 2.2f, contact = 1, coins = 2, rotates = true };
+                case EnemyType.Siege: return new Spec { sprite = "enemy_siege", size = 16, radius = 0.5f, hpBase = Mathf.FloorToInt(4 + d / 4), speed = 1.6f, contact = 1, coins = 3, rotates = false };
+                case EnemyType.Swarm: return new Spec { sprite = "enemy_swarm", size = 6, radius = 0.3f, hpBase = 1, speed = 2.8f, contact = 1, coins = 0, rotates = false };
+                case EnemyType.Guard: return new Spec { sprite = "enemy_guard", size = 16, radius = 0.5f, hpBase = Mathf.FloorToInt(4 + d / 4), speed = 1.7f, contact = 1, coins = 3, rotates = true };
+                default: return new Spec { sprite = "enemy_spawner", size = 24, radius = 0.7f, hpBase = Mathf.FloorToInt(8 + d / 2), speed = 0.7f, contact = 1, coins = 3, rotates = false };
             }
         }
 
         /// <summary>Limit predkosci zwyklych wrogow: 0.8 predkosci gracza z 1 stackiem nog (5 * 0.92); rojowi nizej, bo goni tlumem.</summary>
         public static float MaxSpeed(EnemyType t) => t == EnemyType.Swarm ? 2.7f :0.8f * 5f * 0.92f;
 
-        public static Enemy Spawn(Transform parent, EnemyType type, Vector2 pos, int difficulty)
+        public static Enemy Spawn(Transform parent, EnemyType type, Vector2 pos, float difficulty)
         {
             var go = new GameObject(type.ToString());
             go.transform.SetParent(parent, false);
@@ -81,7 +81,7 @@ namespace PayWithPixels
             float scale = 1f + 0.03f * difficulty;
             e.walkName = s.sprite; e.spriteSize = s.size; e.rotates = s.rotates;
             e.sr = Art.MakeRenderer(go, Art.Square(s.sprite + "_walk_0", s.size), 5);
-            e.radius = s.radius; e.hp = e.maxHp = Mathf.CeilToInt(s.hp * Game.Instance.EnemyHpMul); e.speed = Mathf.Min(s.speed * scale * Game.Instance.EnemySpeedMul, MaxSpeed(type));
+            e.radius = s.radius; e.hp = e.maxHp = Mathf.CeilToInt(s.hpBase * Game.Instance.EnemyHpMul); e.speed = Mathf.Min(s.speed * scale * Game.Instance.EnemySpeedMul, MaxSpeed(type));
             e.contactDamage = s.contact; e.coinDrop = s.coins;
             if (e.maxHp >= 8 && type != EnemyType.Guard) e.CreateBar();
             if (type == EnemyType.Guard)
@@ -310,7 +310,7 @@ namespace PayWithPixels
             Sfx.Play(Sound.Kill);
             if (type == EnemyType.Boss)
             {
-                Game.Instance.OnBossKilled();
+                Game.Instance.OnBossKilled(this);
                 return;
             }
             Shard.Burst(transform.parent, transform.position, 5);
@@ -320,11 +320,12 @@ namespace PayWithPixels
                 if (st.critBlast > 0) Explosion.Spawn(transform.parent, transform.position, 1.6f, 2);
                 if (st.critCoins > 0) Game.Instance.SpawnCoin(transform.position, st.critCoins);
             }
-            if (type != EnemyType.Collector) Game.Instance.OnEnemyKilled(transform.position);
+            if (type != EnemyType.Collector) 
+                Game.Instance.OnEnemyKilled(transform.position);
             if (type == EnemyType.Collector)
             {
                 ReturnHeldGain();
-                Game.Instance.OnCollectorKilled();   // nagroda to zmniejszenie dlugu, bez monet
+                Game.Instance.OnCollectorKilled(this);
                 Destroy(gameObject);
                 return;
             }

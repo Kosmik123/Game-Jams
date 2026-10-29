@@ -164,7 +164,7 @@ namespace PayWithPixels
 
         public bool IsBossWave => waveInZone > WavesPerZone;
         /// <summary>Trudnosc do skalowania wrogow (rosnie przez caly run).</summary>
-        public int Difficulty => (zone - 1) * WavesPerZone + waveInZone;
+        public float Difficulty => (zone - 1) * WavesPerZone + waveInZone - totalRunPurchases * 0.15f;
 
         public static void Create()
         {
@@ -470,13 +470,13 @@ namespace PayWithPixels
             contractValue = 0;
             shopContract = null;
             shopVisits = contractsSigned = soldGains = 0;
-            purchases = carriedPurchases = 0;
             CleanupRun();
             Palette.Reset();
             flickerClock = 0;
             auctioned.Clear();
             runTime = 0;
             kills = 0;
+            totalRunPurchases = 0;
             collectorMeetings = 0;
             coinsEarned = 0;
             noHitWaves = 0;
@@ -587,7 +587,7 @@ namespace PayWithPixels
             {
                 int zone = (w / allWavesPerZone) + 1;
                 int waveInZone = w % allWavesPerZone + 1;
-                int count = SpawnCount(zone, waveInZone, w);
+                int count = SpawnCount(zone, waveInZone, w + 1);
                 Debug.Log($"Zone: {zone}-{waveInZone} -> {count} enemies");
             }
         }
@@ -598,8 +598,8 @@ namespace PayWithPixels
         {
             int n = zone == 1
                 ? (waveInZone <= 3 ? 5 : 8) + 2 * waveInZone
-                : 8 + 2 * waveInZone + 4 * (zone - 1);
-            return Mathf.RoundToInt((n + wave / 3) * 1.5f);
+                : 8 + 3 * waveInZone + 3 * (zone - 2);
+            return Mathf.RoundToInt((n + wave / 8) * 1.5f);
         }
 
         private void StartWave()
@@ -666,7 +666,7 @@ namespace PayWithPixels
             }
         }
 
-        public void OnBossKilled()
+        public void OnBossKilled(Enemy boss)
         {
             foreach (var e in Enemy.All.ToArray()) if (e != null) e.ReturnHeldGain();   // boss kasuje wrogow: uciekajacy Poborca oddaje zysk
             foreach (var e in Enemy.All.ToArray()) if (e != null) Destroy(e.gameObject);
@@ -688,15 +688,16 @@ namespace PayWithPixels
             }
             else
             {
-                SpawnCoin(Vector2.zero, 8);
+                SpawnCoin(boss.transform.position, 8);
                 ui.Toast("ZONE CLEARED");
             }
         }
 
         /// <summary>Poborca zabity: dlug splacony.</summary>
-        public void OnCollectorKilled()
+        public void OnCollectorKilled(Enemy collector)
         {
             ui.Toast("COLLECTOR DOWN");
+            SpawnCoin(collector.transform.position, 1);
         }
 
         /// <summary>Poborca dotknal gracza: zabiera losowy zysk, zostawia cene.</summary>
@@ -870,7 +871,7 @@ namespace PayWithPixels
                     break;
                 case State.Playing:
                     if (!Frozen) Enemy.Separate(Time.deltaTime);
-                    UpdateSpawner();
+                    UpdateSpawning();
                     UpdateLingerFailsafe();
                     if (spawnLeft <= 0 && Enemy.All.Count == 0)
                     {
@@ -1061,12 +1062,13 @@ namespace PayWithPixels
             if (any) ui.Toast("THE REST GAVE UP THE CHASE");
         }
 
-        private void UpdateSpawner()
+        private void UpdateSpawning()
         {
             if (spawnLeft <= 0) return;
             spawnTimer -= Time.deltaTime;
             if (spawnTimer > 0) return;
-            spawnTimer = Mathf.Max(0.5f, 1.0f - Difficulty * 0.03f);
+            spawnTimer = 0.2f * Enemy.All.Count - 0.1f * Difficulty;
+            spawnTimer = Mathf.Max(0.6f, spawnTimer);
             spawnLeft--;
             SpawnCollectorIfDue();
 
@@ -1151,9 +1153,7 @@ namespace PayWithPixels
             foreach (var a in AreaBlast.All.ToArray()) if (a != null) Destroy(a.gameObject);
 
             state = State.Shop;
-            carriedPurchases = purchases;   // zakupy z poprzedniego sklepu podnosza ceny w tym; w trakcie wizyty ceny sa stale
-            purchases = 0;
-            shopOffers = Catalog.Roll(3, wave, stats);
+            shopOffers = Catalog.Roll(3, Difficulty, stats);
             if (firstShopPending)
             {
                 firstShopPending = false;
@@ -1168,18 +1168,16 @@ namespace PayWithPixels
             ui.AnimateNextShop = true;
             if (!Meta.TutorialDone)
                 ui.Toast("THE FIRST GAIN IS FREE - ITS PRICE IS NOT. EVERY PRICE LASTS THE WHOLE RUN. NO COINS? BUY ON CREDIT, BUT DEBT GROWS", 10f);
-            FreezeCosts();
             rerolls = 0;
+            purchases = 0;
             haggles = 0;
             RefreshShopUi();
         }
 
         private List<Offer> shopOffers;
         private int rerolls;
-        private int purchases;          // zakupy w tej wizycie
-        private int carriedPurchases;   // zakupy z poprzedniej wizyty: kazdy +10% do cen w tym sklepie (maks. +30%)
-        private const float CarryStep = 0.10f, CarryCap = 0.30f;
-        private float CarryMul => 1f + Mathf.Min(CarryCap, CarryStep * carriedPurchases);
+        private int purchases;   // zakupy w tej wizycie: kazdy kolejny +25%
+        private int totalRunPurchases;
         private int haggles;
         private int HaggleMax => 1 + stats.priceLock;
 
@@ -1228,18 +1226,10 @@ namespace PayWithPixels
 
         private int RerollCost => freeRerolls ? 0 : 3 + 2 * rerolls;
 
-        private const float GainCostMul = 1.1f;   // globalna skala cen zyskow w sklepie
+        /// <summary>Aktualny koszt oferty: +25% za kazdy wczesniejszy zakup w tej wizycie.</summary>
+        private const float GainCostMul = 1.15f;   // globalna skala cen zyskow w sklepie
 
-        /// <summary>Cena oferty: zamrozona w chwili pokazania (FreezeCosts), wiec nie zmienia sie w trakcie jednego sklepu.</summary>
-        public int CostOf(Offer o) => o.shownCost >= 0 ? o.shownCost : ComputeCost(o);
-
-        private int ComputeCost(Offer o) => o.free ? 0 : Mathf.Max(1, Mathf.RoundToInt(Mathf.CeilToInt(o.cost * GainCostMul * CarryMul * shopMarkup * (1f + 0.2f * stats.priceyShopStacks)) * Catalog.PriceDiscount(o.price)));
-
-        /// <summary>Liczy i zapisuje ceny niesprzedanych ofert (otwarcie sklepu, reroll, targowanie).</summary>
-        private void FreezeCosts()
-        {
-            foreach (var o in shopOffers) if (!o.sold) o.shownCost = ComputeCost(o);
-        }
+        public int CostOf(Offer o) => o.free ? 0 : Mathf.Max(1, Mathf.RoundToInt(Mathf.CeilToInt(o.cost * GainCostMul * (1f + 0.25f * purchases) * shopMarkup * (1f + 0.2f * stats.priceyShopStacks)) * Catalog.PriceDiscount(o.price)));
 
         private List<KeyValuePair<string, int>> RedeemOptions()
         {
@@ -1281,7 +1271,6 @@ namespace PayWithPixels
             coins -= RerollCost;
             rerolls++;
             shopOffers = Catalog.Roll(3, wave, stats);
-            FreezeCosts();
             Sfx.Play(Sound.Coin);
             RefreshShopUi();
         }
@@ -1298,7 +1287,6 @@ namespace PayWithPixels
                     o.price = Catalog.Prices[Random.Range(0, Catalog.Prices.Count)];
                     if (o.sell) o.reward = Catalog.SellReward(wave, o.price);
                 }
-            FreezeCosts();   // targowanie zmienia ceny (kary) ofert: to jedyny moment, gdy cena moze sie zmienic w trakcie sklepu
             Sfx.Play(Sound.Hurt);
             RefreshShopUi();
         }
@@ -1326,6 +1314,7 @@ namespace PayWithPixels
                     coins = 0;
                 }
                 if (!o.free) purchases++;
+                totalRunPurchases++;
                 var g = o.gain;
                 if (!g.consumable) stats.levels[g.name] = o.level;
                 stats.Recompute();
