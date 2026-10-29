@@ -412,8 +412,8 @@ namespace PayWithPixels
             ui.Toast("FINE PRINT: " + name + " +" + n);
             AddTemp(waves, untilZoneEnd, () =>
             {
-                if (name == "FOG") stats.fogStacks = Mathf.Max(0, stats.fogStacks - n);
-                else if (name == "HEAVY LEGS") stats.legsStacks = Mathf.Max(0, stats.legsStacks - n);
+                var tmpPrice = Catalog.Prices.Find(pr => pr.name == name);
+                if (tmpPrice != null) for (int i = 0; i < n; i++) tmpPrice.revert(stats);   // dziala dla kazdej ceny, nie tylko Mgly i Nog
                 stats.priceCounts[name] = Mathf.Max(0, stats.PriceCount(name) - n);
                 ApplyPrices();
                 ui.Toast(name + " STACKS GONE");

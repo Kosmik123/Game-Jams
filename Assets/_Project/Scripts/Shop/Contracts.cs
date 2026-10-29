@@ -37,6 +37,18 @@ namespace PayWithPixels
                 now = g => g.ContractBonusDrop(2), later = g => g.ContractEnemySpeed(1.2f, 2) },
             new Contract { title = "BODYGUARD", reward = "GAIN A RANDOM SHIELD", finePrint = "PIXELATION +1 STACK PERMANENT", value = 25,
                 now = g => g.ContractShield(), later = g => g.ContractAddPrice("PIXELATION") },
+            new Contract { title = "LOAN SHARK", reward = "+45 COINS", finePrint = "DEBT +12", value = 40,
+                now = g => g.coins += 45, later = g => g.debt += 12 },
+            new Contract { title = "FREE SAMPLE", reward = "A RANDOM GAIN FOR FREE", finePrint = "PRICEY SHOP +1 STACK FOR 3 WAVES", value = 30,
+                now = g => g.ContractFreeGain(), later = g => g.ContractTempPrice("PRICEY SHOP", 1, 3, false) },
+            new Contract { title = "QUICK HANDS", reward = "+30% FIRE RATE FOR 2 WAVES", finePrint = "REVERSED CONTROLS +1 FOR 2 WAVES", value = 25,
+                now = g => g.ContractFireBoost(1.3f, 2), later = g => g.ContractTempPrice("REVERSED CONTROLS", 1, 2, false) },
+            new Contract { title = "LUCKY STREAK", reward = "ENEMIES DROP +1 COIN FOR 3 WAVES", finePrint = "FLICKER +1 FOR 3 WAVES", value = 25,
+                now = g => g.ContractBonusDrop(3), later = g => g.ContractTempPrice("FLICKER", 1, 3, false) },
+            new Contract { title = "HEALTHY LIFE", reward = "FULL HEAL AND +1 BONUS HP", finePrint = "SLUGGISH AIM +1 STACK PERMANENT", value = 25,
+                now = g => g.ContractHeal(1), later = g => g.ContractAddPrice("SLUGGISH AIM") },
+            new Contract { title = "QUIET MONEY", reward = "+25 COINS", finePrint = "SILENCE FOR 3 WAVES", value = 20,
+                now = g => g.coins += 25, later = g => g.ContractTempPrice("SILENCE", 1, 3, false) },
         };
 
         public static Contract Roll()
