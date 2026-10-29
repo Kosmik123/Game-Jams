@@ -26,7 +26,7 @@ namespace PayWithPixels.Build
             PlayerSettings.SplashScreen.backgroundColor = Color.black;
             PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Disabled;
             PlayerSettings.WebGL.decompressionFallback = false;
-            PlayerSettings.WebGL.exceptionSupport = WebGLExceptionSupport.None;
+            PlayerSettings.WebGL.exceptionSupport = WebGLExceptionSupport.ExplicitlyThrownExceptionsOnly;   // Unity Services (tablica) lapie wyjatki; przy None WebGL ginie z "Uncaught undefined"
             // rozmiar: agresywny stripping kodu zarzadzanego i IL2CPP pod rozmiar
             PlayerSettings.SetManagedStrippingLevel(UnityEditor.Build.NamedBuildTarget.WebGL, ManagedStrippingLevel.High);
             PlayerSettings.SetIl2CppCodeGeneration(UnityEditor.Build.NamedBuildTarget.WebGL, UnityEditor.Build.Il2CppCodeGeneration.OptimizeSize);

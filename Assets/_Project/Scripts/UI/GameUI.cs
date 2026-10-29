@@ -590,7 +590,9 @@ namespace PayWithPixels
         {
             if (Online.State != Online.Status.Ready)
             {
-                Toast("LEADERBOARD OFFLINE");   // brak polaczenia lub blad konfiguracji: tablicy nie pokazujemy
+                bool connecting = Online.State == Online.Status.Connecting;
+                if (!connecting) Online.Init();   // po bledzie lub przed pierwszym polaczeniem: ponow probe
+                Toast(connecting || Online.State == Online.Status.Connecting ? "CONNECTING... TRY AGAIN IN A MOMENT" : "LEADERBOARD OFFLINE");   // tablicy nie pokazujemy, dopoki nie jest gotowa
                 return;
             }
             leaderOnClose = onClose;
