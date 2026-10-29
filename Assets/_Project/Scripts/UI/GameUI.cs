@@ -310,7 +310,7 @@ namespace PayWithPixels
                 MakeButton(shopPanel.transform, "[C] CONTRACT - " + contractLabel, new Vector2(0.02f, 0.21f), new Vector2(0.98f, 0.26f), true, onContract);
             if (redeemOptions != null && redeemOptions.Count > 0)
             {
-                int n = Mathf.Min(4, redeemOptions.Count);
+                int n = Mathf.Min(3, redeemOptions.Count);
                 float w = 0.96f / n;
                 for (int i = 0; i < n; i++)
                 {
