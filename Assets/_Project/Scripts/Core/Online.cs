@@ -51,6 +51,8 @@ namespace PayWithPixels
 
         private static void Changed() => Version++;
 
+        public static bool HasEverLoaded { get; private set; } = false;
+
         /// <summary>Pasek stanu do UI tablicy.</summary>
         public static string StatusLine()
         {
@@ -59,7 +61,7 @@ namespace PayWithPixels
             {
                 case Status.Connecting: return "CONNECTING...";
                 case Status.Error: return "OFFLINE - SCORES ARE SENT LATER";
-                case Status.Ready: return Busy ? "LOADING..." : "";
+                case Status.Ready: return (!HasEverLoaded && Busy) ? "LOADING..." : "";
                 default: return "OFFLINE";
             }
         }
@@ -202,6 +204,7 @@ namespace PayWithPixels
                 Top.Clear();
                 foreach (var e in page.Results)
                     Top.Add(new Row { rank = e.Rank + 1, name = Strip(e.PlayerName), score = (int)e.Score, mine = e.PlayerId == myId });
+                HasEverLoaded = true;
                 Mine = null;
                 foreach (var r in Top) if (r.mine) Mine = r;
                 if (Mine == null)

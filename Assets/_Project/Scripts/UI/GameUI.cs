@@ -594,7 +594,7 @@ namespace PayWithPixels
                 string err = Online.State == Online.Status.Error ? Online.Message : "";   // ostatni blad: pokazujemy graczowi (diagnoza bez konsoli)
                 if (!connecting) Online.Init();   // po bledzie lub przed pierwszym polaczeniem: ponow probe
                 if (err.Length > 70) err = err.Substring(0, 70);
-                Toast((connecting || Online.State == Online.Status.Connecting ? "CONNECTING... TRY AGAIN IN A MOMENT" : "LEADERBOARD OFFLINE") + (err.Length > 0 ? " / " + err.ToUpperInvariant() : ""), 6f);   // tablicy nie pokazujemy, dopoki nie jest gotowa
+                Toast((connecting || Online.State == Online.Status.Connecting ? "CONNECTING... TRY AGAIN IN A MOMENT" : "LEADERBOARD OFFLINE") + (err.Length > 0 ? " / " + err.ToUpperInvariant() : ""), 3f);   // tablicy nie pokazujemy, dopoki nie jest gotowa
                 return;
             }
             leaderOnClose = onClose;
