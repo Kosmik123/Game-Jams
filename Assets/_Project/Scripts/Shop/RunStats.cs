@@ -73,15 +73,25 @@ namespace PayWithPixels
         }
 
         /// <summary>Poborca: usuwa losowy posiadany zysk (z poziomami). Zwraca jego nazwe albo null.</summary>
-        public string StealRandomGain()
+        public string StealRandomGain(out int level)
         {
+            level = 0;
             var owned = new List<string>();
             foreach (var kv in levels) if (kv.Value > 0) owned.Add(kv.Key);
             if (owned.Count == 0) return null;
             string name = owned[UnityEngine.Random.Range(0, owned.Count)];
+            level = levels[name];
             levels.Remove(name);
             Recompute();
             return name;
+        }
+
+        /// <summary>Oddaje zabrany zysk z poziomem, jaki gracz mial w chwili kradziezy.</summary>
+        public void RestoreGain(string name, int level)
+        {
+            levels.TryGetValue(name, out int now);
+            levels[name] = Mathf.Max(now, level);
+            Recompute();
         }
 
         public int bonusMaxHp;              // kontrakty

@@ -295,7 +295,7 @@ namespace PayWithPixels
 
         public void ContractLoseGain()
         {
-            var name = stats.StealRandomGain();
+            var name = stats.StealRandomGain(out _);
             RefreshDrones();
             ui.Toast("FINE PRINT: YOU LOST " + (name ?? "NOTHING (YOU HAD NO GAINS)"));
         }
@@ -475,6 +475,7 @@ namespace PayWithPixels
             auctioned.Clear();
             runTime = 0;
             kills = 0;
+            collectorMeetings = 0;
             coinsEarned = 0;
             noHitWaves = 0;
             hitThisWave = false;
@@ -593,6 +594,7 @@ namespace PayWithPixels
             state = State.Playing;
             lastWaveWasBoss = IsBossWave;
             spawnLeft = IsBossWave ? 9 : SpawnCount();
+            collectorAtLeft = -1;
             spawnTimer = 0.5f;
             player.RefillShield();
             freezeReady = stats.freeze > 0;
@@ -605,10 +607,17 @@ namespace PayWithPixels
                 Sfx.Play(Sound.Boss);
             }
             else if (CollectorComes())
-            {
-                Enemy.SpawnCollector(world, PickSpawnPoint());
-                ui.Toast("THE COLLECTOR COMES FOR YOUR DEBT");
-            }
+                collectorAtLeft = Random.Range(0, Mathf.Max(1, spawnLeft));   // Poborca wchodzi po losowej liczbie zespawnowanych wrogow
+        }
+
+        private int collectorAtLeft = -1;   // spawnLeft, przy ktorym wchodzi Poborca (-1 = w tej fali nie wchodzi)
+
+        private void SpawnCollectorIfDue()
+        {
+            if (collectorAtLeft < 0 || spawnLeft > collectorAtLeft) return;
+            collectorAtLeft = -1;
+            Enemy.SpawnCollector(world, PickSpawnPoint());
+            ui.Toast("THE COLLECTOR COMES FOR YOUR DEBT");
         }
 
         /// <summary>
@@ -639,6 +648,7 @@ namespace PayWithPixels
 
         public void OnBossKilled()
         {
+            foreach (var e in Enemy.All.ToArray()) if (e != null) e.ReturnHeldGain();   // boss kasuje wrogow: uciekajacy Poborca oddaje zysk
             foreach (var e in Enemy.All.ToArray()) if (e != null) Destroy(e.gameObject);
             foreach (var b in Bullet.All.ToArray()) if (b != null) Destroy(b.gameObject);
             foreach (var a in AreaBlast.All.ToArray()) if (a != null) Destroy(a.gameObject);
@@ -671,13 +681,30 @@ namespace PayWithPixels
         }
 
         /// <summary>Poborca dotknal gracza: zabiera losowy zysk, zostawia cene.</summary>
-        public void OnCollectorTouch()
+        public string OnCollectorTouch(out int level)
         {
-            string taken = stats.StealRandomGain();
+            string taken = stats.StealRandomGain(out level);
             RefreshDrones();
             if (player.hp > stats.maxHp) player.hp = stats.maxHp;
-            ui.Toast(taken != null ? "THE COLLECTOR TOOK: " + taken : "THE COLLECTOR FOUND NOTHING TO TAKE");
+            ui.Toast(taken != null ? "THE COLLECTOR TOOK: " + taken + " - KILL IT BEFORE IT ESCAPES" : "THE COLLECTOR FOUND NOTHING TO TAKE");
+            return taken;
         }
+
+        /// <summary>Poborca uciekl z lupem za brzeg areny: zysk zostaje stracony.</summary>
+        public void OnCollectorEscaped(string gain)
+        {
+            if (gain != null) ui.Toast("THE COLLECTOR ESCAPED WITH: " + gain);
+        }
+
+        /// <summary>Poborca zabity w trakcie ucieczki: zabrany zysk wraca do gracza.</summary>
+        public void RestoreGain(string gain, int level)
+        {
+            stats.RestoreGain(gain, level);
+            RefreshDrones();
+            ui.Toast("BONUS RECOVERED: " + gain);
+        }
+
+        public int collectorMeetings;   // ile razy Poborca juz sie pojawil w tym runie: kazdy kolejny ma wiecej HP
 
         public void OnEnemyKilled(Vector2 pos)
         {
@@ -1025,6 +1052,7 @@ namespace PayWithPixels
             if (spawnTimer > 0) return;
             spawnTimer = Mathf.Max(0.5f, 1.0f - Difficulty * 0.03f);
             spawnLeft--;
+            SpawnCollectorIfDue();
 
             if (IsBossWave)
             {
@@ -1040,6 +1068,7 @@ namespace PayWithPixels
                 for (int i = 0; i < 5; i++)
                     Enemy.Spawn(world, type, at + Random.insideUnitCircle * 0.7f, Difficulty);
                 spawnLeft = Mathf.Max(0, spawnLeft - 1);
+                SpawnCollectorIfDue();
                 return;
             }
             Enemy.Spawn(world, type, at, Difficulty);

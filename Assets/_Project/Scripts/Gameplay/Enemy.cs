@@ -37,6 +37,9 @@ namespace PayWithPixels
         private float dashLeft;
         // Straznik
         private Vector2 facing = Vector2.down;
+        private bool fleeing;                // Poborca po dotknieciu gracza ucieka za brzeg areny
+        private string heldGain;             // zabrany zysk (wraca, jesli Poborca zginie w ucieczce)
+        private int heldLevel;
         private SpriteRenderer shieldSr;   // Straznik: tarcza jako osobny sprite, niezalezny od obrotu korpusu (kierunek ruchu)
         private int shieldDir = -1;
         // Spawner
@@ -112,7 +115,9 @@ namespace PayWithPixels
             e.sr = Art.MakeRenderer(go, Art.Square("enemy_collector_walk_0", 24), 6);
             e.walkName = "enemy_collector"; e.spriteSize = 24;
             e.radius = 0.6f;
-            e.hp = e.maxHp = 35 + 6 * Game.Instance.zone;
+            // kazde kolejne spotkanie w runie: +12% HP bazowego
+            e.hp = e.maxHp = Mathf.RoundToInt((35 + 6 * Game.Instance.zone) * (1f + 0.12f * Game.Instance.collectorMeetings));
+            Game.Instance.collectorMeetings++;
             e.speed = 3.5f;
             e.CreateBar();
             e.contactDamage = 0;
@@ -268,6 +273,32 @@ namespace PayWithPixels
             if (d != shieldDir) { shieldDir = d; shieldSr.sprite = Art.ShieldArc(d); }
         }
 
+        /// <summary>Poborca dotknal gracza: zabiera zysk, nie znika, tylko ucieka za brzeg areny.</summary>
+        private void StartFleeing(Game game)
+        {
+            fleeing = true;
+            heldGain = game.OnCollectorTouch(out heldLevel);
+            speed = 3.8f;
+            if (heldGain == null) return;
+            walkName = "enemy_collector_empty";   // korpus bez dolara, w srodku ikona zabranego zysku
+            var gain = Catalog.Gains.Find(g => g.name == heldGain);
+            var icon = gain != null ? Resources.Load<Sprite>("Icons/" + gain.icon) : null;
+            if (icon == null) return;
+            var go = new GameObject("HeldGain");
+            go.transform.SetParent(transform, false);
+            go.transform.localScale = Vector3.one * 0.75f;
+            Art.MakeRenderer(go, icon, 7);
+        }
+
+        /// <summary>Oddaje graczowi zysk zabrany przez tego Poborce (zabity w ucieczce albo wymieciony z areny).</summary>
+        public void ReturnHeldGain()
+        {
+            if (heldGain == null) return;
+            string g = heldGain;
+            heldGain = null;
+            Game.Instance.RestoreGain(g, heldLevel);
+        }
+
         public void Damage(int dmg, bool crit = false)
         {
             hp -= dmg;
@@ -288,6 +319,7 @@ namespace PayWithPixels
             if (type != EnemyType.Collector) Game.Instance.OnEnemyKilled(transform.position);
             if (type == EnemyType.Collector)
             {
+                ReturnHeldGain();
                 Game.Instance.OnCollectorKilled();   // nagroda to zmniejszenie dlugu, bez monet
                 Destroy(gameObject);
                 return;
@@ -660,6 +692,16 @@ namespace PayWithPixels
                     }
                     break;
 
+                case EnemyType.Collector:
+                    if (!fleeing) move = dir;
+                    else
+                    {
+                        // ucieczka od gracza, lekko w strone najblizszego brzegu, zeby nie utknal na srodku
+                        Vector2 outward = pos.sqrMagnitude > 0.01f ? pos.normalized : Vector2.up;
+                        move = (-dir + 0.35f * outward).normalized;
+                    }
+                    break;
+
                 case EnemyType.Guard:
                     move = dir;
                     if (dir != Vector2.zero) facing = ((Vector2)Vector3.RotateTowards(facing, dir, 0.7f * dt, 0f)).normalized;   // tarcza obraca sie powoli: da sie go okrazyc
@@ -675,10 +717,20 @@ namespace PayWithPixels
                 sr.sprite = Art.Square(walkName + "_walk_" + (Mathf.FloorToInt(clock / 0.25f) % 2), spriteSize);
 
             pos += move * (moveSpeed * dt);
-            pos.x = Mathf.Clamp(pos.x, -Game.ArenaHalf.x, Game.ArenaHalf.x);
-            pos.y = Mathf.Clamp(pos.y, -Game.ArenaHalf.y, Game.ArenaHalf.y);
+            if (!fleeing)
+            {
+                pos.x = Mathf.Clamp(pos.x, -Game.ArenaHalf.x, Game.ArenaHalf.x);
+                pos.y = Mathf.Clamp(pos.y, -Game.ArenaHalf.y, Game.ArenaHalf.y);
+            }
             pos = Obstacles.Push(pos, radius * 0.8f);
             transform.position = pos;
+            if (fleeing && (Mathf.Abs(pos.x) > Game.ArenaHalf.x + 1f || Mathf.Abs(pos.y) > Game.ArenaHalf.y + 1f))
+            {
+                game.OnCollectorEscaped(heldGain);   // uciekl: zysk przepada
+                heldGain = null;
+                Destroy(gameObject);
+                return;
+            }
             if (rotates && dir != Vector2.zero && dashLeft <= 0) transform.rotation = Art.FaceRotation(dir);
             UpdateShield();
 
@@ -689,8 +741,7 @@ namespace PayWithPixels
             {
                 if (type == EnemyType.Collector)
                 {
-                    game.OnCollectorTouch();
-                    Destroy(gameObject);
+                    if (!fleeing) StartFleeing(game);
                     return;
                 }
                 game.player.Hurt(contactDamage);
