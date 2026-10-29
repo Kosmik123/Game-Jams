@@ -623,6 +623,7 @@ namespace PayWithPixels
                 ui.ShowBossLine(BossLines[Mathf.Clamp(zone - 1, 0, BossLines.Length - 1)]);
                 bossBuff = false;
                 Sfx.Play(Sound.Boss);
+                Sfx.SetMusic(zone, true);
             }
             else if (CollectorComes())
                 collectorAtLeft = Random.Range(0, Mathf.Max(1, spawnLeft));   // Poborca wchodzi po losowej liczbie zespawnowanych wrogow
@@ -675,6 +676,7 @@ namespace PayWithPixels
             HitStop(0.2f);
             Shake(0.6f);
             Grant("boss" + zone);
+            Sfx.SetMusic(zone);
             if (zone >= Zones)
             {
                 state = State.Won;
@@ -752,6 +754,7 @@ namespace PayWithPixels
         {
             state = State.Dead;
             Sfx.Play(Sound.Death);
+            Sfx.SetMusic(zone);
             Shake(0.6f);
             EndRun(false);
         }

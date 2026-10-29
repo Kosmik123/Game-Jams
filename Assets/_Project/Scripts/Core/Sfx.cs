@@ -11,7 +11,7 @@ namespace PayWithPixels
     {
         private const int Rate = 22050;
         private static readonly Dictionary<Sound, AudioClip> clips = new Dictionary<Sound, AudioClip>();
-        private static AudioSource sfxSource, musicSource;
+        private static AudioSource sfxSource, alertSource, musicSource;
         private static bool muted;
 
         public static bool Muted => muted;
@@ -25,6 +25,10 @@ namespace PayWithPixels
             go.transform.SetParent(parent, false);
             sfxSource = go.AddComponent<AudioSource>();
             sfxSource.playOnAwake = false;
+            alertSource = go.AddComponent<AudioSource>();
+            alertSource.playOnAwake = false;
+            alertSource.priority = 0;   // najwyzszy priorytet: nigdy nie wypychany przez inne glosy
+            duckUntil = 0f;
             musicSource = go.AddComponent<AudioSource>();
             musicSource.playOnAwake = false;
             musicSource.loop = true;
@@ -76,14 +80,27 @@ namespace PayWithPixels
         public static void Play(Sound s)
         {
             if (sfxSource == null || muted || SilenceMul < 0.05f) return;
-            if (clips.TryGetValue(s, out var c)) sfxSource.PlayOneShot(c);
+            if (!clips.TryGetValue(s, out var c)) return;
+            if (s == Sound.Hurt || s == Sound.Death || s == Sound.Rewind)
+            {
+                // wazne dla gracza: osobne zrodlo (nie ginie w limicie glosow ani w tlumie innych dzwiekow) + chwilowe sciszenie reszty
+                duckUntil = Time.unscaledTime + 0.35f;
+                ApplyVolumes();
+                alertSource.PlayOneShot(c);
+            }
+            else sfxSource.PlayOneShot(c);
         }
+
+        private static float duckUntil;
+        private const float DuckMul = 0.3f;
 
         /// <summary>Ustawia glosnosc muzyki i SFX z ustawien.</summary>
         public static void ApplyVolumes()
         {
-            if (musicSource != null) musicSource.volume = 0.35f * Settings.MusicVolume * SilenceMul;
-            if (sfxSource != null) sfxSource.volume = Settings.SfxVolume * SilenceMul;
+            float duck = Time.unscaledTime < duckUntil ? DuckMul : 1f;
+            if (musicSource != null) musicSource.volume = 0.35f * Settings.MusicVolume * SilenceMul * duck;
+            if (sfxSource != null) sfxSource.volume = Settings.SfxVolume * SilenceMul * duck;
+            if (alertSource != null) alertSource.volume = Settings.SfxVolume * SilenceMul;
         }
 
         public static void StartMusic()
@@ -181,12 +198,17 @@ namespace PayWithPixels
         private static readonly Dictionary<int, AudioClip> zoneMusic = new Dictionary<int, AudioClip>();
         private static int musicZone = -1;
 
-        /// <summary>Petla muzyczna per strefa (1-3), generowana leniwie.</summary>
-        public static void SetMusic(int zone)
+        /// <summary>Petla muzyczna per strefa (1-3), generowana leniwie; boss = motyw bossa strefy (Music/boss1..3).</summary>
+        public static void SetMusic(int zone, bool boss = false)
         {
-            if (musicSource == null || zone == musicZone) return;
-            musicZone = zone;
-            if (!zoneMusic.TryGetValue(zone, out var clip)) zoneMusic[zone] = clip = Resources.Load<AudioClip>("Music/zone" + zone) ?? BuildMusic(zone);
+            int key = boss ? 100 + zone : zone;
+            if (musicSource == null || key == musicZone) return;
+            musicZone = key;
+            if (!zoneMusic.TryGetValue(key, out var clip))
+            {
+                clip = boss ? Resources.Load<AudioClip>("Music/boss" + zone) : null;
+                zoneMusic[key] = clip = clip ?? Resources.Load<AudioClip>("Music/zone" + zone) ?? BuildMusic(zone);
+            }
             bool wasPlaying = musicSource.isPlaying;
             musicSource.clip = clip;
             if (wasPlaying) musicSource.Play();
