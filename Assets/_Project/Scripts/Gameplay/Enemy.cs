@@ -163,9 +163,11 @@ namespace PayWithPixels
         private static readonly Stack<List<Enemy>> cellPool = new Stack<List<Enemy>>();
 
         /// <summary>
-        /// Miekkie rozpychanie: zwykli wrogowie odpychaja sasiadow, gdy sa blizej niz 0.75 sumy promieni
-        /// (sila proporcjonalna do zakladki, bez fizyki). Siatka przestrzenna 1.5 j. - tanie przy 60+ wrogach.
+        /// Miekkie rozpychanie: zwykli wrogowie odpychaja sasiadow, gdy sa blizej niz 1.5 sumy promieni
+        /// (sila proporcjonalna do zakladki, bez fizyki). Siatka przestrzenna 2.5 j. (>= 1.5 * najwieksza suma promieni 1.4) - tanie przy 60+ wrogach.
         /// </summary>
+        private const float SeparationCell = 2.5f, SeparationFactor = 1.5f;
+
         public static void Separate(float dt)
         {
             foreach (var kv in grid) { kv.Value.Clear(); cellPool.Push(kv.Value); }
@@ -175,7 +177,7 @@ namespace PayWithPixels
                 var e = All[i];
                 if (!e.IsRegular) continue;
                 Vector2 p = e.transform.position;
-                long key = Key(Mathf.FloorToInt(p.x / 1.5f), Mathf.FloorToInt(p.y / 1.5f));
+                long key = Key(Mathf.FloorToInt(p.x / SeparationCell), Mathf.FloorToInt(p.y / SeparationCell));
                 if (!grid.TryGetValue(key, out var cell)) grid[key] = cell = cellPool.Count > 0 ? cellPool.Pop() : new List<Enemy>();
                 cell.Add(e);
             }
@@ -185,7 +187,7 @@ namespace PayWithPixels
                 var a = All[i];
                 if (!a.IsRegular) continue;
                 Vector2 pa = a.transform.position;
-                int cx = Mathf.FloorToInt(pa.x / 1.5f), cy = Mathf.FloorToInt(pa.y / 1.5f);
+                int cx = Mathf.FloorToInt(pa.x / SeparationCell), cy = Mathf.FloorToInt(pa.y / SeparationCell);
                 Vector2 push = Vector2.zero;
                 for (int dx = -1; dx <= 1; dx++)
                     for (int dy = -1; dy <= 1; dy++)
@@ -195,7 +197,7 @@ namespace PayWithPixels
                         {
                             if (b == a) continue;
                             Vector2 d = pa - (Vector2)b.transform.position;
-                            float min = 0.75f * (a.radius + b.radius);
+                            float min = SeparationFactor * (a.radius + b.radius);
                             float sq = d.sqrMagnitude;
                             if (sq >= min * min) continue;
                             float dist = Mathf.Sqrt(sq);
