@@ -163,7 +163,7 @@ namespace PayWithPixels
 
         public bool IsBossWave => waveInZone > WavesPerZone;
         /// <summary>Trudnosc do skalowania wrogow (rosnie przez caly run).</summary>
-        public int Difficulty => (zone - 1) * (WavesPerZone + 1) + waveInZone;
+        public int Difficulty => (zone - 1) * WavesPerZone + waveInZone;
 
         public static void Create()
         {
@@ -578,11 +578,14 @@ namespace PayWithPixels
         }
 
         /// <summary>Liczba wrogow w fali; x1.5 po powiekszeniu areny do 480x270 (2.25x powierzchni). Z1-1..3 lagodniej.</summary>
-        private int SpawnCount()
+        private static int SpawnCount(int zone, int waveInZone, int wave)
         {
-            int n = zone == 1 ? (waveInZone <= 3 ? 5 : 8) + 2 * waveInZone : 8 + 3 * waveInZone + 5 * (zone - 1);
+            int n = zone == 1 
+                ? (waveInZone <= 3 ? 5 : 8) + 2 * waveInZone 
+                : 8 + 3 * waveInZone + 5 * (zone - 1);
             return Mathf.RoundToInt((n + wave / 3) * 1.5f);
         }
+
         private void StartWave()
         {
             wave++;
@@ -593,7 +596,7 @@ namespace PayWithPixels
             Palette.SetZone(zone, waveInZone);
             state = State.Playing;
             lastWaveWasBoss = IsBossWave;
-            spawnLeft = IsBossWave ? 9 : SpawnCount();
+            spawnLeft = IsBossWave ? 9 : SpawnCount(zone, waveInZone, wave);
             collectorAtLeft = -1;
             spawnTimer = 0.5f;
             player.RefillShield();
@@ -1081,7 +1084,7 @@ namespace PayWithPixels
             var pool = new List<KeyValuePair<EnemyType, float>>();
             void Add(EnemyType t, float w, int minWave = 1) { if (waveInZone >= minWave) pool.Add(new KeyValuePair<EnemyType, float>(t, w)); }
 
-            Add(EnemyType.Chaser, zone == 1 ? 5f : 3f);
+            Add(EnemyType.Chaser, zone == 1 ? 5f : 3f, 1);
             Add(EnemyType.Shooter, 3f, zone == 1 ? 2 : 1);
             Add(EnemyType.Tank, 1.2f, zone == 1 ? 4 : 3);
             if (zone >= 2)

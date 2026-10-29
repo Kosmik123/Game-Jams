@@ -113,7 +113,8 @@ namespace PayWithPixels
             var e = go.AddComponent<Enemy>();
             e.type = EnemyType.Collector;
             e.sr = Art.MakeRenderer(go, Art.Square("enemy_collector_walk_0", 24), 6);
-            e.walkName = "enemy_collector"; e.spriteSize = 24;
+            e.walkName = "enemy_collector";
+            e.spriteSize = 24;
             e.radius = 0.6f;
             // kazde kolejne spotkanie w runie: +12% HP bazowego
             e.hp = e.maxHp = Mathf.RoundToInt((35 + 6 * Game.Instance.zone) * (1f + 0.12f * Game.Instance.collectorMeetings));
@@ -121,6 +122,7 @@ namespace PayWithPixels
             e.speed = 3.5f;
             e.CreateBar();
             e.contactDamage = 0;
+            e.coinDrop = 1;
             return e;
         }
 
