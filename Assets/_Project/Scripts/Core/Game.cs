@@ -1,3 +1,4 @@
+using NaughtyAttributes;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -577,12 +578,26 @@ namespace PayWithPixels
             ui.ShowZone(zone, ZoneNames[zone - 1]);
         }
 
+        [Button]
+        private void ShowDebugSpawnCounts()
+        {
+            int allWavesPerZone = (WavesPerZone + 1);
+            for (int w = 0; w < 20; w++)
+            {
+                int zone = (w / allWavesPerZone) + 1;
+                int waveInZone = w % allWavesPerZone + 1;
+                int count = SpawnCount(zone, waveInZone, w);
+                Debug.Log($"Zone: {zone}-{waveInZone} -> {count} enemies");
+            }
+        }
+
+
         /// <summary>Liczba wrogow w fali; x1.5 po powiekszeniu areny do 480x270 (2.25x powierzchni). Z1-1..3 lagodniej.</summary>
         private static int SpawnCount(int zone, int waveInZone, int wave)
         {
-            int n = zone == 1 
-                ? (waveInZone <= 3 ? 5 : 8) + 2 * waveInZone 
-                : 8 + 3 * waveInZone + 5 * (zone - 1);
+            int n = zone == 1
+                ? (waveInZone <= 3 ? 5 : 8) + 2 * waveInZone
+                : 8 + 2 * waveInZone + 4 * (zone - 1);
             return Mathf.RoundToInt((n + wave / 3) * 1.5f);
         }
 
@@ -730,7 +745,7 @@ namespace PayWithPixels
         {
             for (int i = 0; i < count; i++)
                 Coin.Spawn(world, pos + Random.insideUnitCircle * 0.4f);
-                for (int i = 0; i < bonusDrop; i++) Coin.Spawn(world, pos + Random.insideUnitCircle * 0.6f);
+            for (int i = 0; i < bonusDrop; i++) Coin.Spawn(world, pos + Random.insideUnitCircle * 0.6f);
         }
 
         public void OnPlayerDied()
@@ -760,9 +775,14 @@ namespace PayWithPixels
             cam.transform.position = p;
         }
 
+        [SerializeField]
+        private bool shouldPauseOnDefocus;
         /// <summary>Utrata fokusu karty: wycisza dzwiek i pauzuje gre.</summary>
         private void OnApplicationFocus(bool focused)
         {
+            if (shouldPauseOnDefocus == false && focused == false)
+                return;
+
             AudioListener.pause = !focused;
             if (!focused && !Paused && CanPause && ui != null) TogglePause();
         }
@@ -772,7 +792,6 @@ namespace PayWithPixels
         private void TogglePause()
         {
             Paused = !Paused;
-            resetArmed = false;
             Time.timeScale = Paused ? 0f : 1f;
             if (Paused) ShowPauseMenu();
             else ui.HidePause();
@@ -788,16 +807,8 @@ namespace PayWithPixels
                 onShake: () => { Settings.Shake = !Settings.Shake; ShowPauseMenu(); },
                 onMusic: () => { Settings.MusicVolume = Settings.MusicVolume >= 0.99f ? 0f : Settings.MusicVolume + 0.1f; ShowPauseMenu(); },
                 onSfx: () => { Settings.SfxVolume = Settings.SfxVolume >= 0.99f ? 0f : Settings.SfxVolume + 0.1f; ShowPauseMenu(); },
-                onReset: () =>
-                {
-                    if (!resetArmed) { resetArmed = true; ShowPauseMenu(); return; }
-                    resetArmed = false;
-                    Meta.ResetAll();
-                    TogglePause();
-                    GoToTitle();
-                    ui.Toast("PROGRESS RESET", 3f);
-                },
-                resetLabel: resetArmed ? "SURE? CLICK AGAIN (ERASES ALL)" : "RESET PROGRESS",
+                onReset: () => { TogglePause(); GoToTitle(); },
+                resetLabel: "RETURN TO TITLE",
                 onExport: () => { Save.ShowExport(); ui.Toast("SAVE CODE COPIED", 3f); },
                 onImport: () =>
                 {
@@ -806,8 +817,6 @@ namespace PayWithPixels
                     ui.Toast(ok ? "SAVE LOADED" : "INVALID SAVE CODE", 3f);
                 });
         }
-
-        private bool resetArmed;
 
         private void Update()
         {
@@ -1327,6 +1336,15 @@ namespace PayWithPixels
                 BeginZone();
             }
             else StartWave();
+        }
+
+        [SerializeField]
+        private Sound debugSound;
+
+        [Button]
+        private void PlayDebugSound()
+        {
+            Sfx.Play(debugSound);
         }
     }
 

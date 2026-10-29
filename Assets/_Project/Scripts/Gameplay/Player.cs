@@ -69,7 +69,7 @@ namespace PayWithPixels
                 rewindLeft--;
                 hp = Mathf.Min(game.stats.maxHp, 2);
                 invulnTimer = 2f;
-                Sfx.Play(Sound.Win);
+                Sfx.Play(Sound.Rewind);
                 game.Announce("TIME REWOUND");
                 return;
             }

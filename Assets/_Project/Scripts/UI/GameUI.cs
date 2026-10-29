@@ -386,7 +386,7 @@ namespace PayWithPixels
 
         // ---------- pauza ----------
 
-        public void ShowPause(Action onResume, Action onRestart, Action onVolume, Action onFlicker, Action onShake, Action onMusic, Action onSfx, Action onReset = null, string resetLabel = "RESET PROGRESS", Action onExport = null, Action onImport = null)
+        public void ShowPause(Action onResume, Action onRestart, Action onVolume, Action onFlicker, Action onShake, Action onMusic, Action onSfx, Action onReset = null, string resetLabel = "RETURN TO TITLE", Action onExport = null, Action onImport = null)
         {
             foreach (Transform c in pausePanel.transform) Destroy(c.gameObject);
             tinted.RemoveAll(kv => kv.Key == null);
