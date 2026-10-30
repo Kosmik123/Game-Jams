@@ -1188,7 +1188,7 @@ namespace PayWithPixels
         // ---- REDEEM: zdejmij 1 stack wybranej ceny (co 3. sklep zamiast kontraktu) ----
         private bool shopRedeem;
 
-        public int RedeemCost(string priceName) => 10 + 5 * stats.PriceCount(priceName) + Mathf.RoundToInt(Difficulty);
+        public int RedeemCost(string priceName) => 10 + 2 * stats.PriceCount(priceName) + Mathf.RoundToInt(Difficulty);
 
         private List<string> OwnedPrices()
         {

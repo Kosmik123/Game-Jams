@@ -670,7 +670,7 @@ namespace PayWithPixels
                     }
                     else
                     {
-                        if (dist > 4f) move = dir;
+                        moveSpeed = Mathf.Lerp(0.1f, speed, Mathf.InverseLerp(1, 5, dist));
                         dashTimer -= dt;
                         if (dashTimer <= 0 && attacking && dist < 8f) { telegraph = 0.55f; move = Vector2.zero; }
                     }
