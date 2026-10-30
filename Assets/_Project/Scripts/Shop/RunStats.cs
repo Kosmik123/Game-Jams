@@ -45,6 +45,8 @@ namespace PayWithPixels
         public float BulletLife => weapon == Weapon.Shotgun ? 0.55f : weapon == Weapon.Laser ? 1.4f : 2.5f;   // strzelba ~6 j. zasiegu
         public float SpreadStep => weapon == Weapon.Shotgun ? 7.5f * 4f / Mathf.Max(4, shotCount - 1) : 12f;   // 5 srutow = stozek ok. 30 st.
         public bool LongBullets => weapon == Weapon.Laser;
+        /// <summary>Laser: TRIPLE SHOT poszerza wiazke (shotCount 1/3/5 = x1, x1.8, x2.6) zamiast mnozyc pociski.</summary>
+        public float BeamWidthMul => 1f + 0.8f * (shotCount - 1) / 2f;
 
         public int PriceCount(string name) => priceCounts.TryGetValue(name, out var c) ? c : 0;
         public void AddPrice(string name) => priceCounts[name] = PriceCount(name) + 1;
@@ -142,6 +144,9 @@ namespace PayWithPixels
         public Func<RunStats, bool> available;   // dodatkowy warunek puli (zysk warunkowy: pojawia sie 2x czesciej)
         public bool consumable;                  // brak poziomow (np. leczenie)
         public bool heal;                        // koszt rosnie przez cene "Drogie zycie"
+        public Weapon[] notWith;                 // bronie, przy ktorych zysk nie ma sensu: nie wchodzi do sklepu ani do losowania
+
+        public bool OkFor(Weapon w) => notWith == null || Array.IndexOf(notWith, w) < 0;
     }
 
     public class Price
@@ -180,13 +185,13 @@ namespace PayWithPixels
                 apply = s => s.shotCount += 2 },
             new Gain { name = "HEALING", heal = true, icon = "icon_gain_heal", description = "FULL HP", cost = 3, consumable = true,
                 onBuy = (s, p) => p.Heal(99) },
-            new Gain { name = "PIERCING", icon = "icon_gain_pierce", description = "BULLETS PIERCE +1 ENEMY", cost = 6,
+            new Gain { name = "PIERCING", icon = "icon_gain_pierce", description = "BULLETS PIERCE +1 ENEMY", cost = 6, notWith = new[] { Weapon.Laser },
                 apply = s => s.pierce += 1 },
             new Gain { name = "DASH", icon = "icon_gain_dash", description = "SPACE: DASH, SHORTER COOLDOWN", cost = 7,
                 apply = s => s.dashLevel += 1 },
             new Gain { name = "MAGNET", icon = "icon_gain_magnet", description = "PULLS COINS FROM FAR AWAY", cost = 4,
                 apply = s => s.magnetRange += 2.5f },
-            new Gain { name = "RICOCHET", icon = "icon_gain_ricochet", description = "BULLETS BOUNCE OFF WALLS", cost = 6,
+            new Gain { name = "RICOCHET", icon = "icon_gain_ricochet", description = "BULLETS BOUNCE OFF WALLS", cost = 6, notWith = new[] { Weapon.Laser },
                 apply = s => s.ricochet += 1 },
             new Gain { name = "EXPLOSION", icon = "icon_gain_explosion", description = "DEAD ENEMIES BLOW UP", cost = 8,
                 apply = s => s.explosion += 1 },
@@ -279,7 +284,7 @@ namespace PayWithPixels
 
         /// <summary>Nagroda za sprzedaz ceny: (5 + fala/2) * 0.8 / 1.0 / 1.3 zaleznie od dotkliwosci.</summary>
         public static int SellReward(float difficulty, Price p) =>
-            Mathf.RoundToInt((5 + difficulty / 2) * (p.severity >= 3 ? 1.3f : p.severity == 2 ? 1f : 0.8f));
+            Mathf.RoundToInt((5 + difficulty / 2) * (1 + p.severity * 0.1f)) + UnityEngine.Random.Range(-1, 2);
 
         /// <summary>Synergie zysk+cena: (zysk, cena, opis efektu). Efekty sa w RunStats / Drone / Player.</summary>
         private static readonly string[][] Synergies =
@@ -316,7 +321,7 @@ namespace PayWithPixels
         public static List<Offer> Roll(int count, float difficulty, RunStats stats)
         {
             var gains = Gains.FindAll(g =>
-                (g.available == null || g.available(stats)) &&
+                (g.available == null || g.available(stats)) && g.OkFor(stats.weapon) &&
                 (g.consumable || stats.Level(g.name) < g.maxLevel));
             var prices = Prices.FindAll(p => p.available == null || p.available(stats));
             var offers = new List<Offer>();

@@ -163,7 +163,7 @@ Obecni: Goniec, Strzelec, Tank. Dodać: Skaczek (dash na gracza), Oblężnik (po
 - Haggle: 1 moneta, raz na sklep, przelosowuje CENY ZMYSŁÓW niekupionych ofert (etykieta w UI: NEW PRICES).
 - Pierwszy stack ceny słaby, kolejne mocniejsze (krzywe nieliniowe); od fali 7 drogie zyski (koszt >= 9) dostają cenę x2.
 - Wrogowie: limit prędkości (max 0.8 * prędkość gracza przy 1 stacku nóg, Rój 2.7); rozpychanie się; pocisk bez PIERCE trafia jednego wroga.
-- 3 bronie startowe (pistolet / strzelba / laser) z różnymi zachowaniami; shotgun odblokowuje boss 1, laser boss 2.
+- 3 bronie startowe (pistolet / strzelba / laser) z różnymi zachowaniami; shotgun odblokowuje boss 1, laser boss 2. Laser (wiązka) a zyski: RICOCHET i PIERCING nie wchodzą do puli (przy laserze bez sensu), TRIPLE SHOT poszerza wiązkę (x1,8 / x2,6), FASTER SHOTS skraca odstęp ticków wiązki (działają wszystkie 3 stacki).
 
 ## Dodane, a nie ma w pierwotnym GDD
 **ASCENSION** 1-5 po pierwszej wygranej (A1 start z mgłą, A2 wrogowie +25% HP, A3 ciężkie nogi + pikselizacja, A4 wrogowie szybsi i odsetki 30%, A5 migotanie + zbliżenie i bossowie +20% HP; mnożnik wyniku 1+0.25*poziom), przycisk PAY DEBT (klawisz D), skróty w sklepie (1-3, R, H, D, Enter), debug (F1-F6, tylko z ?debug=1), 11 osiągnięć z opisem po najechaniu, RESET PROGRESS, szablon WebGL (czarny ekran ładowania), telegrafy ataków i limit 170 pocisków wrogów.

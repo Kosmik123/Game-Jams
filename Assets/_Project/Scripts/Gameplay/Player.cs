@@ -215,7 +215,7 @@ namespace PayWithPixels
 
         private float heat;
         private Transform beam;
-        private float beamTick;
+        private float beamTick, beamSoundTimer;
 
         private void OnDestroy()
         {
@@ -233,9 +233,10 @@ namespace PayWithPixels
                 beam = go.transform;
             }
             beam.gameObject.SetActive(firing);
-            if (!firing) { beamTick = 0; return; }
+            if (!firing) { beamTick = 0; beamSoundTimer = 0; return; }
 
             var stats = game.stats;
+            float hitHalf = 0.12f * stats.BeamWidthMul;   // TRIPLE SHOT: szersza wiazka (obrazenia i blokada tarcza)
             // dlugosc: do sciany, krawedzi areny albo tarczy Straznika
             float len = 0f;
             const float maxLen = 18f;
@@ -252,7 +253,7 @@ namespace PayWithPixels
                 Vector2 rel = (Vector2)e.transform.position - pos;
                 float along = Vector2.Dot(rel, dir);
                 if (along < 0f || along > len) continue;
-                if ((rel - dir * along).magnitude > e.radius + 0.12f) continue;
+                if ((rel - dir * along).magnitude > e.radius + hitHalf) continue;
                 if (e.Blocks(dir) && along < blockDist) blockDist = along;
             }
             len = blockDist;
@@ -261,20 +262,21 @@ namespace PayWithPixels
             float unit = sprite != null ? sprite.bounds.size.x : 0.25f;
             beam.position = pos + dir * (len * 0.5f + 0.3f);
             beam.rotation = Quaternion.Euler(0, 0, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg);
-            beam.localScale = new Vector3(len / unit, 0.14f / unit * (1f + heat), 1f);
+            beam.localScale = new Vector3(len / unit, 0.14f / unit * (1f + heat) * stats.BeamWidthMul, 1f);
 
+            beamSoundTimer -= Time.deltaTime;
+            if (beamSoundTimer <= 0) { beamSoundTimer = 0.1f; Sfx.Play(Sound.LaserTick); }   // dzwiek w stalym rytmie niezaleznie od szybkostrzelnosci
             beamTick -= Time.deltaTime;
             if (beamTick > 0) return;
-            beamTick = 0.1f;
-            Sfx.Play(Sound.LaserTick);
-            float chance = Mathf.Lerp(0.25f, 0.7f, heat) * Mathf.Min(2f, stats.fireRateMul);
+            beamTick = 0.1f / (stats.fireRateMul * stats.tempFireMul);   // FASTER SHOTS i kontrakty skracaja odstep miedzy tickami (bez limitu stackow)
+            float chance = Mathf.Lerp(0.25f, 0.7f, heat);
             foreach (var e in Enemy.All.ToArray())
             {
                 if (e == null) continue;
                 Vector2 rel = (Vector2)e.transform.position - pos;
                 float along = Vector2.Dot(rel, dir);
                 if (along < 0f || along > len + e.radius) continue;
-                if ((rel - dir * along).magnitude > e.radius + 0.12f) continue;
+                if ((rel - dir * along).magnitude > e.radius + hitHalf) continue;
                 if (Random.value >= chance) continue;
                 int dmg = RollDamage(stats, out bool beamCrit);
                 e.Damage(dmg, beamCrit);

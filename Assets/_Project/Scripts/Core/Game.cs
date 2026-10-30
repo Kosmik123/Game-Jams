@@ -326,7 +326,7 @@ namespace PayWithPixels
 
         public void ContractFreeGain()
         {
-            var pool = Catalog.Gains.FindAll(g => !g.consumable && stats.Level(g.name) < g.maxLevel && (g.available == null || g.available(stats)));
+            var pool = Catalog.Gains.FindAll(g => !g.consumable && stats.Level(g.name) < g.maxLevel && g.OkFor(stats.weapon) && (g.available == null || g.available(stats)));
             if (pool.Count == 0) { coins += 20; return; }
             var gain = pool[Random.Range(0, pool.Count)];
             stats.levels[gain.name] = stats.Level(gain.name) + 1;
@@ -1316,7 +1316,7 @@ namespace PayWithPixels
                 if (!o.sold)
                 {
                     o.price = Catalog.Prices[Random.Range(0, Catalog.Prices.Count)];
-                    if (o.sell) o.reward = Catalog.SellReward(wave, o.price);
+                    if (o.sell) o.reward = Catalog.SellReward(1.2f * Difficulty, o.price);
                 }
             Sfx.Play(Sound.Hurt);
             RefreshShopUi();
