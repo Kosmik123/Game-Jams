@@ -107,7 +107,8 @@ namespace PayWithPixels
             Meta.RecordRun(wave, won, Ascension, score);
             Online.Submit(score);
             boardPromptAt = Online.IsAvailable && score > 0 ? Time.unscaledTime : -1f;
-            ui.ShowDeath(won, RunSummary(won) + "\nSCORE " + score + (Ascension > 0 ? "  (ASCENSION " + Ascension + " x" + ScoreMul.ToString("0.00") + ")" : ""), StartRun, GoToTitle);
+            deathOkPending = false;
+            ui.ShowDeath(won, RunSummary(won) + "\nSCORE " + score + (Ascension > 0 ? "  (ASCENSION " + Ascension + " x" + ScoreMul.ToString("0.00") + ")" : ""), OnDeathOk);
         }
 
         public void AuctionOffGain(float seconds)
@@ -235,6 +236,7 @@ namespace PayWithPixels
 
         private void GoToTitle()
         {
+            Online.ClearHighlight();
             CleanupRun();
             Palette.Reset();
             state = State.Title;
@@ -244,21 +246,29 @@ namespace PayWithPixels
             GoToTitleRefresh();
         }
 
-        private float boardPromptAt = -1f;
+        private float boardPromptAt = -1f;   // >= 0: wynik tego runu idzie na tablice
+        private bool deathOkPending;
+        private float deathOkAt;
         private const float BoardPromptTimeout = 12f;
 
-        /// <summary>Po zgonie/wygranej: gdy wynik zostal wyslany, otwiera tablice (z wpisaniem nazwy przy pierwszym razie). Blad lub timeout = tablica sie nie pojawia.</summary>
+        /// <summary>OK na ekranie konca runu: wynik w TOP 10 = tablica (z wpisaniem nazwy), inaczej tytul. Czeka na wynik wysylki.</summary>
+        private void OnDeathOk()
+        {
+            if (deathOkPending) return;
+            if (boardPromptAt < 0f) { GoToTitle(); return; }
+            deathOkPending = true;
+            deathOkAt = Time.unscaledTime;
+            ui.Toast("SUBMITTING SCORE...", 3f);
+        }
+
         private void UpdateBoardPrompt()
         {
-            if (boardPromptAt < 0f) return;
-            if (Online.State == Online.Status.Error || Time.unscaledTime - boardPromptAt > BoardPromptTimeout)
-            {
-                boardPromptAt = -1f;
-                return;
-            }
-            if (Online.State != Online.Status.Ready || Online.Busy || Online.HasPendingScore) return;
-            boardPromptAt = -1f;
-            ui.ShowLeaderboard(null, Online.HasName == false);
+            if (!deathOkPending) return;
+            bool ready = Online.State == Online.Status.Ready && !Online.Busy && !Online.HasPendingScore;
+            if (!ready && Online.State != Online.Status.Error && Time.unscaledTime - deathOkAt <= BoardPromptTimeout) return;
+            deathOkPending = false;
+            if (ready && Online.InTop10) ui.ShowLeaderboard(GoToTitle, true);
+            else GoToTitle();   // poza TOP 10, blad albo timeout: wynik zostaje w kolejce
         }
 
         private void GoToTitleRefresh()
@@ -270,6 +280,7 @@ namespace PayWithPixels
         private void CleanupRun()
         {
             boardPromptAt = -1f;
+            deathOkPending = false;
             foreach (var e in Enemy.All.ToArray()) if (e != null) Destroy(e.gameObject);
             foreach (var b in Bullet.All.ToArray()) if (b != null) Destroy(b.gameObject);
             foreach (var a in AreaBlast.All.ToArray()) if (a != null) Destroy(a.gameObject);
@@ -467,6 +478,7 @@ namespace PayWithPixels
 
         private void StartRun()
         {
+            Online.ClearHighlight();
             activeContracts.Clear();
             ResetContractEffects();
             contractValue = 0;
@@ -906,9 +918,7 @@ namespace PayWithPixels
                 case State.Dead:
                     UpdateBoardPrompt();
                     if (ui.OverlayOpen) break;
-                    if (Input.GetKeyDown(KeyCode.L)) { ui.ShowLeaderboard(); break; }
-                    if (Input.GetKeyDown(KeyCode.R)) StartRun();
-                    if (Input.GetKeyDown(KeyCode.T)) GoToTitle();
+                    if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Space)) OnDeathOk();
                     break;
             }
         }

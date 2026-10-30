@@ -88,7 +88,11 @@ namespace PayWithPixels
             invulnTimer -= Time.deltaTime;
             sr.enabled = invulnTimer <= 0 || Mathf.FloorToInt(Time.time * 12f) % 2 == 0;
             halo.enabled = sr.enabled;
-            if (game.state != Game.State.Playing && game.state != Game.State.Clearing) return;
+            if (game.state != Game.State.Playing && game.state != Game.State.Clearing)
+            {
+                if (beam != null) beam.gameObject.SetActive(false);   // smierc w trakcie strzalu: wiazka nie moze zostac na ekranie
+                return;
+            }
 
             // synergia Ciezkie nogi + Tarcza: tarcza odnawia sie w trakcie fali
             float regen = game.stats.ShieldRegen;
@@ -212,6 +216,11 @@ namespace PayWithPixels
         private float heat;
         private Transform beam;
         private float beamTick;
+
+        private void OnDestroy()
+        {
+            if (beam != null) Destroy(beam.gameObject);   // wiazka jest dzieckiem swiata, nie gracza: bez tego zostaje w nastepnym runie
+        }
 
         /// <summary>Laser: ciagla wiazka przebijajaca wszystkich w linii; co 0.1 s losowo rani kazdego (szansa rosnie z rozgrzaniem).</summary>
         private void UpdateBeam(Game game, Vector2 pos, Vector2 dir, bool firing)
