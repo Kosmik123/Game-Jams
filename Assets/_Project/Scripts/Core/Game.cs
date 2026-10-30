@@ -715,7 +715,7 @@ namespace PayWithPixels
         public void OnCollectorKilled(Enemy collector)
         {
             ui.Toast("COLLECTOR DOWN");
-            SpawnCoin(collector.transform.position, 1 + collectorMeetings);
+            SpawnCoin(collector.transform.position, collector.GetCoins() + collectorMeetings);
         }
 
         /// <summary>Poborca dotknal gracza: zabiera losowy zysk, zostawia cene.</summary>

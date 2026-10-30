@@ -48,6 +48,9 @@ namespace PayWithPixels
         private int spawned;
         private float flash;
 
+        public int GetCoins(float spread = 1.5f) => GetCoins(coinDrop, spread);
+        public static int GetCoins(float coins, float spread = 1.5f) => Mathf.RoundToInt(coins + spread * (Random.value - 0.5f));
+
         private struct Spec
         {
             public string sprite; public int size; public float radius; public int hpBase; public float speed; public int contact; public int coins; public bool rotates;
@@ -333,9 +336,10 @@ namespace PayWithPixels
                 Destroy(gameObject);
                 return;
             }
-            if (type == EnemyType.Spawner) Game.Instance.SpawnCoin(transform.position, coinDrop + (SpawnerMaxSpawnCount - spawned) / 2) ;
-            else if (coinDrop > 0) Game.Instance.SpawnCoin(transform.position, coinDrop);
-            else if (Random.value < 0.5f) Game.Instance.SpawnCoin(transform.position, 1);
+            if (type == EnemyType.Spawner)
+                Game.Instance.SpawnCoin(transform.position, GetCoins(coinDrop + (SpawnerMaxSpawnCount - spawned) / 2));
+            else
+                Game.Instance.SpawnCoin(transform.position, GetCoins());
             Destroy(gameObject);
         }
 
