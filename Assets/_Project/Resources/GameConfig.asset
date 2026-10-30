@@ -113,29 +113,20 @@ MonoBehaviour:
     speed: 2.6
     contactDamage: 1
     coins: 1
-    hpPerZone: 0
-    hpPerEncounter: 0
-    hpPerDebt: 0
   - type: 1
     radius: 0.45
-    hpBase: 2
+    hpBase: 1.5
     hpPerDifficulty: 0.25
     speed: 2
     contactDamage: 1
     coins: 1
-    hpPerZone: 0
-    hpPerEncounter: 0
-    hpPerDebt: 0
   - type: 2
     radius: 0.7
-    hpBase: 6
+    hpBase: 7
     hpPerDifficulty: 0.75
     speed: 1.2
     contactDamage: 2
     coins: 3
-    hpPerZone: 0
-    hpPerEncounter: 0
-    hpPerDebt: 0
   - type: 3
     radius: 0.45
     hpBase: 2
@@ -143,9 +134,6 @@ MonoBehaviour:
     speed: 2.2
     contactDamage: 1
     coins: 2
-    hpPerZone: 0
-    hpPerEncounter: 0
-    hpPerDebt: 0
   - type: 4
     radius: 0.5
     hpBase: 4
@@ -153,9 +141,6 @@ MonoBehaviour:
     speed: 1.6
     contactDamage: 1
     coins: 4
-    hpPerZone: 0
-    hpPerEncounter: 0
-    hpPerDebt: 0
   - type: 5
     radius: 0.3
     hpBase: 1
@@ -163,19 +148,13 @@ MonoBehaviour:
     speed: 2.8
     contactDamage: 1
     coins: 0
-    hpPerZone: 0
-    hpPerEncounter: 0
-    hpPerDebt: 0
   - type: 6
     radius: 0.5
-    hpBase: 4
+    hpBase: 2
     hpPerDifficulty: 0.25
     speed: 1.7
     contactDamage: 1
     coins: 3
-    hpPerZone: 0
-    hpPerEncounter: 0
-    hpPerDebt: 0
   - type: 7
     radius: 0.7
     hpBase: 8
@@ -183,22 +162,20 @@ MonoBehaviour:
     speed: 0.7
     contactDamage: 1
     coins: 2
-    hpPerZone: 0
-    hpPerEncounter: 0
-    hpPerDebt: 0
-  - type: 9
-    radius: 0.6
-    hpBase: 30
-    hpPerDifficulty: 1
-    speed: 3.5
-    contactDamage: 0
+  collector:
+    type: 9
+    radius: 0.45
+    hpBase: 1
+    hpPerDifficulty: 0
+    speed: 2
+    contactDamage: 1
     coins: 1
     hpPerZone: 6
     hpPerEncounter: 0.12
-    hpPerDebt: 1
+    hpPerDebt: 0.5
   economy:
     gainCostMul: 1.15
-    purchaseSurcharge: 0.25
+    purchaseSurcharge: 0.2
     levelCostStep: 3
     ownedGainCost: 1
     difficultyCostDivisor: 3

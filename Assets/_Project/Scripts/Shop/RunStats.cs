@@ -165,7 +165,7 @@ namespace PayWithPixels
         public Func<RunStats, bool> available;
 
         /// <summary>Dotkliwosc ceny (0 i wiecej): znizka kosztu zysku i wyzsza nagroda za sprzedaz.</summary>
-        public int severity => cfg.severity;
+        public float Severity => cfg.severity;
     }
 
     public class Offer
@@ -284,11 +284,11 @@ namespace PayWithPixels
         };
 
         /// <summary>Mnoznik kosztu zysku zaleznie od dotkliwosci ceny: 1 - dotkliwosc * discountPerSeverity.</summary>
-        public static float PriceDiscount(Price p) => 1 - p.severity * E.discountPerSeverity;
+        public static float PriceDiscount(Price p) => 1 - p.Severity * E.discountPerSeverity;
 
         /// <summary>Nagroda za sprzedaz ceny: (baza + trudnosc / dzielnik) * (1 + dotkliwosc * bonus), plus losowy rozrzut.</summary>
         public static int SellReward(float difficulty, Price p) =>
-            Mathf.RoundToInt((E.sellRewardBase + difficulty / E.sellRewardDifficultyDivisor) * (1 + p.severity * E.sellRewardPerSeverity))
+            Mathf.RoundToInt((E.sellRewardBase + difficulty / E.sellRewardDifficultyDivisor) * (1 + p.Severity * E.sellRewardPerSeverity))
             + UnityEngine.Random.Range(-E.sellRewardSpread, E.sellRewardSpread + 1);
 
         /// <summary>Synergie zysk+cena: (zysk, cena, opis efektu). Efekty sa w RunStats / Drone / Player.</summary>

@@ -77,7 +77,11 @@ namespace PayWithPixels.Build
             Check(Catalog.GainCost(fasterShots, 1, 1f, stats) == 6, "gain cost FASTER SHOTS d=1");
             Check(Catalog.GainCost(fasterShots, 1, 17f, stats) == 16, "gain cost FASTER SHOTS d=17: " + Catalog.GainCost(fasterShots, 1, 17f, stats));
             var fogPrice = Catalog.Prices.Find(p => p.name == "FOG");
-            Check(fogPrice.severity == 2 && Catalog.Prices.Find(p => p.name == "REVERSED CONTROLS").severity == 4 && Catalog.Prices.Find(p => p.name == "FLICKER").severity == 0, "price severities");
+
+            Near(fogPrice.Severity, 2, "fog severity");
+            Near(Catalog.Prices.Find(p => p.name == "REVERSED CONTROLS").Severity, 4, "reversed control severity");
+            Near(Catalog.Prices.Find(p => p.name == "FLICKER").Severity, 0, "flicker severity");
+            
             Near(Catalog.PriceDiscount(fogPrice), 0.8f, "fog discount");
             for (int i = 0; i < 50; i++) { int r = Catalog.SellReward(1f, fogPrice); Check(r >= 6 && r <= 8, "sell reward d=1 sev2: " + r); }
 

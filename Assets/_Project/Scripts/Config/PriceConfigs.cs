@@ -7,9 +7,9 @@ namespace PayWithPixels
     [Serializable]
     public class PriceConfig
     {
-        [Tooltip("Dotkliwosc (0 i wiecej): znizka kosztu zysku i nagroda za sprzedaz rosna z nia.")]
-        public int severity = 1;
-        [Tooltip("Maksymalna liczba stackow (0 = bez limitu).")]
+        [Tooltip("Dotkliwosc (0 i wiecej): znizka kosztu zysku i nagroda za sprzedaz rosna z nia."), Min(0)]
+        public float severity = 1;
+        [Tooltip("Maksymalna liczba stackow (0 = bez limitu)."), Min(0)]
         public int maxStacks;
 
         protected void Set(int severity, int maxStacks = 0)

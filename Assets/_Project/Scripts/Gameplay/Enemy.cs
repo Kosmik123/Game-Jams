@@ -14,6 +14,7 @@ namespace PayWithPixels
         public float radius;
         public bool IsRegular => type != EnemyType.Boss && type != EnemyType.Collector;
         public EnemyType type { get; private set; }
+        [SerializeField]
         private int hp;
         private int maxHp;
         private float speed;
@@ -48,12 +49,12 @@ namespace PayWithPixels
         private int spawned;
         private float flash;
 
-        public int GetCoins(float spread = 1.5f) => GetCoins(coinDrop, spread);
-        public static int GetCoins(float coins, float spread = 1.5f) => Mathf.RoundToInt(coins + spread * (Random.value - 0.5f));
+        public int GetCoins(float spread = 1.5f) => GetRandomizedInt(coinDrop, spread);
+        public static int GetRandomizedInt(float number, float spread = 1.5f) => Mathf.RoundToInt(number + spread * (Random.value - 0.5f));
 
         private struct Spec
         {
-            public string sprite; public int size; public float radius; public int hpBase; public float speed; public int contact; public float coins; public bool rotates;
+            public string sprite; public int size; public float radius; public float hpBase; public float speed; public int contact; public float coins; public bool rotates;
         }
 
         /// <summary>Statystyki wroga z GameConfig (EnemyConfig); tu zostaje tylko wyglad.</summary>
@@ -92,9 +93,11 @@ namespace PayWithPixels
             float scale = 1f + GameConfig.Instance.enemyScaling.speedPerDifficulty * difficulty;
             e.walkName = s.sprite; e.spriteSize = s.size; e.rotates = s.rotates;
             e.sr = Art.MakeRenderer(go, Art.Square(s.sprite + "_walk_0", s.size), 5);
-            e.radius = s.radius; e.hp = e.maxHp = Mathf.CeilToInt(s.hpBase * Game.Instance.EnemyHpMul); e.speed = Mathf.Min(s.speed * scale * Game.Instance.EnemySpeedMul, MaxSpeed(type));
+            e.radius = s.radius; 
+            e.hp = e.maxHp = Mathf.Max(1, GetRandomizedInt(s.hpBase * Game.Instance.EnemyHpMul));
+            e.speed = Mathf.Min(s.speed * scale * Game.Instance.EnemySpeedMul, MaxSpeed(type));
             e.contactDamage = s.contact;
-            e.coinDrop = overrideCoins.HasValue ? overrideCoins.Value : s.coins;
+            e.coinDrop = overrideCoins ?? s.coins;
             if (type == EnemyType.Tank || type == EnemyType.Spawner)
                 e.CreateBar();
             if (type == EnemyType.Guard)
@@ -128,10 +131,15 @@ namespace PayWithPixels
             e.sr = Art.MakeRenderer(go, Art.Square("enemy_collector_walk_0", 24), 6);
             e.walkName = "enemy_collector";
             e.spriteSize = 24;
-            var cc = GameConfig.Instance.GetEnemy(EnemyType.Collector);
+            var cc = GameConfig.Instance.GetCollector();
             e.radius = cc.radius;
             // kazde kolejne spotkanie w runie zwieksza HP bazowe
-            e.hp = e.maxHp = Mathf.RoundToInt((cc.hpBase + cc.hpPerZone * Game.Instance.zone) * (1f + cc.hpPerEncounter * Game.Instance.collectorMeetings) + cc.hpPerDebt * Game.Instance.debt + cc.hpPerDifficulty * Game.Instance.Difficulty);
+            e.hp = e.maxHp = GetRandomizedInt(cc.hpBase 
+                + cc.hpPerZone * Game.Instance.zone
+                + cc.hpPerEncounter * Game.Instance.collectorMeetings
+                + cc.hpPerDebt * Game.Instance.debt 
+                + cc.hpPerDifficulty * Game.Instance.Difficulty);
+
             Game.Instance.collectorMeetings++;
             e.speed = cc.speed;
             e.CreateBar();

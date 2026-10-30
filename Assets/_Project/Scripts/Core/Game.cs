@@ -153,6 +153,7 @@ namespace PayWithPixels
         public float InterestRate => Ascension >= 4 ? 0.3f : 0.2f;
         /// <summary>Wrogowie rosna z fala (co 3 fale +10% HP) i ze strefa (2: +15%, 3: +30% HP oraz predkosci).</summary>
         private float ZoneScale => zone >= 3 ? GameConfig.Instance.enemyScaling.zone3Mul : zone == 2 ? GameConfig.Instance.enemyScaling.zone2Mul : 1f;
+        [ShowNativeProperty]
         public float EnemyHpMul => (Ascension >= 2 ? 1.25f : 1f) * ZoneScale * (1f + GameConfig.Instance.enemyScaling.hpPerFourWaves * (wave / 4));
         public float EnemySpeedMul => (Ascension >= 4 ? 1.15f : 1f) * enemySpeedContractMul * ZoneScale;
         public float BossHpMul => (Ascension >= 5 ? 1.2f : 1f) * ContractBossHpMul;

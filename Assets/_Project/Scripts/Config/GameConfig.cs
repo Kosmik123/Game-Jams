@@ -49,6 +49,7 @@ namespace PayWithPixels
         [Header("Enemies")]
         public EnemyScalingConfig enemyScaling = new EnemyScalingConfig();
         public List<EnemyConfig> enemies = new List<EnemyConfig>();
+        public CollectorEnemyConfig collector = new CollectorEnemyConfig();
 
         [Header("Economy")]
         public EconomyConfig economy = new EconomyConfig();
@@ -64,6 +65,8 @@ namespace PayWithPixels
             foreach (var w in weapons) if (w.type == type) return w;
             return weapons[0];
         }
+
+        public CollectorEnemyConfig GetCollector() => collector;
 
         public EnemyConfig GetEnemy(EnemyType type)
         {
@@ -81,6 +84,7 @@ namespace PayWithPixels
         {
             weapons = WeaponConfig.Defaults();
             enemies = EnemyConfig.Defaults();
+            collector = CollectorEnemyConfig.Default;
         }
 
         /// <summary>Uzupelnia brakujace wpisy list (nowa bron, nowy typ wroga) wartosciami domyslnymi.</summary>
@@ -195,6 +199,8 @@ namespace PayWithPixels
         public float swarmMaxSpeed = 2.7f;
     }
 
+
+
     [Serializable]
     public class EnemyConfig
     {
@@ -205,15 +211,7 @@ namespace PayWithPixels
         public float hpPerDifficulty;
         public float speed = 2f;
         public int contactDamage = 1;
-        public int coins = 1;
-
-        [Header("Poborca only")]
-        [Tooltip("Dodatkowe HP za numer strefy.")]
-        public float hpPerZone;
-        [Tooltip("Przyrost HP za kazde wczesniejsze spotkanie w runie (ulamek).")]
-        public float hpPerEncounter;
-        [Tooltip("Dodatkowe HP za kazda monete dlugu.")]
-        public float hpPerDebt;
+        public float coins = 1;
 
         public static List<EnemyConfig> Defaults() => new List<EnemyConfig>
         {
@@ -225,8 +223,32 @@ namespace PayWithPixels
             new EnemyConfig { type = EnemyType.Swarm, radius = 0.3f, hpBase = 1f, hpPerDifficulty = 0f, speed = 2.8f, contactDamage = 1, coins = 0 },
             new EnemyConfig { type = EnemyType.Guard, radius = 0.5f, hpBase = 4f, hpPerDifficulty = 0.25f, speed = 1.7f, contactDamage = 1, coins = 3 },
             new EnemyConfig { type = EnemyType.Spawner, radius = 0.7f, hpBase = 8f, hpPerDifficulty = 0.5f, speed = 0.7f, contactDamage = 1, coins = 2 },
-            new EnemyConfig { type = EnemyType.Collector, radius = 0.6f, hpBase = 30f, hpPerDifficulty = 1f, speed = 3.5f, contactDamage = 0, coins = 1,
-                hpPerZone = 6f, hpPerEncounter = 0.12f, hpPerDebt = 1f },
+        };
+    }
+
+    [System.Serializable]
+    public class CollectorEnemyConfig : EnemyConfig
+    {
+        [Header("Poborca only")]
+        [Tooltip("Dodatkowe HP za numer strefy.")]
+        public float hpPerZone;
+        [Tooltip("Przyrost HP za kazde wczesniejsze spotkanie w runie (ulamek).")]
+        public float hpPerEncounter;
+        [Tooltip("Dodatkowe HP za kazda monete dlugu.")]
+        public float hpPerDebt;
+
+        public static CollectorEnemyConfig Default = new CollectorEnemyConfig
+        {
+            type = EnemyType.Collector,
+            radius = 0.6f,
+            hpBase = 30f,
+            hpPerDifficulty = 1f,
+            speed = 3.5f,
+            contactDamage = 0,
+            coins = 1,
+            hpPerZone = 6f,
+            hpPerEncounter = 0.12f,
+            hpPerDebt = 1f
         };
     }
 
