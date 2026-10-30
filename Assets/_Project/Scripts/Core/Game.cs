@@ -706,7 +706,7 @@ namespace PayWithPixels
             }
             else
             {
-                SpawnCoin(boss.transform.position, 2 * zone + totalRunPurchases + 3);
+                SpawnCoin(boss.transform.position, 4 * zone + totalRunPurchases + 1);
                 ui.Toast("ZONE CLEARED");
             }
         }
