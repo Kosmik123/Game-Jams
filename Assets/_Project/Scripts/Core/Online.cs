@@ -114,7 +114,12 @@ namespace PayWithPixels
         {
             EndSession();
             if (!await WithTimeout(AuthenticationService.Instance.SignInAnonymouslyAsync())) throw new TimeoutException("sign-in timeout");
+            string n = AuthenticationService.Instance.PlayerName;
+            if (string.IsNullOrEmpty(n)) try { n = await AuthenticationService.Instance.GetPlayerNameAsync(); } catch (Exception) { }
+            accountDefaultName = string.IsNullOrEmpty(n) ? null : Strip(n);   // losowa nazwa nowego konta, zanim cokolwiek jej zmieni
         }
+
+        private static string accountDefaultName;
 
         private static void EndSession()
         {
@@ -128,17 +133,19 @@ namespace PayWithPixels
 
         private static string nameOverrideId, nameOverride;
 
-        /// <summary>Zatwierdzenie nazwy wpisanej w tablicy: zapis lokalny i zmiana nazwy konta ostatniego wyniku. Pusta nazwa = zostaje losowa z Authentication.</summary>
+        /// <summary>Zatwierdzenie nazwy wpisanej w tablicy: zapis lokalny i zmiana nazwy konta ostatniego wyniku. Pusta nazwa = kasuje zapisana nazwe i przywraca domyslna z Authentication (konto ostatniego wyniku dostaje ja z powrotem).</summary>
         public static async void ApplyName(string raw)
         {
-            if (string.IsNullOrEmpty(raw)) return;
-            SetName(raw);
+            bool reset = string.IsNullOrEmpty(raw);
+            if (reset) ClearName(); else SetName(raw);
             if (State != Status.Ready) return;
+            string target = reset ? accountDefaultName : PlayerName;
+            if (string.IsNullOrEmpty(target)) return;
             // nowa nazwa widoczna od razu, jeszcze przed potwierdzeniem przez chmure (odswiezenia ja podtrzymuja do konca zmiany)
             if (OwnsRecentEntry)
             {
                 nameOverrideId = AuthenticationService.Instance.PlayerId;
-                nameOverride = PlayerName;
+                nameOverride = target;
                 for (int i = 0; i < Top.Count; i++)
                     if (Top[i].id == nameOverrideId) { var row = Top[i]; row.name = nameOverride; Top[i] = row; }
                 Changed();
@@ -146,7 +153,7 @@ namespace PayWithPixels
             await AcquireSession();
             try
             {
-                if (OwnsRecentEntry) await WithTimeout(AuthenticationService.Instance.UpdatePlayerNameAsync(PlayerName));
+                if (OwnsRecentEntry) await WithTimeout(AuthenticationService.Instance.UpdatePlayerNameAsync(target));
             }
             catch (Exception e) { Debug.Log("[online] name: " + e.Message); }
             sessionBusy = false;
@@ -196,6 +203,13 @@ namespace PayWithPixels
         public static void SetName(string raw)
         {
             Save.SetString(KeyName, CleanName(raw));
+            Save.Flush();
+            Changed();
+        }
+
+        private static void ClearName()
+        {
+            Save.SetString(KeyName, "");
             Save.Flush();
             Changed();
         }

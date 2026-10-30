@@ -571,7 +571,7 @@ namespace PayWithPixels
         public void HideTitle() => titlePanel.SetActive(false);
 
         /// <summary>Koniec runu: naglowek, statystyki i jeden przycisk OK (tablica albo tytul decyduje Game).</summary>
-        public void ShowDeath(bool won, string details, Action onOk)
+        public void ShowDeath(bool won, string details, int score, Action onOk)
         {
             foreach (Transform c in deathPanel.transform) Destroy(c.gameObject);
             tinted.RemoveAll(kv => kv.Key == null);
@@ -591,10 +591,13 @@ namespace PayWithPixels
                 Stretch(art.rectTransform, new Vector2(0.03f, 0.3f), new Vector2(0.45f, 0.75f), Vector2.zero, Vector2.zero);
             }
             var body = NewText("Body", deathPanel.transform, details, hasArt ? 18 : 20, hasArt ? TextAnchor.UpperLeft : TextAnchor.UpperCenter);
-            if (hasArt) Stretch(body.rectTransform, new Vector2(0.47f, 0.27f), new Vector2(0.98f, 0.75f), Vector2.zero, Vector2.zero);
-            else Stretch(body.rectTransform, new Vector2(0.1f, 0.34f), new Vector2(0.9f, 0.74f), Vector2.zero, Vector2.zero);
+            if (hasArt) Stretch(body.rectTransform, new Vector2(0.47f, 0.32f), new Vector2(0.98f, 0.75f), Vector2.zero, Vector2.zero);
+            else Stretch(body.rectTransform, new Vector2(0.1f, 0.36f), new Vector2(0.9f, 0.74f), Vector2.zero, Vector2.zero);
 
-            MakeButton(deathPanel.transform, "OK   [ENTER]", new Vector2(0.3f, 0.06f), new Vector2(0.7f, 0.2f), true, onOk);
+            var scoreText = NewText("Score", deathPanel.transform, "SCORE " + score, 40, TextAnchor.MiddleCenter);   // najwazniejsza liczba ekranu: wieksza niz reszta statystyk
+            Stretch(scoreText.rectTransform, new Vector2(0.03f, 0.19f), new Vector2(0.97f, 0.33f), Vector2.zero, Vector2.zero);
+
+            MakeButton(deathPanel.transform, "OK   [ENTER]", new Vector2(0.3f, 0.04f), new Vector2(0.7f, 0.17f), true, onOk);
 
             Recolor();
             deathPanel.SetActive(true);

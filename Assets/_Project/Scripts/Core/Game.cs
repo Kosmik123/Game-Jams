@@ -107,7 +107,7 @@ namespace PayWithPixels
             Online.Submit(score);
             boardPromptAt = Online.IsAvailable && score > 0 ? Time.unscaledTime : -1f;
             deathOkPending = false;
-            ui.ShowDeath(won, RunSummary(won) + "\nSCORE " + score + (Ascension > 0 ? "  (ASCENSION " + Ascension + " x" + ScoreMul.ToString("0.00") + ")" : ""), OnDeathOk);
+            ui.ShowDeath(won, RunSummary(won) + (Ascension > 0 ? "\nASCENSION " + Ascension + " (SCORE x" + ScoreMul.ToString("0.00") + ")" : ""), score, OnDeathOk);
         }
 
         private int CalculateScore(bool won)
