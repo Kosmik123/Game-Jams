@@ -174,11 +174,11 @@ namespace PayWithPixels
         {
             new Gain { name = "FASTER SHOTS", icon = "icon_gain_firerate", description = "+50% FIRE RATE", cost = 5,
                 apply = s => s.fireRateMul *= 1.5f },
-            new Gain { name = "MORE HEALTH", heal = true, icon = "icon_heart", description = "+3 MAX HP AND HEAL 3", cost = 5,
+            new Gain { name = "MORE HEALTH", heal = true, icon = "icon_heart", description = "+3 MAX HP AND HEAL 3", cost = 8,
                 apply = s => s.maxHp += 3, onBuy = (s, p) => p.Heal(3) },
             new Gain { name = "TRIPLE SHOT", icon = "icon_gain_triple", description = "MORE BULLETS PER SHOT", cost = 8, maxLevel = 2,
                 apply = s => s.shotCount += 2 },
-            new Gain { name = "HEALING", heal = true, icon = "icon_gain_heal", description = "FULL HP", cost = 4, consumable = true,
+            new Gain { name = "HEALING", heal = true, icon = "icon_gain_heal", description = "FULL HP", cost = 3, consumable = true,
                 onBuy = (s, p) => p.Heal(99) },
             new Gain { name = "PIERCING", icon = "icon_gain_pierce", description = "BULLETS PIERCE +1 ENEMY", cost = 6,
                 apply = s => s.pierce += 1 },
@@ -192,7 +192,7 @@ namespace PayWithPixels
                 apply = s => s.explosion += 1 },
             new Gain { name = "VAMPIRISM", icon = "icon_gain_vampire", description = "KILLS HEAL YOU NOW AND THEN", cost = 7,
                 apply = s => s.vampire += 1 },
-            new Gain { name = "SLOW AURA", icon = "icon_gain_aura", description = "ENEMIES NEAR YOU MOVE SLOWER", cost = 6,
+            new Gain { name = "SLOW AURA", icon = "icon_gain_aura", description = "ENEMIES NEAR YOU MOVE SLOWER", cost = 5,
                 apply = s => s.slowAura += 1 },
             new Gain { name = "DRONE", icon = "icon_gain_drone", description = "A COMPANION SHOOTS FOR YOU", cost = 8, maxLevel = 1,
                 apply = s => s.drones += 1 },
@@ -218,17 +218,17 @@ namespace PayWithPixels
                 apply = s => s.critBlast += 1, available = s => s.crit > 0 },
             new Gain { name = "CRIT COINS", icon = "icon_gain_crit_coins", description = "CRITICAL KILLS DROP +1 COIN", cost = 6, maxLevel = 2,
                 apply = s => s.critCoins += 1, available = s => s.crit > 0 },
-            new Gain { name = "TRIPLE CRIT", icon = "icon_gain_crit_triple", description = "CRITICAL HITS DEAL +2 DAMAGE", cost = 10, maxLevel = 1,
+            new Gain { name = "TRIPLE CRIT", icon = "icon_gain_crit_triple", description = "CRITICAL HITS DEAL +2 DAMAGE", cost = 8, maxLevel = 1,
                 apply = s => s.tripleCrit += 1, available = s => s.crit > 0 },
             new Gain { name = "DEBT WEAPON", icon = "icon_gain_debt_weapon", description = "SHOTS HIT +1 HARDER WHILE IN DEBT (LV2: +1 MORE AT 30+)", cost = 8, maxLevel = 2,
                 apply = s => s.debtWeapon += 1 },
             new Gain { name = "TIME REWIND", icon = "icon_gain_time_rewind", description = "ONCE PER WAVE A FATAL HIT IS UNDONE", cost = 10, maxLevel = 1,
                 apply = s => s.rewind += 1 },
-            new Gain { name = "PRICE LOCK", icon = "icon_gain_price_lock", description = "NEW PRICES CAN BE USED TWICE PER SHOP", cost = 5, maxLevel = 1,
+            new Gain { name = "PRICE LOCK", icon = "icon_gain_price_lock", description = "NEW PRICES CAN BE USED TWICE PER SHOP", cost = 4, maxLevel = 1,
                 apply = s => s.priceLock += 1 },
-            new Gain { name = "TIME FREEZE", icon = "icon_gain_freeze", description = "F: FREEZE ENEMIES ONCE PER WAVE", cost = 9,
+            new Gain { name = "TIME FREEZE", icon = "icon_gain_freeze", description = "F: FREEZE ENEMIES ONCE PER WAVE", cost = 7,
                 apply = s => s.freeze += 1 },
-            new Gain { name = "SHIELD", icon = "icon_gain_shield", description = "BLOCKS A HIT EACH WAVE", cost = 5,
+            new Gain { name = "SHIELD", icon = "icon_gain_shield", description = "BLOCKS A HIT EACH WAVE", cost = 7,
                 apply = s => s.shieldMax += 1 },
         };
 
@@ -267,13 +267,15 @@ namespace PayWithPixels
         static Catalog()
         {
             void Sev(int v, params string[] names) { foreach (var n in names) Prices.Find(p => p.name == n).severity = v; }
-            Sev(1, "SILENCE", "FLICKER", "ZOOM IN", "INPUT DELAY");
-            Sev(2, "SLUGGISH AIM", "HEAVY LEGS", "FOG", "PIXELATION", "COSTLY LIFE", "PRICEY SHOP");
-            Sev(3, "REVERSED CONTROLS", "FRAGILITY", "HUNGER", "INERTIA");
+            Sev(0, "FLICKER");
+            Sev(1, "SILENCE", "ZOOM IN", "INPUT DELAY", "SLUGGISH AIM", "HEAVY LEGS", "PIXELATION");
+            Sev(2, "INERTIA", "COSTLY LIFE", "FOG", "PRICEY SHOP");
+            Sev(3, "FRAGILITY", "HUNGER");
+            Sev(4, "REVERSED CONTROLS");
         }
 
         /// <summary>Mnoznik kosztu zysku zaleznie od dotkliwosci ceny: 1 = x1, 2 = x0.85, 3 = x0.7.</summary>
-        public static float PriceDiscount(Price p) => p.severity >= 3 ? 0.7f : p.severity == 2 ? 0.85f : 1f;
+        public static float PriceDiscount(Price p) => 1 - p.severity * 0.1f;
 
         /// <summary>Nagroda za sprzedaz ceny: (5 + fala/2) * 0.8 / 1.0 / 1.3 zaleznie od dotkliwosci.</summary>
         public static int SellReward(float difficulty, Price p) =>
@@ -306,7 +308,7 @@ namespace PayWithPixels
             int owned = 0;
             foreach (var kv in stats.levels) owned += kv.Value;
             // mnoznik ceny rosnie ze strefa (6 fal na strefe): dochod rosnie szybciej niz ceny, wiec strefy 2-3 drozeja
-            float zoneMul = 1.3f; // wave <= 6 ? 1.3f : wave <= 12 ? 1.5f : 1.7f;
+            float zoneMul = difficulty <= 6 ? 1.2f : difficulty <= 12 ? 1.4f : 1.5f;
             int cost = Mathf.RoundToInt((g.cost + (level - 1) * 3 + owned + difficulty / 3) * zoneMul);
             return g.heal ? cost * (1 + stats.costlyHealStacks) : cost;
         }

@@ -69,7 +69,7 @@ namespace PayWithPixels
         /// <summary>Limit predkosci zwyklych wrogow: 0.8 predkosci gracza z 1 stackiem nog (5 * 0.92); rojowi nizej, bo goni tlumem.</summary>
         public static float MaxSpeed(EnemyType t) => t == EnemyType.Swarm ? 2.7f :0.8f * 5f * 0.92f;
 
-        public static Enemy Spawn(Transform parent, EnemyType type, Vector2 pos, float difficulty)
+        public static Enemy Spawn(Transform parent, EnemyType type, Vector2 pos, float difficulty, int? overrideCoins = null)
         {
             var go = new GameObject(type.ToString());
             go.transform.SetParent(parent, false);
@@ -82,7 +82,8 @@ namespace PayWithPixels
             e.walkName = s.sprite; e.spriteSize = s.size; e.rotates = s.rotates;
             e.sr = Art.MakeRenderer(go, Art.Square(s.sprite + "_walk_0", s.size), 5);
             e.radius = s.radius; e.hp = e.maxHp = Mathf.CeilToInt(s.hpBase * Game.Instance.EnemyHpMul); e.speed = Mathf.Min(s.speed * scale * Game.Instance.EnemySpeedMul, MaxSpeed(type));
-            e.contactDamage = s.contact; e.coinDrop = s.coins;
+            e.contactDamage = s.contact;
+            e.coinDrop = overrideCoins.HasValue ? overrideCoins.Value : s.coins;
             if (e.maxHp >= 8 && type != EnemyType.Guard) e.CreateBar();
             if (type == EnemyType.Guard)
             {
@@ -117,7 +118,7 @@ namespace PayWithPixels
             e.spriteSize = 24;
             e.radius = 0.6f;
             // kazde kolejne spotkanie w runie: +12% HP bazowego
-            e.hp = e.maxHp = Mathf.RoundToInt((35 + 6 * Game.Instance.zone) * (1f + 0.12f * Game.Instance.collectorMeetings));
+            e.hp = e.maxHp = Mathf.RoundToInt((30 + 6 * Game.Instance.zone) * (1f + 0.12f * Game.Instance.collectorMeetings) + Game.Instance.debt + Game.Instance.Difficulty);
             Game.Instance.collectorMeetings++;
             e.speed = 3.5f;
             e.CreateBar();
@@ -669,7 +670,7 @@ namespace PayWithPixels
                     }
                     else
                     {
-                        move = dir;
+                        if (dist > 4f) move = dir;
                         dashTimer -= dt;
                         if (dashTimer <= 0 && attacking && dist < 8f) { telegraph = 0.55f; move = Vector2.zero; }
                     }
@@ -687,13 +688,15 @@ namespace PayWithPixels
                     break;
 
                 case EnemyType.Spawner:
-                    move = dist < 5f ? -dir : Vector2.zero;
+                    move = dist < 7f ? -dir
+                        : dist > 10f ? dir 
+                        : Vector2.zero;
                     shootTimer -= dt;
-                    if (shootTimer <= 0 && attacking && spawned < 8)
+                    if (shootTimer <= 0 && attacking && spawned < 12)
                     {
                         shootTimer = 4f;
                         spawned++;
-                        Spawn(transform.parent, EnemyType.Chaser, pos, game.Difficulty);
+                        Spawn(transform.parent, EnemyType.Chaser, pos, game.Difficulty, 0);
                     }
                     break;
 

@@ -198,9 +198,9 @@ namespace PayWithPixels
             if (index >= game.stats.drones) { Destroy(gameObject); return; }
             if (game.state != Game.State.Playing && game.state != Game.State.Clearing) return;
 
-            float angle = Mathf.PI / game.stats.drones * index + Time.time % Mathf.PI;
+            float angleRadians = index * 2 * Mathf.PI / game.stats.drones + Time.time;
             Vector2 center = game.player.transform.position;
-            transform.position = center + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * (game.stats.droneOrbit > 0 ? 1.5f : 1.2f);
+            transform.position = center + new Vector2(Mathf.Cos(angleRadians), Mathf.Sin(angleRadians)) * (game.stats.droneOrbit > 0 ? 1.5f : 1.2f);
 
             fireTimer -= Time.deltaTime;
             if (fireTimer > 0 || game.state != Game.State.Playing) return;

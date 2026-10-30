@@ -1,6 +1,7 @@
 using NaughtyAttributes;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Pool;
 using UnityEngine.SceneManagement;
 
 namespace PayWithPixels
@@ -164,6 +165,7 @@ namespace PayWithPixels
 
         public bool IsBossWave => waveInZone > WavesPerZone;
         /// <summary>Trudnosc do skalowania wrogow (rosnie przez caly run).</summary>
+        [ShowNativeProperty]
         public float Difficulty => (zone - 1) * WavesPerZone + waveInZone - totalRunPurchases * 0.15f;
 
         public static void Create()
@@ -688,7 +690,7 @@ namespace PayWithPixels
             }
             else
             {
-                SpawnCoin(boss.transform.position, 8);
+                SpawnCoin(boss.transform.position, wave * 4 + 7);
                 ui.Toast("ZONE CLEARED");
             }
         }
@@ -749,7 +751,8 @@ namespace PayWithPixels
         {
             for (int i = 0; i < count; i++)
                 Coin.Spawn(world, pos + Random.insideUnitCircle * 0.4f);
-            for (int i = 0; i < bonusDrop; i++) Coin.Spawn(world, pos + Random.insideUnitCircle * 0.6f);
+            for (int i = 0; i < bonusDrop; i++) 
+                Coin.Spawn(world, pos + Random.insideUnitCircle * 0.6f);
         }
 
         public void OnPlayerDied()
@@ -938,8 +941,8 @@ namespace PayWithPixels
             else if (Input.GetKeyDown(KeyCode.C)) SignContract();
             else if (shopRedeem)
             {
-                var opts = RedeemOptions();
                 KeyCode[] rk = { KeyCode.Alpha4, KeyCode.Alpha5, KeyCode.Alpha6 };
+                var opts = RedeemOptions(rk.Length);
                 for (int i = 0; i < rk.Length && opts != null && i < opts.Count; i++)
                     if (Input.GetKeyDown(rk[i])) { Redeem(opts[i].Key); return; }
             }
@@ -1144,7 +1147,7 @@ namespace PayWithPixels
         }
 
         // ---------- sklep ----------
-
+        private int shopRedeemSeed;
         private void OpenShop()
         {
             // reszta monet wpada automatycznie
@@ -1153,6 +1156,7 @@ namespace PayWithPixels
             foreach (var a in AreaBlast.All.ToArray()) if (a != null) Destroy(a.gameObject);
 
             state = State.Shop;
+            shopRedeemSeed = Random.Range(-10000, 10000);
             shopOffers = Catalog.Roll(3, Difficulty, stats);
             if (firstShopPending)
             {
@@ -1184,7 +1188,7 @@ namespace PayWithPixels
         // ---- REDEEM: zdejmij 1 stack wybranej ceny (co 3. sklep zamiast kontraktu) ----
         private bool shopRedeem;
 
-        public int RedeemCost(string priceName) => 10 + 5 * stats.PriceCount(priceName);
+        public int RedeemCost(string priceName) => 10 + 5 * stats.PriceCount(priceName) + Mathf.RoundToInt(Difficulty);
 
         private List<string> OwnedPrices()
         {
@@ -1229,13 +1233,31 @@ namespace PayWithPixels
         /// <summary>Aktualny koszt oferty: +25% za kazdy wczesniejszy zakup w tej wizycie.</summary>
         private const float GainCostMul = 1.15f;   // globalna skala cen zyskow w sklepie
 
-        public int CostOf(Offer o) => o.free ? 0 : Mathf.Max(1, Mathf.RoundToInt(Mathf.CeilToInt(o.cost * GainCostMul * (1f + 0.25f * purchases) * shopMarkup * (1f + 0.2f * stats.priceyShopStacks)) * Catalog.PriceDiscount(o.price)));
+        public int CostOf(Offer o) => o.free ? 0 
+            : Mathf.Max(1, Mathf.RoundToInt(Mathf.CeilToInt(o.cost * GainCostMul * (1f + 0.25f * purchases) * shopMarkup * (1f + 0.2f * stats.priceyShopStacks)) * Catalog.PriceDiscount(o.price)));
 
-        private List<KeyValuePair<string, int>> RedeemOptions()
+        private List<KeyValuePair<string, int>> RedeemOptions(int maxCount)
         {
-            if (!shopRedeem) return null;
+            if (!shopRedeem) 
+                return null;
+            
             var list = new List<KeyValuePair<string, int>>();
-            foreach (var name in OwnedPrices()) list.Add(new KeyValuePair<string, int>(name, RedeemCost(name)));
+            var seed = Random.state;
+            Random.InitState(shopRedeemSeed);
+            using (ListPool<string>.Get(out var ownedPrices))
+            {
+                ownedPrices.Clear();
+                ownedPrices.AddRange(OwnedPrices());
+                int count = Mathf.Min(maxCount, ownedPrices.Count);
+                for (int i = 0; i < count; i++)
+                {
+                    int index = Random.Range(0, ownedPrices.Count);
+                    var priceName = ownedPrices[index]; 
+                    ownedPrices.RemoveAt(index);
+                    list.Add(new KeyValuePair<string, int>(priceName, RedeemCost(priceName)));
+                }
+            }
+            Random.state = seed;
             return list;
         }
 
@@ -1251,7 +1273,7 @@ namespace PayWithPixels
             foreach (var ac in activeContracts) pending += (pending.Length > 0 ? ", " : "") + ac.contract.title + " (" + ac.wavesLeft + ")";
             ui.ShowShop(shopOffers, coins, debt, Buy, CloseShop, RerollCost, Reroll, haggles < HaggleMax, Haggle, PayDebt,
                 shopContract == null ? null : shopContract.title + ": " + shopContract.reward + " / FINE PRINT: ???", SignContract,
-                pending.Length > 0 ? "SIGNED: " + pending : null, DebtInfo(), RedeemOptions(), Redeem);
+                pending.Length > 0 ? "SIGNED: " + pending : null, DebtInfo(), RedeemOptions(3), Redeem);
         }
 
         /// <summary>Splaca dlug dostepnymi monetami.</summary>
