@@ -1,0 +1,509 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07a4ffbf751d61b46a56f7783ef2a7c2, type: 3}
+  m_Name: GameConfig
+  m_EditorClassIdentifier: Assembly-CSharp::PayWithPixels.GameConfig
+  shouldPauseOnDefocus: 1
+  run:
+    wavesPerZone: 5
+    maxDebt: 20
+    difficultyPerPurchase: 0.15
+    ascensionScoreStep: 0.25
+  score:
+    pointsPerWave: 100
+    pointsPerKill: 2
+    earnedCoinsMul: 1
+    leftoverCoinsMul: 1
+    winBonus: 1000
+    maxSaneScore: 200000
+  player:
+    baseHp: 6
+    moveSpeed: 5
+    radius: 0.45
+    hitInvulnerability: 1
+    dashDuration: 0.15
+    dashSpeed: 20
+    magnetBaseRange: 1.8
+    baseFireInterval: 0.35
+  weapons:
+  - type: 0
+    fireRateMul: 1
+    shotCount: 1
+    damage: 1
+    bulletSpeed: 12
+    bulletLife: 2.5
+    spreadStep: 12
+    coneDegrees: 0
+    spreadJitter: 0
+    speedJitter: 0
+    baseCritChance: 0.08
+    explosionRadiusMul: 1
+    aimTurnRate: 18
+    beamTickInterval: 0.1
+    beamHalfWidth: 0.12
+    beamVisualWidth: 0.14
+    beamMaxLength: 18
+    beamChanceMin: 0.25
+    beamChanceMax: 0.7
+    heatUpTime: 1.5
+    heatCoolRate: 2.5
+  - type: 1
+    fireRateMul: 0.6
+    shotCount: 5
+    damage: 1
+    bulletSpeed: 11
+    bulletLife: 0.55
+    spreadStep: 12
+    coneDegrees: 30
+    spreadJitter: 2.5
+    speedJitter: 0.1
+    baseCritChance: 0
+    explosionRadiusMul: 1.25
+    aimTurnRate: 18
+    beamTickInterval: 0.1
+    beamHalfWidth: 0.12
+    beamVisualWidth: 0.14
+    beamMaxLength: 18
+    beamChanceMin: 0.25
+    beamChanceMax: 0.7
+    heatUpTime: 1.5
+    heatCoolRate: 2.5
+  - type: 2
+    fireRateMul: 1
+    shotCount: 1
+    damage: 1
+    bulletSpeed: 24
+    bulletLife: 1.4
+    spreadStep: 12
+    coneDegrees: 0
+    spreadJitter: 0
+    speedJitter: 0
+    baseCritChance: 0
+    explosionRadiusMul: 1
+    aimTurnRate: 9
+    beamTickInterval: 0.1
+    beamHalfWidth: 0.12
+    beamVisualWidth: 0.14
+    beamMaxLength: 18
+    beamChanceMin: 0.25
+    beamChanceMax: 0.7
+    heatUpTime: 1.5
+    heatCoolRate: 2.5
+  enemyScaling:
+    speedPerDifficulty: 0.03
+    hpPerFourWaves: 0.1
+    zone2Mul: 1.15
+    zone3Mul: 1.2
+    regularMaxSpeed: 3.68
+    swarmMaxSpeed: 2.7
+  enemies:
+  - type: 0
+    radius: 0.45
+    hpBase: 1
+    hpPerDifficulty: 0.33333334
+    speed: 2.6
+    contactDamage: 1
+    coins: 1
+    hpPerZone: 0
+    hpPerEncounter: 0
+    hpPerDebt: 0
+  - type: 1
+    radius: 0.45
+    hpBase: 2
+    hpPerDifficulty: 0.25
+    speed: 2
+    contactDamage: 1
+    coins: 1
+    hpPerZone: 0
+    hpPerEncounter: 0
+    hpPerDebt: 0
+  - type: 2
+    radius: 0.7
+    hpBase: 6
+    hpPerDifficulty: 0.75
+    speed: 1.2
+    contactDamage: 2
+    coins: 3
+    hpPerZone: 0
+    hpPerEncounter: 0
+    hpPerDebt: 0
+  - type: 3
+    radius: 0.45
+    hpBase: 2
+    hpPerDifficulty: 0.2
+    speed: 2.2
+    contactDamage: 1
+    coins: 2
+    hpPerZone: 0
+    hpPerEncounter: 0
+    hpPerDebt: 0
+  - type: 4
+    radius: 0.5
+    hpBase: 4
+    hpPerDifficulty: 0.25
+    speed: 1.6
+    contactDamage: 1
+    coins: 4
+    hpPerZone: 0
+    hpPerEncounter: 0
+    hpPerDebt: 0
+  - type: 5
+    radius: 0.3
+    hpBase: 1
+    hpPerDifficulty: 0
+    speed: 2.8
+    contactDamage: 1
+    coins: 0
+    hpPerZone: 0
+    hpPerEncounter: 0
+    hpPerDebt: 0
+  - type: 6
+    radius: 0.5
+    hpBase: 4
+    hpPerDifficulty: 0.25
+    speed: 1.7
+    contactDamage: 1
+    coins: 3
+    hpPerZone: 0
+    hpPerEncounter: 0
+    hpPerDebt: 0
+  - type: 7
+    radius: 0.7
+    hpBase: 8
+    hpPerDifficulty: 0.5
+    speed: 0.7
+    contactDamage: 1
+    coins: 2
+    hpPerZone: 0
+    hpPerEncounter: 0
+    hpPerDebt: 0
+  - type: 9
+    radius: 0.6
+    hpBase: 30
+    hpPerDifficulty: 1
+    speed: 3.5
+    contactDamage: 0
+    coins: 1
+    hpPerZone: 6
+    hpPerEncounter: 0.12
+    hpPerDebt: 1
+  economy:
+    gainCostMul: 1.15
+    purchaseSurcharge: 0.25
+    levelCostStep: 3
+    ownedGainCost: 1
+    difficultyCostDivisor: 3
+    tier1MaxDifficulty: 6
+    tier2MaxDifficulty: 12
+    tier1Mul: 1.2
+    tier2Mul: 1.4
+    tier3Mul: 1.5
+    offersPerShop: 3
+    doubleStackMinCost: 9
+    doubleStackMinDifficulty: 7
+    sellOfferChance: 0.6
+    sellOfferMinDifficulty: 2
+    discountPerSeverity: 0.1
+    sellRewardBase: 5
+    sellRewardDifficultyDivisor: 2
+    sellRewardPerSeverity: 0.1
+    sellRewardSpread: 1
+    rerollBase: 3
+    rerollStep: 2
+    haggleCost: 1
+    haggleDifficultyMul: 1.2
+  gains:
+    fasterShots:
+      cost: 5
+      maxLevel: 3
+      poolWeight: 1
+      notWith: 
+      fireRateMul: 1.5
+    moreHealth:
+      cost: 8
+      maxLevel: 3
+      poolWeight: 1
+      notWith: 
+      maxHp: 3
+      heal: 3
+    tripleShot:
+      cost: 8
+      maxLevel: 2
+      poolWeight: 1
+      notWith: 
+      extraShots: 2
+      beamWidthPerLevel: 0.8
+    healing:
+      cost: 3
+      maxLevel: 3
+      poolWeight: 1
+      notWith: 
+      heal: 99
+    piercing:
+      cost: 6
+      maxLevel: 3
+      poolWeight: 1
+      notWith: 02000000
+      pierce: 1
+    dash:
+      cost: 7
+      maxLevel: 3
+      poolWeight: 1
+      notWith: 
+      cooldownByLevel:
+      - 1.2
+      - 0.95
+      - 0.7
+    magnet:
+      cost: 4
+      maxLevel: 3
+      poolWeight: 1
+      notWith: 
+      rangePerLevel: 2.5
+    ricochet:
+      cost: 6
+      maxLevel: 3
+      poolWeight: 1
+      notWith: 02000000
+      bounces: 1
+    explosion:
+      cost: 8
+      maxLevel: 3
+      poolWeight: 1
+      notWith: 
+      baseRadius: 1.1
+      radiusPerLevel: 0.4
+      bigDamageLevel: 3
+      damage: 1
+      bigDamage: 2
+    vampirism:
+      cost: 7
+      maxLevel: 3
+      poolWeight: 1
+      notWith: 
+      killsByLevel: 0c0000000800000005000000
+    slowAura:
+      cost: 5
+      maxLevel: 3
+      poolWeight: 1
+      notWith: 
+      baseRadius: 1.8
+      radiusPerLevel: 0.7
+      factorByLevel:
+      - 0.75
+      - 0.62
+      - 0.5
+    drone:
+      cost: 8
+      maxLevel: 1
+      poolWeight: 1
+      notWith: 
+      baseInterval: 1.1
+      baseDamage: 1
+      pixelationInterval: 0.75
+      pixelationDamage: 2
+    dronePower:
+      cost: 7
+      maxLevel: 2
+      poolWeight: 2
+      notWith: 
+      extraDamage: 1
+    droneRate:
+      cost: 7
+      maxLevel: 2
+      poolWeight: 2
+      notWith: 
+      intervalMulPerLevel: 0.75
+    moreDrones:
+      cost: 9
+      maxLevel: 2
+      poolWeight: 2
+      notWith: 
+      extraDrones: 1
+    droneOrbit:
+      cost: 9
+      maxLevel: 1
+      poolWeight: 2
+      notWith: 
+    critical:
+      cost: 6
+      maxLevel: 3
+      poolWeight: 1
+      notWith: 
+      chancePerLevel: 0.12
+      firstLevelBonus: 0.06
+      multiplier: 3
+      fogMultiplier: 5
+    shockwave:
+      cost: 9
+      maxLevel: 2
+      poolWeight: 2
+      notWith: 
+      baseRadius: 2.2
+      radiusPerLevel: 0.6
+      damage: 1
+      damageLevel2: 2
+      pushDistance: 1.5
+    doubleDash:
+      cost: 9
+      maxLevel: 1
+      poolWeight: 2
+      notWith: 
+      window: 0.8
+    dashCrit:
+      cost: 8
+      maxLevel: 1
+      poolWeight: 2
+      notWith: 
+      duration: 2
+    dashMines:
+      cost: 7
+      maxLevel: 3
+      poolWeight: 2
+      notWith: 
+      minesPerLevel: 1
+      mineInterval: 0.045
+    critBlast:
+      cost: 9
+      maxLevel: 1
+      poolWeight: 2
+      notWith: 
+    critCoins:
+      cost: 6
+      maxLevel: 2
+      poolWeight: 2
+      notWith: 
+      extraCoinsPerLevel: 1
+    tripleCrit:
+      cost: 8
+      maxLevel: 1
+      poolWeight: 2
+      notWith: 
+      extraMultiplier: 2
+    debtWeapon:
+      cost: 8
+      maxLevel: 2
+      poolWeight: 1
+      notWith: 
+      bonusDamage: 1
+      level2DebtThreshold: 30
+    timeRewind:
+      cost: 10
+      maxLevel: 1
+      poolWeight: 1
+      notWith: 
+      hpAfterRewind: 2
+      invulnerableSeconds: 2
+    priceLock:
+      cost: 4
+      maxLevel: 1
+      poolWeight: 1
+      notWith: 
+    timeFreeze:
+      cost: 7
+      maxLevel: 3
+      poolWeight: 1
+      notWith: 
+      baseDuration: 1.5
+      durationPerLevel: 1
+    shield:
+      cost: 7
+      maxLevel: 3
+      poolWeight: 1
+      notWith: 
+      invulnerableSeconds: 0.6
+      heavyLegsRegenSeconds: 10
+  prices:
+    fog:
+      severity: 2
+      maxStacks: 0
+      visionRadiusByStack:
+      - 9
+      - 6.2
+      - 3.8
+      radiusLossPerExtraStack: 0.6
+      minRadius: 2.2
+    pixelation:
+      severity: 1
+      maxStacks: 0
+    flicker:
+      severity: 0
+      maxStacks: 0
+      durationByStack:
+      - 0.8
+      - 1.7
+      - 2.8
+      period: 8
+    sluggishAim:
+      severity: 1
+      maxStacks: 0
+      lagPerStack: 1.5
+    zoomIn:
+      severity: 1
+      maxStacks: 3
+      zoomByStack:
+      - 0.93
+      - 0.76
+      - 0.58
+    fragility:
+      severity: 3
+      maxStacks: 0
+      hpLossPerStack: 1
+      minMaxHp: 2
+    costlyLife:
+      severity: 2
+      maxStacks: 2
+      extraMulPerStack: 1
+    hunger:
+      severity: 3
+      maxStacks: 3
+      coinLifetimeByStack:
+      - 10
+      - 6.5
+      - 3.5
+    reversedControls:
+      severity: 4
+      maxStacks: 3
+      period: 11
+      periodReductionPerStack: 0.5
+      duration: 2
+    silence:
+      severity: 1
+      maxStacks: 3
+      baseDuration: 1.5
+      durationPerStack: 0.5
+    inertia:
+      severity: 2
+      maxStacks: 3
+      startTimeByStack:
+      - 0.1
+      - 0.22
+      - 0.4
+      stopTimeMul: 1.3
+    inputDelay:
+      severity: 1
+      maxStacks: 3
+      delayByStack:
+      - 0.15
+      - 0.3
+      - 0.5
+    priceyShop:
+      severity: 3
+      maxStacks: 3
+      costPerStack: 0.2
+    heavyLegs:
+      severity: 2
+      maxStacks: 0
+      speedMulByStack:
+      - 0.92
+      - 0.76
+      - 0.58

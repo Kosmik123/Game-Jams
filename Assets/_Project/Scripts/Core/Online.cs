@@ -23,7 +23,7 @@ namespace PayWithPixels
         public const string EnvName = "";
         /// <summary>Unity Cloud Project ID; puste, gdy projekt jest polaczony z chmura w Edytorze (Project Settings > Services).</summary>
         public const string ProjectId = "";
-        public const int MaxSaneScore = 200000;   // wyniki powyzej to blad albo oszustwo: nie wysylamy
+        public static int MaxSaneScore => GameConfig.Instance.score.maxSaneScore;   // wyniki powyzej to blad albo oszustwo: nie wysylamy
 
         private const string KeyName = "pwp_player_name";
         private const string KeyPending = "pwp_pending_score";      // stary format: jeden najlepszy wynik (migrowany do kolejki)

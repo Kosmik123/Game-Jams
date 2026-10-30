@@ -17,8 +17,8 @@ namespace PayWithPixels
         public const float HudOffsetY = 0f;
 
         public  const int Zones = 3;
-        public const int WavesPerZone = 5;           // + boss strefy
-        public const int MaxDebt = 20;
+        public static int WavesPerZone => GameConfig.Instance.run.wavesPerZone;   // + boss strefy
+        public static int MaxDebt => GameConfig.Instance.run.maxDebt;
 
         private static readonly string[] ZoneNames = { "THE TOLL ROAD", "THE BANK", "THE AUCTION HOUSE" };
 
@@ -112,7 +112,8 @@ namespace PayWithPixels
 
         private int CalculateScore(bool won)
         {
-            return Mathf.RoundToInt(((wave - 1) * 100 + kills * 2 + coinsEarned + coins + (won ? 1000 : 0)) * ScoreMul);
+            var sc = GameConfig.Instance.score;
+            return Mathf.RoundToInt(((wave - 1) * sc.pointsPerWave + kills * sc.pointsPerKill + coinsEarned * sc.earnedCoinsMul + coins * sc.leftoverCoinsMul + (won ? sc.winBonus : 0)) * ScoreMul);
         }
 
         /// <summary>Auctioneer sprzedaje losowy zysk gracza; wraca dopiero po pokonaniu bossa (RestoreAuctioned).</summary>
@@ -151,11 +152,11 @@ namespace PayWithPixels
         public int Ascension { get; private set; }
         public float InterestRate => Ascension >= 4 ? 0.3f : 0.2f;
         /// <summary>Wrogowie rosna z fala (co 3 fale +10% HP) i ze strefa (2: +15%, 3: +30% HP oraz predkosci).</summary>
-        private float ZoneScale => zone >= 3 ? 1.2f : zone == 2 ? 1.15f : 1f;
-        public float EnemyHpMul => (Ascension >= 2 ? 1.25f : 1f) * ZoneScale * (1f + 0.1f * (wave / 4));
+        private float ZoneScale => zone >= 3 ? GameConfig.Instance.enemyScaling.zone3Mul : zone == 2 ? GameConfig.Instance.enemyScaling.zone2Mul : 1f;
+        public float EnemyHpMul => (Ascension >= 2 ? 1.25f : 1f) * ZoneScale * (1f + GameConfig.Instance.enemyScaling.hpPerFourWaves * (wave / 4));
         public float EnemySpeedMul => (Ascension >= 4 ? 1.15f : 1f) * enemySpeedContractMul * ZoneScale;
         public float BossHpMul => (Ascension >= 5 ? 1.2f : 1f) * ContractBossHpMul;
-        public float ScoreMul => 1f + 0.25f * Ascension;
+        public float ScoreMul => 1f + GameConfig.Instance.run.ascensionScoreStep * Ascension;
 
         private void ApplyStartPrice(string name, int n)
         {
@@ -171,7 +172,7 @@ namespace PayWithPixels
         public bool IsBossWave => waveInZone > WavesPerZone;
         /// <summary>Trudnosc do skalowania wrogow (rosnie przez caly run).</summary>
         [ShowNativeProperty]
-        public float Difficulty => Mathf.Max(0f, (zone - 1) * WavesPerZone + waveInZone - totalRunPurchases * 0.15f);
+        public float Difficulty => Mathf.Max(0f, (zone - 1) * WavesPerZone + waveInZone - totalRunPurchases * GameConfig.Instance.run.difficultyPerPurchase);
 
         public static void Create()
         {
@@ -799,12 +800,10 @@ namespace PayWithPixels
             cam.transform.position = p;
         }
 
-        [SerializeField]
-        private bool shouldPauseOnDefocus;
         /// <summary>Utrata fokusu karty: wycisza dzwiek i pauzuje gre.</summary>
         private void OnApplicationFocus(bool focused)
         {
-            if (shouldPauseOnDefocus == false && focused == false)
+            if (GameConfig.Instance.shouldPauseOnDefocus == false && focused == false)
                 return;
 
             AudioListener.pause = !focused;
@@ -1008,7 +1007,8 @@ namespace PayWithPixels
             int stacks = stats.invertStacks;
             bool active = stacks > 0 && state == State.Playing;
             if (!active) { ControlsInverted = false; invertClock = 0; return; }
-            float period = 11f - 0.5f * stacks, duration = 2f;
+            var inv = GameConfig.Instance.prices.reversedControls;
+            float period = inv.period - inv.periodReductionPerStack * stacks, duration = inv.duration;
             float prev = invertClock;
             invertClock += Time.deltaTime;
             invertClock %= (period + duration);
@@ -1039,7 +1039,7 @@ namespace PayWithPixels
                 else
                 {
                     silenceTimer -= Time.deltaTime;
-                    if (silenceTimer <= 0) { silenceLeft = 1.5f + 0.5f * stacks; target = 0f; ui.Toast("SILENCE!"); }
+                    if (silenceTimer <= 0) { silenceLeft = GameConfig.Instance.prices.silence.baseDuration + GameConfig.Instance.prices.silence.durationPerStack * stacks; target = 0f; ui.Toast("SILENCE!"); }
                 }
             }
             SilenceMul = Mathf.MoveTowards(SilenceMul, target, Time.unscaledDeltaTime / 0.1f);
@@ -1049,7 +1049,7 @@ namespace PayWithPixels
         {
             float dur = stats.FlickerDuration;
             bool active = dur > 0 && (state == State.Playing || state == State.Clearing);
-            const float period = 8f;
+            float period = GameConfig.Instance.prices.flicker.period;
             bool flick = false;
             if (!active || Settings.ReduceFlicker) flickerClock = 0;
             else
@@ -1166,7 +1166,7 @@ namespace PayWithPixels
 
             state = State.Shop;
             shopRedeemSeed = Random.Range(-10000, 10000);
-            shopOffers = Catalog.Roll(3, Difficulty, stats);
+            shopOffers = Catalog.Roll(GameConfig.Instance.economy.offersPerShop, Difficulty, stats);
             if (firstShopPending)
             {
                 firstShopPending = false;
@@ -1237,13 +1237,12 @@ namespace PayWithPixels
             RefreshShopUi();
         }
 
-        private int RerollCost => freeRerolls ? 0 : 3 + 2 * rerolls;
+        private int RerollCost => freeRerolls ? 0 : GameConfig.Instance.economy.rerollBase + GameConfig.Instance.economy.rerollStep * rerolls;
 
-        /// <summary>Aktualny koszt oferty: +25% za kazdy wczesniejszy zakup w tej wizycie.</summary>
-        private const float GainCostMul = 1.15f;   // globalna skala cen zyskow w sklepie
+        /// <summary>Aktualny koszt oferty: narzut za kazdy wczesniejszy zakup w tej wizycie, mnozniki z GameConfig.</summary>
 
         public int CostOf(Offer o) => o.free ? 0 
-            : Mathf.Max(1, Mathf.RoundToInt(Mathf.CeilToInt(o.cost * GainCostMul * (1f + 0.25f * purchases) * shopMarkup * (1f + 0.2f * stats.priceyShopStacks)) * Catalog.PriceDiscount(o.price)));
+            : Mathf.Max(1, Mathf.RoundToInt(Mathf.CeilToInt(o.cost * GameConfig.Instance.economy.gainCostMul * (1f + GameConfig.Instance.economy.purchaseSurcharge * purchases) * shopMarkup * (1f + GameConfig.Instance.prices.priceyShop.costPerStack * stats.priceyShopStacks)) * Catalog.PriceDiscount(o.price)));
 
         private List<KeyValuePair<string, int>> RedeemOptions(int maxCount)
         {
@@ -1301,7 +1300,7 @@ namespace PayWithPixels
             if (coins < RerollCost) return;
             coins -= RerollCost;
             rerolls++;
-            shopOffers = Catalog.Roll(3, wave, stats);
+            shopOffers = Catalog.Roll(GameConfig.Instance.economy.offersPerShop, wave, stats);
             Sfx.Play(Sound.Coin);
             RefreshShopUi();
         }
@@ -1309,14 +1308,15 @@ namespace PayWithPixels
         /// <summary>Targowanie: za 1 monete losuje nowe ceny dla ofert (moga byc gorsze).</summary>
         private void Haggle()
         {
-            if (haggles >= HaggleMax || coins < 1) return;
-            coins -= 1;
+            int haggleCost = GameConfig.Instance.economy.haggleCost;
+            if (haggles >= HaggleMax || coins < haggleCost) return;
+            coins -= haggleCost;
             haggles++;
             foreach (var o in shopOffers)
                 if (!o.sold)
                 {
                     o.price = Catalog.Prices[Random.Range(0, Catalog.Prices.Count)];
-                    if (o.sell) o.reward = Catalog.SellReward(1.2f * Difficulty, o.price);
+                    if (o.sell) o.reward = Catalog.SellReward(GameConfig.Instance.economy.haggleDifficultyMul * Difficulty, o.price);
                 }
             Sfx.Play(Sound.Hurt);
             RefreshShopUi();

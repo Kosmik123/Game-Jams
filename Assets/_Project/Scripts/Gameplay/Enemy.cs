@@ -18,7 +18,7 @@ namespace PayWithPixels
         private int maxHp;
         private float speed;
         private int contactDamage = 1;
-        private int coinDrop = 1;
+        private float coinDrop = 1;
         private float shootTimer;
         private float strafeSign = 1f;
         private float clock;
@@ -53,26 +53,32 @@ namespace PayWithPixels
 
         private struct Spec
         {
-            public string sprite; public int size; public float radius; public int hpBase; public float speed; public int contact; public int coins; public bool rotates;
+            public string sprite; public int size; public float radius; public int hpBase; public float speed; public int contact; public float coins; public bool rotates;
         }
 
+        /// <summary>Statystyki wroga z GameConfig (EnemyConfig); tu zostaje tylko wyglad.</summary>
         private static Spec SpecFor(EnemyType t, float d)
         {
+            if (t != EnemyType.Chaser && t != EnemyType.Shooter && t != EnemyType.Tank && t != EnemyType.Dasher && t != EnemyType.Siege
+                && t != EnemyType.Swarm && t != EnemyType.Guard) t = EnemyType.Spawner;
+            var c = GameConfig.Instance.GetEnemy(t);
+            var s = new Spec { radius = c.radius, hpBase = Mathf.FloorToInt(c.hpBase + d * c.hpPerDifficulty), speed = c.speed, contact = c.contactDamage, coins = c.coins };
             switch (t)
             {
-                case EnemyType.Chaser: return new Spec { sprite = "enemy_chaser", size = 16, radius = 0.45f, hpBase = Mathf.FloorToInt(1 + d / 3), speed = 2.6f, contact = 1, coins = 1, rotates = true };
-                case EnemyType.Shooter: return new Spec { sprite = "enemy_shooter", size = 16, radius = 0.45f, hpBase = Mathf.FloorToInt(2 + d / 4), speed = 2f, contact = 1, coins = 1, rotates = true };
-                case EnemyType.Tank: return new Spec { sprite = "enemy_tank", size = 24, radius = 0.7f, hpBase = Mathf.FloorToInt(6 + d * 3 / 4), speed = 1.2f, contact = 2, coins = 3, rotates = true };
-                case EnemyType.Dasher: return new Spec { sprite = "enemy_dasher", size = 16, radius = 0.45f, hpBase = Mathf.FloorToInt(2 + d / 5), speed = 2.2f, contact = 1, coins = 2, rotates = true };
-                case EnemyType.Siege: return new Spec { sprite = "enemy_siege", size = 16, radius = 0.5f, hpBase = Mathf.FloorToInt(4 + d / 4), speed = 1.6f, contact = 1, coins = 4, rotates = false };
-                case EnemyType.Swarm: return new Spec { sprite = "enemy_swarm", size = 6, radius = 0.3f, hpBase = 1, speed = 2.8f, contact = 1, coins = 0, rotates = false };
-                case EnemyType.Guard: return new Spec { sprite = "enemy_guard", size = 16, radius = 0.5f, hpBase = Mathf.FloorToInt(4 + d / 4), speed = 1.7f, contact = 1, coins = 3, rotates = true };
-                default: return new Spec { sprite = "enemy_spawner", size = 24, radius = 0.7f, hpBase = Mathf.FloorToInt(8 + d / 2), speed = 0.7f, contact = 1, coins = 2, rotates = false };
+                case EnemyType.Chaser: s.sprite = "enemy_chaser"; s.size = 16; s.rotates = true; break;
+                case EnemyType.Shooter: s.sprite = "enemy_shooter"; s.size = 16; s.rotates = true; break;
+                case EnemyType.Tank: s.sprite = "enemy_tank"; s.size = 24; s.rotates = true; break;
+                case EnemyType.Dasher: s.sprite = "enemy_dasher"; s.size = 16; s.rotates = true; break;
+                case EnemyType.Siege: s.sprite = "enemy_siege"; s.size = 16; s.rotates = false; break;
+                case EnemyType.Swarm: s.sprite = "enemy_swarm"; s.size = 6; s.rotates = false; break;
+                case EnemyType.Guard: s.sprite = "enemy_guard"; s.size = 16; s.rotates = true; break;
+                default: s.sprite = "enemy_spawner"; s.size = 24; s.rotates = false; break;
             }
+            return s;
         }
 
         /// <summary>Limit predkosci zwyklych wrogow: 0.8 predkosci gracza z 1 stackiem nog (5 * 0.92); rojowi nizej, bo goni tlumem.</summary>
-        public static float MaxSpeed(EnemyType t) => t == EnemyType.Swarm ? 2.7f :0.8f * 5f * 0.92f;
+        public static float MaxSpeed(EnemyType t) => t == EnemyType.Swarm ? GameConfig.Instance.enemyScaling.swarmMaxSpeed : GameConfig.Instance.enemyScaling.regularMaxSpeed;
 
         public static Enemy Spawn(Transform parent, EnemyType type, Vector2 pos, float difficulty, int? overrideCoins = null)
         {
@@ -83,13 +89,13 @@ namespace PayWithPixels
             e.type = type;
 
             var s = SpecFor(type, difficulty);
-            float scale = 1f + 0.03f * difficulty;
+            float scale = 1f + GameConfig.Instance.enemyScaling.speedPerDifficulty * difficulty;
             e.walkName = s.sprite; e.spriteSize = s.size; e.rotates = s.rotates;
             e.sr = Art.MakeRenderer(go, Art.Square(s.sprite + "_walk_0", s.size), 5);
             e.radius = s.radius; e.hp = e.maxHp = Mathf.CeilToInt(s.hpBase * Game.Instance.EnemyHpMul); e.speed = Mathf.Min(s.speed * scale * Game.Instance.EnemySpeedMul, MaxSpeed(type));
             e.contactDamage = s.contact;
             e.coinDrop = overrideCoins.HasValue ? overrideCoins.Value : s.coins;
-            if (type == EnemyType.Tank || type == EnemyType.Spawner) 
+            if (type == EnemyType.Tank || type == EnemyType.Spawner)
                 e.CreateBar();
             if (type == EnemyType.Guard)
             {
@@ -122,14 +128,15 @@ namespace PayWithPixels
             e.sr = Art.MakeRenderer(go, Art.Square("enemy_collector_walk_0", 24), 6);
             e.walkName = "enemy_collector";
             e.spriteSize = 24;
-            e.radius = 0.6f;
-            // kazde kolejne spotkanie w runie: +12% HP bazowego
-            e.hp = e.maxHp = Mathf.RoundToInt((30 + 6 * Game.Instance.zone) * (1f + 0.12f * Game.Instance.collectorMeetings) + Game.Instance.debt + Game.Instance.Difficulty);
+            var cc = GameConfig.Instance.GetEnemy(EnemyType.Collector);
+            e.radius = cc.radius;
+            // kazde kolejne spotkanie w runie zwieksza HP bazowe
+            e.hp = e.maxHp = Mathf.RoundToInt((cc.hpBase + cc.hpPerZone * Game.Instance.zone) * (1f + cc.hpPerEncounter * Game.Instance.collectorMeetings) + cc.hpPerDebt * Game.Instance.debt + cc.hpPerDifficulty * Game.Instance.Difficulty);
             Game.Instance.collectorMeetings++;
-            e.speed = 3.5f;
+            e.speed = cc.speed;
             e.CreateBar();
-            e.contactDamage = 0;
-            e.coinDrop = 1;
+            e.contactDamage = cc.contactDamage;
+            e.coinDrop = cc.coins;
             return e;
         }
 
@@ -327,7 +334,7 @@ namespace PayWithPixels
                 if (st.critBlast > 0) Explosion.Spawn(transform.parent, transform.position, 1.6f, 2);
                 if (st.critCoins > 0) Game.Instance.SpawnCoin(transform.position, st.critCoins);
             }
-            if (type != EnemyType.Collector) 
+            if (type != EnemyType.Collector)
                 Game.Instance.OnEnemyKilled(transform.position);
             if (type == EnemyType.Collector)
             {
@@ -340,6 +347,7 @@ namespace PayWithPixels
                 Game.Instance.SpawnCoin(transform.position, GetCoins(coinDrop + (SpawnerMaxSpawnCount - spawned) / 2));
             else
                 Game.Instance.SpawnCoin(transform.position, GetCoins());
+
             Destroy(gameObject);
         }
 
@@ -698,7 +706,7 @@ namespace PayWithPixels
 
                 case EnemyType.Spawner:
                     move = dist < 7f ? -dir
-                        : dist > 10f ? dir 
+                        : dist > 10f ? dir
                         : Vector2.zero;
                     shootTimer -= dt;
                     if (shootTimer <= 0 && attacking && spawned < SpawnerMaxSpawnCount)
