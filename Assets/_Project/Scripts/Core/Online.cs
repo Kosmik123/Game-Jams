@@ -126,12 +126,23 @@ namespace PayWithPixels
         /// <summary>Wiersz tablicy, ktorego nazwe gracz moze jeszcze wpisac: wynik ostatniego runu z otwartego konta.</summary>
         public static bool CanEdit(Row r) => State == Status.Ready && r.mine && OwnsRecentEntry && r.id == AuthenticationService.Instance.PlayerId;
 
+        private static string nameOverrideId, nameOverride;
+
         /// <summary>Zatwierdzenie nazwy wpisanej w tablicy: zapis lokalny i zmiana nazwy konta ostatniego wyniku. Pusta nazwa = zostaje losowa z Authentication.</summary>
         public static async void ApplyName(string raw)
         {
             if (string.IsNullOrEmpty(raw)) return;
             SetName(raw);
             if (State != Status.Ready) return;
+            // nowa nazwa widoczna od razu, jeszcze przed potwierdzeniem przez chmure (odswiezenia ja podtrzymuja do konca zmiany)
+            if (OwnsRecentEntry)
+            {
+                nameOverrideId = AuthenticationService.Instance.PlayerId;
+                nameOverride = PlayerName;
+                for (int i = 0; i < Top.Count; i++)
+                    if (Top[i].id == nameOverrideId) { var row = Top[i]; row.name = nameOverride; Top[i] = row; }
+                Changed();
+            }
             await AcquireSession();
             try
             {
@@ -139,6 +150,7 @@ namespace PayWithPixels
             }
             catch (Exception e) { Debug.Log("[online] name: " + e.Message); }
             sessionBusy = false;
+            nameOverrideId = null;
             await RefreshInternal();
         }
 
@@ -269,7 +281,7 @@ namespace PayWithPixels
                 var page = pageTask.Result;
                 Top.Clear();
                 foreach (var e in page.Results)
-                    Top.Add(new Row { rank = e.Rank + 1, name = Strip(e.PlayerName), score = (int)e.Score, mine = recentIds.Contains(e.PlayerId), id = e.PlayerId });
+                    Top.Add(new Row { rank = e.Rank + 1, name = e.PlayerId == nameOverrideId ? nameOverride : Strip(e.PlayerName), score = (int)e.Score, mine = recentIds.Contains(e.PlayerId), id = e.PlayerId });
                 HasEverLoaded = true;
                 Mine = null;
                 foreach (var r in Top) if (r.mine) { Mine = r; break; }

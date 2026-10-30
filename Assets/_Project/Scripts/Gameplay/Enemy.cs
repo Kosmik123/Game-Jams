@@ -7,6 +7,8 @@ namespace PayWithPixels
 
     public class Enemy : MonoBehaviour
     {
+        public const int SpawnerMaxSpawnCount = 12;
+
         public static readonly List<Enemy> All = new List<Enemy>();
 
         public float radius;
@@ -62,7 +64,7 @@ namespace PayWithPixels
                 case EnemyType.Siege: return new Spec { sprite = "enemy_siege", size = 16, radius = 0.5f, hpBase = Mathf.FloorToInt(4 + d / 4), speed = 1.6f, contact = 1, coins = 3, rotates = false };
                 case EnemyType.Swarm: return new Spec { sprite = "enemy_swarm", size = 6, radius = 0.3f, hpBase = 1, speed = 2.8f, contact = 1, coins = 0, rotates = false };
                 case EnemyType.Guard: return new Spec { sprite = "enemy_guard", size = 16, radius = 0.5f, hpBase = Mathf.FloorToInt(4 + d / 4), speed = 1.7f, contact = 1, coins = 3, rotates = true };
-                default: return new Spec { sprite = "enemy_spawner", size = 24, radius = 0.7f, hpBase = Mathf.FloorToInt(8 + d / 2), speed = 0.7f, contact = 1, coins = 3, rotates = false };
+                default: return new Spec { sprite = "enemy_spawner", size = 24, radius = 0.7f, hpBase = Mathf.FloorToInt(8 + d / 2), speed = 0.7f, contact = 1, coins = 2, rotates = false };
             }
         }
 
@@ -84,7 +86,8 @@ namespace PayWithPixels
             e.radius = s.radius; e.hp = e.maxHp = Mathf.CeilToInt(s.hpBase * Game.Instance.EnemyHpMul); e.speed = Mathf.Min(s.speed * scale * Game.Instance.EnemySpeedMul, MaxSpeed(type));
             e.contactDamage = s.contact;
             e.coinDrop = overrideCoins.HasValue ? overrideCoins.Value : s.coins;
-            if (e.maxHp >= 8 && type != EnemyType.Guard) e.CreateBar();
+            if (type == EnemyType.Tank || type == EnemyType.Spawner) 
+                e.CreateBar();
             if (type == EnemyType.Guard)
             {
                 var sh = new GameObject("Shield");
@@ -152,7 +155,7 @@ namespace PayWithPixels
             e.bossBullet = zone == 1 ? "bullet_boss" : zone == 2 ? "bullet_boss2" : "bullet_boss3";
             e.sr = Art.MakeRenderer(go, Art.Square(e.bossSprite + "_0", 48), 6);
             e.radius = 1.4f;
-            e.hp = e.maxHp = Mathf.CeilToInt((zone == 1 ? 50 : zone == 2 ? 95 : 130) * Game.Instance.BossHpMul);
+            e.hp = e.maxHp = Mathf.CeilToInt((zone == 1 ? 60 : zone == 2 ? 100 : 150) * Game.Instance.BossHpMul);
             e.contactDamage = 2;
             e.shootTimer = 2f;
             e.spawnAddsTimer = 6f;
@@ -330,7 +333,8 @@ namespace PayWithPixels
                 Destroy(gameObject);
                 return;
             }
-            if (coinDrop > 0) Game.Instance.SpawnCoin(transform.position, coinDrop);
+            if (type == EnemyType.Spawner) Game.Instance.SpawnCoin(transform.position, coinDrop + (SpawnerMaxSpawnCount - spawned) / 2) ;
+            else if (coinDrop > 0) Game.Instance.SpawnCoin(transform.position, coinDrop);
             else if (Random.value < 0.5f) Game.Instance.SpawnCoin(transform.position, 1);
             Destroy(gameObject);
         }
@@ -506,7 +510,7 @@ namespace PayWithPixels
             }
         }
 
-        /// <summary>Strefa 3: The Auctioneer - sprzedaje Twoje zyski podczas walki (wracaja po czasie albo po jego smierci).</summary>
+        /// <summary>Strefa 3: The Auctioneer - sprzedaje Twoje zyski podczas walki (wracaja dopiero po jego smierci).</summary>
         private void UpdateAuctioneer(Game game)
         {
             Vector2 pos = new Vector2(Mathf.Sin(clock * 0.45f) * (Game.ArenaHalf.x - 2.5f), 2.2f + Mathf.Sin(clock * 0.9f) * 1.6f);
@@ -534,7 +538,7 @@ namespace PayWithPixels
             if (auctionTimer <= 0)
             {
                 auctionTimer = 22f;
-                game.AuctionOffGain(14f);
+                game.AuctionOffGain();
             }
 
             shootTimer -= Time.deltaTime;
@@ -693,7 +697,7 @@ namespace PayWithPixels
                         : dist > 10f ? dir 
                         : Vector2.zero;
                     shootTimer -= dt;
-                    if (shootTimer <= 0 && attacking && spawned < 12)
+                    if (shootTimer <= 0 && attacking && spawned < SpawnerMaxSpawnCount)
                     {
                         shootTimer = 4f;
                         spawned++;

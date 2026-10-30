@@ -90,7 +90,7 @@ Obecne: Mgła, Pikselizacja, Migotanie, Ociężałość (sluggish aim), Ciężki
 - **Reroll** oferty za monety (koszt rośnie), **Haggle**: za moneta+ryzyko zamień cenę oferty (zła cena na inną).
 
 ## Wrogowie (docelowo ~9 + 3 bossy)
-Obecni: Goniec, Strzelec, Tank. Dodać: Skaczek (dash na gracza), Oblężnik (pocisk obszarowy z ostrzeżeniem), Rój (małe, grupami), Strażnik (tarcza z przodu), Spawner (rodzi gońców), Poborca (zobacz Dług). Bossy: strefa 1 (obecny, "The Toll Keeper"), strefa 2 (wielofazowy, "The Banker"), strefa 3 ("The Auctioneer": sprzedaje twoje zyski podczas walki).
+Obecni: Goniec, Strzelec, Tank. Dodać: Skaczek (dash na gracza), Oblężnik (pocisk obszarowy z ostrzeżeniem), Rój (małe, grupami), Strażnik (tarcza z przodu), Spawner (rodzi gońców), Poborca (zobacz Dług). Bossy: strefa 1 (obecny, "The Toll Keeper"), strefa 2 (wielofazowy, "The Banker"), strefa 3 ("The Auctioneer": sprzedaje twoje zyski podczas walki; wracają dopiero po jego pokonaniu).
 
 ## Meta (między runami)
 - Ekran końca runu: statystyki, rekord (localStorage/PlayerPrefs), **odblokowania**: nowe bronie startowe (pistolet, strzelba, laser), nowe zyski w puli (odblokowywane osiągnięciami "pokonaj bossa z mgłą x3", "ukończ run z długiem 0" itp.).
@@ -113,7 +113,7 @@ Obecni: Goniec, Strzelec, Tank. Dodać: Skaczek (dash na gracza), Oblężnik (po
 # GDD v3 — fabuła i Kontrakty (decyzja designera po uwadze Kosmika)
 
 ## Fabuła (lekka)
-- Gracz to Dłużnik: wszedł na Drogę Opłat, żeby spłacić dług, którego nie pamięta. Każdy boss to etap "rozliczenia": Toll Keeper (myto), Banker (kredyt), Auctioneer (licytuje Ciebie).
+- Gracz to Dłużnik: wszedł na Drogę Opłat, żeby spłacić dług, którego nie pamięta. Każdy boss to etap "rozliczenia": Toll Keeper (myto), Banker (kredyt), Auctioneer (licytuje Ciebie; sprzedane zyski odzyskujesz tylko pokonując go).
 - Intro: 3-4 kadry 1-bit na tytule (po pierwszym uruchomieniu, pomijalne klawiszem).
 - Przed każdym bossem 1 linijka dialogu w ramce. Po Auctioneerze zakończenie: "SOLD." i ekran z łączną ceną runu (suma stacków cen, długu, sprzedanych zysków).
 - Zakończenie złe (zgon): "PAID IN FULL" z liczbą fal.

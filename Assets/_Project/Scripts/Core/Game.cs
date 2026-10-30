@@ -16,7 +16,7 @@ namespace PayWithPixels
         /// <summary>Przesuniecie kamery/tla; 0, bo arena_bg 480x270 ma pas HUD wbudowany u gory.</summary>
         public const float HudOffsetY = 0f;
 
-        public const int Zones = 3;
+        public  const int Zones = 3;
         public const int WavesPerZone = 5;           // + boss strefy
         public const int MaxDebt = 20;
 
@@ -63,7 +63,6 @@ namespace PayWithPixels
 
         // ---- licytacja Aukcjonera: zabrane zyski wracaja po czasie albo po jego smierci ----
         private readonly System.Collections.Generic.List<KeyValuePair<string, int>> auctioned = new System.Collections.Generic.List<KeyValuePair<string, int>>();
-        private float auctionReturnTimer;
 
         public void Announce(string msg) => ui.Toast(msg);
 
@@ -103,7 +102,7 @@ namespace PayWithPixels
 
         private void EndRun(bool won)
         {
-            int score = Mathf.RoundToInt((wave * 100 + kills * 2 + coinsEarned + (won ? 1000 : 0)) * ScoreMul);
+            int score = CalculateScore(won);
             Meta.RecordRun(wave, won, Ascension, score);
             Online.Submit(score);
             boardPromptAt = Online.IsAvailable && score > 0 ? Time.unscaledTime : -1f;
@@ -111,7 +110,13 @@ namespace PayWithPixels
             ui.ShowDeath(won, RunSummary(won) + "\nSCORE " + score + (Ascension > 0 ? "  (ASCENSION " + Ascension + " x" + ScoreMul.ToString("0.00") + ")" : ""), OnDeathOk);
         }
 
-        public void AuctionOffGain(float seconds)
+        private int CalculateScore(bool won)
+        {
+            return Mathf.RoundToInt(((wave - 1) * 100 + kills * 2 + coinsEarned + coins + (won ? 1000 : 0)) * ScoreMul);
+        }
+
+        /// <summary>Auctioneer sprzedaje losowy zysk gracza; wraca dopiero po pokonaniu bossa (RestoreAuctioned).</summary>
+        public void AuctionOffGain()
         {
             var owned = new System.Collections.Generic.List<string>();
             foreach (var kv in stats.levels) if (kv.Value > 0) owned.Add(kv.Key);
@@ -121,7 +126,6 @@ namespace PayWithPixels
             stats.levels.Remove(name);
             stats.Recompute();
             RefreshDrones();
-            auctionReturnTimer = seconds;
             ui.Toast("SOLD! YOUR " + name + " GOES TO THE HIGHEST BIDDER");
             Sfx.Play(Sound.Hurt);
         }
@@ -167,7 +171,7 @@ namespace PayWithPixels
         public bool IsBossWave => waveInZone > WavesPerZone;
         /// <summary>Trudnosc do skalowania wrogow (rosnie przez caly run).</summary>
         [ShowNativeProperty]
-        public float Difficulty => (zone - 1) * WavesPerZone + waveInZone - totalRunPurchases * 0.15f;
+        public float Difficulty => Mathf.Max(0f, (zone - 1) * WavesPerZone + waveInZone - totalRunPurchases * 0.15f);
 
         public static void Create()
         {
@@ -702,7 +706,7 @@ namespace PayWithPixels
             }
             else
             {
-                SpawnCoin(boss.transform.position, wave * 4 + 7);
+                SpawnCoin(boss.transform.position, 2 * zone + totalRunPurchases + 3);
                 ui.Toast("ZONE CLEARED");
             }
         }
@@ -711,7 +715,7 @@ namespace PayWithPixels
         public void OnCollectorKilled(Enemy collector)
         {
             ui.Toast("COLLECTOR DOWN");
-            SpawnCoin(collector.transform.position, 1);
+            SpawnCoin(collector.transform.position, 1 + collectorMeetings);
         }
 
         /// <summary>Poborca dotknal gracza: zabiera losowy zysk, zostawia cene.</summary>
@@ -844,11 +848,6 @@ namespace PayWithPixels
             if ((Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.P)) && (CanPause || Paused)) TogglePause();
             if (Paused) return;
             Time.timeScale = (Time.unscaledTime < hitStopUntil ? 0.05f : 1f) * DebugTimeScale;
-            if (auctioned.Count > 0 && state == State.Playing)
-            {
-                auctionReturnTimer -= Time.deltaTime;
-                if (auctionReturnTimer <= 0) RestoreAuctioned();
-            }
 
             if (cam != null) cam.orthographicSize = Mathf.MoveTowards(cam.orthographicSize, OrthoSize * (stats != null ? stats.CameraZoom : 1f), 4f * Time.deltaTime);
             if (player != null) display.SetFogCenter(player.transform.position);
@@ -1198,7 +1197,7 @@ namespace PayWithPixels
         // ---- REDEEM: zdejmij 1 stack wybranej ceny (co 3. sklep zamiast kontraktu) ----
         private bool shopRedeem;
 
-        public int RedeemCost(string priceName) => 10 + 2 * stats.PriceCount(priceName) + Mathf.RoundToInt(Difficulty);
+        public int RedeemCost(string priceName) => 10 + 2 * stats.PriceCount(priceName) + Mathf.RoundToInt(Difficulty / 2);
 
         private List<string> OwnedPrices()
         {

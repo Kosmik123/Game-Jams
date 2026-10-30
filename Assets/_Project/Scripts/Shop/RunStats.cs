@@ -268,9 +268,9 @@ namespace PayWithPixels
         {
             void Sev(int v, params string[] names) { foreach (var n in names) Prices.Find(p => p.name == n).severity = v; }
             Sev(0, "FLICKER");
-            Sev(1, "SILENCE", "ZOOM IN", "INPUT DELAY", "SLUGGISH AIM", "HEAVY LEGS", "PIXELATION");
-            Sev(2, "INERTIA", "COSTLY LIFE", "FOG", "PRICEY SHOP");
-            Sev(3, "FRAGILITY", "HUNGER");
+            Sev(1, "SILENCE", "ZOOM IN", "INPUT DELAY", "SLUGGISH AIM", "PIXELATION");
+            Sev(2, "INERTIA", "COSTLY LIFE", "FOG", "HEAVY LEGS");
+            Sev(3, "FRAGILITY", "HUNGER", "PRICEY SHOP");
             Sev(4, "REVERSED CONTROLS");
         }
 
