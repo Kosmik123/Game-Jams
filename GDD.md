@@ -119,7 +119,7 @@ Obecni: Goniec, Strzelec, Tank. Dodać: Skaczek (dash na gracza), Oblężnik (po
 - Zakończenie złe (zgon): "PAID IN FULL" z liczbą fal.
 
 ## Kontrakty (nowa mechanika)
-- Przed falą (w sklepie, jako czwarta opcja co 2. sklep) można podpisać kontrakt: nagroda teraz, **mały druk** ujawniany po 2 falach.
+- Przed falą (w sklepie, jako czwarta opcja co 2. sklep) można podpisać kontrakt: nagroda teraz, **mały druk** ujawniany po 2 falach. Nagroda ("now", nadaje kontraktowi nazwę) i mały druk ("later", kara) są losowane osobno z dwóch pul (14 nagród, 14 kar), więc ta sama nagroda może mieć różne kary; gracz nie zna kary w chwili podpisania.
 - Przykłady: "+30 monet teraz / po 2 falach tracisz 1 losowy zysk"; "+1 max HP / po 2 falach dług +10"; "podwójne monety przez 2 fale / po nich Mgła x2 do końca strefy"; "leczenie do pełna / następny boss +20% HP".
 - Mały druk jest ukryty do czasu, ale kontrakty z tego samego typu są znane z doświadczenia (UI pokazuje "???"). Kontrakt można odrzucić.
 - Osiągnięcie: "READ THE FINE PRINT" (podpisz 0 kontraktów w runie), "SIGNED AND SEALED" (podpisz 5).
@@ -152,7 +152,7 @@ Obecni: Goniec, Strzelec, Tank. Dodać: Skaczek (dash na gracza), Oblężnik (po
 # STAN AKTUALNY (synchronizacja z kodem, build 5402db79) — ten rozdział ma pierwszeństwo przy rozbieżnościach
 
 ## Zgodne z GDD
-3 strefy (5 fal + boss każda), 3 bossy (Toll Keeper / Banker / Auctioneer), dług (kredyt, odsetki 20% po fali), Poborca (od fali 5 strefy przy długu), 8 zwykłych wrogów (Goniec, Strzelec, Tank, Skaczek, Oblężnik, Rój, Strażnik, Spawner) + Poborca, 16 zysków (poziomy do 3), 10 cen, synergie, reroll, haggle, kontrakty (8), REDEEM, fabuła (intro, linijki bossów, SOLD / PAID IN FULL), pauza z ustawieniami, tutorial, meta (rekordy, osiągnięcia, odblokowania broni), 3 pętle muzyczne, dźwięk proceduralny.
+3 strefy (5 fal + boss każda), 3 bossy (Toll Keeper / Banker / Auctioneer), dług (kredyt, odsetki 20% po fali), Poborca (od fali 5 strefy przy długu), 8 zwykłych wrogów (Goniec, Strzelec, Tank, Skaczek, Oblężnik, Rój, Strażnik, Spawner) + Poborca, 16 zysków (poziomy do 3), 10 cen, synergie, reroll, haggle, kontrakty (14 nagród x 14 kar, losowane osobno), REDEEM, fabuła (intro, linijki bossów, SOLD / PAID IN FULL), pauza z ustawieniami, tutorial, meta (rekordy, osiągnięcia, odblokowania broni), 3 pętle muzyczne, dźwięk proceduralny.
 
 ## Zmienione względem wcześniejszych zapisów
 - Rozdzielczość wewnętrzna **480x270** (nie 320x180), canvas WebGL 1280x720, HUD w osobnym pasku 14 px.

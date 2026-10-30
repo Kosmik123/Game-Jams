@@ -1079,7 +1079,7 @@ namespace PayWithPixels
             if (spawnLeft <= 0) return;
             spawnTimer -= Time.deltaTime;
             if (spawnTimer > 0) return;
-            spawnTimer = 0.2f * Enemy.All.Count - 0.1f * Difficulty;
+            spawnTimer = 0.15f * Enemy.All.Count - 0.1f * Difficulty;
             spawnTimer = Mathf.Max(0.6f, spawnTimer);
             spawnLeft--;
             SpawnCollectorIfDue();
