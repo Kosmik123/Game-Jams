@@ -5,12 +5,12 @@ namespace ZeroHour.Tower
 {
     public readonly struct FloorStats
     {
-        public readonly int Population;
-        public readonly int Jobs;
+        public readonly float Population;
+        public readonly float Jobs;
         public readonly int Energy;
         public readonly int Happiness;
 
-        public FloorStats(int population, int jobs, int energy, int happiness)
+        public FloorStats(float population, float jobs, int energy, int happiness)
         {
             Population = population;
             Jobs = jobs;
@@ -38,15 +38,15 @@ namespace ZeroHour.Tower
     // (all-or-nothing blackout); rulesets create a subclass to change the rules.
     public class CityStats
     {
-        protected virtual int ResidentsLostPerUnhappiness => 5;
+        protected virtual float ResidentsLostPerUnhappiness => 5f;
         protected virtual float IncomePerWorker => 0.2f;
 
         private readonly List<FloorType> floorTypes = new List<FloorType>();
         private readonly List<bool> floorPowered = new List<bool>();
 
         public int Height { get; private set; }
-        public int Population { get; private set; }
-        public int Jobs { get; private set; }
+        public float Population { get; private set; }
+        public float Jobs { get; private set; }
         public int Energy { get; private set; }
         public int Happiness { get; private set; }
         public float Income { get; private set; }
@@ -74,8 +74,8 @@ namespace ZeroHour.Tower
         // Floors from the bottom of the tower up.
         public void Recalculate(IReadOnlyList<FloorType> floors)
         {
-            int population = 0;
-            int jobs = 0;
+            float population = 0f;
+            float jobs = 0f;
             int supply = 0;
             int demand = 0;
             int happiness = 0;
@@ -102,7 +102,7 @@ namespace ZeroHour.Tower
 
             // Unhappy residents move out.
             if (happiness < 0)
-                population = Mathf.Max(0, population + happiness * ResidentsLostPerUnhappiness);
+                population = Mathf.Max(0f, population + happiness * ResidentsLostPerUnhappiness);
 
             Height = floors.Count;
             Population = population;
@@ -158,7 +158,7 @@ namespace ZeroHour.Tower
 
         protected virtual float CalculatePowerRatio(int supply, int demand) => supply >= demand ? 1f : 0f;
 
-        protected virtual float CalculateIncome(int population, int jobs, int happiness, float powerRatio) =>
+        protected virtual float CalculateIncome(float population, float jobs, int happiness, float powerRatio) =>
             (Mathf.Min(population, jobs) * IncomePerWorker + NeighborIncome) * powerRatio;
 
         // The jam economy ignores the order of the floors.

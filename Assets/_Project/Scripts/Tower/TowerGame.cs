@@ -165,6 +165,7 @@ namespace ZeroHour.Tower
             if (ruleset.ShowTowerShot)
                 hud.UseCenteredLayout();
             hud.PopulationLabel = ruleset.PopulationLabel;
+            hud.PopulationScale = ruleset.PopulationDisplayScale;
             if (ruleset.ShowMenuButton)
                 hud.AddMenuButton();
             if (ruleset.PlaySounds)

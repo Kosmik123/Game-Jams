@@ -20,7 +20,7 @@ namespace ZeroHour.Tower
             this.config = config;
         }
 
-        protected override int ResidentsLostPerUnhappiness => config.residentsLostPerUnhappiness;
+        protected override float ResidentsLostPerUnhappiness => config.residentsLostPerUnhappiness;
 
         protected override float IncomePerWorker => config.incomePerWorker;
 
@@ -61,7 +61,7 @@ namespace ZeroHour.Tower
         protected override float CalculatePowerRatio(int supply, int demand) =>
             demand == 0 ? 1f : Mathf.Min(1f, (float)supply / demand);
 
-        protected override float CalculateIncome(int population, int jobs, int happiness, float powerRatio)
+        protected override float CalculateIncome(float population, float jobs, int happiness, float powerRatio)
         {
             float happinessMultiplier = happiness > 0 ? Mathf.Min(1f + config.happinessIncomeBonus * happiness, config.maxHappinessMultiplier) : 1f;
             return base.CalculateIncome(population, jobs, happiness, powerRatio) * happinessMultiplier * ComboIncomeMultiplier;

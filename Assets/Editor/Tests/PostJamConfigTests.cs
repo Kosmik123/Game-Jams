@@ -22,11 +22,12 @@ public class PostJamConfigTests
     {
         PostJamConfig config = NewConfig();
         Assert.IsTrue(config.TryGetFloorStats("Residential", out FloorStats residential));
-        Assert.AreEqual(10, residential.Population);
+        Assert.AreEqual(1f, residential.Population);
         Assert.AreEqual(-1, residential.Energy);
-        Assert.AreEqual(-1, residential.Happiness);
+        Assert.AreEqual(0, residential.Happiness);
         Assert.IsTrue(config.TryGetFloorStats("Office", out FloorStats office));
-        Assert.AreEqual(10, office.Jobs);
+        Assert.AreEqual(1f, office.Jobs);
+        Assert.AreEqual(-1, office.Happiness);
         Assert.IsTrue(config.TryGetFloorStats("Power", out FloorStats power));
         Assert.AreEqual(4, power.Energy);
         Assert.AreEqual(-2, power.Happiness);
@@ -38,15 +39,15 @@ public class PostJamConfigTests
     }
 
     [Test]
-    public void Defaults_GiveTheOldBalancedBlock()
+    public void Defaults_GiveABalancedBlock()
     {
         var stats = new PostJamCityStats(NewConfig());
         stats.Recalculate(new[] { Type("Residential"), Type("Office"), Type("Residential"), Type("Office"), Type("Power"), Type("Park") });
         Assert.AreEqual(0, stats.Energy);
         Assert.AreEqual(0, stats.Happiness);
-        Assert.AreEqual(20, stats.Population);
-        // 20 workers x 0.2 + three residential-office pairs x 0.3 commute
-        Assert.AreEqual(4f + 0.9f, stats.Income, 1e-3f);
+        Assert.AreEqual(2f, stats.Population);
+        // 2 workers x 6 + three residential-office pairs x 0.9 commute
+        Assert.AreEqual(12f + 2.7f, stats.Income, 1e-3f);
     }
 
     [Test]
@@ -56,18 +57,18 @@ public class PostJamConfigTests
         config.incomePerWorker = 0.5f;
         var stats = new PostJamCityStats(config);
         stats.Recalculate(new[] { Type("Residential"), Type("Office"), Type("Power"), Type("Park") });
-        // 10 workers x 0.5 + 0.3 commute, energy 4 vs 2 consumers, happiness -1 -2 +4 = +1 (+5%).
-        Assert.AreEqual((10 * 0.5f + 0.3f) * 1.05f, stats.Income, 1e-3f);
+        // 1 worker x 0.5 + 0.9 commute, energy 4 vs 2 consumers, happiness -1 -2 +4 = +1 (+5%).
+        Assert.AreEqual((0.5f + 0.9f) * 1.05f, stats.Income, 1e-3f);
     }
 
     [Test]
     public void FloorTable_ChangesTheStats()
     {
         PostJamConfig config = NewConfig();
-        config.floors[0].population = 20; // Residential
+        config.floors[0].population = 2; // Residential
         var stats = new PostJamCityStats(config);
         stats.Recalculate(new[] { Type("Residential"), Type("Office"), Type("Power"), Type("Park") });
-        Assert.AreEqual(20, stats.Population);
+        Assert.AreEqual(2f, stats.Population);
     }
 
     [Test]
@@ -89,7 +90,7 @@ public class PostJamConfigTests
         var stats = new PostJamCityStats(config);
         stats.Recalculate(new[] { Type("Residential"), Type("Office"), Type("Power"), Type("Park"), Type("Park") });
         // happiness -1 -2 +8 = +5 -> x1.5 capped at x1.2
-        Assert.AreEqual((10 * 0.2f + 0.3f) * 1.2f, stats.Income, 1e-3f);
+        Assert.AreEqual((6f + 0.9f) * 1.2f, stats.Income, 1e-3f);
     }
 
     [Test]

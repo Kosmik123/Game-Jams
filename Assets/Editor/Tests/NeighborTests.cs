@@ -20,7 +20,7 @@ public class NeighborTests
     [Test]
     public void ResidentialNextToPark_GainsJoy()
     {
-        Assert.AreEqual(-1 + 4 + 1, PostJam(R, Park).Happiness);
+        Assert.AreEqual(0 + 4 + 1, PostJam(R, Park).Happiness);
     }
 
     [Test]
@@ -28,30 +28,30 @@ public class NeighborTests
     {
         var stats = PostJam(R, P);
         Assert.AreEqual(3, stats.Energy);
-        Assert.AreEqual(-1 - 2 - 1, stats.Happiness);
+        Assert.AreEqual(0 - 2 - 1, stats.Happiness);
     }
 
     [Test]
     public void ResidentialNextToOffice_AddsCommuteIncome()
     {
-        // R-O pair (+0.3), the rest has no synergy; joy -1-2+8 = 5 -> x1.25, full power.
+        // R-O pair (+0.9), the rest has no synergy; joy -1-2+8 = 5 -> x1.25, full power.
         var stats = PostJam(R, O, P, Park, Park);
-        Assert.AreEqual(0.3f, stats.NeighborIncome, 1e-5f);
+        Assert.AreEqual(0.9f, stats.NeighborIncome, 1e-5f);
         Assert.AreEqual(1f, stats.PowerRatio);
-        Assert.AreEqual((10 * 0.2f + 0.3f) * 1.25f, stats.Income, 1e-4f);
+        Assert.AreEqual((6f + 0.9f) * 1.25f, stats.Income, 1e-4f);
     }
 
     [Test]
     public void ParkResidentialPark_CountsBothPairs()
     {
-        Assert.AreEqual(4 - 1 + 4 + 2, PostJam(Park, R, Park).Happiness);
+        Assert.AreEqual(4 + 0 + 4 + 2, PostJam(Park, R, Park).Happiness);
     }
 
     [Test]
     public void Order_ChangesTheNumberOfPairs()
     {
-        Assert.AreEqual(0.9f, PostJam(R, O, R, O).NeighborIncome, 1e-5f);
-        Assert.AreEqual(0.3f, PostJam(R, R, O, O).NeighborIncome, 1e-5f);
+        Assert.AreEqual(2.7f, PostJam(R, O, R, O).NeighborIncome, 1e-5f);
+        Assert.AreEqual(0.9f, PostJam(R, R, O, O).NeighborIncome, 1e-5f);
     }
 
     [Test]

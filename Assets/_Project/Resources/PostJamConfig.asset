@@ -14,15 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ZeroHour.Tower.PostJamConfig
   floors:
   - floorType: Residential
-    population: 10
+    population: 1
     jobs: 0
     energy: -1
-    happiness: -1
+    happiness: 0
   - floorType: Office
     population: 0
-    jobs: 10
+    jobs: 1
     energy: -1
-    happiness: 0
+    happiness: -1
   - floorType: Power
     population: 0
     jobs: 0
@@ -38,13 +38,13 @@ MonoBehaviour:
     jobs: 0
     energy: 0
     happiness: 0
-  incomePerWorker: 0.2
-  residentsLostPerUnhappiness: 5
+  incomePerWorker: 6
+  residentsLostPerUnhappiness: 0.5
   happinessIncomeBonus: 0.05
   maxHappinessMultiplier: 1.5
   parkNeighborHappiness: 1
   powerNeighborHappiness: -1
-  commuteIncome: 0.3
+  commuteIncome: 0.9
   minComboStreak: 2
   comboIncomePerLevel: 0.1
   goldChance: 0.05

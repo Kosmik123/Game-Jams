@@ -15,8 +15,10 @@ namespace ZeroHour.Tower
         {
             [Tooltip("FloorType name: Residential, Office, Power, Park, Bank.")]
             public string floorType;
-            public int population;
-            public int jobs;
+            [Tooltip("Residents in units of 10 (a house = 1).")]
+            public float population;
+            [Tooltip("Jobs in units of 10 (an office = 1).")]
+            public float jobs;
             public int energy;
             public int happiness;
         }
@@ -24,18 +26,18 @@ namespace ZeroHour.Tower
         [Header("Floor stats (energy: positive produces, negative consumes)")]
         public FloorEntry[] floors =
         {
-            new FloorEntry { floorType = "Residential", population = 10, jobs = 0, energy = -1, happiness = -1 },
-            new FloorEntry { floorType = "Office", population = 0, jobs = 10, energy = -1, happiness = 0 },
+            new FloorEntry { floorType = "Residential", population = 1, jobs = 0, energy = -1, happiness = 0 },
+            new FloorEntry { floorType = "Office", population = 0, jobs = 1, energy = -1, happiness = -1 },
             new FloorEntry { floorType = "Power", population = 0, jobs = 0, energy = 4, happiness = -2 },
             new FloorEntry { floorType = "Park", population = 0, jobs = 0, energy = 0, happiness = 4 },
             new FloorEntry { floorType = "Bank", population = 0, jobs = 0, energy = 0, happiness = 0 },
         };
 
         [Header("Income")]
-        [Tooltip("$ per second for every employed resident (the smaller of population and jobs).")]
-        [Min(0f)] public float incomePerWorker = 0.2f;
-        [Tooltip("Residents who move out for every point of unhappiness below zero.")]
-        [Min(0)] public int residentsLostPerUnhappiness = 5;
+        [Tooltip("$ per second for every employed unit of residents (the smaller of population and jobs).")]
+        [Min(0f)] public float incomePerWorker = 6f;
+        [Tooltip("Population units that move out for every point of unhappiness below zero (0.5 = 5 residents).")]
+        [Min(0f)] public float residentsLostPerUnhappiness = 0.5f;
         [Tooltip("Income bonus per point of happiness above zero (0.05 = +5%).")]
         [Min(0f)] public float happinessIncomeBonus = 0.05f;
         [Tooltip("Cap of the happiness income multiplier (1.5 = +50%).")]
@@ -45,7 +47,7 @@ namespace ZeroHour.Tower
         public int parkNeighborHappiness = 1;
         public int powerNeighborHappiness = -1;
         [Tooltip("$ per second for a residential floor next to an office.")]
-        [Min(0f)] public float commuteIncome = 0.3f;
+        [Min(0f)] public float commuteIncome = 0.9f;
 
         [Header("Combo")]
         [Tooltip("Perfect landings in a row needed to start the combo.")]

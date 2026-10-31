@@ -91,6 +91,9 @@ namespace ZeroHour.Tower
 
         public abstract string PopulationLabel { get; }
 
+        // The HUD shows population and jobs multiplied by this (post-jam counts them in units of 10).
+        public virtual int PopulationDisplayScale => 1;
+
         // A perfect landing places the floor exactly on top of the previous one.
         public abstract bool SnapPerfectLandings { get; }
 
@@ -203,6 +206,7 @@ namespace ZeroHour.Tower
         public override bool RelativeControl => true;
         public override string BestScoreKey => "BestScore_PostJam";
         public override string PopulationLabel => "Popul";
+        public override int PopulationDisplayScale => 10;
         public override bool SnapPerfectLandings => true;
         public override bool ShowTowerShot => true;
         public override bool ShowJuice => true;

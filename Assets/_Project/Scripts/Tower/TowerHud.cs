@@ -54,6 +54,7 @@ namespace ZeroHour.Tower
 
         // HUD label of the population stat; the version can rename it.
         public string PopulationLabel { get; set; } = "Pop";
+        public int PopulationScale { get; set; } = 1;
         private Color tutorialOutlineColor;
         private bool isTutorialFading;
 
@@ -256,8 +257,8 @@ namespace ZeroHour.Tower
                 $"Height {stats.Height}\n" +
                 $"$ {stats.Money:0} (+{stats.Income:0.0}/s)" +
                 (stats.Combo > 1 ? $" <color={ComboColor}>COMBO {stats.Combo} (x{stats.ComboIncomeMultiplier:0.0})</color>" : "") + "\n" +
-                $"{Label(PopulationLabel, 0)} {stats.Population}\n" +
-                $"{Label("Jobs", 1)} {stats.Jobs}\n" +
+                $"{Label(PopulationLabel, 0)} {Mathf.RoundToInt(stats.Population * PopulationScale)}\n" +
+                $"{Label("Jobs", 1)} {Mathf.RoundToInt(stats.Jobs * PopulationScale)}\n" +
                 $"{Label("Energy", 2)} {Signed(stats.Energy)}\n" +
                 $"{Label("Joy", 3)} {Signed(stats.Happiness)}\n" +
                 $"<color={stabilityColor}>Stability {stability * 100f:0}%</color>" +
