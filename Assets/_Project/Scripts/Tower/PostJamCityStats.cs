@@ -7,29 +7,29 @@ namespace ZeroHour.Tower
     // and positive happiness boosts income.
     public class PostJamCityStats : CityStats
     {
-        private const float HappinessIncomeBonus = 0.05f;
-        private const float MaxHappinessMultiplier = 1.5f;
-        private const int ParkNeighborJoy = 1;      // "view of the park"
-        private const int PowerNeighborJoy = -1;    // "smog under the window"
-        private const float CommuteIncome = 0.3f;   // "short commute"
-        private const int MinComboStreak = 2;
-        private const float ComboIncomePerLevel = 0.1f; // combo 2 -> x1.1, combo 3 -> x1.2, ...
+        // All numbers come from the config: the floor table, the income and happiness rules, the neighbor pairs
+        // ("view of the park", "smog under the window", "short commute") and the combo (level 2 -> x1.1, 3 -> x1.2, ...).
+        private readonly PostJamConfig config;
 
-        // Floor numbers tuned so 2 residential + 2 offices + 1 power plant + 1 park balance out.
-        private static readonly Dictionary<string, FloorStats> Floors = new Dictionary<string, FloorStats>
+        public PostJamCityStats() : this(PostJamConfig.CreateDefault())
         {
-            ["Residential"] = new FloorStats(population: 10, jobs: 0, energy: -1, happiness: -1),
-            ["Office"] = new FloorStats(population: 0, jobs: 10, energy: -1, happiness: 0),
-            ["Power"] = new FloorStats(population: 0, jobs: 0, energy: 4, happiness: -2),
-            ["Park"] = new FloorStats(population: 0, jobs: 0, energy: 0, happiness: 4),
-        };
+        }
+
+        public PostJamCityStats(PostJamConfig config)
+        {
+            this.config = config;
+        }
+
+        protected override int ResidentsLostPerUnhappiness => config.residentsLostPerUnhappiness;
+
+        protected override float IncomePerWorker => config.incomePerWorker;
 
         public override string PowerWarning => IsPowered ? null : $"Power {PowerRatio * 100f:0}%";
 
         // Combo N from the Nth perfect landing in a row (from the second one on), without an upper limit.
-        public override int Combo => PerfectStreak >= MinComboStreak ? PerfectStreak : 1;
+        public override int Combo => PerfectStreak >= config.minComboStreak ? PerfectStreak : 1;
 
-        public override float ComboIncomeMultiplier => 1f + ComboIncomePerLevel * (Combo - 1);
+        public override float ComboIncomeMultiplier => 1f + config.comboIncomePerLevel * (Combo - 1);
 
         public override void RegisterLanding(bool isPerfect) => PerfectStreak = isPerfect ? PerfectStreak + 1 : 0;
 
@@ -48,22 +48,22 @@ namespace ZeroHour.Tower
 
             switch (other.Name)
             {
-                case "Park": return new NeighborEffect(ParkNeighborJoy, 0f);
-                case "Power": return new NeighborEffect(PowerNeighborJoy, 0f);
-                case "Office": return new NeighborEffect(0, CommuteIncome);
+                case "Park": return new NeighborEffect(config.parkNeighborHappiness, 0f);
+                case "Power": return new NeighborEffect(config.powerNeighborHappiness, 0f);
+                case "Office": return new NeighborEffect(0, config.commuteIncome);
                 default: return default;
             }
         }
 
         protected override FloorStats GetFloorStats(FloorType type) =>
-            Floors.TryGetValue(type.Name, out FloorStats stats) ? stats : base.GetFloorStats(type);
+            config.TryGetFloorStats(type.Name, out FloorStats stats) ? stats : base.GetFloorStats(type);
 
         protected override float CalculatePowerRatio(int supply, int demand) =>
             demand == 0 ? 1f : Mathf.Min(1f, (float)supply / demand);
 
         protected override float CalculateIncome(int population, int jobs, int happiness, float powerRatio)
         {
-            float happinessMultiplier = happiness > 0 ? Mathf.Min(1f + HappinessIncomeBonus * happiness, MaxHappinessMultiplier) : 1f;
+            float happinessMultiplier = happiness > 0 ? Mathf.Min(1f + config.happinessIncomeBonus * happiness, config.maxHappinessMultiplier) : 1f;
             return base.CalculateIncome(population, jobs, happiness, powerRatio) * happinessMultiplier * ComboIncomeMultiplier;
         }
 

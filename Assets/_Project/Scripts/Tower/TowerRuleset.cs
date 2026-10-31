@@ -149,14 +149,17 @@ namespace ZeroHour.Tower
 
     public class PostJamRuleset : TowerRuleset
     {
-        // Difficulty grows with every floor in the tower.
-        private const float BaseFallSpeed = 3f;
-        private const float FallSpeedPerFloor = 0.15f;
-        private const float MaxFallSpeed = 8f;
-        private const float BaseSpawnInterval = 0.7f;
-        private const float SpawnIntervalPerFloor = 0.01f;
-        private const float MinSpawnInterval = 0.4f;
-        private const float FallSpeedSpread = 0.1f;
+        private readonly PostJamConfig config;
+
+        // The shipped numbers; GameVersion passes the config asset to the real game.
+        public PostJamRuleset() : this(PostJamConfig.CreateDefault())
+        {
+        }
+
+        public PostJamRuleset(PostJamConfig config)
+        {
+            this.config = config;
+        }
 
         // The clock starts low and the player earns time by building.
         private const float StartTime = 25f;
@@ -168,22 +171,13 @@ namespace ZeroHour.Tower
         private const float CollapsePenalty = 4f;
         private const float MissedFloorPenalty = 0.5f;
 
-        // Golden floor.
-        private const float GoldSpawnChance = 0.05f;
-        private const int GoldSpawnMinHeight = 3;
-        private const int GoldSpawnPity = 25;
-        private const float GoldSpeedFactor = 1.4f;
-        private const float GoldBonusTime = 3f;
-        private const float GoldBonusStability = 25f;
-        private const float GoldBonusMoney = 25f;
-
         public override string Name => "Post-jam";
         public override float RoundDuration => StartTime;
         public override float MaxTime => MaxRoundTime;
         public override float CollapseTimePenalty => CollapsePenalty;
         public override float MissedFloorTimePenalty => MissedFloorPenalty;
-        public override float SpawnIntervalJitter => 0.5f;
-        public override float FallSpeedJitter => FallSpeedSpread;
+        public override float SpawnIntervalJitter => config.spawnIntervalJitter;
+        public override float FallSpeedJitter => config.fallSpeedSpread;
         public override IReadOnlyList<FloorType> FloorPool => FloorType.WithBank;
         public override int TimerWarningSeconds => 4;
 
@@ -191,21 +185,21 @@ namespace ZeroHour.Tower
         public override float FloorTimeBonus(int towerHeight, bool isPerfect) =>
             TimePerFloor * Mathf.Max(MinTimeFactor, 1f - towerHeight / TimeFalloffHeight) + (isPerfect ? PerfectTimeBonus : 0f);
         public override float FallSpeed(int towerHeight) =>
-            Mathf.Min(BaseFallSpeed + FallSpeedPerFloor * towerHeight, MaxFallSpeed);
+            Mathf.Min(config.baseFallSpeed + config.fallSpeedPerFloor * towerHeight, config.maxFallSpeed);
         public override float SpawnInterval(int towerHeight) =>
-            Mathf.Max(BaseSpawnInterval - SpawnIntervalPerFloor * towerHeight, MinSpawnInterval);
-        public override CityStats CreateEconomy() => new PostJamCityStats();
+            Mathf.Max(config.baseSpawnInterval - config.spawnIntervalPerFloor * towerHeight, config.minSpawnInterval);
+        public override CityStats CreateEconomy() => new PostJamCityStats(config);
         public override TowerSway CreateSway() => new PostJamTowerSway();
         public override bool FixedCamera => true;
         public override float TowerTopScreenFraction => 0.2f;
         public override bool DynamicSky => true;
-        public override float GoldChance => GoldSpawnChance;
-        public override int GoldMinHeight => GoldSpawnMinHeight;
-        public override int GoldPity => GoldSpawnPity;
-        public override float GoldFallSpeedFactor => GoldSpeedFactor;
-        public override float GoldTimeBonus => GoldBonusTime;
-        public override float GoldInstabilityRelief => GoldBonusStability;
-        public override float GoldMoneyBonus => GoldBonusMoney;
+        public override float GoldChance => config.goldChance;
+        public override int GoldMinHeight => config.goldMinHeight;
+        public override int GoldPity => config.goldPity;
+        public override float GoldFallSpeedFactor => config.goldFallSpeedFactor;
+        public override float GoldTimeBonus => config.goldTimeBonus;
+        public override float GoldInstabilityRelief => config.goldInstabilityRelief;
+        public override float GoldMoneyBonus => config.goldMoneyBonus;
         public override bool RelativeControl => true;
         public override string BestScoreKey => "BestScore_PostJam";
         public override string PopulationLabel => "Popul";

@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 11030d9914bc0dc4981903cb9fd5ada7, type: 3}
+  m_Name: PostJamConfig
+  m_EditorClassIdentifier: Assembly-CSharp::ZeroHour.Tower.PostJamConfig
+  floors:
+  - floorType: Residential
+    population: 10
+    jobs: 0
+    energy: -1
+    happiness: -1
+  - floorType: Office
+    population: 0
+    jobs: 10
+    energy: -1
+    happiness: 0
+  - floorType: Power
+    population: 0
+    jobs: 0
+    energy: 4
+    happiness: -2
+  - floorType: Park
+    population: 0
+    jobs: 0
+    energy: 0
+    happiness: 4
+  - floorType: Bank
+    population: 0
+    jobs: 0
+    energy: 0
+    happiness: 0
+  incomePerWorker: 0.2
+  residentsLostPerUnhappiness: 5
+  happinessIncomeBonus: 0.05
+  maxHappinessMultiplier: 1.5
+  parkNeighborHappiness: 1
+  powerNeighborHappiness: -1
+  commuteIncome: 0.3
+  minComboStreak: 2
+  comboIncomePerLevel: 0.1
+  goldChance: 0.05
+  goldMinHeight: 3
+  goldPity: 25
+  goldFallSpeedFactor: 1.4
+  goldTimeBonus: 3
+  goldInstabilityRelief: 25
+  goldMoneyBonus: 25
+  baseFallSpeed: 3
+  fallSpeedPerFloor: 0.15
+  maxFallSpeed: 8
+  fallSpeedSpread: 0.1
+  baseSpawnInterval: 0.7
+  spawnIntervalPerFloor: 0.01
+  minSpawnInterval: 0.4
+  spawnIntervalJitter: 0.5

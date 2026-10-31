@@ -38,8 +38,8 @@ namespace ZeroHour.Tower
     // (all-or-nothing blackout); rulesets create a subclass to change the rules.
     public class CityStats
     {
-        protected const int ResidentsLostPerUnhappiness = 5;
-        protected const float IncomePerWorker = 0.2f;
+        protected virtual int ResidentsLostPerUnhappiness => 5;
+        protected virtual float IncomePerWorker => 0.2f;
 
         private readonly List<FloorType> floorTypes = new List<FloorType>();
         private readonly List<bool> floorPowered = new List<bool>();

@@ -16,7 +16,7 @@ namespace ZeroHour
 
         public static TowerRuleset CreateRuleset()
         {
-            return Selected == GameVersionType.Jam ? new JamRuleset() : (TowerRuleset)new PostJamRuleset();
+            return Selected == GameVersionType.Jam ? new JamRuleset() : (TowerRuleset)new PostJamRuleset(PostJamConfig.Load());
         }
 
         // Statics survive play sessions when domain reload is disabled.
