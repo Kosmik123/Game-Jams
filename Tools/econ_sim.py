@@ -4,16 +4,21 @@ import random, statistics
 
 TYPES = ['R', 'O', 'P', 'Pk', 'B']
 
-def stats(sums, nR_O, P, k):
-    """sums: effective (quality-weighted) counts per type; nRO: raw count of consumers; P: raw plants."""
-    pop = 10 * sums['R']
-    jobs = 10 * sums['O']
-    demand = nR_O
+# Which floor carries the unhappiness, and whether surplus happiness pays a bonus.
+MODEL = {'house_joy': -1, 'office_joy': 0, 'bonus': False}
+
+
+def stats(sums, cnt, k):
+    """sums: quality-weighted counts per type; cnt: raw counts. Units: 1 house = 1 population (10 people), k is per person (x10 per unit)."""
+    demand = cnt['R'] + cnt['O']
     supply = 4 * sums['P']
     r = 1.0 if demand == 0 else min(1.0, supply / demand)
-    slots = max(0.0, 5 * sums['R'] + 20 * sums['Pk'] - 10 * P)
-    workers = min(jobs * r, pop * r, slots)
-    return k * workers, workers
+    joy = 4 * sums['Pk'] + MODEL['house_joy'] * cnt['R'] + MODEL['office_joy'] * cnt['O'] - 2 * cnt['P']
+    pop = max(0.0, sums['R'] + 0.5 * min(0.0, joy))
+    workers = min(sums['O'] * r, pop * r)
+    bonus = 1.0 + min(0.5, 0.05 * max(0.0, joy)) if MODEL['bonus'] else 1.0
+    return 10 * k * workers * bonus, workers
+
 
 def run(k, m, policy, seed, free=8, upkeep=1.0, start=100.0, base_cap=100.0, bank_cap=150.0,
         step=1.5, grace=8.0, max_floors=400, noise=0.08):
@@ -27,15 +32,15 @@ def run(k, m, policy, seed, free=8, upkeep=1.0, start=100.0, base_cap=100.0, ban
         def marginal(t, q):
             c2 = dict(cnt); e2 = dict(eff)
             c2[t] += 1; e2[t] += q
-            inc, _ = stats(e2, c2['R'] + c2['O'], c2['P'], k)
-            inc0, _ = stats(eff, cnt['R'] + cnt['O'], cnt['P'], k)
+            inc, _ = stats(e2, c2, k)
+            inc0, _ = stats(eff, cnt, k)
             return inc - inc0
         mm = m(floors) if callable(m) else m
         q = min(1.0, max(0.5, rng.gauss(mm, noise)))
         if policy == 'random':
             t = options[0]
         else:
-            cur_inc, _ = stats(eff, cnt['R'] + cnt['O'], cnt['P'], k)
+            cur_inc, _ = stats(eff, cnt, k)
             net = cur_inc - upkeep * max(0, floors - free)
             def score(t):
                 v = marginal(t, q)
@@ -48,7 +53,7 @@ def run(k, m, policy, seed, free=8, upkeep=1.0, start=100.0, base_cap=100.0, ban
                 return v
             t = max(options, key=score)
         cnt[t] += 1; eff[t] += q; floors += 1
-        inc, _ = stats(eff, cnt['R'] + cnt['O'], cnt['P'], k)
+        inc, _ = stats(eff, cnt, k)
         cap = base_cap + bank_cap * eff['B']
         balance = min(cap, balance + (inc - upkeep * max(0, floors - free)) * step)
         if balance < 0:
