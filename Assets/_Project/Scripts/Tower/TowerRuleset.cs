@@ -49,6 +49,16 @@ namespace ZeroHour.Tower
         public float NextFallSpeed(int towerHeight, float unit01) =>
             FallSpeed(towerHeight) * (1f + FallSpeedJitter * (2f * unit01 - 1f));
 
+        // The round ends when the clock runs out and floors earn or cost time; off where bankruptcy ends it.
+        public virtual bool UseRoundClock => true;
+
+        // The round ends when the balance stays below zero for BankruptcyGraceSeconds, or when every floor is gone.
+        public virtual bool LosesByBankruptcy => false;
+        public virtual float BankruptcyGraceSeconds => 0f;
+
+        // The score is the highest tower reached (a tie goes to whoever earned more) instead of height x 10 plus money.
+        public virtual bool ScoreByMaxHeight => false;
+
         // The shortest gap between two floors, so they never overlap.
         public const float MinSpawnGap = 0.15f;
 
@@ -204,7 +214,11 @@ namespace ZeroHour.Tower
         public override float GoldInstabilityRelief => config.goldInstabilityRelief;
         public override float GoldMoneyBonus => config.goldMoneyBonus;
         public override bool RelativeControl => true;
-        public override string BestScoreKey => "BestScore_PostJam";
+        public override string BestScoreKey => "BestHeight_PostJam";
+        public override bool UseRoundClock => false;
+        public override bool LosesByBankruptcy => config.canLose;
+        public override float BankruptcyGraceSeconds => config.bankruptcyGraceSeconds;
+        public override bool ScoreByMaxHeight => true;
         public override string PopulationLabel => "Popul";
         public override int PopulationDisplayScale => 10;
         public override bool SnapPerfectLandings => true;

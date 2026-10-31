@@ -55,6 +55,12 @@ namespace ZeroHour.Tower
         [Tooltip("The first floors of the tower cost no upkeep.")]
         [Min(0)] public int freeFloors = 8;
 
+        [Header("Game over")]
+        [Tooltip("Untick to never lose: bankruptcy and an empty tower end nothing (for testing).")]
+        public bool canLose = true;
+        [Tooltip("The round ends when the balance has been below zero for this many seconds in a row.")]
+        [Min(0f)] public float bankruptcyGraceSeconds = 8f;
+
         [Header("Neighbor pairs (a residential floor directly above or below)")]
         public int parkNeighborHappiness = 1;
         public int powerNeighborHappiness = -1;

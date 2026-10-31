@@ -37,6 +37,7 @@ namespace ZeroHour.Tower
         private static readonly Color NeighborIncomeColor = new Color(1f, 0.85f, 0.3f);
         private static readonly Color GoldColor = new Color(1f, 0.84f, 0.1f);
         private const float GoldPopupExtraHeight = 0.7f;
+        private const string BestEarnedSuffix = "_Earned";
 
         [SerializeField]
         private float playWidth = 6f;
@@ -118,6 +119,8 @@ namespace ZeroHour.Tower
         private Vector3 towerShotStartPosition;
         private float towerShotStartSize;
         private float timeLeft;
+        private int maxHeight;
+        private BankruptcyTimer bankruptcy;
         private float roundElapsed;
         private float shakeTimeLeft;
         private float incomePopupTimer;
@@ -166,6 +169,7 @@ namespace ZeroHour.Tower
                 hud.UseCenteredLayout();
             hud.PopulationLabel = ruleset.PopulationLabel;
             hud.PopulationScale = ruleset.PopulationDisplayScale;
+            hud.TimerEnabled = ruleset.UseRoundClock;
             if (ruleset.ShowMenuButton)
                 hud.AddMenuButton();
             if (ruleset.PlaySounds)
@@ -214,6 +218,8 @@ namespace ZeroHour.Tower
             if (sky != null)
                 sky.ResetToDay();
             timeLeft = ruleset.RoundDuration;
+            maxHeight = 0;
+            bankruptcy = new BankruptcyTimer(ruleset.BankruptcyGraceSeconds);
             roundElapsed = 0f;
             shakeTimeLeft = 0f;
             incomePopupTimer = 0f;
@@ -231,7 +237,7 @@ namespace ZeroHour.Tower
                 hud.ShowTutorial("Move finger to catch floors");
         }
 
-        private void EndRound()
+        private void EndRound(string title)
         {
             isGameOver = true;
             gameOverTime = Time.time;
@@ -247,23 +253,33 @@ namespace ZeroHour.Tower
                 Tower.SuppressSway = true;
                 Tower.IsFrozen = true;
             }
-            int score = stats.Height * scorePerFloor + Mathf.FloorToInt(stats.TotalEarned);
+            // Versions that score by height keep the highest tower ever reached; the others use height x 10 plus money.
+            int earned = Mathf.FloorToInt(stats.TotalEarned);
+            bool byHeight = ruleset.ScoreByMaxHeight;
+            int shownHeight = byHeight ? maxHeight : stats.Height;
+            int record = byHeight ? maxHeight : stats.Height * scorePerFloor + earned;
+            int? score = byHeight ? (int?)null : record;
             string bestKey = ruleset.BestScoreKey;
             if (bestKey == null)
             {
-                hud.ShowGameOver(stats.Height, stats.TotalEarned, score);
+                hud.ShowGameOver(title, shownHeight, stats.TotalEarned, score);
                 return;
             }
 
-            // The first round ever is a record too.
-            bool isNewBest = !PlayerPrefs.HasKey(bestKey) || score > PlayerPrefs.GetInt(bestKey);
+            // The first round ever is a record too; at the same height the one that earned more wins.
+            string earnedKey = bestKey + BestEarnedSuffix;
+            bool isNewBest = !PlayerPrefs.HasKey(bestKey) ||
+                (byHeight
+                    ? RoundScore.IsNewBest(record, earned, PlayerPrefs.GetInt(bestKey), PlayerPrefs.GetInt(earnedKey))
+                    : record > PlayerPrefs.GetInt(bestKey));
             if (isNewBest)
             {
                 newBestSoundTime = Time.time + NewBestSoundDelay;
-                PlayerPrefs.SetInt(bestKey, score);
+                PlayerPrefs.SetInt(bestKey, record);
+                PlayerPrefs.SetInt(earnedKey, earned);
                 PlayerPrefs.Save(); // WebGL: written to IndexedDB right away
             }
-            hud.ShowGameOver(stats.Height, stats.TotalEarned, score, PlayerPrefs.GetInt(bestKey), isNewBest);
+            hud.ShowGameOver(title, shownHeight, stats.TotalEarned, score, PlayerPrefs.GetInt(bestKey), isNewBest);
         }
 
         private void Update()
@@ -316,20 +332,41 @@ namespace ZeroHour.Tower
             for (int i = 0; i < Tower.Floors.Count; i++)
                 Tower.Floors[i].SetPowered(stats.IsFloorPowered(i));
 
-            timeLeft -= Time.deltaTime;
+            maxHeight = Mathf.Max(maxHeight, stats.Height);
+            if (ruleset.UseRoundClock)
+                timeLeft -= Time.deltaTime;
+            if (ruleset.LosesByBankruptcy)
+                bankruptcy.Update(stats.Money, Time.deltaTime);
             roundElapsed += Time.deltaTime;
             if (ruleset.ShowTutorial && (Tower.Floors.Count > 0 || roundElapsed >= tutorialDuration))
                 hud.FadeOutTutorial();
-            hud.Refresh(stats, Tower.Stability, timeLeft);
-            // A tick on every full second of the last five.
-            int second = Mathf.CeilToInt(timeLeft);
-            if (second < lastTickSecond && second >= 1 && second <= TickFromSecond)
-                PlaySound("tick");
-            lastTickSecond = second;
-            if (timeLeft <= 0f)
+            hud.Refresh(stats, Tower.Stability, timeLeft, bankruptcy.IsCounting ? bankruptcy.TimeLeft : -1f);
+            if (ruleset.UseRoundClock)
             {
-                EndRound();
-                return;
+                // A tick on every full second of the last five.
+                int second = Mathf.CeilToInt(timeLeft);
+                if (second < lastTickSecond && second >= 1 && second <= TickFromSecond)
+                    PlaySound("tick");
+                lastTickSecond = second;
+                if (timeLeft <= 0f)
+                {
+                    EndRound("TIME'S UP!");
+                    return;
+                }
+            }
+            if (ruleset.LosesByBankruptcy)
+            {
+                if (bankruptcy.IsBankrupt)
+                {
+                    EndRound("BANKRUPT!");
+                    return;
+                }
+                // The whole tower collapsed.
+                if (maxHeight > 0 && Tower.Floors.Count == 0)
+                {
+                    EndRound("TOWER LOST!");
+                    return;
+                }
             }
 
             if (ruleset.ShowJuice)
@@ -497,7 +534,7 @@ namespace ZeroHour.Tower
         // Bonus or penalty from the tower; only during the round.
         private void ChangeTime(float change, float soundVolume = 1f)
         {
-            if (isGameOver || change == 0f)
+            if (isGameOver || change == 0f || !ruleset.UseRoundClock)
                 return;
             float before = timeLeft;
             timeLeft = ruleset.ApplyTimeChange(timeLeft, change);

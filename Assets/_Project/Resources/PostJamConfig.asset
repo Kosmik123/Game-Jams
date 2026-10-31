@@ -47,6 +47,8 @@ MonoBehaviour:
   bankMoneyCap: 150
   upkeepPerFloor: 1
   freeFloors: 8
+  canLose: 1
+  bankruptcyGraceSeconds: 8
   parkNeighborHappiness: 1
   powerNeighborHappiness: -1
   commuteIncome: 0.9

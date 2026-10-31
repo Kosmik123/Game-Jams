@@ -55,6 +55,9 @@ namespace ZeroHour.Tower
         // HUD label of the population stat; the version can rename it.
         public string PopulationLabel { get; set; } = "Pop";
         public int PopulationScale { get; set; } = 1;
+
+        // The clock is hidden in versions that end by bankruptcy.
+        public bool TimerEnabled { get; set; } = true;
         private Color tutorialOutlineColor;
         private bool isTutorialFading;
 
@@ -250,7 +253,7 @@ namespace ZeroHour.Tower
             menuButton != null && menuButton.gameObject.activeInHierarchy &&
             RectTransformUtility.RectangleContainsScreenPoint(menuButton, screenPosition, null);
 
-        public void Refresh(CityStats stats, float stability, float timeLeft)
+        public void Refresh(CityStats stats, float stability, float timeLeft, float bankruptcyTimeLeft = -1f)
         {
             string stabilityColor = stability > 0.5f ? "white" : stability > 0.25f ? "#ffcc33" : WarningColor;
             statsText.text =
@@ -263,7 +266,8 @@ namespace ZeroHour.Tower
                 $"{Label("Joy", 3)} {Signed(stats.Happiness)}\n" +
                 $"<color={stabilityColor}>Stability {stability * 100f:0}%</color>" +
                 (stats.PowerWarning == null ? "" : $"\n<color={WarningColor}>{stats.PowerWarning}</color>") +
-                (float.IsInfinity(stats.Runway) || float.IsInfinity(stats.MoneyCap) ? "" : $"\n<color={WarningColor}>Broke in {Mathf.CeilToInt(stats.Runway)}s</color>");
+                (bankruptcyTimeLeft >= 0f ? $"\n<color={WarningColor}>BANKRUPT in {Mathf.CeilToInt(bankruptcyTimeLeft)}s!</color>"
+                    : float.IsInfinity(stats.Runway) || float.IsInfinity(stats.MoneyCap) ? "" : $"\n<color={WarningColor}>Broke in {Mathf.CeilToInt(stats.Runway)}s</color>");
 
             int seconds = Mathf.CeilToInt(Mathf.Max(0f, timeLeft));
             timerText.text = seconds <= TimerWarningSeconds ? $"<color={WarningColor}>{seconds}s</color>" : $"{seconds}s";
@@ -306,16 +310,20 @@ namespace ZeroHour.Tower
         }
 
         // bestScore is null when the version doesn't track records.
-        public void ShowGameOver(int height, float money, int score, int? bestScore = null, bool isNewBest = false)
+        // score is null when the height is the score (the summary then shows the money as a tiebreaker).
+        public void ShowGameOver(string title, int height, float money, int? score, int? bestScore = null, bool isNewBest = false)
         {
-            string text = isCenteredLayout
-                ? "TIME'S UP!\n" +
-                  $"Height  {height}    Money  $ {money:0}\n" +
-                  $"<size={gameOverFontSize + 20}>Score  {score}</size>"
-                : "TIME'S UP!\n\n" +
-                  $"Height  {height}\n" +
-                  $"Money  $ {money:0}\n\n" +
-                  $"<size={gameOverFontSize + 20}>Score  {score}</size>";
+            int big = gameOverFontSize + 20;
+            string summary;
+            if (score.HasValue)
+                summary = isCenteredLayout
+                    ? $"Height  {height}    Money  $ {money:0}\n<size={big}>Score  {score.Value}</size>"
+                    : $"Height  {height}\nMoney  $ {money:0}\n\n<size={big}>Score  {score.Value}</size>";
+            else
+                summary = isCenteredLayout
+                    ? $"<size={big}>Height  {height}</size>\nEarned  $ {money:0}"
+                    : $"<size={big}>Height  {height}</size>\n\nEarned  $ {money:0}";
+            string text = title + (isCenteredLayout ? "\n" : "\n\n") + summary;
             int bestLineIndex = -1;
             if (bestScore.HasValue)
             {
@@ -369,7 +377,7 @@ namespace ZeroHour.Tower
         private void SetGameplayHudVisible(bool visible)
         {
             statsText.transform.parent.gameObject.SetActive(visible);
-            timerText.gameObject.SetActive(visible);
+            timerText.gameObject.SetActive(visible && TimerEnabled);
         }
     }
 }
