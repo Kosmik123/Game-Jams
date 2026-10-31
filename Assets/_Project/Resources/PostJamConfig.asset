@@ -42,6 +42,11 @@ MonoBehaviour:
   residentsLostPerUnhappiness: 0.5
   happinessIncomeBonus: 0.05
   maxHappinessMultiplier: 1.5
+  startBalance: 100
+  baseMoneyCap: 100
+  bankMoneyCap: 150
+  upkeepPerFloor: 1
+  freeFloors: 8
   parkNeighborHappiness: 1
   powerNeighborHappiness: -1
   commuteIncome: 0.9

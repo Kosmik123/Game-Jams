@@ -97,8 +97,10 @@ public class GoldFloorTests
     [Test]
     public void Catch_PaysTwentyFiveDollars()
     {
-        var stats = new PostJamRuleset().CreateEconomy();
-        stats.AddBonusMoney(new PostJamRuleset().GoldMoneyBonus);
+        PostJamConfig config = PostJamConfig.CreateDefault();
+        config.startBalance = 0f;
+        var stats = new PostJamRuleset(config).CreateEconomy();
+        stats.AddBonusMoney(new PostJamRuleset(config).GoldMoneyBonus);
         Assert.AreEqual(25f, stats.Money, 1e-4f);
     }
 

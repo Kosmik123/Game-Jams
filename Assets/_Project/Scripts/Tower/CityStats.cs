@@ -52,6 +52,20 @@ namespace ZeroHour.Tower
         public float Income { get; private set; }
         public float Money { get; private set; }
 
+        // Everything earned from income so far, before upkeep and without one-off bonuses.
+        public float TotalEarned { get; private set; }
+
+        // The balance never goes above this; the jam economy has no limit.
+        public virtual float MoneyCap => float.PositiveInfinity;
+
+        // $ per second paid for keeping the tower up; the jam economy pays nothing.
+        public virtual float Upkeep => 0f;
+
+        public float NetIncome => Income - Upkeep;
+
+        // Seconds until the balance reaches zero at the current net income; infinite when it isn't shrinking.
+        public float Runway => NetIncome >= 0f ? float.PositiveInfinity : Mathf.Max(0f, Money) / -NetIncome;
+
         // Base income per second from neighbor pairs, before power and multipliers.
         public float NeighborIncome { get; private set; }
 
@@ -113,6 +127,9 @@ namespace ZeroHour.Tower
             PowerRatio = CalculatePowerRatio(supply, demand);
             Income = CalculateIncome(population, jobs, happiness, PowerRatio);
 
+            OnRecalculated(floors);
+            Money = Mathf.Min(Money, MoneyCap);
+
             floorPowered.Clear();
             int consumers = 0;
             foreach (FloorType type in floors)
@@ -131,10 +148,19 @@ namespace ZeroHour.Tower
         // Whether the floor at this index (from the bottom) has power. FallingFloor keeps producers lit anyway.
         public bool IsFloorPowered(int index) => floorPowered[index];
 
-        public void Tick(float deltaTime) => Money += Income * deltaTime;
+        public void Tick(float deltaTime)
+        {
+            TotalEarned += Income * deltaTime;
+            Money = Mathf.Min(Money + NetIncome * deltaTime, MoneyCap);
+        }
 
-        // One-off cash that doesn't come from income (the golden floor).
-        public void AddBonusMoney(float amount) => Money += amount;
+        // One-off cash that doesn't come from income (the golden floor, the starting balance), up to the limit.
+        public void AddBonusMoney(float amount) => Money = Mathf.Min(Money + amount, MoneyCap);
+
+        // Called at the end of Recalculate, before the balance is cut to the limit.
+        protected virtual void OnRecalculated(IReadOnlyList<FloorType> floors)
+        {
+        }
 
         // Perfect landings in a row; the jam economy doesn't count them.
         public int PerfectStreak { get; protected set; }

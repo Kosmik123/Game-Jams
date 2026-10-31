@@ -255,17 +255,29 @@ namespace ZeroHour.Tower
             string stabilityColor = stability > 0.5f ? "white" : stability > 0.25f ? "#ffcc33" : WarningColor;
             statsText.text =
                 $"Height {stats.Height}\n" +
-                $"$ {stats.Money:0} (+{stats.Income:0.0}/s)" +
+                MoneyLine(stats) +
                 (stats.Combo > 1 ? $" <color={ComboColor}>COMBO {stats.Combo} (x{stats.ComboIncomeMultiplier:0.0})</color>" : "") + "\n" +
                 $"{Label(PopulationLabel, 0)} {Mathf.RoundToInt(stats.Population * PopulationScale)}\n" +
                 $"{Label("Jobs", 1)} {Mathf.RoundToInt(stats.Jobs * PopulationScale)}\n" +
                 $"{Label("Energy", 2)} {Signed(stats.Energy)}\n" +
                 $"{Label("Joy", 3)} {Signed(stats.Happiness)}\n" +
                 $"<color={stabilityColor}>Stability {stability * 100f:0}%</color>" +
-                (stats.PowerWarning == null ? "" : $"\n<color={WarningColor}>{stats.PowerWarning}</color>");
+                (stats.PowerWarning == null ? "" : $"\n<color={WarningColor}>{stats.PowerWarning}</color>") +
+                (float.IsInfinity(stats.Runway) || float.IsInfinity(stats.MoneyCap) ? "" : $"\n<color={WarningColor}>Broke in {Mathf.CeilToInt(stats.Runway)}s</color>");
 
             int seconds = Mathf.CeilToInt(Mathf.Max(0f, timeLeft));
             timerText.text = seconds <= TimerWarningSeconds ? $"<color={WarningColor}>{seconds}s</color>" : $"{seconds}s";
+        }
+
+        // "$ 87/100 (+3.2/s)" when the balance has a limit (net income, red when negative), the plain total otherwise.
+        private static string MoneyLine(CityStats stats)
+        {
+            if (float.IsInfinity(stats.MoneyCap))
+                return $"$ {stats.Money:0} (+{stats.Income:0.0}/s)";
+            string net = stats.NetIncome.ToString("+0.0;-0.0;0.0");
+            if (stats.NetIncome < 0f)
+                net = $"<color={WarningColor}>{net}</color>";
+            return $"$ {stats.Money:0}/{stats.MoneyCap:0} ({net}/s)";
         }
 
         // Stat label in the color of the floor type that produces it (order of FloorType.All).

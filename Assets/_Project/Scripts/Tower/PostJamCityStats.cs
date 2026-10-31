@@ -15,9 +15,31 @@ namespace ZeroHour.Tower
         {
         }
 
+        private int bankCount;
+        private int payingFloorCount;
+
         public PostJamCityStats(PostJamConfig config)
         {
             this.config = config;
+            AddBonusMoney(config.startBalance);
+        }
+
+        // Banks raise the limit; the first floors and the gold floor cost no upkeep.
+        public override float MoneyCap => config.baseMoneyCap + config.bankMoneyCap * bankCount;
+
+        public override float Upkeep => config.upkeepPerFloor * Mathf.Max(0, payingFloorCount - config.freeFloors);
+
+        protected override void OnRecalculated(IReadOnlyList<FloorType> floors)
+        {
+            bankCount = 0;
+            payingFloorCount = 0;
+            foreach (FloorType type in floors)
+            {
+                if (type == FloorType.Bank)
+                    bankCount++;
+                if (!type.IsGold)
+                    payingFloorCount++;
+            }
         }
 
         protected override float ResidentsLostPerUnhappiness => config.residentsLostPerUnhappiness;

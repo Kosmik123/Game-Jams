@@ -43,6 +43,18 @@ namespace ZeroHour.Tower
         [Tooltip("Cap of the happiness income multiplier (1.5 = +50%).")]
         [Min(1f)] public float maxHappinessMultiplier = 1.5f;
 
+        [Header("Treasury")]
+        [Tooltip("Balance at the start of a round.")]
+        public float startBalance = 100f;
+        [Tooltip("The most money that can be kept without banks; income above the limit is lost.")]
+        [Min(0f)] public float baseMoneyCap = 100f;
+        [Tooltip("Extra limit for every bank in the tower.")]
+        [Min(0f)] public float bankMoneyCap = 150f;
+        [Tooltip("$ per second for every floor beyond the free ones (the gold floor never pays).")]
+        [Min(0f)] public float upkeepPerFloor = 1f;
+        [Tooltip("The first floors of the tower cost no upkeep.")]
+        [Min(0)] public int freeFloors = 8;
+
         [Header("Neighbor pairs (a residential floor directly above or below)")]
         public int parkNeighborHappiness = 1;
         public int powerNeighborHappiness = -1;

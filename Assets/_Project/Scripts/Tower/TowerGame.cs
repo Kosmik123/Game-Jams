@@ -121,7 +121,7 @@ namespace ZeroHour.Tower
         private float roundElapsed;
         private float shakeTimeLeft;
         private float incomePopupTimer;
-        private float moneyAtLastPopup;
+        private float earnedAtLastPopup;
         private int lastTickSecond;
         private float newBestSoundTime = -1f;
         private bool isGameOver;
@@ -217,7 +217,7 @@ namespace ZeroHour.Tower
             roundElapsed = 0f;
             shakeTimeLeft = 0f;
             incomePopupTimer = 0f;
-            moneyAtLastPopup = 0f;
+            earnedAtLastPopup = 0f;
             lastTickSecond = int.MaxValue;
             newBestSoundTime = -1f;
             if (ruleset.PlaySounds)
@@ -247,11 +247,11 @@ namespace ZeroHour.Tower
                 Tower.SuppressSway = true;
                 Tower.IsFrozen = true;
             }
-            int score = stats.Height * scorePerFloor + Mathf.FloorToInt(stats.Money);
+            int score = stats.Height * scorePerFloor + Mathf.FloorToInt(stats.TotalEarned);
             string bestKey = ruleset.BestScoreKey;
             if (bestKey == null)
             {
-                hud.ShowGameOver(stats.Height, stats.Money, score);
+                hud.ShowGameOver(stats.Height, stats.TotalEarned, score);
                 return;
             }
 
@@ -263,7 +263,7 @@ namespace ZeroHour.Tower
                 PlayerPrefs.SetInt(bestKey, score);
                 PlayerPrefs.Save(); // WebGL: written to IndexedDB right away
             }
-            hud.ShowGameOver(stats.Height, stats.Money, score, PlayerPrefs.GetInt(bestKey), isNewBest);
+            hud.ShowGameOver(stats.Height, stats.TotalEarned, score, PlayerPrefs.GetInt(bestKey), isNewBest);
         }
 
         private void Update()
@@ -398,7 +398,6 @@ namespace ZeroHour.Tower
             PlaySound("gold");
             Tower.RelieveInstability(ruleset.GoldInstabilityRelief);
             stats.AddBonusMoney(ruleset.GoldMoneyBonus);
-            moneyAtLastPopup += ruleset.GoldMoneyBonus; // not part of the per-second income popup
             float height = PerfectPopupHeight + (isPerfect && ruleset.ShowPerfectPopup ? GoldPopupExtraHeight : 0f);
             WorldPopup.Show(hud, Camera, floor.transform, Vector3.up * height, "GOLD!", PerfectFontSize, GoldColor, PerfectRise, PerfectDuration);
         }
@@ -462,8 +461,8 @@ namespace ZeroHour.Tower
             if (incomePopupTimer < incomePopupInterval)
                 return;
             incomePopupTimer -= incomePopupInterval;
-            int earned = Mathf.RoundToInt(stats.Money - moneyAtLastPopup);
-            moneyAtLastPopup = stats.Money;
+            int earned = Mathf.RoundToInt(stats.TotalEarned - earnedAtLastPopup);
+            earnedAtLastPopup = stats.TotalEarned;
             if (earned <= 0)
                 return;
             var roof = new Vector3(Tower.TopOffset, Tower.LocalTop + IncomePopupHeight, 0f);
