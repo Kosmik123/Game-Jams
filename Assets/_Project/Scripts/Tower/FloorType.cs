@@ -33,8 +33,16 @@ namespace ZeroHour.Tower
         // The rare golden floor: no stats, never part of the random draw (see GoldSpawner).
         public static FloorType Gold { get; } = new FloorType("Gold", new Color(1f, 0.84f, 0.1f), 0, 0, 0, 0);
 
+        // Stores money (post-jam only). Same class of floor as the four above, so it shares their draw.
+        public static FloorType Bank { get; } = new FloorType("Bank", new Color(0.37f, 0.75f, 0.53f), 0, 0, 0, 0);
+
+        // The floors a version may draw from: All, plus the bank where the ruleset allows it.
+        public static IReadOnlyList<FloorType> WithBank { get; } = new List<FloorType>(All) { Bank };
+
         public bool IsGold => this == Gold;
 
-        public static FloorType GetRandom() => All[Random.Range(0, All.Count)];
+        public static FloorType GetRandom() => GetRandom(All);
+
+        public static FloorType GetRandom(IReadOnlyList<FloorType> pool) => pool[Random.Range(0, pool.Count)];
     }
 }

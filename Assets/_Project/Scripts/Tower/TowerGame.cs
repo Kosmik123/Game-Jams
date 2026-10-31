@@ -553,7 +553,7 @@ namespace ZeroHour.Tower
             if (!isGold)
             {
                 do
-                    type = FloorType.GetRandom();
+                    type = FloorType.GetRandom(ruleset.FloorPool);
                 while (type == lastSpawnType);
                 lastSpawnType = type;
             }
@@ -578,7 +578,7 @@ namespace ZeroHour.Tower
         {
             var floor = new GameObject("Floor").AddComponent<FallingFloor>();
             floor.transform.position = position;
-            float fallSpeed = ruleset.FallSpeed(stats.Height) * (type.IsGold ? ruleset.GoldFallSpeedFactor : 1f);
+            float fallSpeed = ruleset.NextFallSpeed(stats.Height, Random.value) * (type.IsGold ? ruleset.GoldFallSpeedFactor : 1f);
             floor.Init(this, type, squareSprite, floorWidth, ruleset.FloorHeight, ruleset.FloorArtFolder, fallSpeed);
             spawnedFloors.Add(floor);
         }

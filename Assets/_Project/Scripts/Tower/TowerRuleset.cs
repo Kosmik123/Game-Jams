@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace ZeroHour.Tower
@@ -37,6 +38,16 @@ namespace ZeroHour.Tower
 
         // How far the real gap may stray from SpawnInterval, as a fraction of it (0.5 = from half to one and a half).
         public virtual float SpawnIntervalJitter => 0f;
+
+        // How far a floor's own fall speed may stray from FallSpeed, as a fraction of it (0.1 = plus or minus 10%).
+        public virtual float FallSpeedJitter => 0f;
+
+        // The floor types that fall; the jam draws only the original four.
+        public virtual IReadOnlyList<FloorType> FloorPool => FloorType.All;
+
+        // FallSpeed with a random spread; unit01 is a uniform random number from 0 to 1.
+        public float NextFallSpeed(int towerHeight, float unit01) =>
+            FallSpeed(towerHeight) * (1f + FallSpeedJitter * (2f * unit01 - 1f));
 
         // The shortest gap between two floors, so they never overlap.
         public const float MinSpawnGap = 0.15f;
@@ -145,6 +156,7 @@ namespace ZeroHour.Tower
         private const float BaseSpawnInterval = 0.7f;
         private const float SpawnIntervalPerFloor = 0.01f;
         private const float MinSpawnInterval = 0.4f;
+        private const float FallSpeedSpread = 0.1f;
 
         // The clock starts low and the player earns time by building.
         private const float StartTime = 25f;
@@ -171,6 +183,8 @@ namespace ZeroHour.Tower
         public override float CollapseTimePenalty => CollapsePenalty;
         public override float MissedFloorTimePenalty => MissedFloorPenalty;
         public override float SpawnIntervalJitter => 0.5f;
+        public override float FallSpeedJitter => FallSpeedSpread;
+        public override IReadOnlyList<FloorType> FloorPool => FloorType.WithBank;
         public override int TimerWarningSeconds => 4;
 
         // The floor bonus shrinks as the tower grows; the perfect bonus doesn't.

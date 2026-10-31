@@ -1,7 +1,7 @@
 """Pixel-art floor sprites written as PNG with pure Python, upscaled x4.
 
 Square 32x32 set (jam version, Resources/Floors):      python floor_sprites.py <out>
-Wide 32x24 (4:3) set (post-jam, Resources/FloorsWide, incl. the Gold bonus floor): python floor_sprites.py <out> --wide
+Wide 32x24 (4:3) set (post-jam, Resources/FloorsWide, incl. the Gold bonus floor and the Bank): python floor_sprites.py <out> --wide
 """
 import os
 import struct
@@ -326,11 +326,47 @@ def gold_wide():
     return c
 
 
+def bank_wide():
+    """Post-jam floor that stores money: marble front, green cornice with a dollar sign, vault door."""
+    wall, dark, light = hexc('#d9e2d6'), hexc('#8fa38f'), hexc('#f4f8f1')
+    green, green_d, green_l = hexc('#2f8f5b'), hexc('#1f6b42'), hexc('#5fc088')
+    ring, steel, steel_l = hexc('#3a464c'), hexc('#7e8f99'), hexc('#a9b9c2')
+    cap, white = hexc('#b9c8b6'), hexc('#ffffff')
+    c = Canvas(w=WW, h=WH)
+    frame(c, wall, dark, light)
+    # stone block lines
+    for y in (10, 15):
+        c.rect(7, y, WW - 14, 1, hexc('#c9d4c5'))
+    # green cornice band with a dollar sign
+    c.rect(2, 1, WW - 4, 6, green)
+    c.rect(2, 1, WW - 4, 1, green_l)
+    c.rect(2, 6, WW - 4, 1, green_d)
+    for (x, y) in ((15, 1), (16, 1), (17, 1), (15, 2), (15, 3), (16, 3), (17, 3), (17, 4), (15, 5), (16, 5), (17, 5), (16, 2), (16, 4)):
+        c.px(x, y, white)
+    # columns
+    for x0 in (3, 26):
+        c.rect(x0, 7, 3, 13, hexc('#eef3ea'))
+        c.rect(x0, 7, 1, 13, white)
+        c.rect(x0 + 2, 7, 1, 13, dark)
+        c.rect(x0 - 1, 7, 5, 1, cap)
+        c.rect(x0 - 1, 19, 5, 1, cap)
+    # vault door
+    c.circle(16, 13.5, 6.5, ring)
+    c.circle(16, 13.5, 5.4, steel)
+    c.circle(16, 13.5, 3.4, steel_l)
+    c.rect(15, 10, 2, 8, ring)
+    c.rect(12, 13, 8, 2, ring)
+    c.rect(15, 13, 2, 2, green_l)
+    for (x, y) in ((11, 9), (21, 9), (11, 18), (21, 18)):
+        c.px(x, y, steel_l)
+    return c
+
+
 if __name__ == '__main__':
     out = sys.argv[1]
     wide_set = '--wide' in sys.argv[2:]
     os.makedirs(out, exist_ok=True)
-    sprites = (('Residential', residential_wide), ('Office', office_wide), ('Power', power_wide), ('Park', park_wide), ('Gold', gold_wide))         if wide_set else (('Residential', residential), ('Office', office), ('Power', power), ('Park', park))
+    sprites = (('Residential', residential_wide), ('Office', office_wide), ('Power', power_wide), ('Park', park_wide), ('Gold', gold_wide), ('Bank', bank_wide))         if wide_set else (('Residential', residential), ('Office', office), ('Power', power), ('Park', park))
     for name, fn in sprites:
         fn().save(os.path.join(out, name + '.png'))
         print('wrote', name)
