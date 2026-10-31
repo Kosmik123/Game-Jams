@@ -183,7 +183,7 @@ namespace ZeroHour.Tower
         public override CityStats CreateEconomy() => new PostJamCityStats();
         public override TowerSway CreateSway() => new PostJamTowerSway();
         public override bool FixedCamera => true;
-        public override float TowerTopScreenFraction => 0.25f;
+        public override float TowerTopScreenFraction => 0.2f;
         public override bool DynamicSky => true;
         public override float GoldChance => GoldSpawnChance;
         public override int GoldMinHeight => GoldSpawnMinHeight;

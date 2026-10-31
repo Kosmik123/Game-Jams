@@ -12,6 +12,6 @@ public class RulesetCameraTests
     [Test]
     public void PostJam_KeepsTowerTopLower_ForMoreSky()
     {
-        Assert.AreEqual(0.25f, new PostJamRuleset().TowerTopScreenFraction, 1e-4f);
+        Assert.AreEqual(0.2f, new PostJamRuleset().TowerTopScreenFraction, 1e-4f);
     }
 }
