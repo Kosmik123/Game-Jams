@@ -214,6 +214,18 @@ Po każdym tasku: kompilacja/testy → commit (mały, z opisem). Build WebGL + d
 
 - [x] **31. [post-jam] Trudniej: kara za pominięte piętro, combo bez limitu (zrobione przez menedżera, 26.10).** `MissedFloorTimePenalty` 0,5 s (jam 0), `PostJamCityStats.Combo` bez limitu i `ComboIncomeMultiplier = 1 + 0,1 × (combo − 1)`. Testy: `ComboTests`, `RoundTimeTests` (77/77). Szczegóły w GDD.
 
+### Etap: bankructwo i wysokość (od 31.10.2026) — specyfikacja w GDD, sekcja „Koniec gry: bankructwo”
+
+Kolejność = zależności; po każdym tasku gra ma się dać uruchomić. Tylko `PostJamRuleset` — jam zostaje zamrożony. Liczby w GDD (strojenie po testach), stałe w jednym miejscu.
+
+- [ ] **32. [post-jam] Ekonomia na slotach (bez zmiany zachowania).** Przepisz `PostJamCityStats` na model z GDD: `pracownicy = min(praca·r, ludzie·r, sloty)`, sloty dom +5, park +20, elektrownia −10, dochód = `k × pracownicy` (k = 0,9, stała). Na tym kroku `q = 1` dla wszystkich pięter, bez salda i utrzymania. Testy: równoważność ze starym modelem szczęścia dla przykładów z GDD (np. 2R2O1P1Pk, 3R3O2P1Pk, 3R1O1P0Pk), bank bez efektu. Jam (`CityStats`) nietknięty.
+- [ ] **33. [post-jam] Saldo, utrzymanie, banki.** Saldo (start 100) z limitem (baza 100 + 150 × q za każdy bank), utrzymanie 1 $/s za piętro od 9. piętra (pierwsze 8 darmowe), nadwyżka ponad limit przepada. HUD: saldo/limit, bilans na sekundę, zapas czasu. Testy: limit, utrzymanie, darmowe piętra, bank podnosi limit.
+- [ ] **34. [post-jam] Bankructwo, koniec timera, nowy wynik.** Saldo < 0 przez 8 s → game over (odliczanie na HUD, reset po powrocie na plus); game over także przy 0 pięter. Usuń zegar i wszystkie bonusy/kary czasowe oraz combo. Wynik = maksymalna wysokość, remis = suma zarobków; rekord w `PlayerPrefs` (klucz nowy, stary rekord ignorujemy). Ekran końca: wysokość + suma zarobków. Po tym tasku gra jest w nowej formie — ogłoś w `COMMS.md` (menedżer zrobi build do testu na telefonie).
+- [ ] **35. [post-jam] Jakość ułożenia `q`.** `q` z przesunięcia (perfect = 1,0, inaczej `1 − 0,5·min(1, przesunięcie/szerokość)`), mnoży efekty dodatnie piętra i pojemność banku; wizualnie ciemniejsze/„blade” piętra o niskim `q` (opcjonalnie). Testy na przykładach z GDD.
+- [ ] **36. [post-jam] Tempo bez limitu i mniejsza celność.** Prędkość i częstość pięter rosną z maksymalną wysokością bez sufitu; niestabilność z lądowania rośnie z tempem, okno perfect się zwęża. Wartości startowe: patrz GDD [PROPOZYCJA]; stałe łatwe do strojenia.
+- [ ] **37. [post-jam] Złoty blok jako zastrzyk gotówki.** Po złapaniu +60 $ do salda (ucięte limitem), niestabilność −25 jak dotąd, bez +3 s i bez utrzymania.
+- [ ] **38. [post-jam] Strojenie na botach.** Bot z poprzedniego jamu lub nowy: raport, jak daleko dochodzą boty o różnej dokładności; porównanie z `Tools/econ_sim.py`; propozycje korekt `k`, tempa i okna perfect.
+
 ## Zrobione (jam, do `39a94ec` na itch.io)
 
 - [x] Input na telefonie (platforma zostaje w miejscu bez dotyku).
