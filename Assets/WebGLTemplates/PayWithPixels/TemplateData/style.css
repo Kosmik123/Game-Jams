@@ -12,7 +12,8 @@ body { padding: 0; margin: 0; color: #F4F1DE; font-family: "Pixel57", monospace 
 #unity-canvas { background: #000; display: block; aspect-ratio: 16 / 9; width: min(100vw, calc((100vh - 28px) * 16 / 9)); height: auto; image-rendering: pixelated; image-rendering: crisp-edges }
 .unity-desktop #unity-footer { width: 100% }
 #unity-container.unity-mobile { display: flex; align-items: center; justify-content: center; background: #000 }
-.unity-mobile #unity-canvas { width: min(100vw, calc(100vh * 16 / 9)); height: auto; aspect-ratio: 16 / 9 }
+/* telefon: canvas wypelnia caly ekran, proporcje obrazu dobiera gra (TwoColorDisplay) */
+.unity-mobile #unity-canvas { width: 100vw; height: 100vh; height: 100dvh; aspect-ratio: auto }
 #unity-loading-bar { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: none; text-align: center }
 #unity-loading-title { font-size: 28px; letter-spacing: 2px; margin-bottom: 20px }
 #unity-progress-bar-empty { width: 240px; height: 14px; border: 2px solid #F4F1DE; padding: 2px; margin: 0 auto }

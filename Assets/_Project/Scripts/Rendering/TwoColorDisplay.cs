@@ -11,8 +11,10 @@ namespace PayWithPixels
     {
         /// <summary>Rozdzielczosc wewnetrzna RT (RT_HEIGHT; szerokosc = 16:9). Zmiana tej stalej + Game.OrthoSize/ArenaHalf cofa 480x270 -> 320x180.</summary>
         public const int BaseHeight = 270;
-        private const float Aspect = 16f / 9f;
+        private const float BaseAspect = 16f / 9f;
+        private const float MaxAspect = 2.4f;   // szerszy ekran (np. 21:9) dostaje paski; telefony 18:9-20:9 wypelniamy w calosci
         private const float MinHeight = 30;
+        private float aspect = BaseAspect;
 
         private Camera worldCamera;
         private RenderTexture rt;
@@ -56,7 +58,7 @@ namespace PayWithPixels
 
             material = new Material(Resources.Load<Shader>("TwoColor"));
             image.material = material;
-            material.SetFloat("_Aspect", Aspect);
+            material.SetFloat("_Aspect", aspect);
 
             SetPixelLevel(0);
             Palette.Changed += ApplyColors;
@@ -81,9 +83,25 @@ namespace PayWithPixels
         {
             if (level == pixelLevel) return;
             pixelLevel = level;
-            float h = Mathf.Max(MinHeight, BaseHeight / (1f + 0.5f * level));
+            RebuildTexture();
+        }
+
+        /// <summary>Proporcje obrazu = proporcje ekranu, ale nie wezsze niz 16:9 i nie szersze niz MaxAspect. Wysokosc swiata bez zmian, szerszy ekran widzi wiecej po bokach.</summary>
+        private void FitAspect()
+        {
+            float target = Mathf.Clamp(Screen.width / (float)Mathf.Max(1, Screen.height), BaseAspect, MaxAspect);
+            if (Mathf.Abs(target - BaseAspect) < 0.02f) target = BaseAspect;
+            if (Mathf.Abs(target - aspect) < 0.01f) return;
+            aspect = target;
+            material.SetFloat("_Aspect", aspect);
+            RebuildTexture();
+        }
+
+        private void RebuildTexture()
+        {
+            float h = Mathf.Max(MinHeight, BaseHeight / (1f + 0.5f * pixelLevel));
             int height = Mathf.RoundToInt(h);
-            int width = Mathf.RoundToInt(h * Aspect);
+            int width = Mathf.RoundToInt(h * aspect);
 
             if (rt != null)
             {
@@ -107,8 +125,9 @@ namespace PayWithPixels
 
         private void LateUpdate()
         {
-            float scale = Mathf.Min(Screen.width / 16f, Screen.height / 9f);
-            var size = new Vector2(16f * scale, 9f * scale);
+            FitAspect();
+            float scale = Mathf.Min(Screen.width / (aspect * 9f), Screen.height / 9f);
+            var size = new Vector2(aspect * 9f * scale, 9f * scale);
             var rect = image.rectTransform;
             rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
             rect.pivot = new Vector2(0.5f, 0.5f);
