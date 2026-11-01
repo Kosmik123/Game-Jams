@@ -22,6 +22,9 @@ namespace ZeroHour.Menu
         [SerializeField]
         private int footerFontSize = 40;
 
+        [SerializeField]
+        private int debugFontSize = 44;
+
         private void Awake()
         {
             Camera camera = Camera.main;
@@ -44,10 +47,25 @@ namespace ZeroHour.Menu
             Place((RectTransform)postJamButton.transform, -200f, buttonSize);
             postJamButton.onClick.AddListener(() => Play(GameVersionType.PostJam));
 
+            // Debug mode (post-jam never loses); remembered between visits.
+            Vector2 debugSize = new Vector2(420f, 100f);
+            Button debugButton = UiFactory.CreateButton("Debug", canvas.transform, debugFontSize, debugSize);
+            Place((RectTransform)debugButton.transform, -340f, debugSize);
+            Text debugLabel = debugButton.GetComponentInChildren<Text>();
+            debugLabel.text = DebugLabel(DebugMode.IsStored);
+            debugButton.onClick.AddListener(() =>
+            {
+                AudioManager.Instance.Play("ui_click");
+                DebugMode.SetStored(!DebugMode.IsStored);
+                debugLabel.text = DebugLabel(DebugMode.IsStored);
+            });
+
             Text footer = UiFactory.CreateText("Footer", canvas.transform, footerFontSize, TextAnchor.MiddleCenter);
             footer.text = "0h Game Jam 2026";
-            Place(footer.rectTransform, -420f, new Vector2(1000f, 80f));
+            Place(footer.rectTransform, -460f, new Vector2(1000f, 80f));
         }
+
+        private static string DebugLabel(bool isOn) => isOn ? "Debug: on" : "Debug: off";
 
         // Centered horizontally, y relative to the screen center.
         private static void Place(RectTransform rect, float y, Vector2 size)

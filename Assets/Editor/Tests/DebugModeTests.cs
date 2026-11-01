@@ -22,9 +22,38 @@ public class DebugModeTests
     [Test]
     public void PostJam_OutsideDebugKeepsTheLoss()
     {
-        // In the editor the address is empty, so debug is off and the config decides.
-        Assert.IsFalse(new PostJamRuleset().IsDebug);
-        Assert.IsTrue(new PostJamRuleset().LosesByBankruptcy);
+        // In the editor the address is empty, so only the stored switch can turn debug on.
+        bool stored = DebugMode.IsStored;
+        DebugMode.SetStored(false);
+        try
+        {
+            Assert.IsFalse(new PostJamRuleset().IsDebug);
+            Assert.IsTrue(new PostJamRuleset().LosesByBankruptcy);
+        }
+        finally
+        {
+            DebugMode.SetStored(stored);
+        }
+    }
+
+    [Test]
+    public void StoredSwitch_TurnsDebugOnAndNeverLoses()
+    {
+        bool stored = DebugMode.IsStored;
+        try
+        {
+            DebugMode.SetStored(true);
+            Assert.IsTrue(DebugMode.IsEnabled);
+            Assert.IsTrue(new PostJamRuleset().IsDebug);
+            Assert.IsFalse(new PostJamRuleset().LosesByBankruptcy);
+            Assert.IsFalse(new JamRuleset().IsDebug, "the jam version has no debug mode");
+            DebugMode.SetStored(false);
+            Assert.IsFalse(DebugMode.IsStored);
+        }
+        finally
+        {
+            DebugMode.SetStored(stored);
+        }
     }
 
     [Test]
