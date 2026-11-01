@@ -55,6 +55,12 @@ namespace ZeroHour.Tower
         [Tooltip("The first floors of the tower cost no upkeep.")]
         [Min(0)] public int freeFloors = 8;
 
+        [Header("Accuracy gets harder with height")]
+        [Tooltip("Instability from a landing is multiplied by 1 + sqrt(highest height) / this.")]
+        [Min(0.1f)] public float instabilitySqrtScale = 8f;
+        [Tooltip("The perfect window is divided by 1 + sqrt(highest height) / this.")]
+        [Min(0.1f)] public float perfectWindowSqrtScale = 10f;
+
         [Header("Game over")]
         [Tooltip("Untick to never lose: bankruptcy and an empty tower end nothing (for testing).")]
         public bool canLose = true;
@@ -83,15 +89,19 @@ namespace ZeroHour.Tower
         public float goldInstabilityRelief = 25f;
         public float goldMoneyBonus = 25f;
 
-        [Header("Tempo")]
+        [Header("Placement quality")]
+        [Tooltip("Quality of a floor that landed a full floor width off (a perfect landing is 1). It multiplies the good a floor does: people, jobs, power, joy and a bank's limit.")]
+        [Range(0f, 1f)] public float minQuality = 0.5f;
+
+        [Header("Tempo (grows with the square root of the highest tower reached, no upper limit)")]
         [Min(0f)] public float baseFallSpeed = 3f;
-        [Min(0f)] public float fallSpeedPerFloor = 0.15f;
-        [Min(0f)] public float maxFallSpeed = 8f;
+        [Tooltip("Fall speed = base + this x sqrt(highest height).")]
+        [Min(0f)] public float fallSpeedPerSqrtFloor = 0.8f;
         [Tooltip("Each floor falls at its own speed within this share of the current one (0.1 = plus or minus 10%).")]
         [Range(0f, 0.9f)] public float fallSpeedSpread = 0.1f;
         [Min(0.05f)] public float baseSpawnInterval = 0.7f;
-        [Min(0f)] public float spawnIntervalPerFloor = 0.01f;
-        [Min(0.05f)] public float minSpawnInterval = 0.4f;
+        [Tooltip("Spawn interval = base / (1 + this x sqrt(highest height)); never shorter than the minimum gap between floors.")]
+        [Min(0f)] public float spawnRatePerSqrtFloor = 0.1f;
         [Tooltip("The gap between floors strays from the interval by this share (0.5 = from half to one and a half).")]
         [Range(0f, 0.95f)] public float spawnIntervalJitter = 0.5f;
 

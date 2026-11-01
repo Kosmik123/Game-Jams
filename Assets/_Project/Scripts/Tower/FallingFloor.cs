@@ -5,6 +5,7 @@ namespace ZeroHour.Tower
     public class FallingFloor : MonoBehaviour
     {
         private static readonly Color UnpoweredTint = new Color(0.45f, 0.45f, 0.5f);
+        private const float MinQualityShade = 0.65f;
         private const float SlideDuration = 0.08f;
         private const float SquashDuration = 0.15f;
         private const float GoldPulseDepth = 0.15f;
@@ -27,6 +28,9 @@ namespace ZeroHour.Tower
         public float Height { get; private set; }
         public bool IsAttached { get; private set; }
         public bool IsDebris => isDebris;
+
+        // How well the floor was placed (1 = perfectly); a badly placed floor looks darker.
+        public float Quality { get; set; } = 1f;
 
         // Position in the tower, without the visual wobble.
         public Vector2 TowerPosition { get; private set; }
@@ -137,7 +141,9 @@ namespace ZeroHour.Tower
         {
             bool producesPower = Type.Energy > 0;
             Color baseColor = hasArt ? Color.white : Type.Color;
-            spriteRenderer.color = isPowered || producesPower ? baseColor : baseColor * UnpoweredTint;
+            float shade = Mathf.Lerp(MinQualityShade, 1f, Mathf.InverseLerp(0.5f, 1f, Quality));
+            var qualityTint = new Color(shade, shade, shade, 1f);
+            spriteRenderer.color = (isPowered || producesPower ? baseColor : baseColor * UnpoweredTint) * qualityTint;
         }
 
         // Falls off the collapsing tower and never attaches again.

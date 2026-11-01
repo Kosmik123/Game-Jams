@@ -98,14 +98,13 @@ public class PostJamConfigTests
     {
         PostJamConfig config = NewConfig();
         config.baseFallSpeed = 5f;
-        config.fallSpeedPerFloor = 0.5f;
-        config.maxFallSpeed = 7f;
+        config.fallSpeedPerSqrtFloor = 2f;
         config.goldChance = 0.5f;
         config.goldMoneyBonus = 99f;
         var ruleset = new PostJamRuleset(config);
         Assert.AreEqual(5f, ruleset.FallSpeed(0), 1e-4f);
-        Assert.AreEqual(6f, ruleset.FallSpeed(2), 1e-4f);
-        Assert.AreEqual(7f, ruleset.FallSpeed(100), 1e-4f);
+        Assert.AreEqual(9f, ruleset.FallSpeed(4), 1e-4f);
+        Assert.AreEqual(25f, ruleset.FallSpeed(100), 1e-4f);
         Assert.AreEqual(0.5f, ruleset.GoldChance, 1e-4f);
         Assert.AreEqual(99f, ruleset.GoldMoneyBonus, 1e-4f);
     }
@@ -115,9 +114,9 @@ public class PostJamConfigTests
     {
         var ruleset = new PostJamRuleset();
         Assert.AreEqual(3f, ruleset.FallSpeed(0), 1e-4f);
-        Assert.AreEqual(8f, ruleset.FallSpeed(1000), 1e-4f);
+        Assert.AreEqual(3f + 0.8f * 10f, ruleset.FallSpeed(100), 1e-4f);
         Assert.AreEqual(0.7f, ruleset.SpawnInterval(0), 1e-4f);
-        Assert.AreEqual(0.4f, ruleset.SpawnInterval(1000), 1e-4f);
+        Assert.AreEqual(0.7f / (1f + 0.1f * 10f), ruleset.SpawnInterval(100), 1e-4f);
         Assert.AreEqual(0.5f, ruleset.SpawnIntervalJitter, 1e-4f);
         Assert.AreEqual(0.1f, ruleset.FallSpeedJitter, 1e-4f);
     }

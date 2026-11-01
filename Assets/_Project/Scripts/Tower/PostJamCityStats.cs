@@ -15,7 +15,7 @@ namespace ZeroHour.Tower
         {
         }
 
-        private int bankCount;
+        private float bankCapacity;
         private int payingFloorCount;
 
         public PostJamCityStats(PostJamConfig config)
@@ -24,20 +24,28 @@ namespace ZeroHour.Tower
             AddBonusMoney(config.startBalance);
         }
 
-        // Banks raise the limit; the first floors and the gold floor cost no upkeep.
-        public override float MoneyCap => config.baseMoneyCap + config.bankMoneyCap * bankCount;
+        // Banks raise the limit (a badly placed bank counts for less); the first floors and the gold floor cost no upkeep.
+        public override float MoneyCap => config.baseMoneyCap + config.bankMoneyCap * bankCapacity;
+
+        // A badly placed floor does less good: its people, jobs, power and joy shrink with its quality,
+        // while what it costs (energy use, smog, crowding) stays.
+        protected override FloorStats ScaleStats(FloorStats stats, float quality) => new FloorStats(
+            stats.Population * quality,
+            stats.Jobs * quality,
+            stats.Energy > 0f ? stats.Energy * quality : stats.Energy,
+            stats.Happiness > 0f ? stats.Happiness * quality : stats.Happiness);
 
         public override float Upkeep => config.upkeepPerFloor * Mathf.Max(0, payingFloorCount - config.freeFloors);
 
         protected override void OnRecalculated(IReadOnlyList<FloorType> floors)
         {
-            bankCount = 0;
+            bankCapacity = 0f;
             payingFloorCount = 0;
-            foreach (FloorType type in floors)
+            for (int i = 0; i < floors.Count; i++)
             {
-                if (type == FloorType.Bank)
-                    bankCount++;
-                if (!type.IsGold)
+                if (floors[i] == FloorType.Bank)
+                    bankCapacity += QualityAt(i);
+                if (!floors[i].IsGold)
                     payingFloorCount++;
             }
         }
@@ -80,10 +88,10 @@ namespace ZeroHour.Tower
         protected override FloorStats GetFloorStats(FloorType type) =>
             config.TryGetFloorStats(type.Name, out FloorStats stats) ? stats : base.GetFloorStats(type);
 
-        protected override float CalculatePowerRatio(int supply, int demand) =>
+        protected override float CalculatePowerRatio(float supply, float demand) =>
             demand == 0 ? 1f : Mathf.Min(1f, (float)supply / demand);
 
-        protected override float CalculateIncome(float population, float jobs, int happiness, float powerRatio)
+        protected override float CalculateIncome(float population, float jobs, float happiness, float powerRatio)
         {
             float happinessMultiplier = happiness > 0 ? Mathf.Min(1f + config.happinessIncomeBonus * happiness, config.maxHappinessMultiplier) : 1f;
             return base.CalculateIncome(population, jobs, happiness, powerRatio) * happinessMultiplier * ComboIncomeMultiplier;

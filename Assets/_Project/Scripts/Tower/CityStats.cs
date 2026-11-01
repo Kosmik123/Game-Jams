@@ -7,10 +7,10 @@ namespace ZeroHour.Tower
     {
         public readonly float Population;
         public readonly float Jobs;
-        public readonly int Energy;
-        public readonly int Happiness;
+        public readonly float Energy;
+        public readonly float Happiness;
 
-        public FloorStats(float population, float jobs, int energy, int happiness)
+        public FloorStats(float population, float jobs, float energy, float happiness)
         {
             Population = population;
             Jobs = jobs;
@@ -42,13 +42,15 @@ namespace ZeroHour.Tower
         protected virtual float IncomePerWorker => 0.2f;
 
         private readonly List<FloorType> floorTypes = new List<FloorType>();
+        private readonly List<float> floorQualities = new List<float>();
+        private IReadOnlyList<float> qualities;
         private readonly List<bool> floorPowered = new List<bool>();
 
         public int Height { get; private set; }
         public float Population { get; private set; }
         public float Jobs { get; private set; }
-        public int Energy { get; private set; }
-        public int Happiness { get; private set; }
+        public float Energy { get; private set; }
+        public float Happiness { get; private set; }
         public float Income { get; private set; }
         public float Money { get; private set; }
 
@@ -80,22 +82,30 @@ namespace ZeroHour.Tower
         public void Recalculate(IReadOnlyList<FallingFloor> floors)
         {
             floorTypes.Clear();
+            floorQualities.Clear();
             foreach (FallingFloor floor in floors)
+            {
                 floorTypes.Add(floor.Type);
-            Recalculate(floorTypes);
+                floorQualities.Add(floor.Quality);
+            }
+            Recalculate(floorTypes, floorQualities);
         }
 
-        // Floors from the bottom of the tower up.
-        public void Recalculate(IReadOnlyList<FloorType> floors)
+        // Floors from the bottom of the tower up, every one placed perfectly.
+        public void Recalculate(IReadOnlyList<FloorType> floors) => Recalculate(floors, null);
+
+        // qualities: how well each floor was placed (1 = perfectly); null counts every floor as perfect.
+        public void Recalculate(IReadOnlyList<FloorType> floors, IReadOnlyList<float> qualities)
         {
+            this.qualities = qualities;
             float population = 0f;
             float jobs = 0f;
-            int supply = 0;
-            int demand = 0;
-            int happiness = 0;
-            foreach (FloorType type in floors)
+            float supply = 0f;
+            float demand = 0f;
+            float happiness = 0f;
+            for (int i = 0; i < floors.Count; i++)
             {
-                FloorStats floor = GetFloorStats(type);
+                FloorStats floor = StatsAt(floors, i);
                 population += floor.Population;
                 jobs += floor.Jobs;
                 if (floor.Energy > 0)
@@ -132,18 +142,28 @@ namespace ZeroHour.Tower
 
             floorPowered.Clear();
             int consumers = 0;
-            foreach (FloorType type in floors)
+            for (int i = 0; i < floors.Count; i++)
             {
-                if (NeedsPower(GetFloorStats(type)))
+                if (NeedsPower(StatsAt(floors, i)))
                     consumers++;
             }
             int poweredConsumers = CountPoweredConsumers(consumers);
-            foreach (FloorType type in floors)
+            for (int i = 0; i < floors.Count; i++)
             {
-                bool needsPower = NeedsPower(GetFloorStats(type));
+                bool needsPower = NeedsPower(StatsAt(floors, i));
                 floorPowered.Add(!needsPower || poweredConsumers-- > 0);
             }
         }
+
+        private FloorStats StatsAt(IReadOnlyList<FloorType> floors, int index) =>
+            ScaleStats(GetFloorStats(floors[index]), QualityAt(index));
+
+        // How well the floor at this index (from the bottom) was placed, 0..1.
+        protected float QualityAt(int index) =>
+            qualities != null && index < qualities.Count ? qualities[index] : 1f;
+
+        // The effects of a badly placed floor; the jam economy ignores placement.
+        protected virtual FloorStats ScaleStats(FloorStats stats, float quality) => stats;
 
         // Whether the floor at this index (from the bottom) has power. FallingFloor keeps producers lit anyway.
         public bool IsFloorPowered(int index) => floorPowered[index];
@@ -182,9 +202,9 @@ namespace ZeroHour.Tower
         protected virtual FloorStats GetFloorStats(FloorType type) =>
             new FloorStats(type.Population, type.Jobs, type.Energy, type.Happiness);
 
-        protected virtual float CalculatePowerRatio(int supply, int demand) => supply >= demand ? 1f : 0f;
+        protected virtual float CalculatePowerRatio(float supply, float demand) => supply >= demand ? 1f : 0f;
 
-        protected virtual float CalculateIncome(float population, float jobs, int happiness, float powerRatio) =>
+        protected virtual float CalculateIncome(float population, float jobs, float happiness, float powerRatio) =>
             (Mathf.Min(population, jobs) * IncomePerWorker + NeighborIncome) * powerRatio;
 
         // The jam economy ignores the order of the floors.

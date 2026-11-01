@@ -49,6 +49,14 @@ namespace ZeroHour.Tower
         public float NextFallSpeed(int towerHeight, float unit01) =>
             FallSpeed(towerHeight) * (1f + FallSpeedJitter * (2f * unit01 - 1f));
 
+        // How well a floor was placed, 0..1, from its offset (in floor widths) when it landed; the jam doesn't care.
+        public virtual float FloorQuality(float offset, bool isPerfect) => 1f;
+
+        // The perfect window and the instability a landing adds change with the highest tower reached
+        // (1 = as the base values).
+        public virtual float PerfectWindowScale(int maxHeight) => 1f;
+        public virtual float InstabilityScale(int maxHeight) => 1f;
+
         // Debug mode (the HUD says so); versions that support it also never lose.
         public virtual bool IsDebug => false;
 
@@ -201,9 +209,9 @@ namespace ZeroHour.Tower
         public override float FloorTimeBonus(int towerHeight, bool isPerfect) =>
             TimePerFloor * Mathf.Max(MinTimeFactor, 1f - towerHeight / TimeFalloffHeight) + (isPerfect ? PerfectTimeBonus : 0f);
         public override float FallSpeed(int towerHeight) =>
-            Mathf.Min(config.baseFallSpeed + config.fallSpeedPerFloor * towerHeight, config.maxFallSpeed);
+            config.baseFallSpeed + config.fallSpeedPerSqrtFloor * Mathf.Sqrt(towerHeight);
         public override float SpawnInterval(int towerHeight) =>
-            Mathf.Max(config.baseSpawnInterval - config.spawnIntervalPerFloor * towerHeight, config.minSpawnInterval);
+            config.baseSpawnInterval / (1f + config.spawnRatePerSqrtFloor * Mathf.Sqrt(towerHeight));
         public override CityStats CreateEconomy() => new PostJamCityStats(config);
         public override TowerSway CreateSway() => new PostJamTowerSway();
         public override bool FixedCamera => true;
@@ -219,6 +227,9 @@ namespace ZeroHour.Tower
         public override bool RelativeControl => true;
         public override string BestScoreKey => "BestHeight_PostJam";
         public override bool UseRoundClock => false;
+        public override float FloorQuality(float offset, bool isPerfect) => Landing.Quality(offset, isPerfect, config.minQuality);
+        public override float PerfectWindowScale(int maxHeight) => 1f / (1f + Mathf.Sqrt(maxHeight) / config.perfectWindowSqrtScale);
+        public override float InstabilityScale(int maxHeight) => 1f + Mathf.Sqrt(maxHeight) / config.instabilitySqrtScale;
         public override bool IsDebug => DebugMode.IsEnabled;
         public override bool LosesByBankruptcy => config.canLose && !IsDebug;
         public override float BankruptcyGraceSeconds => config.bankruptcyGraceSeconds;

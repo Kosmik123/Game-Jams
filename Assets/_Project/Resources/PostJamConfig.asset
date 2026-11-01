@@ -47,6 +47,8 @@ MonoBehaviour:
   bankMoneyCap: 150
   upkeepPerFloor: 1
   freeFloors: 8
+  instabilitySqrtScale: 8
+  perfectWindowSqrtScale: 10
   canLose: 1
   bankruptcyGraceSeconds: 8
   parkNeighborHappiness: 1
@@ -61,11 +63,10 @@ MonoBehaviour:
   goldTimeBonus: 3
   goldInstabilityRelief: 25
   goldMoneyBonus: 25
+  minQuality: 0.5
   baseFallSpeed: 3
-  fallSpeedPerFloor: 0.15
-  maxFallSpeed: 8
+  fallSpeedPerSqrtFloor: 0.8
   fallSpeedSpread: 0.1
   baseSpawnInterval: 0.7
-  spawnIntervalPerFloor: 0.01
-  minSpawnInterval: 0.4
+  spawnRatePerSqrtFloor: 0.1
   spawnIntervalJitter: 0.5

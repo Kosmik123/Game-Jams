@@ -152,7 +152,11 @@ namespace ZeroHour.Tower
         {
             float previousX = floors.Count > 0 ? floors[floors.Count - 1].TowerPosition.x : 0f;
             float offsetX = floor.transform.position.x - transform.position.x;
-            float placeX = Landing.PlaceX(offsetX, previousX, floor.Width, perfectOffset, game.Ruleset.SnapPerfectLandings, out bool isPerfect);
+            int maxHeight = game.MaxHeight;
+            float perfectWindow = perfectOffset * game.Ruleset.PerfectWindowScale(maxHeight);
+            float placeX = Landing.PlaceX(offsetX, previousX, floor.Width, perfectWindow, game.Ruleset.SnapPerfectLandings, out bool isPerfect);
+            float landedOffset = Mathf.Abs(offsetX - previousX) / floor.Width;
+            floor.Quality = game.Ruleset.FloorQuality(landedOffset, isPerfect);
 
             floor.transform.SetParent(transform, true);
             floor.PlaceInTower(new Vector2(placeX, localTop + floor.Height / 2f), offsetX - placeX, game.Ruleset.ShowJuice);
@@ -163,7 +167,7 @@ namespace ZeroHour.Tower
             if (isPerfect)
                 instability = Mathf.Max(0f, instability - perfectCalm);
             else
-                instability += offset * offset * instabilityPerOffset;
+                instability += offset * offset * instabilityPerOffset * game.Ruleset.InstabilityScale(maxHeight);
 
             FloorLanded?.Invoke(floor, isPerfect);
 

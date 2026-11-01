@@ -11,5 +11,10 @@ namespace ZeroHour.Tower
             isPerfect = Mathf.Abs(landedX - previousX) / width < perfectOffset;
             return isPerfect && snapPerfect ? previousX : landedX;
         }
+
+        // How well a floor was placed: 1 for a perfect landing, shrinking linearly to minQuality at an offset
+        // of one full floor width (offset is in floor widths, before any snapping).
+        public static float Quality(float offset, bool isPerfect, float minQuality) =>
+            isPerfect ? 1f : Mathf.Lerp(1f, minQuality, Mathf.Clamp01(offset));
     }
 }

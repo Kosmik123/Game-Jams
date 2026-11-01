@@ -120,6 +120,9 @@ namespace ZeroHour.Tower
         private float towerShotStartSize;
         private float timeLeft;
         private int maxHeight;
+
+        // The highest tower of this round; the tempo and the accuracy demands follow it.
+        public int MaxHeight => maxHeight;
         private BankruptcyTimer bankruptcy;
         private float roundElapsed;
         private float shakeTimeLeft;
@@ -376,7 +379,7 @@ namespace ZeroHour.Tower
             spawnTimer -= Time.deltaTime;
             if (spawnTimer <= 0f)
             {
-                spawnTimer = ruleset.NextSpawnGap(stats.Height, Random.value);
+                spawnTimer = ruleset.NextSpawnGap(maxHeight, Random.value);
                 SpawnNextFloor();
             }
         }
@@ -616,7 +619,7 @@ namespace ZeroHour.Tower
         {
             var floor = new GameObject("Floor").AddComponent<FallingFloor>();
             floor.transform.position = position;
-            float fallSpeed = ruleset.NextFallSpeed(stats.Height, Random.value) * (type.IsGold ? ruleset.GoldFallSpeedFactor : 1f);
+            float fallSpeed = ruleset.NextFallSpeed(maxHeight, Random.value) * (type.IsGold ? ruleset.GoldFallSpeedFactor : 1f);
             floor.Init(this, type, squareSprite, floorWidth, ruleset.FloorHeight, ruleset.FloorArtFolder, fallSpeed);
             spawnedFloors.Add(floor);
         }

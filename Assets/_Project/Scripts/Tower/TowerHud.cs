@@ -295,9 +295,9 @@ namespace ZeroHour.Tower
             return $"<color=#{color}>{label}</color>";
         }
 
-        private static string Signed(int value)
+        private static string Signed(float value)
         {
-            string text = value.ToString("+0;-0;0");
+            string text = value.ToString("+0.#;-0.#;0");
             return value < 0 ? $"<color={WarningColor}>{text}</color>" : text;
         }
 

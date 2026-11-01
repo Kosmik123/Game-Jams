@@ -113,7 +113,7 @@ public class GoldFloorTests
 
         stats.Recalculate(withGold);
         Assert.AreEqual(3, stats.Height, "gold counts as a floor");
-        int energy = stats.Energy, happiness = stats.Happiness;
+        float energy = stats.Energy, happiness = stats.Happiness;
         float population = stats.Population;
         float neighborIncome = stats.NeighborIncome;
         Assert.AreEqual(0f, neighborIncome, "no pairs: gold separates the residential from the park");
