@@ -56,6 +56,9 @@ namespace ZeroHour.Tower
         public string PopulationLabel { get; set; } = "Pop";
         public int PopulationScale { get; set; } = 1;
 
+        // "DEBUG" under the stats.
+        public bool DebugLabel { get; set; }
+
         // The clock is hidden in versions that end by bankruptcy.
         public bool TimerEnabled { get; set; } = true;
         private Color tutorialOutlineColor;
@@ -266,6 +269,7 @@ namespace ZeroHour.Tower
                 $"{Label("Joy", 3)} {Signed(stats.Happiness)}\n" +
                 $"<color={stabilityColor}>Stability {stability * 100f:0}%</color>" +
                 (stats.PowerWarning == null ? "" : $"\n<color={WarningColor}>{stats.PowerWarning}</color>") +
+                (DebugLabel ? "\n<color=#66ddff>DEBUG: no game over</color>" : "") +
                 (bankruptcyTimeLeft >= 0f ? $"\n<color={WarningColor}>BANKRUPT in {Mathf.CeilToInt(bankruptcyTimeLeft)}s!</color>"
                     : float.IsInfinity(stats.Runway) || float.IsInfinity(stats.MoneyCap) ? "" : $"\n<color={WarningColor}>Broke in {Mathf.CeilToInt(stats.Runway)}s</color>");
 

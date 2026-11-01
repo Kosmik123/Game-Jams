@@ -170,6 +170,7 @@ namespace ZeroHour.Tower
             hud.PopulationLabel = ruleset.PopulationLabel;
             hud.PopulationScale = ruleset.PopulationDisplayScale;
             hud.TimerEnabled = ruleset.UseRoundClock;
+            hud.DebugLabel = ruleset.IsDebug;
             if (ruleset.ShowMenuButton)
                 hud.AddMenuButton();
             if (ruleset.PlaySounds)

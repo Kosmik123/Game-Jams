@@ -49,6 +49,9 @@ namespace ZeroHour.Tower
         public float NextFallSpeed(int towerHeight, float unit01) =>
             FallSpeed(towerHeight) * (1f + FallSpeedJitter * (2f * unit01 - 1f));
 
+        // Debug mode (the HUD says so); versions that support it also never lose.
+        public virtual bool IsDebug => false;
+
         // The round ends when the clock runs out and floors earn or cost time; off where bankruptcy ends it.
         public virtual bool UseRoundClock => true;
 
@@ -216,7 +219,8 @@ namespace ZeroHour.Tower
         public override bool RelativeControl => true;
         public override string BestScoreKey => "BestHeight_PostJam";
         public override bool UseRoundClock => false;
-        public override bool LosesByBankruptcy => config.canLose;
+        public override bool IsDebug => DebugMode.IsEnabled;
+        public override bool LosesByBankruptcy => config.canLose && !IsDebug;
         public override float BankruptcyGraceSeconds => config.bankruptcyGraceSeconds;
         public override bool ScoreByMaxHeight => true;
         public override string PopulationLabel => "Popul";
