@@ -18,6 +18,11 @@ public class Genome
 		new[] { new BlockGene(0, -1), new BlockGene(0, 0), new BlockGene(1, 0), new BlockGene(0, 1) },
 		new[] { new BlockGene(0, -1), new BlockGene(0, 0), new BlockGene(-1, 0), new BlockGene(0, 1) },
 		new[] { new BlockGene(-1, 0), new BlockGene(0, 0), new BlockGene(1, 0), new BlockGene(0, 1) },
+
+		new[] { new BlockGene(0, -1), new BlockGene(0, 0), new BlockGene(0, 1), new BlockGene(1, 1) },
+		new[] { new BlockGene(0, -1), new BlockGene(0, 0), new BlockGene(0, 1), new BlockGene(-1, 1) },
+		new[] { new BlockGene(1, -1), new BlockGene(0, -1), new BlockGene(0, 0), new BlockGene(0, 1) },
+		new[] { new BlockGene(-1, -1), new BlockGene(0, -1), new BlockGene(0, 0), new BlockGene(0, 1) },
 	};
 
 	[SerializeField]
