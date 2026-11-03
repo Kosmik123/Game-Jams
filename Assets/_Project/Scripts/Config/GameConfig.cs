@@ -25,7 +25,8 @@ namespace PayWithPixels
         private static GameConfig Load()
         {
             var cfg = Resources.Load<GameConfig>("GameConfig");
-            if (cfg == null) cfg = CreateInstance<GameConfig>();
+            if (cfg == null)
+                cfg = CreateInstance<GameConfig>();
             cfg.FillMissing();
             return cfg;
         }
@@ -62,7 +63,10 @@ namespace PayWithPixels
 
         public WeaponConfig GetWeapon(Weapon type)
         {
-            foreach (var w in weapons) if (w.type == type) return w;
+            foreach (var w in weapons)
+                if (w.type == type) 
+                    return w;
+
             return weapons[0];
         }
 
@@ -90,12 +94,14 @@ namespace PayWithPixels
         /// <summary>Uzupelnia brakujace wpisy list (nowa bron, nowy typ wroga) wartosciami domyslnymi.</summary>
         private void FillMissing()
         {
-            if (weapons == null) weapons = new List<WeaponConfig>();
-            if (enemies == null) enemies = new List<EnemyConfig>();
+            weapons ??= new List<WeaponConfig>();
+            enemies ??= new List<EnemyConfig>();
             foreach (var d in WeaponConfig.Defaults())
-                if (!weapons.Exists(w => w.type == d.type)) weapons.Add(d);
+                if (!weapons.Exists(w => w.type == d.type))
+                    weapons.Add(d);
             foreach (var d in EnemyConfig.Defaults())
-                if (!enemies.Exists(e => e.type == d.type)) enemies.Add(d);
+                if (!enemies.Exists(e => e.type == d.type)) 
+                    enemies.Add(d);
         }
     }
 
