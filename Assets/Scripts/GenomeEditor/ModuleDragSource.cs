@@ -1,28 +1,32 @@
+using MicrojamEvolution.Creature;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-/// <summary>Sidebar entry that can be dragged onto a block of the creature.</summary>
-public class ModuleDragSource : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+namespace MicrojamEvolution.GenomeEditor
 {
-    private GenomeEditor editor;
-    private ModuleType module;
-
-    public void Init(GenomeEditor editor, ModuleType module)
+    /// <summary>Sidebar entry that can be dragged onto a block of the creature.</summary>
+    public class ModuleDragSource : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
     {
-        this.editor = editor;
-        this.module = module;
-    }
+        private GenomeEditor editor;
+        private ModuleType module;
 
-    public void OnBeginDrag(PointerEventData eventData)
-    {
-        editor.BeginModuleDrag(module);
-    }
+        public void Init(GenomeEditor editor, ModuleType module)
+        {
+            this.editor = editor;
+            this.module = module;
+        }
 
-    // Has to exist, otherwise the event system does not deliver the drag events.
-    public void OnDrag(PointerEventData eventData) { }
+        public void OnBeginDrag(PointerEventData eventData)
+        {
+            editor.BeginModuleDrag(module);
+        }
 
-    public void OnEndDrag(PointerEventData eventData)
-    {
-        editor.EndModuleDrag();
+        // Has to exist, otherwise the event system does not deliver the drag events.
+        public void OnDrag(PointerEventData eventData) { }
+
+        public void OnEndDrag(PointerEventData eventData)
+        {
+            editor.EndModuleDrag();
+        }
     }
 }

@@ -1,8 +1,11 @@
-public enum ModuleType
+namespace MicrojamEvolution.Creature
 {
-    None = 0,
-    Brain,
-    Flagellum,
-    Spikes,
-    Armor,
+    public enum ModuleType
+    {
+        None = 0,
+        Brain,
+        Flagellum,
+        Spikes,
+        Armor,
+    }
 }

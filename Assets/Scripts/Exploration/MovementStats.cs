@@ -1,21 +1,32 @@
 using System;
+using UnityEngine;
 
-/// <summary>
-/// Numbers that drive creature movement. Fixed for now; later they will be computed from the genome
-/// (flagella raise the speed and so on), so everything that moves a creature should read them from here.
-/// </summary>
-[Serializable]
-public struct MovementStats
+namespace MicrojamEvolution.Exploration
 {
-    /// <summary>World units per second, the same in every direction.</summary>
-    public float moveSpeed;
-
-    /// <summary>Degrees per second.</summary>
-    public float rotationSpeed;
-
-    public static MovementStats Default => new MovementStats
+    /// <summary>
+    /// Numbers that drive creature movement. Fixed for now; later they will be computed from the genome
+    /// (flagella raise the speed and so on), so everything that moves a creature should read them from here.
+    /// </summary>
+    [Serializable]
+    public struct MovementStats
     {
-        moveSpeed = 1f,
-        rotationSpeed = 90f,
-    };
+        [Tooltip("World units per second, the same in every direction.")]
+        [SerializeField]
+        private float moveSpeed;
+
+        [Tooltip("Degrees per second.")]
+        [SerializeField]
+        private float rotationSpeed;
+
+        public MovementStats(float moveSpeed, float rotationSpeed)
+        {
+            this.moveSpeed = moveSpeed;
+            this.rotationSpeed = rotationSpeed;
+        }
+
+        public static MovementStats Default => new MovementStats(1f, 90f);
+
+        public float MoveSpeed => moveSpeed;
+        public float RotationSpeed => rotationSpeed;
+    }
 }
