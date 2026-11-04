@@ -102,7 +102,7 @@ namespace PayWithPixels
                 if (shieldRegenTimer >= regen) { shieldRegenTimer = 0; shieldLeft++; }
             }
 
-            var move = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
+            var move = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")) + TouchControls.Move;
             if (game.ControlsInverted) move = -move;
             if (move.sqrMagnitude > 1f) move.Normalize();
             float startT = Mathf.Max(game.stats.InputDelay, game.stats.InertiaTime);   // INPUT DELAY i INERCJA: dluzszy czas startu
@@ -143,7 +143,8 @@ namespace PayWithPixels
             transform.position = pos;
             if (dashTimer <= 0 && Obstacles.OnSpikes(pos, 0.3f)) Hurt(1);
 
-            Vector2 aim = game.display.ScreenToWorld(Input.mousePosition) - pos;
+            // dotyk: kierunek z prawego joysticka (zero = zostaje poprzedni kat), mysz jest wtedy tylko emulacja palca
+            Vector2 aim = TouchControls.Enabled ? TouchControls.Aim : game.display.ScreenToWorld(Input.mousePosition) - pos;
             float target = aim.sqrMagnitude > 0.0001f ? Mathf.Atan2(aim.y, aim.x) * Mathf.Rad2Deg : aimAngle;
             bool laser = game.stats.weapon == Weapon.Laser;
             if (!aimInit || (game.stats.aimLagStacks <= 0 && !laser)) { aimAngle = target; aimInit = true; }
@@ -159,7 +160,7 @@ namespace PayWithPixels
             aimMark.rotation = Quaternion.identity;
 
             fireTimer -= Time.deltaTime;
-            bool firing = Input.GetMouseButton(0) && game.state == Game.State.Playing;
+            bool firing = (TouchControls.Enabled ? TouchControls.Firing : Input.GetMouseButton(0)) && game.state == Game.State.Playing;
             // laser: rozgrzewanie - slaby na starcie, mocny po ~1.5 s ciaglego ognia
             var wc = GameConfig.Instance.GetWeapon(game.stats.weapon);
             heat = firing ? Mathf.Min(1f, heat + Time.deltaTime / wc.heatUpTime) : Mathf.Max(0f, heat - Time.deltaTime * wc.heatCoolRate);

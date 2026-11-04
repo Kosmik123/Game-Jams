@@ -210,6 +210,7 @@ namespace PayWithPixels
             world.SetParent(transform, false);
             BuildArena();
             ui = GameUI.Create(transform);
+            gameObject.AddComponent<TouchControls>();
 
             GoToTitle();
         }
