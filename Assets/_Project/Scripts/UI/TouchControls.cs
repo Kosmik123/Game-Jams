@@ -46,7 +46,11 @@ namespace PayWithPixels
         private void Awake()
         {
             Enabled = Application.isMobilePlatform || Application.absoluteURL.IndexOf("touch=1", System.StringComparison.OrdinalIgnoreCase) >= 0;
-            if (!Enabled) { enabled = false; return; }
+            if (Enabled == false) 
+            { 
+                enabled = false;
+                return; 
+            }
             ring = MakeTexture(128, 6f);
             disc = MakeTexture(128, 0f);
         }

@@ -17,7 +17,8 @@ namespace PayWithPixels
         {
             get
             {
-                if (instance == null) instance = Load();
+                if (instance == null)
+                    instance = Load();
                 return instance;
             }
         }

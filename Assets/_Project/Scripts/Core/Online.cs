@@ -18,7 +18,8 @@ namespace PayWithPixels
     /// </summary>
     public static class Online
     {
-        public const string BoardId = "pay_with_pixels_score";
+        public const string PCBoardId = "pay_with_pixels_score";
+        public const string MobileBoardId = "pay_with_pixels_score_mobile";
         /// <summary>Puste = srodowisko domyslne (production); Leaderboards i Authentication nie maja wlasnych srodowisk w panelu.</summary>
         public const string EnvName = "";
         /// <summary>Unity Cloud Project ID; puste, gdy projekt jest polaczony z chmura w Edytorze (Project Settings > Services).</summary>
@@ -59,6 +60,8 @@ namespace PayWithPixels
         private static void Changed() => Version++;
 
         public static bool HasEverLoaded { get; private set; } = false;
+
+        public static string BoardId => TouchControls.Enabled ? MobileBoardId : PCBoardId;
 
         /// <summary>Pasek stanu do UI tablicy.</summary>
         public static string StatusLine()
