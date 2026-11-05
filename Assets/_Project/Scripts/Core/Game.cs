@@ -36,6 +36,7 @@ namespace PayWithPixels
         private Camera cam;
         private GameUI ui;
         private Transform world;
+        private SpriteRenderer arenaBg;
 
         private int spawnLeft;
         private float spawnTimer;
@@ -220,7 +221,7 @@ namespace PayWithPixels
             var bg = new GameObject("Arena BG");
             bg.transform.SetParent(world, false);
             bg.transform.position = new Vector3(0, HudOffsetY, 0);
-            Art.MakeRenderer(bg, Art.Square("arena_bg", 16), -10);
+            arenaBg = Art.MakeRenderer(bg, Art.Square("arena_bg", 16), -10);
             var wall = Art.Square("tile_wall", 16);
             // ramka areny z kafli scian (jesli sa sprity od grafika) lub cienkich bialych pasow
             float w = ArenaHalf.x + 0.5f, h = ArenaHalf.y + 0.5f;
@@ -595,6 +596,7 @@ namespace PayWithPixels
             introTimer = 2.6f;
             waveInZone = 0;
             Palette.SetZone(zone, 1);
+            if (arenaBg != null) arenaBg.sprite = Art.Square(zone >= 3 ? "arena_bg_zone3" : zone == 2 ? "arena_bg_zone2" : "arena_bg", 16);
             Sfx.SetMusic(zone);
             Obstacles.Build(world, zone);
             ui.ShowZone(zone, ZoneNames[zone - 1]);
