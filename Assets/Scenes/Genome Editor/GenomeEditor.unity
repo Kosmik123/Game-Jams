@@ -135,7 +135,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &40730081
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -148,6 +148,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 31bdcf4da5f6c594084169f6240b655b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GenomeEditor
+  cam: {fileID: 0}
 --- !u!4 &40730082
 Transform:
   m_ObjectHideFlags: 0
@@ -316,7 +317,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1961906884
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -329,6 +330,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7779126b57e89c54ca589ea4f43b6bda, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ExplorationBootstrap
+  cam: {fileID: 0}
   cameraSize: 6
 --- !u!4 &1961906885
 Transform:
