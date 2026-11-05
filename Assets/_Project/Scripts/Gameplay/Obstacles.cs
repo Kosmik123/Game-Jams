@@ -19,10 +19,11 @@ namespace PayWithPixels
                 new[] { -6f, 3f, 3f, 1f }, new[] { 6f, 3f, 3f, 1f }, new[] { 0f, 0f, 1f, 1f },
                 new[] { -6f, -3f, 3f, 1f }, new[] { 6f, -3f, 3f, 1f },
             },
-            new[]                // strefa 3: krzyz + dwa bloki
+            new[]                // strefa 3: dwa bloki (nie ma krzyża)
             {
-                new[] { 0f, 0f, 1f, 5f }, new[] { 0f, 0f, 5f, 1f },
-                new[] { -9f, 4f, 2f, 1f }, new[] { 9f, -4f, 2f, 1f }, new[] { -9f, -4f, 1f, 2f }, new[] { 9f, 4f, 1f, 2f },
+                //new[] { 0f, 0f, 1f, 5f }, new[] { 0f, 0f, 5f, 1f },
+                new[] { -9f, 4f, 2f, 1f }, new[] { 9f, -4f, 2f, 1f }, 
+                new[] { -9f, -4f, 1f, 2f }, new[] { 9f, 4f, 1f, 2f },
             },
         };
 
@@ -30,7 +31,7 @@ namespace PayWithPixels
         {
             new float[][] { },
             new float[][] { },
-            new[] { new[] { -10f, 0f, 3f, 1f }, new[] { 10f, 0f, 3f, 1f } },
+            new[] { new[] { -6f, 0f, 3f, 1f }, new[] { 6f, 0f, 3f, 1f } },
         };
 
         public static void Build(Transform parent, int zone)

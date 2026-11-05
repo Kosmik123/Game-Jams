@@ -1,5 +1,7 @@
+using NaughtyAttributes;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Pool;
 using UnityEngine.SceneManagement;
 
 namespace PayWithPixels
@@ -14,9 +16,9 @@ namespace PayWithPixels
         /// <summary>Przesuniecie kamery/tla; 0, bo arena_bg 480x270 ma pas HUD wbudowany u gory.</summary>
         public const float HudOffsetY = 0f;
 
-        public const int Zones = 3;
-        public const int WavesPerZone = 5;           // + boss strefy
-        public const int MaxDebt = 20;
+        public  const int Zones = 3;
+        public static int WavesPerZone => GameConfig.Instance.run.wavesPerZone;   // + boss strefy
+        public static int MaxDebt => GameConfig.Instance.run.maxDebt;
 
         private static readonly string[] ZoneNames = { "THE TOLL ROAD", "THE BANK", "THE AUCTION HOUSE" };
 
@@ -61,7 +63,6 @@ namespace PayWithPixels
 
         // ---- licytacja Aukcjonera: zabrane zyski wracaja po czasie albo po jego smierci ----
         private readonly System.Collections.Generic.List<KeyValuePair<string, int>> auctioned = new System.Collections.Generic.List<KeyValuePair<string, int>>();
-        private float auctionReturnTimer;
 
         public void Announce(string msg) => ui.Toast(msg);
 
@@ -101,13 +102,22 @@ namespace PayWithPixels
 
         private void EndRun(bool won)
         {
-            int score = Mathf.RoundToInt((wave * 100 + kills * 2 + coinsEarned + (won ? 1000 : 0)) * ScoreMul);
+            int score = CalculateScore(won);
             Meta.RecordRun(wave, won, Ascension, score);
             Online.Submit(score);
-            ui.ShowDeath(won, RunSummary(won) + "\nSCORE " + score + (Ascension > 0 ? "  (ASCENSION " + Ascension + " x" + ScoreMul.ToString("0.00") + ")" : ""), StartRun, GoToTitle);
+            boardPromptAt = Online.IsAvailable && score > 0 ? Time.unscaledTime : -1f;
+            deathOkPending = false;
+            ui.ShowDeath(won, RunSummary(won) + (Ascension > 0 ? "\nASCENSION " + Ascension + " (SCORE x" + ScoreMul.ToString("0.00") + ")" : ""), score, OnDeathOk);
         }
 
-        public void AuctionOffGain(float seconds)
+        private int CalculateScore(bool won)
+        {
+            var sc = GameConfig.Instance.score;
+            return Mathf.RoundToInt(((wave - 1) * sc.pointsPerWave + kills * sc.pointsPerKill + coinsEarned * sc.earnedCoinsMul + coins * sc.leftoverCoinsMul + (won ? sc.winBonus : 0)) * ScoreMul);
+        }
+
+        /// <summary>Auctioneer sprzedaje losowy zysk gracza; wraca dopiero po pokonaniu bossa (RestoreAuctioned).</summary>
+        public void AuctionOffGain()
         {
             var owned = new System.Collections.Generic.List<string>();
             foreach (var kv in stats.levels) if (kv.Value > 0) owned.Add(kv.Key);
@@ -117,7 +127,6 @@ namespace PayWithPixels
             stats.levels.Remove(name);
             stats.Recompute();
             RefreshDrones();
-            auctionReturnTimer = seconds;
             ui.Toast("SOLD! YOUR " + name + " GOES TO THE HIGHEST BIDDER");
             Sfx.Play(Sound.Hurt);
         }
@@ -143,11 +152,12 @@ namespace PayWithPixels
         public int Ascension { get; private set; }
         public float InterestRate => Ascension >= 4 ? 0.3f : 0.2f;
         /// <summary>Wrogowie rosna z fala (co 3 fale +10% HP) i ze strefa (2: +15%, 3: +30% HP oraz predkosci).</summary>
-        private float ZoneScale => zone >= 3 ? 1.2f : zone == 2 ? 1.15f : 1f;
-        public float EnemyHpMul => (Ascension >= 2 ? 1.25f : 1f) * ZoneScale * (1f + 0.1f * (wave / 4));
+        private float ZoneScale => zone >= 3 ? GameConfig.Instance.enemyScaling.zone3Mul : zone == 2 ? GameConfig.Instance.enemyScaling.zone2Mul : 1f;
+        [ShowNativeProperty]
+        public float EnemyHpMul => (Ascension >= 2 ? 1.25f : 1f) * ZoneScale * (1f + GameConfig.Instance.enemyScaling.hpPerFourWaves * (wave / 4));
         public float EnemySpeedMul => (Ascension >= 4 ? 1.15f : 1f) * enemySpeedContractMul * ZoneScale;
         public float BossHpMul => (Ascension >= 5 ? 1.2f : 1f) * ContractBossHpMul;
-        public float ScoreMul => 1f + 0.25f * Ascension;
+        public float ScoreMul => 1f + GameConfig.Instance.run.ascensionScoreStep * Ascension;
 
         private void ApplyStartPrice(string name, int n)
         {
@@ -162,7 +172,8 @@ namespace PayWithPixels
 
         public bool IsBossWave => waveInZone > WavesPerZone;
         /// <summary>Trudnosc do skalowania wrogow (rosnie przez caly run).</summary>
-        public int Difficulty => (zone - 1) * (WavesPerZone + 1) + waveInZone;
+        [ShowNativeProperty]
+        public float Difficulty => Mathf.Max(0f, (zone - 1) * WavesPerZone + waveInZone - totalRunPurchases * GameConfig.Instance.run.difficultyPerPurchase);
 
         public static void Create()
         {
@@ -199,6 +210,7 @@ namespace PayWithPixels
             world.SetParent(transform, false);
             BuildArena();
             ui = GameUI.Create(transform);
+            gameObject.AddComponent<TouchControls>();
 
             GoToTitle();
         }
@@ -231,6 +243,7 @@ namespace PayWithPixels
 
         private void GoToTitle()
         {
+            Online.ClearHighlight();
             CleanupRun();
             Palette.Reset();
             state = State.Title;
@@ -240,21 +253,41 @@ namespace PayWithPixels
             GoToTitleRefresh();
         }
 
-        private bool namePrompted;
+        private float boardPromptAt = -1f;   // >= 0: wynik tego runu idzie na tablice
+        private bool deathOkPending;
+        private float deathOkAt;
+        private const float BoardPromptTimeout = 12f;
+
+        /// <summary>OK na ekranie konca runu: wynik w TOP 10 = tablica (z wpisaniem nazwy), inaczej tytul. Czeka na wynik wysylki.</summary>
+        private void OnDeathOk()
+        {
+            if (deathOkPending) return;
+            if (boardPromptAt < 0f) { GoToTitle(); return; }
+            deathOkPending = true;
+            deathOkAt = Time.unscaledTime;
+            ui.Toast("SUBMITTING SCORE...", 3f);
+        }
+
+        private void UpdateBoardPrompt()
+        {
+            if (!deathOkPending) return;
+            bool ready = Online.State == Online.Status.Ready && !Online.Busy && !Online.HasPendingScore;
+            if (!ready && Online.State != Online.Status.Error && Time.unscaledTime - deathOkAt <= BoardPromptTimeout) return;
+            deathOkPending = false;
+            if (ready && Online.InTop10) ui.ShowLeaderboard(GoToTitle, true);
+            else GoToTitle();   // poza TOP 10, blad albo timeout: wynik zostaje w kolejce
+        }
 
         private void GoToTitleRefresh()
         {
             ui.ShowTitle(StartRun, w => { Meta.Selected = w; GoToTitleRefresh(); },
                 () => { Meta.Ascension = (Meta.Ascension + 1) % (Meta.AscensionUnlocked + 1); GoToTitleRefresh(); });
-            if (!namePrompted && !Online.HasName && !Application.isBatchMode)
-            {
-                namePrompted = true;   // nazwa gracza raz, przy pierwszym uruchomieniu
-                ui.ShowLeaderboard(null, true);
-            }
         }
 
         private void CleanupRun()
         {
+            boardPromptAt = -1f;
+            deathOkPending = false;
             foreach (var e in Enemy.All.ToArray()) if (e != null) Destroy(e.gameObject);
             foreach (var b in Bullet.All.ToArray()) if (b != null) Destroy(b.gameObject);
             foreach (var a in AreaBlast.All.ToArray()) if (a != null) Destroy(a.gameObject);
@@ -283,7 +316,7 @@ namespace PayWithPixels
 
         public void ContractLoseGain()
         {
-            var name = stats.StealRandomGain();
+            var name = stats.StealRandomGain(out _);
             RefreshDrones();
             ui.Toast("FINE PRINT: YOU LOST " + (name ?? "NOTHING (YOU HAD NO GAINS)"));
         }
@@ -296,7 +329,7 @@ namespace PayWithPixels
 
         public void ContractFreeGain()
         {
-            var pool = Catalog.Gains.FindAll(g => !g.consumable && stats.Level(g.name) < g.maxLevel && (g.available == null || g.available(stats)));
+            var pool = Catalog.Gains.FindAll(g => !g.consumable && stats.Level(g.name) < g.maxLevel && g.OkFor(stats.weapon) && (g.available == null || g.available(stats)));
             if (pool.Count == 0) { coins += 20; return; }
             var gain = pool[Random.Range(0, pool.Count)];
             stats.levels[gain.name] = stats.Level(gain.name) + 1;
@@ -400,8 +433,8 @@ namespace PayWithPixels
             ui.Toast("FINE PRINT: " + name + " +" + n);
             AddTemp(waves, untilZoneEnd, () =>
             {
-                if (name == "FOG") stats.fogStacks = Mathf.Max(0, stats.fogStacks - n);
-                else if (name == "HEAVY LEGS") stats.legsStacks = Mathf.Max(0, stats.legsStacks - n);
+                var tmpPrice = Catalog.Prices.Find(pr => pr.name == name);
+                if (tmpPrice != null) for (int i = 0; i < n; i++) tmpPrice.revert(stats);   // dziala dla kazdej ceny, nie tylko Mgly i Nog
                 stats.priceCounts[name] = Mathf.Max(0, stats.PriceCount(name) - n);
                 ApplyPrices();
                 ui.Toast(name + " STACKS GONE");
@@ -452,6 +485,7 @@ namespace PayWithPixels
 
         private void StartRun()
         {
+            Online.ClearHighlight();
             activeContracts.Clear();
             ResetContractEffects();
             contractValue = 0;
@@ -463,6 +497,8 @@ namespace PayWithPixels
             auctioned.Clear();
             runTime = 0;
             kills = 0;
+            totalRunPurchases = 0;
+            collectorMeetings = 0;
             coinsEarned = 0;
             noHitWaves = 0;
             hitThisWave = false;
@@ -564,12 +600,29 @@ namespace PayWithPixels
             ui.ShowZone(zone, ZoneNames[zone - 1]);
         }
 
-        /// <summary>Liczba wrogow w fali; x1.5 po powiekszeniu areny do 480x270 (2.25x powierzchni). Z1-1..3 lagodniej.</summary>
-        private int SpawnCount()
+        [Button]
+        private void ShowDebugSpawnCounts()
         {
-            int n = zone == 1 ? (waveInZone <= 3 ? 5 : 8) + 2 * waveInZone : 8 + 3 * waveInZone + 5 * (zone - 1);
-            return Mathf.RoundToInt((n + wave / 3) * 1.5f);
+            int allWavesPerZone = (WavesPerZone + 1);
+            for (int w = 0; w < 20; w++)
+            {
+                int zone = (w / allWavesPerZone) + 1;
+                int waveInZone = w % allWavesPerZone + 1;
+                int count = SpawnCount(zone, waveInZone, w + 1);
+                Debug.Log($"Zone: {zone}-{waveInZone} -> {count} enemies");
+            }
         }
+
+
+        /// <summary>Liczba wrogow w fali; x1.5 po powiekszeniu areny do 480x270 (2.25x powierzchni). Z1-1..3 lagodniej.</summary>
+        private static int SpawnCount(int zone, int waveInZone, int wave)
+        {
+            int n = zone == 1
+                ? (waveInZone <= 3 ? 5 : 8) + 2 * waveInZone
+                : 8 + 3 * waveInZone + 3 * (zone - 2);
+            return Mathf.RoundToInt((n + wave / 8) * 1.5f);
+        }
+
         private void StartWave()
         {
             wave++;
@@ -580,7 +633,8 @@ namespace PayWithPixels
             Palette.SetZone(zone, waveInZone);
             state = State.Playing;
             lastWaveWasBoss = IsBossWave;
-            spawnLeft = IsBossWave ? 9 : SpawnCount();
+            spawnLeft = IsBossWave ? 9 : SpawnCount(zone, waveInZone, wave);
+            collectorAtLeft = -1;
             spawnTimer = 0.5f;
             player.RefillShield();
             freezeReady = stats.freeze > 0;
@@ -591,12 +645,20 @@ namespace PayWithPixels
                 ui.ShowBossLine(BossLines[Mathf.Clamp(zone - 1, 0, BossLines.Length - 1)]);
                 bossBuff = false;
                 Sfx.Play(Sound.Boss);
+                Sfx.SetMusic(zone, true);
             }
             else if (CollectorComes())
-            {
-                Enemy.SpawnCollector(world, PickSpawnPoint());
-                ui.Toast("THE COLLECTOR COMES FOR YOUR DEBT");
-            }
+                collectorAtLeft = Random.Range(0, Mathf.Max(1, spawnLeft));   // Poborca wchodzi po losowej liczbie zespawnowanych wrogow
+        }
+
+        private int collectorAtLeft = -1;   // spawnLeft, przy ktorym wchodzi Poborca (-1 = w tej fali nie wchodzi)
+
+        private void SpawnCollectorIfDue()
+        {
+            if (collectorAtLeft < 0 || spawnLeft > collectorAtLeft) return;
+            collectorAtLeft = -1;
+            Enemy.SpawnCollector(world, PickSpawnPoint());
+            ui.Toast("THE COLLECTOR COMES FOR YOUR DEBT");
         }
 
         /// <summary>
@@ -613,7 +675,7 @@ namespace PayWithPixels
 
         public void AddCoins(int n)
         {
-            float v = n * coinMul * (zone >= 2 ? 1.25f : 1f);   // strefy 2-3: +25% monet (losowe zaokraglenie, zeby 1 moneta tez zyskiwala)
+            float v = n * coinMul;   // bez bonusu stref 2-3 (byl +25%): dochod rosl szybciej niz ceny
             n = Mathf.FloorToInt(v) + (Random.value < v - Mathf.Floor(v) ? 1 : 0);
             coins += n;
             coinsEarned += n;
@@ -625,8 +687,9 @@ namespace PayWithPixels
             }
         }
 
-        public void OnBossKilled()
+        public void OnBossKilled(Enemy boss)
         {
+            foreach (var e in Enemy.All.ToArray()) if (e != null) e.ReturnHeldGain();   // boss kasuje wrogow: uciekajacy Poborca oddaje zysk
             foreach (var e in Enemy.All.ToArray()) if (e != null) Destroy(e.gameObject);
             foreach (var b in Bullet.All.ToArray()) if (b != null) Destroy(b.gameObject);
             foreach (var a in AreaBlast.All.ToArray()) if (a != null) Destroy(a.gameObject);
@@ -635,6 +698,7 @@ namespace PayWithPixels
             HitStop(0.2f);
             Shake(0.6f);
             Grant("boss" + zone);
+            Sfx.SetMusic(zone);
             if (zone >= Zones)
             {
                 state = State.Won;
@@ -645,27 +709,43 @@ namespace PayWithPixels
             }
             else
             {
-                SpawnCoin(Vector2.zero, 8);
+                SpawnCoin(boss.transform.position, 4 * zone + totalRunPurchases + 1);
                 ui.Toast("ZONE CLEARED");
             }
         }
 
         /// <summary>Poborca zabity: dlug splacony.</summary>
-        public void OnCollectorKilled()
+        public void OnCollectorKilled(Enemy collector)
         {
-            int before = debt;
-            debt = debt / 2;   // zabicie Poborcy tylko zmniejsza dlug o polowe
-            ui.Toast("COLLECTOR DOWN: DEBT " + before + " -> " + debt);
+            ui.Toast("COLLECTOR DOWN");
+            SpawnCoin(collector.transform.position, collector.GetCoins() + collectorMeetings);
         }
 
         /// <summary>Poborca dotknal gracza: zabiera losowy zysk, zostawia cene.</summary>
-        public void OnCollectorTouch()
+        public string OnCollectorTouch(out int level)
         {
-            string taken = stats.StealRandomGain();
+            string taken = stats.StealRandomGain(out level);
             RefreshDrones();
             if (player.hp > stats.maxHp) player.hp = stats.maxHp;
-            ui.Toast(taken != null ? "THE COLLECTOR TOOK: " + taken : "THE COLLECTOR FOUND NOTHING TO TAKE");
+            ui.Toast(taken != null ? "THE COLLECTOR TOOK: " + taken + " - KILL IT BEFORE IT ESCAPES" : "THE COLLECTOR FOUND NOTHING TO TAKE");
+            return taken;
         }
+
+        /// <summary>Poborca uciekl z lupem za brzeg areny: zysk zostaje stracony.</summary>
+        public void OnCollectorEscaped(string gain)
+        {
+            if (gain != null) ui.Toast("THE COLLECTOR ESCAPED WITH: " + gain);
+        }
+
+        /// <summary>Poborca zabity w trakcie ucieczki: zabrany zysk wraca do gracza.</summary>
+        public void RestoreGain(string gain, int level)
+        {
+            stats.RestoreGain(gain, level);
+            RefreshDrones();
+            ui.Toast("BONUS RECOVERED: " + gain);
+        }
+
+        public int collectorMeetings;   // ile razy Poborca juz sie pojawil w tym runie: kazdy kolejny ma wiecej HP
 
         public void OnEnemyKilled(Vector2 pos)
         {
@@ -690,13 +770,15 @@ namespace PayWithPixels
         {
             for (int i = 0; i < count; i++)
                 Coin.Spawn(world, pos + Random.insideUnitCircle * 0.4f);
-                for (int i = 0; i < bonusDrop; i++) Coin.Spawn(world, pos + Random.insideUnitCircle * 0.6f);
+            for (int i = 0; i < bonusDrop; i++) 
+                Coin.Spawn(world, pos + Random.insideUnitCircle * 0.6f);
         }
 
         public void OnPlayerDied()
         {
             state = State.Dead;
             Sfx.Play(Sound.Death);
+            Sfx.SetMusic(zone);
             Shake(0.6f);
             EndRun(false);
         }
@@ -723,6 +805,9 @@ namespace PayWithPixels
         /// <summary>Utrata fokusu karty: wycisza dzwiek i pauzuje gre.</summary>
         private void OnApplicationFocus(bool focused)
         {
+            if (GameConfig.Instance.shouldPauseOnDefocus == false && focused == false)
+                return;
+
             AudioListener.pause = !focused;
             if (!focused && !Paused && CanPause && ui != null) TogglePause();
         }
@@ -732,7 +817,6 @@ namespace PayWithPixels
         private void TogglePause()
         {
             Paused = !Paused;
-            resetArmed = false;
             Time.timeScale = Paused ? 0f : 1f;
             if (Paused) ShowPauseMenu();
             else ui.HidePause();
@@ -740,25 +824,18 @@ namespace PayWithPixels
 
         private void ShowPauseMenu()
         {
-            ui.ShowPause(TogglePause,
-                () => { TogglePause(); StartRun(); },
-                () => { Settings.Volume = Settings.Volume >= 0.99f ? 0f : Settings.Volume + 0.1f; ShowPauseMenu(); },
-                () => { Settings.ReduceFlicker = !Settings.ReduceFlicker; ShowPauseMenu(); },
-                () => { Settings.Shake = !Settings.Shake; ShowPauseMenu(); },
-                () => { Settings.MusicVolume = Settings.MusicVolume >= 0.99f ? 0f : Settings.MusicVolume + 0.1f; ShowPauseMenu(); },
-                () => { Settings.SfxVolume = Settings.SfxVolume >= 0.99f ? 0f : Settings.SfxVolume + 0.1f; ShowPauseMenu(); },
-                () =>
-                {
-                    if (!resetArmed) { resetArmed = true; ShowPauseMenu(); return; }
-                    resetArmed = false;
-                    Meta.ResetAll();
-                    TogglePause();
-                    GoToTitle();
-                    ui.Toast("PROGRESS RESET", 3f);
-                },
-                resetArmed ? "SURE? CLICK AGAIN (ERASES ALL)" : "RESET PROGRESS",
-                () => { Save.ShowExport(); ui.Toast("SAVE CODE COPIED", 3f); },
-                () =>
+            ui.ShowPause(
+                onResume: TogglePause,
+                onRestart: () => { TogglePause(); StartRun(); },
+                onVolume: () => { Settings.Volume = Settings.Volume >= 0.99f ? 0f : Settings.Volume + 0.1f; ShowPauseMenu(); },
+                onFlicker: () => { Settings.ReduceFlicker = !Settings.ReduceFlicker; ShowPauseMenu(); },
+                onShake: () => { Settings.Shake = !Settings.Shake; ShowPauseMenu(); },
+                onMusic: () => { Settings.MusicVolume = Settings.MusicVolume >= 0.99f ? 0f : Settings.MusicVolume + 0.1f; ShowPauseMenu(); },
+                onSfx: () => { Settings.SfxVolume = Settings.SfxVolume >= 0.99f ? 0f : Settings.SfxVolume + 0.1f; ShowPauseMenu(); },
+                onReset: () => { TogglePause(); GoToTitle(); },
+                resetLabel: "RETURN TO TITLE",
+                onExport: () => { Save.ShowExport(); ui.Toast("SAVE CODE COPIED", 3f); },
+                onImport: () =>
                 {
                     bool ok = Save.AskImport();
                     ShowPauseMenu();
@@ -766,19 +843,12 @@ namespace PayWithPixels
                 });
         }
 
-        private bool resetArmed;
-
         private void Update()
         {
             Sfx.ApplyVolumes();   // SILENCE moze sie zmienic w kazdej chwili
             if ((Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.P)) && (CanPause || Paused)) TogglePause();
             if (Paused) return;
             Time.timeScale = (Time.unscaledTime < hitStopUntil ? 0.05f : 1f) * DebugTimeScale;
-            if (auctioned.Count > 0 && state == State.Playing)
-            {
-                auctionReturnTimer -= Time.deltaTime;
-                if (auctionReturnTimer <= 0) RestoreAuctioned();
-            }
 
             if (cam != null) cam.orthographicSize = Mathf.MoveTowards(cam.orthographicSize, OrthoSize * (stats != null ? stats.CameraZoom : 1f), 4f * Time.deltaTime);
             if (player != null) display.SetFogCenter(player.transform.position);
@@ -792,7 +862,8 @@ namespace PayWithPixels
             if (state == State.Story) { UpdateStory(); return; }
             if (state == State.Title)
             {
-                if (Input.GetKeyDown(KeyCode.L)) { ui.ShowLeaderboard(); return; }
+                if (ui.OverlayOpen) return;   // tablica wynikow otwarta: Enter/Spacja nie startuja runu
+                if (Input.GetKeyDown(KeyCode.L) && Online.IsAvailable) { ui.ShowLeaderboard(); return; }
                 if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return)) StartRun();
                 if (Input.GetKeyDown(KeyCode.Alpha1)) { Meta.Selected = Weapon.Pistol; GoToTitleRefresh(); }
                 if (Input.GetKeyDown(KeyCode.Alpha2) && Meta.IsWeaponUnlocked(Weapon.Shotgun)) { Meta.Selected = Weapon.Shotgun; GoToTitleRefresh(); }
@@ -815,7 +886,7 @@ namespace PayWithPixels
                     break;
                 case State.Playing:
                     if (!Frozen) Enemy.Separate(Time.deltaTime);
-                    UpdateSpawner();
+                    UpdateSpawning();
                     UpdateLingerFailsafe();
                     if (spawnLeft <= 0 && Enemy.All.Count == 0)
                     {
@@ -845,9 +916,9 @@ namespace PayWithPixels
                     break;
                 case State.Won:
                 case State.Dead:
-                    if (Input.GetKeyDown(KeyCode.L)) { ui.ShowLeaderboard(); break; }
-                    if (Input.GetKeyDown(KeyCode.R)) StartRun();
-                    if (Input.GetKeyDown(KeyCode.T)) GoToTitle();
+                    UpdateBoardPrompt();
+                    if (ui.OverlayOpen) break;
+                    if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Space)) OnDeathOk();
                     break;
             }
         }
@@ -880,8 +951,8 @@ namespace PayWithPixels
             else if (Input.GetKeyDown(KeyCode.C)) SignContract();
             else if (shopRedeem)
             {
-                var opts = RedeemOptions();
-                KeyCode[] rk = { KeyCode.Alpha4, KeyCode.Alpha5, KeyCode.Alpha6, KeyCode.Alpha7 };
+                KeyCode[] rk = { KeyCode.Alpha4, KeyCode.Alpha5, KeyCode.Alpha6 };
+                var opts = RedeemOptions(rk.Length);
                 for (int i = 0; i < rk.Length && opts != null && i < opts.Count; i++)
                     if (Input.GetKeyDown(rk[i])) { Redeem(opts[i].Key); return; }
             }
@@ -938,9 +1009,11 @@ namespace PayWithPixels
             int stacks = stats.invertStacks;
             bool active = stacks > 0 && state == State.Playing;
             if (!active) { ControlsInverted = false; invertClock = 0; return; }
-            float period = 11f, dur = 1.5f + 0.5f * stacks;
+            var inv = GameConfig.Instance.prices.reversedControls;
+            float period = inv.period - inv.periodReductionPerStack * stacks, duration = inv.duration;
             float prev = invertClock;
-            invertClock = (invertClock + Time.deltaTime) % (period + dur);
+            invertClock += Time.deltaTime;
+            invertClock %= (period + duration);
             ControlsInverted = invertClock > period;
             if (ControlsInverted && prev <= period) ui.Toast("CONTROLS INVERTED!");
         }
@@ -968,7 +1041,7 @@ namespace PayWithPixels
                 else
                 {
                     silenceTimer -= Time.deltaTime;
-                    if (silenceTimer <= 0) { silenceLeft = 1.5f + 0.5f * stacks; target = 0f; ui.Toast("SILENCE!"); }
+                    if (silenceTimer <= 0) { silenceLeft = GameConfig.Instance.prices.silence.baseDuration + GameConfig.Instance.prices.silence.durationPerStack * stacks; target = 0f; ui.Toast("SILENCE!"); }
                 }
             }
             SilenceMul = Mathf.MoveTowards(SilenceMul, target, Time.unscaledDeltaTime / 0.1f);
@@ -978,7 +1051,7 @@ namespace PayWithPixels
         {
             float dur = stats.FlickerDuration;
             bool active = dur > 0 && (state == State.Playing || state == State.Clearing);
-            const float period = 8f;
+            float period = GameConfig.Instance.prices.flicker.period;
             bool flick = false;
             if (!active || Settings.ReduceFlicker) flickerClock = 0;
             else
@@ -1003,13 +1076,15 @@ namespace PayWithPixels
             if (any) ui.Toast("THE REST GAVE UP THE CHASE");
         }
 
-        private void UpdateSpawner()
+        private void UpdateSpawning()
         {
             if (spawnLeft <= 0) return;
             spawnTimer -= Time.deltaTime;
             if (spawnTimer > 0) return;
-            spawnTimer = Mathf.Max(0.5f, 1.0f - Difficulty * 0.03f);
+            spawnTimer = 0.15f * Enemy.All.Count - 0.1f * Difficulty;
+            spawnTimer = Mathf.Max(0.6f, spawnTimer);
             spawnLeft--;
+            SpawnCollectorIfDue();
 
             if (IsBossWave)
             {
@@ -1025,6 +1100,7 @@ namespace PayWithPixels
                 for (int i = 0; i < 5; i++)
                     Enemy.Spawn(world, type, at + Random.insideUnitCircle * 0.7f, Difficulty);
                 spawnLeft = Mathf.Max(0, spawnLeft - 1);
+                SpawnCollectorIfDue();
                 return;
             }
             Enemy.Spawn(world, type, at, Difficulty);
@@ -1037,7 +1113,7 @@ namespace PayWithPixels
             var pool = new List<KeyValuePair<EnemyType, float>>();
             void Add(EnemyType t, float w, int minWave = 1) { if (waveInZone >= minWave) pool.Add(new KeyValuePair<EnemyType, float>(t, w)); }
 
-            Add(EnemyType.Chaser, zone == 1 ? 5f : 3f);
+            Add(EnemyType.Chaser, zone == 1 ? 5f : 3f, 1);
             Add(EnemyType.Shooter, 3f, zone == 1 ? 2 : 1);
             Add(EnemyType.Tank, 1.2f, zone == 1 ? 4 : 3);
             if (zone >= 2)
@@ -1082,7 +1158,7 @@ namespace PayWithPixels
         }
 
         // ---------- sklep ----------
-
+        private int shopRedeemSeed;
         private void OpenShop()
         {
             // reszta monet wpada automatycznie
@@ -1091,7 +1167,8 @@ namespace PayWithPixels
             foreach (var a in AreaBlast.All.ToArray()) if (a != null) Destroy(a.gameObject);
 
             state = State.Shop;
-            shopOffers = Catalog.Roll(3, wave, stats);
+            shopRedeemSeed = Random.Range(-10000, 10000);
+            shopOffers = Catalog.Roll(GameConfig.Instance.economy.offersPerShop, Difficulty, stats);
             if (firstShopPending)
             {
                 firstShopPending = false;
@@ -1115,13 +1192,14 @@ namespace PayWithPixels
         private List<Offer> shopOffers;
         private int rerolls;
         private int purchases;   // zakupy w tej wizycie: kazdy kolejny +25%
+        private int totalRunPurchases;
         private int haggles;
         private int HaggleMax => 1 + stats.priceLock;
 
         // ---- REDEEM: zdejmij 1 stack wybranej ceny (co 3. sklep zamiast kontraktu) ----
         private bool shopRedeem;
 
-        public int RedeemCost(string priceName) => 10 + 5 * stats.PriceCount(priceName);
+        public int RedeemCost(string priceName) => 10 + 2 * stats.PriceCount(priceName) + Mathf.RoundToInt(Difficulty / 2);
 
         private List<string> OwnedPrices()
         {
@@ -1161,23 +1239,42 @@ namespace PayWithPixels
             RefreshShopUi();
         }
 
-        private int RerollCost => freeRerolls ? 0 : 3 + 2 * rerolls;
+        private int RerollCost => freeRerolls ? 0 : GameConfig.Instance.economy.rerollBase + GameConfig.Instance.economy.rerollStep * rerolls;
 
-        /// <summary>Aktualny koszt oferty: +25% za kazdy wczesniejszy zakup w tej wizycie.</summary>
-        public int CostOf(Offer o) => o.free ? 0 : Mathf.Max(1, Mathf.RoundToInt(Mathf.CeilToInt(o.cost * (1f + 0.25f * purchases) * shopMarkup * (1f + 0.2f * stats.priceyShopStacks)) * Catalog.PriceDiscount(o.price)));
+        /// <summary>Aktualny koszt oferty: narzut za kazdy wczesniejszy zakup w tej wizycie, mnozniki z GameConfig.</summary>
 
-        private List<KeyValuePair<string, int>> RedeemOptions()
+        public int CostOf(Offer o) => o.free ? 0 
+            : Mathf.Max(1, Mathf.RoundToInt(Mathf.CeilToInt(o.cost * GameConfig.Instance.economy.gainCostMul * (1f + GameConfig.Instance.economy.purchaseSurcharge * purchases) * shopMarkup * (1f + GameConfig.Instance.prices.priceyShop.costPerStack * stats.priceyShopStacks)) * Catalog.PriceDiscount(o.price)));
+
+        private List<KeyValuePair<string, int>> RedeemOptions(int maxCount)
         {
-            if (!shopRedeem) return null;
+            if (!shopRedeem) 
+                return null;
+            
             var list = new List<KeyValuePair<string, int>>();
-            foreach (var name in OwnedPrices()) list.Add(new KeyValuePair<string, int>(name, RedeemCost(name)));
+            var seed = Random.state;
+            Random.InitState(shopRedeemSeed);
+            using (ListPool<string>.Get(out var ownedPrices))
+            {
+                ownedPrices.Clear();
+                ownedPrices.AddRange(OwnedPrices());
+                int count = Mathf.Min(maxCount, ownedPrices.Count);
+                for (int i = 0; i < count; i++)
+                {
+                    int index = Random.Range(0, ownedPrices.Count);
+                    var priceName = ownedPrices[index]; 
+                    ownedPrices.RemoveAt(index);
+                    list.Add(new KeyValuePair<string, int>(priceName, RedeemCost(priceName)));
+                }
+            }
+            Random.state = seed;
             return list;
         }
 
         private string DebtInfo()
         {
             if (debt <= 0) return null;
-            return "DEBT +" + Mathf.RoundToInt(InterestRate * 100) + "% EVERY WAVE";   // bez terminu Poborcy: pojawia sie losowo wg dlugu
+            return "+" + Mathf.RoundToInt(InterestRate * 100) + "% EVERY WAVE";   // bez terminu Poborcy: pojawia sie losowo wg dlugu
         }
 
         private void RefreshShopUi()
@@ -1186,7 +1283,7 @@ namespace PayWithPixels
             foreach (var ac in activeContracts) pending += (pending.Length > 0 ? ", " : "") + ac.contract.title + " (" + ac.wavesLeft + ")";
             ui.ShowShop(shopOffers, coins, debt, Buy, CloseShop, RerollCost, Reroll, haggles < HaggleMax, Haggle, PayDebt,
                 shopContract == null ? null : shopContract.title + ": " + shopContract.reward + " / FINE PRINT: ???", SignContract,
-                pending.Length > 0 ? "SIGNED: " + pending : null, DebtInfo(), RedeemOptions(), Redeem);
+                pending.Length > 0 ? "SIGNED: " + pending : null, DebtInfo(), RedeemOptions(3), Redeem);
         }
 
         /// <summary>Splaca dlug dostepnymi monetami.</summary>
@@ -1205,7 +1302,7 @@ namespace PayWithPixels
             if (coins < RerollCost) return;
             coins -= RerollCost;
             rerolls++;
-            shopOffers = Catalog.Roll(3, wave, stats);
+            shopOffers = Catalog.Roll(GameConfig.Instance.economy.offersPerShop, wave, stats);
             Sfx.Play(Sound.Coin);
             RefreshShopUi();
         }
@@ -1213,14 +1310,15 @@ namespace PayWithPixels
         /// <summary>Targowanie: za 1 monete losuje nowe ceny dla ofert (moga byc gorsze).</summary>
         private void Haggle()
         {
-            if (haggles >= HaggleMax || coins < 1) return;
-            coins -= 1;
+            int haggleCost = GameConfig.Instance.economy.haggleCost;
+            if (haggles >= HaggleMax || coins < haggleCost) return;
+            coins -= haggleCost;
             haggles++;
             foreach (var o in shopOffers)
                 if (!o.sold)
                 {
                     o.price = Catalog.Prices[Random.Range(0, Catalog.Prices.Count)];
-                    if (o.sell) o.reward = Catalog.SellReward(wave, o.price);
+                    if (o.sell) o.reward = Catalog.SellReward(GameConfig.Instance.economy.haggleDifficultyMul * Difficulty, o.price);
                 }
             Sfx.Play(Sound.Hurt);
             RefreshShopUi();
@@ -1249,6 +1347,7 @@ namespace PayWithPixels
                     coins = 0;
                 }
                 if (!o.free) purchases++;
+                totalRunPurchases++;
                 var g = o.gain;
                 if (!g.consumable) stats.levels[g.name] = o.level;
                 stats.Recompute();
@@ -1280,6 +1379,15 @@ namespace PayWithPixels
                 BeginZone();
             }
             else StartWave();
+        }
+
+        [SerializeField]
+        private Sound debugSound;
+
+        [Button]
+        private void PlayDebugSound()
+        {
+            Sfx.Play(debugSound);
         }
     }
 

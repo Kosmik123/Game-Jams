@@ -4,7 +4,7 @@ namespace PayWithPixels
 {
     public class Player : MonoBehaviour
     {
-        public const float Radius = 0.45f;
+        public static float Radius => GameConfig.Instance.player.radius;
 
         public int hp;
         private float fireTimer;
@@ -60,21 +60,21 @@ namespace PayWithPixels
             if (shieldLeft > 0)
             {
                 shieldLeft--;
-                invulnTimer = 0.6f;
+                invulnTimer = GameConfig.Instance.gains.shield.invulnerableSeconds;
                 return;
             }
             hp -= dmg;
             if (hp <= 0 && rewindLeft > 0)
             {
                 rewindLeft--;
-                hp = Mathf.Min(game.stats.maxHp, 2);
-                invulnTimer = 2f;
-                Sfx.Play(Sound.Win);
+                hp = Mathf.Min(game.stats.maxHp, GameConfig.Instance.gains.timeRewind.hpAfterRewind);
+                invulnTimer = GameConfig.Instance.gains.timeRewind.invulnerableSeconds;
+                Sfx.Play(Sound.Rewind);
                 game.Announce("TIME REWOUND");
                 return;
             }
             game.NotifyHit();
-            invulnTimer = 1f;
+            invulnTimer = GameConfig.Instance.player.hitInvulnerability;
             Sfx.Play(Sound.Hurt);
             game.HitStop(0.07f);
             game.Shake(0.3f);
@@ -88,7 +88,11 @@ namespace PayWithPixels
             invulnTimer -= Time.deltaTime;
             sr.enabled = invulnTimer <= 0 || Mathf.FloorToInt(Time.time * 12f) % 2 == 0;
             halo.enabled = sr.enabled;
-            if (game.state != Game.State.Playing && game.state != Game.State.Clearing) return;
+            if (game.state != Game.State.Playing && game.state != Game.State.Clearing)
+            {
+                if (beam != null) beam.gameObject.SetActive(false);   // smierc w trakcie strzalu: wiazka nie moze zostac na ekranie
+                return;
+            }
 
             // synergia Ciezkie nogi + Tarcza: tarcza odnawia sie w trakcie fali
             float regen = game.stats.ShieldRegen;
@@ -98,11 +102,11 @@ namespace PayWithPixels
                 if (shieldRegenTimer >= regen) { shieldRegenTimer = 0; shieldLeft++; }
             }
 
-            var move = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
+            var move = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")) + TouchControls.Move;
             if (game.ControlsInverted) move = -move;
             if (move.sqrMagnitude > 1f) move.Normalize();
             float startT = Mathf.Max(game.stats.InputDelay, game.stats.InertiaTime);   // INPUT DELAY i INERCJA: dluzszy czas startu
-            float stopT = game.stats.InertiaTime * 1.3f;                                // hamuje tylko INERCJA
+            float stopT = game.stats.InertiaTime * game.stats.InertiaStopMul;                                // hamuje tylko INERCJA
             if (startT > 0f || stopT > 0f)
             {
                 bool speedingUp = move.magnitude >= moveSmoothed.magnitude - 0.001f;
@@ -119,13 +123,13 @@ namespace PayWithPixels
             {
                 dashTimer -= Time.deltaTime;
                 if (dashTimer <= 0) EndDash(game);
-                step = dashDir * 20f;
+                step = dashDir * GameConfig.Instance.player.dashSpeed;
                 mineTimer -= Time.deltaTime;
                 if (minesToDrop > 0 && mineTimer <= 0)
                 {
                     Mine.Spawn(transform.parent, transform.position);
                     minesToDrop--;
-                    mineTimer = 0.045f;
+                    mineTimer = GameConfig.Instance.gains.dashMines.mineInterval;
                 }
             }
             if (move.sqrMagnitude > 0.01f) walkClock += Time.deltaTime;
@@ -139,14 +143,15 @@ namespace PayWithPixels
             transform.position = pos;
             if (dashTimer <= 0 && Obstacles.OnSpikes(pos, 0.3f)) Hurt(1);
 
-            Vector2 aim = game.display.ScreenToWorld(Input.mousePosition) - pos;
+            // dotyk: kierunek z prawego joysticka (zero = zostaje poprzedni kat), mysz jest wtedy tylko emulacja palca
+            Vector2 aim = TouchControls.Enabled ? TouchControls.Aim : game.display.ScreenToWorld(Input.mousePosition) - pos;
             float target = aim.sqrMagnitude > 0.0001f ? Mathf.Atan2(aim.y, aim.x) * Mathf.Rad2Deg : aimAngle;
             bool laser = game.stats.weapon == Weapon.Laser;
             if (!aimInit || (game.stats.aimLagStacks <= 0 && !laser)) { aimAngle = target; aimInit = true; }
             else
             {
                 // laser obraca celowanie wolniej (ciezka wiazka); cena SLUGGISH AIM jeszcze bardziej
-                float rate = (laser ? 9f : 18f) / (1f + 1.5f * game.stats.aimLagStacks);
+                float rate = GameConfig.Instance.GetWeapon(game.stats.weapon).aimTurnRate / (1f + GameConfig.Instance.prices.sluggishAim.lagPerStack * game.stats.aimLagStacks);
                 aimAngle = Mathf.LerpAngle(aimAngle, target, 1f - Mathf.Exp(-rate * Time.deltaTime));
             }
             Vector2 dir = new Vector2(Mathf.Cos(aimAngle * Mathf.Deg2Rad), Mathf.Sin(aimAngle * Mathf.Deg2Rad));
@@ -155,9 +160,10 @@ namespace PayWithPixels
             aimMark.rotation = Quaternion.identity;
 
             fireTimer -= Time.deltaTime;
-            bool firing = Input.GetMouseButton(0) && game.state == Game.State.Playing;
+            bool firing = (TouchControls.Enabled ? TouchControls.Firing : Input.GetMouseButton(0)) && game.state == Game.State.Playing;
             // laser: rozgrzewanie - slaby na starcie, mocny po ~1.5 s ciaglego ognia
-            heat = firing ? Mathf.Min(1f, heat + Time.deltaTime / 1.5f) : Mathf.Max(0f, heat - Time.deltaTime * 2.5f);
+            var wc = GameConfig.Instance.GetWeapon(game.stats.weapon);
+            heat = firing ? Mathf.Min(1f, heat + Time.deltaTime / wc.heatUpTime) : Mathf.Max(0f, heat - Time.deltaTime * wc.heatCoolRate);
             if (laser)
             {
                 UpdateBeam(game, pos, dir, firing);
@@ -175,10 +181,10 @@ namespace PayWithPixels
         {
             bool second = game.stats.doubleDash > 0 && dashWindow > 0;
             if (!game.stats.HasDash || dashTimer > 0 || (dashCooldown > 0 && !second)) return false;
-            dashTimer = 0.15f;
+            dashTimer = GameConfig.Instance.player.dashDuration;
             Sfx.Play(Sound.Dash);
             if (second) dashWindow = 0f;
-            else { dashCooldown = game.stats.DashCooldown; dashWindow = game.stats.doubleDash > 0 ? 0.8f : 0f; }
+            else { dashCooldown = game.stats.DashCooldown; dashWindow = game.stats.doubleDash > 0 ? GameConfig.Instance.gains.doubleDash.window : 0f; }
             minesToDrop = game.stats.mines;
             mineTimer = 0;
             dashDir = move.sqrMagnitude > 0.01f ? move.normalized : fallbackDir.normalized;
@@ -189,7 +195,7 @@ namespace PayWithPixels
         {
             var st = game.stats;
             moveSmoothed = dashDir;   // po dashu krotkie hamowanie wg INERCJI
-            if (st.dashCrit > 0) critUntil = Time.time + 2f;
+            if (st.dashCrit > 0) critUntil = Time.time + GameConfig.Instance.gains.dashCrit.duration;
             if (st.shockwave <= 0) return;
             Shockwave.Spawn(transform.parent, transform.position, st.ShockwaveRadius);
             foreach (var e in Enemy.All.ToArray())
@@ -197,8 +203,8 @@ namespace PayWithPixels
                 if (e == null) continue;
                 Vector2 rel = (Vector2)e.transform.position - (Vector2)transform.position;
                 if (rel.magnitude > st.ShockwaveRadius + e.radius) continue;
-                if (e.type != EnemyType.Boss) e.transform.position = (Vector2)e.transform.position + rel.normalized * 1.5f;
-                e.Damage(st.shockwave >= 2 ? 2 : 1);
+                if (e.type != EnemyType.Boss) e.transform.position = (Vector2)e.transform.position + rel.normalized * GameConfig.Instance.gains.shockwave.pushDistance;
+                e.Damage(st.ShockwaveDamage);
             }
         }
 
@@ -206,12 +212,17 @@ namespace PayWithPixels
         private int RollDamage(RunStats stats, out bool crit)
         {
             crit = Time.time < critUntil || Random.value < stats.CritChance;
-            return (crit ? Mathf.RoundToInt(stats.CritMultiplier) : 1) + stats.DebtDamageBonus(Game.Instance.debt);
+            return (crit ? Mathf.RoundToInt(stats.CritMultiplier) : GameConfig.Instance.GetWeapon(stats.weapon).damage) + stats.DebtDamageBonus(Game.Instance.debt);
         }
 
         private float heat;
         private Transform beam;
-        private float beamTick;
+        private float beamTick, beamSoundTimer;
+
+        private void OnDestroy()
+        {
+            if (beam != null) Destroy(beam.gameObject);   // wiazka jest dzieckiem swiata, nie gracza: bez tego zostaje w nastepnym runie
+        }
 
         /// <summary>Laser: ciagla wiazka przebijajaca wszystkich w linii; co 0.1 s losowo rani kazdego (szansa rosnie z rozgrzaniem).</summary>
         private void UpdateBeam(Game game, Vector2 pos, Vector2 dir, bool firing)
@@ -224,12 +235,14 @@ namespace PayWithPixels
                 beam = go.transform;
             }
             beam.gameObject.SetActive(firing);
-            if (!firing) { beamTick = 0; return; }
+            if (!firing) { beamTick = 0; beamSoundTimer = 0; return; }
 
             var stats = game.stats;
+            var wc = GameConfig.Instance.GetWeapon(stats.weapon);
+            float hitHalf = wc.beamHalfWidth * stats.BeamWidthMul;   // TRIPLE SHOT: szersza wiazka (obrazenia i blokada tarcza)
             // dlugosc: do sciany, krawedzi areny albo tarczy Straznika
             float len = 0f;
-            const float maxLen = 18f;
+            float maxLen = wc.beamMaxLength;
             while (len < maxLen)
             {
                 Vector2 p = pos + dir * (len + 0.3f);
@@ -243,7 +256,7 @@ namespace PayWithPixels
                 Vector2 rel = (Vector2)e.transform.position - pos;
                 float along = Vector2.Dot(rel, dir);
                 if (along < 0f || along > len) continue;
-                if ((rel - dir * along).magnitude > e.radius + 0.12f) continue;
+                if ((rel - dir * along).magnitude > e.radius + hitHalf) continue;
                 if (e.Blocks(dir) && along < blockDist) blockDist = along;
             }
             len = blockDist;
@@ -252,20 +265,21 @@ namespace PayWithPixels
             float unit = sprite != null ? sprite.bounds.size.x : 0.25f;
             beam.position = pos + dir * (len * 0.5f + 0.3f);
             beam.rotation = Quaternion.Euler(0, 0, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg);
-            beam.localScale = new Vector3(len / unit, 0.14f / unit * (1f + heat), 1f);
+            beam.localScale = new Vector3(len / unit, wc.beamVisualWidth / unit * (1f + heat) * stats.BeamWidthMul, 1f);
 
+            beamSoundTimer -= Time.deltaTime;
+            if (beamSoundTimer <= 0) { beamSoundTimer = 0.1f; Sfx.Play(Sound.LaserTick); }   // dzwiek w stalym rytmie niezaleznie od szybkostrzelnosci
             beamTick -= Time.deltaTime;
             if (beamTick > 0) return;
-            beamTick = 0.1f;
-            Sfx.Play(Sound.LaserTick);
-            float chance = Mathf.Lerp(0.25f, 0.7f, heat) * Mathf.Min(2f, stats.fireRateMul);
+            beamTick = wc.beamTickInterval / (stats.fireRateMul * stats.tempFireMul);   // FASTER SHOTS i kontrakty skracaja odstep miedzy tickami (bez limitu stackow)
+            float chance = Mathf.Lerp(wc.beamChanceMin, wc.beamChanceMax, heat);
             foreach (var e in Enemy.All.ToArray())
             {
                 if (e == null) continue;
                 Vector2 rel = (Vector2)e.transform.position - pos;
                 float along = Vector2.Dot(rel, dir);
                 if (along < 0f || along > len + e.radius) continue;
-                if ((rel - dir * along).magnitude > e.radius + 0.12f) continue;
+                if ((rel - dir * along).magnitude > e.radius + hitHalf) continue;
                 if (Random.value >= chance) continue;
                 int dmg = RollDamage(stats, out bool beamCrit);
                 e.Damage(dmg, beamCrit);
@@ -288,10 +302,11 @@ namespace PayWithPixels
             for (int i = 0; i < stats.shotCount; i++)
             {
                 float a = (i - (stats.shotCount - 1) / 2f) * stats.SpreadStep;
-                if (stats.weapon == Weapon.Shotgun) a += Random.Range(-2.5f, 2.5f);   // nieregularny stozek ok. 30 st.
+                var wc = GameConfig.Instance.GetWeapon(stats.weapon);
+                if (wc.spreadJitter > 0f) a += Random.Range(-wc.spreadJitter, wc.spreadJitter);   // strzelba: nieregularny stozek
                 var d = (Vector2)(Quaternion.Euler(0, 0, a) * dir);
                 int dmg = RollDamage(stats, out bool crit);
-                float speed = stats.BulletSpeed * (stats.weapon == Weapon.Shotgun ? Random.Range(0.9f, 1.1f) : 1f);
+                float speed = stats.BulletSpeed * (wc.speedJitter > 0f ? Random.Range(1f - wc.speedJitter, 1f + wc.speedJitter) : 1f);
                 var b = Bullet.Spawn(transform.parent, pos + d * 0.6f, d * speed, true, stats.pierce, null, dmg, stats.ricochet, stats.BulletLife);
                 b.closeBonus = stats.weapon == Weapon.Shotgun;
                 b.crit = crit;

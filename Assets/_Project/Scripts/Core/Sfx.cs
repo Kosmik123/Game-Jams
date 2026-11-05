@@ -1,16 +1,17 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace PayWithPixels
 {
-    public enum Sound { Shoot, ShootShotgun, LaserTick, Hit, Block, Kill, Coin, Buy, Hurt, Death, Boss, Dash, Win }
+    public enum Sound { Shoot, ShootShotgun, LaserTick, Hit, Block, Kill, Coin, Buy, Hurt, Death, Boss, Dash, Win, Rewind }
 
     /// <summary>Dzwiek generowany w kodzie (bez assetow): bipy 8-bit i petla z fali kwadratowej. M = wyciszenie.</summary>
     public static class Sfx
     {
         private const int Rate = 22050;
         private static readonly Dictionary<Sound, AudioClip> clips = new Dictionary<Sound, AudioClip>();
-        private static AudioSource sfxSource, musicSource;
+        private static AudioSource sfxSource, alertSource, musicSource;
         private static bool muted;
 
         public static bool Muted => muted;
@@ -24,6 +25,10 @@ namespace PayWithPixels
             go.transform.SetParent(parent, false);
             sfxSource = go.AddComponent<AudioSource>();
             sfxSource.playOnAwake = false;
+            alertSource = go.AddComponent<AudioSource>();
+            alertSource.playOnAwake = false;
+            alertSource.priority = 0;   // najwyzszy priorytet: nigdy nie wypychany przez inne glosy
+            duckUntil = 0f;
             musicSource = go.AddComponent<AudioSource>();
             musicSource.playOnAwake = false;
             musicSource.loop = true;
@@ -47,20 +52,55 @@ namespace PayWithPixels
             clips[Sound.Dash] = Sweep("dash", 200, 700, 0.12f, Wave.Noise, 0.25f);
             clips[Sound.Win] = Join("win", Sweep("w1", 523, 523, 0.12f, Wave.Square, 0.3f), Sweep("w2", 659, 659, 0.12f, Wave.Square, 0.3f),
                 Sweep("w3", 784, 784, 0.12f, Wave.Square, 0.3f), Sweep("w4", 1047, 1047, 0.4f, Wave.Square, 0.3f));
+            clips[Sound.Rewind] = Mix("rewind", 
+                new Layer (Sweep("rw1", 40, 32, 0.8f, Wave.Square, 0.4f)),
+                new Layer (Sweep("rw4", 32, 45, 0.8f, Wave.Square, 0.4f), 0.5f),
+                new Layer (Sweep("rw8", 34, 38, 1f, Wave.Noise, 0.2f), 0f));
             Apply();
+        }
+
+        /// <summary>Przewiniecie czasu: tykanie zegara, coraz szybsze, o opadajacej wysokosci (tasma sie rozpedza), na koncu krotki rosnacy akcent.</summary>
+        private static AudioClip BuildRewind()
+        {
+            var parts = new List<AudioClip>();
+            float f = 1900f;
+            for (int i = 0; i < 10; i++)
+            {
+                float dur = 0.06f * Mathf.Pow(0.85f, i);
+                parts.Add(Sweep("rwt" + i, 3500, 2500, 0.008f, Wave.Noise, 0.3f));   // klik mechanizmu
+                parts.Add(Sweep("rwn" + i, f, f * 0.82f, dur, Wave.Square, 0.2f));
+                f *= 0.9f;
+            }
+            parts.Add(Sweep("rwu1", 784, 784, 0.05f, Wave.Square, 0.25f));   // jasny, rosnacy akcent: powrot do zycia
+            parts.Add(Sweep("rwu2", 1175, 1175, 0.05f, Wave.Square, 0.25f));
+            parts.Add(Sweep("rwu3", 1568, 1568, 0.14f, Wave.Square, 0.25f));
+            return Join("rewind", parts.ToArray());
         }
 
         public static void Play(Sound s)
         {
             if (sfxSource == null || muted || SilenceMul < 0.05f) return;
-            if (clips.TryGetValue(s, out var c)) sfxSource.PlayOneShot(c);
+            if (!clips.TryGetValue(s, out var c)) return;
+            if (s == Sound.Hurt || s == Sound.Death || s == Sound.Rewind)
+            {
+                // wazne dla gracza: osobne zrodlo (nie ginie w limicie glosow ani w tlumie innych dzwiekow) + chwilowe sciszenie reszty
+                duckUntil = Time.unscaledTime + 0.35f;
+                ApplyVolumes();
+                alertSource.PlayOneShot(c);
+            }
+            else sfxSource.PlayOneShot(c);
         }
+
+        private static float duckUntil;
+        private const float DuckMul = 0.3f;
 
         /// <summary>Ustawia glosnosc muzyki i SFX z ustawien.</summary>
         public static void ApplyVolumes()
         {
-            if (musicSource != null) musicSource.volume = 0.35f * Settings.MusicVolume * SilenceMul;
-            if (sfxSource != null) sfxSource.volume = Settings.SfxVolume * SilenceMul;
+            float duck = Time.unscaledTime < duckUntil ? DuckMul : 1f;
+            if (musicSource != null) musicSource.volume = 0.35f * Settings.MusicVolume * SilenceMul * duck;
+            if (sfxSource != null) sfxSource.volume = Settings.SfxVolume * SilenceMul * duck;
+            if (alertSource != null) alertSource.volume = Settings.SfxVolume * SilenceMul;
         }
 
         public static void StartMusic()
@@ -128,15 +168,47 @@ namespace PayWithPixels
             return clip;
         }
 
+        /// <summary>Warstwa dla Mix: klip i opoznienie startu w sekundach.</summary>
+        private readonly struct Layer
+        {
+            public readonly AudioClip clip;
+            public readonly float delay;
+            public Layer(AudioClip clip, float delay = 0f) { this.clip = clip; this.delay = delay; }
+        }
+
+        /// <summary>Miksuje klipy jednoczesnie (sumuje probki), kazdy z wlasnym opoznieniem. Dlugosc = najdalszy koniec; wynik ograniczony do -1..1.</summary>
+        private static AudioClip Mix(string name, params Layer[] layers)
+        {
+            int total = 1;
+            foreach (var l in layers) total = Mathf.Max(total, Mathf.RoundToInt(l.delay * Rate) + l.clip.samples);
+            var data = new float[total];
+            foreach (var l in layers)
+            {
+                var d = new float[l.clip.samples];
+                l.clip.GetData(d, 0);
+                int offset = Mathf.RoundToInt(l.delay * Rate);
+                for (int i = 0; i < d.Length; i++) data[offset + i] += d[i];
+            }
+            for (int i = 0; i < total; i++) data[i] = Mathf.Clamp(data[i], -1f, 1f);
+            var clip = AudioClip.Create(name, total, 1, Rate, false);
+            clip.SetData(data, 0);
+            return clip;
+        }
+
         private static readonly Dictionary<int, AudioClip> zoneMusic = new Dictionary<int, AudioClip>();
         private static int musicZone = -1;
 
-        /// <summary>Petla muzyczna per strefa (1-3), generowana leniwie.</summary>
-        public static void SetMusic(int zone)
+        /// <summary>Petla muzyczna per strefa (1-3), generowana leniwie; boss = motyw bossa strefy (Music/boss1..3).</summary>
+        public static void SetMusic(int zone, bool boss = false)
         {
-            if (musicSource == null || zone == musicZone) return;
-            musicZone = zone;
-            if (!zoneMusic.TryGetValue(zone, out var clip)) zoneMusic[zone] = clip = Resources.Load<AudioClip>("Music/zone" + zone) ?? BuildMusic(zone);
+            int key = boss ? 100 + zone : zone;
+            if (musicSource == null || key == musicZone) return;
+            musicZone = key;
+            if (!zoneMusic.TryGetValue(key, out var clip))
+            {
+                clip = boss ? Resources.Load<AudioClip>("Music/boss" + zone) : null;
+                zoneMusic[key] = clip = clip ?? Resources.Load<AudioClip>("Music/zone" + zone) ?? BuildMusic(zone);
+            }
             bool wasPlaying = musicSource.isPlaying;
             musicSource.clip = clip;
             if (wasPlaying) musicSource.Play();

@@ -18,6 +18,8 @@ namespace PayWithPixels
         private bool shopAnimating;
         public bool AnimateNextShop { get; set; }
         private Text zoneText, toastText;
+        private RectTransform toastRoot;   // pas toastu (y 0.82-0.90): w sklepie jest wolny, nic pod nim nie lezy
+        private Image toastBorder, toastFill;   // prostokat pod toastem poza arena: zaslania to, co jest pod spodem
         private RectTransform priceHud;
         private string priceHudKey = "";
         private float toastTimer;
@@ -85,8 +87,16 @@ namespace PayWithPixels
             pausePanel = NewPanel("Pause", transform);
             pausePanel.SetActive(false);
 
-            toastText = NewText("Toast", transform, "", 22, TextAnchor.UpperCenter);
-            Stretch(toastText.rectTransform, new Vector2(0, 0.80f), new Vector2(1, 0.9f), Vector2.zero, Vector2.zero);
+            toastRoot = new GameObject("ToastRoot", typeof(RectTransform)).GetComponent<RectTransform>();
+            toastRoot.SetParent(transform, false);
+            Stretch(toastRoot, new Vector2(0, 0.82f), new Vector2(1, 0.9f), Vector2.zero, Vector2.zero);
+            toastBorder = NewImage("ToastBorder", toastRoot, true);
+            toastBorder.raycastTarget = false;
+            toastFill = NewImage("ToastFill", toastRoot, false);
+            toastFill.raycastTarget = false;
+            toastBorder.enabled = toastFill.enabled = false;
+            toastText = NewText("Toast", toastRoot, "", 22, TextAnchor.MiddleCenter);
+            Stretch(toastText.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
 
 
             Palette.Changed += Recolor;
@@ -138,6 +148,29 @@ namespace PayWithPixels
                 toastTimer -= Time.deltaTime;
                 if (toastTimer <= 0) toastText.text = "";
             }
+            UpdateToastBox();
+        }
+
+        private bool OverArena => !(titlePanel.activeSelf || shopPanel.activeSelf || deathPanel.activeSelf || pausePanel.activeSelf
+            || (leaderPanel != null && leaderPanel.activeSelf) || (storyPanel != null && storyPanel.activeSelf));
+
+        /// <summary>Poza arena (sklep, tytul, ustawienia, tablica, koniec runu) toast ma prostokat z ramka, ktory zaslania tekst pod spodem.</summary>
+        private void UpdateToastBox()
+        {
+            bool show = toastText.text.Length > 0 && !OverArena;
+            toastBorder.enabled = toastFill.enabled = show;
+            if (!show) return;
+            float w = Mathf.Min(toastText.preferredWidth + 28f, toastRoot.rect.width - 8f);
+            float h = toastRoot.rect.height;
+            SetCentered(toastBorder.rectTransform, w, h);
+            SetCentered(toastFill.rectTransform, w - 4f, h - 4f);
+        }
+
+        private static void SetCentered(RectTransform rt, float w, float h)
+        {
+            rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.anchoredPosition = Vector2.zero;
+            rt.sizeDelta = new Vector2(w, h);
         }
 
         public void Toast(string msg, float seconds = 2.5f)
@@ -201,7 +234,7 @@ namespace PayWithPixels
             HideZone();
             HideTitle();
             shopPanel.transform.SetAsLastSibling();
-            toastText.transform.SetAsLastSibling();
+            toastRoot.SetAsLastSibling();
             foreach (Transform c in shopPanel.transform) Destroy(c.gameObject);
             tinted.RemoveAll(kv => kv.Key == null);
             cardRects.Clear();
@@ -209,13 +242,9 @@ namespace PayWithPixels
             AnimateNextShop = false;
             shopAnimStart = Time.unscaledTime;
 
-            var title = NewText("Title", shopPanel.transform, "SHOP   COINS: " + coins + (debt > 0 ? "   DEBT: " + debt : ""), 30, TextAnchor.UpperCenter);
-            Stretch(title.rectTransform, new Vector2(0, 0.88f), new Vector2(1, 1), Vector2.zero, Vector2.zero);
-            if (debtInfo != null)
-            {
-                var di = NewText("DebtInfo", shopPanel.transform, debtInfo, 16, TextAnchor.UpperCenter);
-                Stretch(di.rectTransform, new Vector2(0, 0.82f), new Vector2(1, 0.88f), Vector2.zero, Vector2.zero);
-            }
+            // wiersz tytulu zawiera tez info o dlugu; pas y 0.82-0.90 zostaje pusty dla toastu
+            var title = NewText("Title", shopPanel.transform, "SHOP   COINS: " + coins + (debt > 0 ? "   DEBT: " + debt : "") + (debtInfo != null ? "  (" + debtInfo + ")" : ""), 30, TextAnchor.UpperCenter);
+            Stretch(title.rectTransform, new Vector2(0, 0.9f), new Vector2(1, 1), Vector2.zero, Vector2.zero);
 
             for (int i = 0; i < offers.Count; i++)
             {
@@ -240,9 +269,9 @@ namespace PayWithPixels
                     : o.free ? key + "FIRST ONE IS FREE!"
                     : !canBuy ? "NEED " + cost + " COINS"
                     : onCredit ? key + "CREDIT: DEBT +" + (cost - coins)
-                    : key + "BUY: " + cost + " COINS" + (o.price.severity >= 2 ? " (-" + (o.price.severity >= 3 ? 30 : 15) + "%)" : "");
+                    : key + "BUY: " + cost + " COINS";
                 var txt = NewText("Text", inner.transform,
-                    top + "\n\nPRICE " + new string('*', o.price.severity) + (o.stacks > 1 && !o.sell ? " x" + o.stacks : "") + "\n" + o.price.name + "\n" + o.price.description +
+                    top + "\n\nPRICE " /*+ new string('*', o.price.severity)*/ + (o.stacks > 1 && !o.sell ? " x" + o.stacks : "") + "\n" + o.price.name + "\n" + o.price.description +
                     (Catalog.SynergyText(o, Game.Instance.stats) is string syn ? "\n\n* SYNERGY *\n" + syn : "") + "\n\n" + bottom,
                     16, TextAnchor.MiddleCenter);
                 Stretch(txt.rectTransform, Vector2.zero, Vector2.one, new Vector2(8, 8), new Vector2(-8, -8));
@@ -281,7 +310,7 @@ namespace PayWithPixels
                 MakeButton(shopPanel.transform, "[C] CONTRACT - " + contractLabel, new Vector2(0.02f, 0.21f), new Vector2(0.98f, 0.26f), true, onContract);
             if (redeemOptions != null && redeemOptions.Count > 0)
             {
-                int n = Mathf.Min(4, redeemOptions.Count);
+                int n = Mathf.Min(3, redeemOptions.Count);
                 float w = 0.96f / n;
                 for (int i = 0; i < n; i++)
                 {
@@ -357,7 +386,7 @@ namespace PayWithPixels
 
         // ---------- pauza ----------
 
-        public void ShowPause(Action onResume, Action onRestart, Action onVolume, Action onFlicker, Action onShake, Action onMusic, Action onSfx, Action onReset = null, string resetLabel = "RESET PROGRESS", Action onExport = null, Action onImport = null)
+        public void ShowPause(Action onResume, Action onRestart, Action onVolume, Action onFlicker, Action onShake, Action onMusic, Action onSfx, Action onReset = null, string resetLabel = "RETURN TO TITLE", Action onExport = null, Action onImport = null)
         {
             foreach (Transform c in pausePanel.transform) Destroy(c.gameObject);
             tinted.RemoveAll(kv => kv.Key == null);
@@ -387,7 +416,7 @@ namespace PayWithPixels
             if (onReset != null) PauseButton(resetLabel, onReset);
             Recolor();
             pausePanel.SetActive(true);
-            toastText.transform.SetAsLastSibling();
+            toastRoot.SetAsLastSibling();
         }
 
         public void HidePause() => pausePanel.SetActive(false);
@@ -525,7 +554,8 @@ namespace PayWithPixels
                     new Vector2(0.2f, 0.135f), new Vector2(0.8f, 0.215f), true, onAscension);
 
             MakeButton(titleDynamic, "START   [SPACE / ENTER]", new Vector2(0.25f, 0.035f), new Vector2(0.75f, 0.125f), true, onStart);
-            MakeButton(titleDynamic, "[L] TOP 10", new Vector2(0.78f, 0.035f), new Vector2(0.98f, 0.125f), true, () => ShowLeaderboard());
+            if (Online.IsAvailable)
+                MakeButton(titleDynamic, "[L] TOP 10", new Vector2(0.77f, 0.035f), new Vector2(0.97f, 0.125f), true, () => ShowLeaderboard());
             var stats = NewText("Stats", titleDynamic,
                 "BEST WAVE " + Meta.BestWave + "   BEST SCORE " + Meta.BestScore + "   WINS " + Meta.Wins, 16, TextAnchor.MiddleCenter);
             Stretch(stats.rectTransform, new Vector2(0, 0.0f), new Vector2(1, 0.035f), Vector2.zero, Vector2.zero);
@@ -533,20 +563,20 @@ namespace PayWithPixels
             var btn = titlePanel.GetComponent<Button>();
             if (btn != null) btn.onClick.RemoveAllListeners();   // klik poza przyciskami nie startuje
             titlePanel.transform.SetAsLastSibling();
-            toastText.transform.SetAsLastSibling();
+            toastRoot.SetAsLastSibling();
             Recolor();
             titlePanel.SetActive(true);
         }
 
         public void HideTitle() => titlePanel.SetActive(false);
 
-        /// <summary>Koniec runu: naglowek, statystyki i przyciski (jeszcze raz / tytul).</summary>
-        public void ShowDeath(bool won, string details, Action onAgain, Action onTitle)
+        /// <summary>Koniec runu: naglowek, statystyki i jeden przycisk OK (tablica albo tytul decyduje Game).</summary>
+        public void ShowDeath(bool won, string details, int score, Action onOk)
         {
             foreach (Transform c in deathPanel.transform) Destroy(c.gameObject);
             tinted.RemoveAll(kv => kv.Key == null);
             deathPanel.transform.SetAsLastSibling();
-            toastText.transform.SetAsLastSibling();
+            toastRoot.SetAsLastSibling();
 
             var head = NewText("Head", deathPanel.transform, won ? "SOLD" : "PAID IN FULL", 48, TextAnchor.MiddleCenter);
             Stretch(head.rectTransform, new Vector2(0, 0.76f), new Vector2(1, 0.96f), Vector2.zero, Vector2.zero);
@@ -561,12 +591,13 @@ namespace PayWithPixels
                 Stretch(art.rectTransform, new Vector2(0.03f, 0.3f), new Vector2(0.45f, 0.75f), Vector2.zero, Vector2.zero);
             }
             var body = NewText("Body", deathPanel.transform, details, hasArt ? 18 : 20, hasArt ? TextAnchor.UpperLeft : TextAnchor.UpperCenter);
-            if (hasArt) Stretch(body.rectTransform, new Vector2(0.47f, 0.27f), new Vector2(0.98f, 0.75f), Vector2.zero, Vector2.zero);
-            else Stretch(body.rectTransform, new Vector2(0.1f, 0.34f), new Vector2(0.9f, 0.74f), Vector2.zero, Vector2.zero);
+            if (hasArt) Stretch(body.rectTransform, new Vector2(0.47f, 0.32f), new Vector2(0.98f, 0.75f), Vector2.zero, Vector2.zero);
+            else Stretch(body.rectTransform, new Vector2(0.1f, 0.36f), new Vector2(0.9f, 0.74f), Vector2.zero, Vector2.zero);
 
-            MakeButton(deathPanel.transform, "[R] AGAIN", new Vector2(0.15f, 0.12f), new Vector2(0.48f, 0.24f), true, onAgain);
-            MakeButton(deathPanel.transform, "[T] TITLE", new Vector2(0.52f, 0.12f), new Vector2(0.85f, 0.24f), true, onTitle);
-            MakeButton(deathPanel.transform, "[L] TOP 10", new Vector2(0.3f, 0.01f), new Vector2(0.7f, 0.1f), true, () => ShowLeaderboard());
+            var scoreText = NewText("Score", deathPanel.transform, "SCORE " + score, 40, TextAnchor.MiddleCenter);   // najwazniejsza liczba ekranu: wieksza niz reszta statystyk
+            Stretch(scoreText.rectTransform, new Vector2(0.03f, 0.19f), new Vector2(0.97f, 0.33f), Vector2.zero, Vector2.zero);
+
+            MakeButton(deathPanel.transform, "OK   [ENTER]", new Vector2(0.3f, 0.04f), new Vector2(0.7f, 0.17f), true, onOk);
 
             Recolor();
             deathPanel.SetActive(true);
@@ -587,15 +618,25 @@ namespace PayWithPixels
 
         public void ShowLeaderboard(Action onClose = null, bool editName = false)
         {
+            if (Online.State != Online.Status.Ready)
+            {
+                bool connecting = Online.State == Online.Status.Connecting;
+                string err = Online.State == Online.Status.Error ? Online.Message : "";   // ostatni blad: pokazujemy graczowi (diagnoza bez konsoli)
+                if (!connecting) Online.Init();   // po bledzie lub przed pierwszym polaczeniem: ponow probe
+                if (err.Length > 70) err = err.Substring(0, 70);
+                Toast((connecting || Online.State == Online.Status.Connecting ? "CONNECTING... TRY AGAIN IN A MOMENT" : "LEADERBOARD OFFLINE") + (err.Length > 0 ? " / " + err.ToUpperInvariant() : ""), 3f);   // tablicy nie pokazujemy, dopoki nie jest gotowa
+                return;
+            }
             leaderOnClose = onClose;
+            leaderOpenedFrame = Time.frameCount;   // ten sam klawisz L, ktory otworzyl tablice, nie moze jej w tej klatce zamknac
             if (leaderPanel == null) leaderPanel = NewPanel("Leaderboard", transform);
             nameEditing = editName;
             nameBuffer = Online.PlayerName;
-            Online.Refresh();
+            if (!editName) Online.Refresh();   // po runie tablica jest swieza, a odswiezenie nie moze zamknac konta wpisu
             RebuildLeaderboard();
             leaderPanel.SetActive(true);
             leaderPanel.transform.SetAsLastSibling();
-            toastText.transform.SetAsLastSibling();
+            toastRoot.SetAsLastSibling();
         }
 
         public void HideLeaderboard()
@@ -605,25 +646,45 @@ namespace PayWithPixels
             leaderOnClose?.Invoke();
         }
 
+        private int leaderOpenedFrame = -1;
+
         private void UpdateLeaderboard()
         {
             if (!OverlayOpen) return;
-            if (leaderVersion != Online.Version) RebuildLeaderboard();
+            if (Time.frameCount == leaderOpenedFrame) return;
+            if (Online.State == Online.Status.Error)
+            {
+                HideLeaderboard();   // blad w trakcie: zamknij tablice i wroc do poprzedniego ekranu
+                Toast("LEADERBOARD OFFLINE");
+                return;
+            }
+            if (nameEditing && !Online.Top.Exists(Online.CanEdit)) nameEditing = false;   // brak wiersza do edycji (np. konto juz zamkniete)
+            int blink = Mathf.FloorToInt(Time.unscaledTime * 2f) % 2;
+            if (leaderVersion != Online.Version || (nameEditing && blink != leaderBlink)) RebuildLeaderboard();
             if (nameEditing)
             {
                 bool changed = false;
                 foreach (char c in Input.inputString)
                 {
                     if (c == '\b') { if (nameBuffer.Length > 0) { nameBuffer = nameBuffer.Substring(0, nameBuffer.Length - 1); changed = true; } }
-                    else if (c == '\n' || c == '\r') { Online.SetName(nameBuffer.Length > 0 ? nameBuffer : "PLAYER"); nameEditing = false; changed = true; }
+                    else if (c == '\n' || c == '\r') { CommitName(); return; }
                     else if (nameBuffer.Length < 16 && ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_')) { nameBuffer += char.ToUpperInvariant(c); changed = true; }
                 }
-                if (Input.GetKeyDown(KeyCode.Escape)) { if (!Online.HasName) Online.SetName("PLAYER"); nameEditing = false; changed = true; }
-                if (changed) RebuildLeaderboard();
+                if (Input.GetKeyDown(KeyCode.Escape)) CommitName();
+                else if (changed) RebuildLeaderboard();
                 return;
             }
             if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.L)) HideLeaderboard();
-            else if (Input.GetKeyDown(KeyCode.N)) { nameEditing = true; nameBuffer = Online.PlayerName; RebuildLeaderboard(); }
+        }
+
+        private int leaderBlink;
+
+        /// <summary>ESC lub Enter w komorce nazwy: zatwierdza (pusta = losowa nazwa z Authentication zostaje).</summary>
+        private void CommitName()
+        {
+            nameEditing = false;
+            Online.ApplyName(nameBuffer);
+            RebuildLeaderboard();
         }
 
         private void RebuildLeaderboard()
@@ -631,6 +692,7 @@ namespace PayWithPixels
             foreach (Transform c in leaderPanel.transform) Destroy(c.gameObject);
             tinted.RemoveAll(kv => kv.Key == null);
             leaderVersion = Online.Version;
+            leaderBlink = Mathf.FloorToInt(Time.unscaledTime * 2f) % 2;
 
             var bg = Resources.Load<Sprite>("UI/ui_leaderboard_bg");
             if (bg != null)
@@ -640,13 +702,26 @@ namespace PayWithPixels
                 img.raycastTarget = false;
                 Stretch(img.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             }
-            // uklad tla 480x270: naglowek y 20-39, tytuly kolumn 43-58, 10 wierszy po 16 px od 58, stopka 226-241
+            // uklad tla 480x270: naglowek y 20-39, tytuly kolumn 40-58, 10 wierszy po 16 px od 58, stopka 226-241
             Vector2 A(float x, float py) => new Vector2(x, 1f - py / 270f);
             var title = NewText("Title", leaderPanel.transform, "TOP 10", 36, TextAnchor.MiddleCenter);
             Stretch(title.rectTransform, A(0.07f, 39f), A(0.93f, 20f), Vector2.zero, Vector2.zero);
             string status = Online.StatusLine();
-            var heads = NewText("Heads", leaderPanel.transform, status.Length > 0 ? status : "RANK   NAME   SCORE", 14, TextAnchor.MiddleCenter);
-            Stretch(heads.rectTransform, A(0.07f, 58f), A(0.93f, 43f), Vector2.zero, Vector2.zero);
+            if (status.Length > 0)
+            {
+                var heads = NewText("Heads", leaderPanel.transform, status, 14, TextAnchor.MiddleCenter);
+                Stretch(heads.rectTransform, A(0.07f, 58f), A(0.93f, 40f), Vector2.zero, Vector2.zero);
+            }
+            else
+            {
+                // tytuly kolumn w tych samych polach co wiersze (rank / nazwa / wynik)
+                var hr = NewText("HR", leaderPanel.transform, "RANK", 16, TextAnchor.MiddleCenter);
+                Stretch(hr.rectTransform, A(0.0667f, 58f), A(0.1667f, 40f), Vector2.zero, Vector2.zero);
+                var hn = NewText("HN", leaderPanel.transform, "NAME", 16, TextAnchor.MiddleLeft);
+                Stretch(hn.rectTransform, A(0.18f, 58f), A(0.7f, 40f), Vector2.zero, Vector2.zero);
+                var hs = NewText("HS", leaderPanel.transform, "SCORE", 16, TextAnchor.MiddleRight);
+                Stretch(hs.rectTransform, A(0.7f, 58f), A(0.92f, 40f), Vector2.zero, Vector2.zero);
+            }
 
             if (Online.Top.Count == 0)
             {
@@ -674,27 +749,17 @@ namespace PayWithPixels
                     var rt = NewText("R", leaderPanel.transform, "#" + r.rank, 20, TextAnchor.MiddleCenter);
                     Stretch(rt.rectTransform, A(0.0667f, y1), A(0.1667f, y0), Vector2.zero, Vector2.zero);
                 }
-                var nt = NewText("N", leaderPanel.transform, (r.mine ? "> " : "") + r.name, 20, TextAnchor.MiddleLeft);
+                string shownName = r.name;
+                if (nameEditing && Online.CanEdit(r))   // nazwa wpisywana od razu w komorce; pusta = widac losowa
+                    shownName = nameBuffer + (leaderBlink == 0 ? "_" : " ");
+                var nt = NewText("N", leaderPanel.transform, (r.mine ? "> " : "") + shownName, 20, TextAnchor.MiddleLeft);
                 Stretch(nt.rectTransform, A(0.18f, y1), A(0.7f, y0), Vector2.zero, Vector2.zero);
                 var st = NewText("S", leaderPanel.transform, r.score.ToString(), 20, TextAnchor.MiddleRight);
                 Stretch(st.rectTransform, A(0.7f, y1), A(0.92f, y0), Vector2.zero, Vector2.zero);
             }
 
-            string foot;
-            if (nameEditing) foot = "NAME: " + nameBuffer + (Mathf.FloorToInt(Time.unscaledTime * 2f) % 2 == 0 ? "_" : " ") + "   [ENTER] OK";
-            else
-            {
-                string me = Online.HasName ? Online.PlayerName : "-";
-                foot = "YOU: " + me + (Online.Mine.HasValue ? "   RANK #" + Online.Mine.Value.rank + "   SCORE " + Online.Mine.Value.score : "");
-            }
-            var ft = NewText("Foot", leaderPanel.transform, foot, 18, TextAnchor.MiddleCenter);
-            Stretch(ft.rectTransform, A(0.07f, 241f), A(0.93f, 226f), Vector2.zero, Vector2.zero);
-
-            if (!nameEditing)
-            {
-                MakeButton(leaderPanel.transform, "[N] CHANGE NAME", A(0.1f, 268f), A(0.46f, 246f), true, () => { nameEditing = true; nameBuffer = Online.PlayerName; RebuildLeaderboard(); });
-                MakeButton(leaderPanel.transform, "[ESC] CLOSE", A(0.54f, 268f), A(0.9f, 246f), true, HideLeaderboard);
-            }
+            if (nameEditing) MakeButton(leaderPanel.transform, "[ENTER] OK", A(0.3f, 268f), A(0.7f, 246f), true, CommitName);
+            else MakeButton(leaderPanel.transform, "[ESC] CLOSE", A(0.3f, 268f), A(0.7f, 246f), true, HideLeaderboard);
             Recolor();
         }
 
@@ -753,7 +818,7 @@ namespace PayWithPixels
             bossLineText.text = line;
             bossLineUntil = Time.unscaledTime + 2.5f;
             bossLinePanel.transform.SetAsLastSibling();
-            toastText.transform.SetAsLastSibling();
+            toastRoot.SetAsLastSibling();
             Recolor();
             bossLinePanel.SetActive(true);
         }

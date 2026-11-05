@@ -7,16 +7,19 @@ namespace PayWithPixels
 
     public class Enemy : MonoBehaviour
     {
+        public const int SpawnerMaxSpawnCount = 12;
+
         public static readonly List<Enemy> All = new List<Enemy>();
 
         public float radius;
         public bool IsRegular => type != EnemyType.Boss && type != EnemyType.Collector;
         public EnemyType type { get; private set; }
+        [SerializeField]
         private int hp;
         private int maxHp;
         private float speed;
         private int contactDamage = 1;
-        private int coinDrop = 1;
+        private float coinDrop = 1;
         private float shootTimer;
         private float strafeSign = 1f;
         private float clock;
@@ -37,34 +40,48 @@ namespace PayWithPixels
         private float dashLeft;
         // Straznik
         private Vector2 facing = Vector2.down;
+        private bool fleeing;                // Poborca po dotknieciu gracza ucieka za brzeg areny
+        private string heldGain;             // zabrany zysk (wraca, jesli Poborca zginie w ucieczce)
+        private int heldLevel;
+        private SpriteRenderer shieldSr;   // Straznik: tarcza jako osobny sprite, niezalezny od obrotu korpusu (kierunek ruchu)
+        private int shieldDir = -1;
         // Spawner
         private int spawned;
         private float flash;
 
+        public int GetCoins(float spread = 1.5f) => GetRandomizedInt(coinDrop, spread);
+        public static int GetRandomizedInt(float number, float spread = 1.5f) => Mathf.RoundToInt(number + spread * (Random.value - 0.5f));
+
         private struct Spec
         {
-            public string sprite; public int size; public float radius; public int hp; public float speed; public int contact; public int coins; public bool rotates;
+            public string sprite; public int size; public float radius; public float hpBase; public float speed; public int contact; public float coins; public bool rotates;
         }
 
-        private static Spec SpecFor(EnemyType t, int d)
+        /// <summary>Statystyki wroga z GameConfig (EnemyConfig); tu zostaje tylko wyglad.</summary>
+        private static Spec SpecFor(EnemyType t, float d)
         {
+            if (t != EnemyType.Chaser && t != EnemyType.Shooter && t != EnemyType.Tank && t != EnemyType.Dasher && t != EnemyType.Siege
+                && t != EnemyType.Swarm && t != EnemyType.Guard) t = EnemyType.Spawner;
+            var c = GameConfig.Instance.GetEnemy(t);
+            var s = new Spec { radius = c.radius, hpBase = Mathf.FloorToInt(c.hpBase + d * c.hpPerDifficulty), speed = c.speed, contact = c.contactDamage, coins = c.coins };
             switch (t)
             {
-                case EnemyType.Chaser: return new Spec { sprite = "enemy_chaser", size = 16, radius = 0.45f, hp = 1 + d / 4, speed = 2.6f, contact = 1, coins = 1, rotates = true };
-                case EnemyType.Shooter: return new Spec { sprite = "enemy_shooter", size = 16, radius = 0.45f, hp = 2 + d / 4, speed = 2f, contact = 1, coins = 1, rotates = true };
-                case EnemyType.Tank: return new Spec { sprite = "enemy_tank", size = 24, radius = 0.7f, hp = 6 + d * 3 / 4, speed = 1.2f, contact = 2, coins = 3, rotates = true };
-                case EnemyType.Dasher: return new Spec { sprite = "enemy_dasher", size = 16, radius = 0.45f, hp = 2 + d / 5, speed = 2.2f, contact = 1, coins = 2, rotates = true };
-                case EnemyType.Siege: return new Spec { sprite = "enemy_siege", size = 16, radius = 0.5f, hp = 4 + d / 4, speed = 1.6f, contact = 1, coins = 3, rotates = false };
-                case EnemyType.Swarm: return new Spec { sprite = "enemy_swarm", size = 6, radius = 0.3f, hp = 1, speed = 2.8f, contact = 1, coins = 0, rotates = false };
-                case EnemyType.Guard: return new Spec { sprite = "enemy_guard", size = 16, radius = 0.5f, hp = 4 + d / 4, speed = 1.7f, contact = 1, coins = 3, rotates = true };
-                default: return new Spec { sprite = "enemy_spawner", size = 24, radius = 0.7f, hp = 8 + d / 2, speed = 0.7f, contact = 1, coins = 4, rotates = false };
+                case EnemyType.Chaser: s.sprite = "enemy_chaser"; s.size = 16; s.rotates = true; break;
+                case EnemyType.Shooter: s.sprite = "enemy_shooter"; s.size = 16; s.rotates = true; break;
+                case EnemyType.Tank: s.sprite = "enemy_tank"; s.size = 24; s.rotates = true; break;
+                case EnemyType.Dasher: s.sprite = "enemy_dasher"; s.size = 16; s.rotates = true; break;
+                case EnemyType.Siege: s.sprite = "enemy_siege"; s.size = 16; s.rotates = false; break;
+                case EnemyType.Swarm: s.sprite = "enemy_swarm"; s.size = 6; s.rotates = false; break;
+                case EnemyType.Guard: s.sprite = "enemy_guard"; s.size = 16; s.rotates = true; break;
+                default: s.sprite = "enemy_spawner"; s.size = 24; s.rotates = false; break;
             }
+            return s;
         }
 
         /// <summary>Limit predkosci zwyklych wrogow: 0.8 predkosci gracza z 1 stackiem nog (5 * 0.92); rojowi nizej, bo goni tlumem.</summary>
-        public static float MaxSpeed(EnemyType t) => t == EnemyType.Swarm ? 2.7f :0.8f * 5f * 0.92f;
+        public static float MaxSpeed(EnemyType t) => t == EnemyType.Swarm ? GameConfig.Instance.enemyScaling.swarmMaxSpeed : GameConfig.Instance.enemyScaling.regularMaxSpeed;
 
-        public static Enemy Spawn(Transform parent, EnemyType type, Vector2 pos, int difficulty)
+        public static Enemy Spawn(Transform parent, EnemyType type, Vector2 pos, float difficulty, int? overrideCoins = null)
         {
             var go = new GameObject(type.ToString());
             go.transform.SetParent(parent, false);
@@ -73,12 +90,23 @@ namespace PayWithPixels
             e.type = type;
 
             var s = SpecFor(type, difficulty);
-            float scale = 1f + 0.03f * difficulty;
+            float scale = 1f + GameConfig.Instance.enemyScaling.speedPerDifficulty * difficulty;
             e.walkName = s.sprite; e.spriteSize = s.size; e.rotates = s.rotates;
             e.sr = Art.MakeRenderer(go, Art.Square(s.sprite + "_walk_0", s.size), 5);
-            e.radius = s.radius; e.hp = e.maxHp = Mathf.CeilToInt(s.hp * Game.Instance.EnemyHpMul); e.speed = Mathf.Min(s.speed * scale * Game.Instance.EnemySpeedMul, MaxSpeed(type));
-            e.contactDamage = s.contact; e.coinDrop = s.coins;
-            if (e.maxHp >= 8 && type != EnemyType.Guard) e.CreateBar();
+            e.radius = s.radius; 
+            e.hp = e.maxHp = Mathf.Max(1, GetRandomizedInt(s.hpBase * Game.Instance.EnemyHpMul));
+            e.speed = Mathf.Min(s.speed * scale * Game.Instance.EnemySpeedMul, MaxSpeed(type));
+            e.contactDamage = s.contact;
+            e.coinDrop = overrideCoins ?? s.coins;
+            if (type == EnemyType.Tank || type == EnemyType.Spawner)
+                e.CreateBar();
+            if (type == EnemyType.Guard)
+            {
+                var sh = new GameObject("Shield");
+                sh.transform.SetParent(go.transform, false);
+                e.shieldSr = Art.MakeRenderer(sh, Art.ShieldArc(6), 6);
+                e.UpdateShield();
+            }
             if (type == EnemyType.Guard && !guardHintShown)
             {
                 guardHintShown = true;
@@ -101,12 +129,22 @@ namespace PayWithPixels
             var e = go.AddComponent<Enemy>();
             e.type = EnemyType.Collector;
             e.sr = Art.MakeRenderer(go, Art.Square("enemy_collector_walk_0", 24), 6);
-            e.walkName = "enemy_collector"; e.spriteSize = 24;
-            e.radius = 0.6f;
-            e.hp = e.maxHp = 35 + 6 * Game.Instance.zone;
-            e.speed = 3.5f;
+            e.walkName = "enemy_collector";
+            e.spriteSize = 24;
+            var cc = GameConfig.Instance.GetCollector();
+            e.radius = cc.radius;
+            // kazde kolejne spotkanie w runie zwieksza HP bazowe
+            e.hp = e.maxHp = GetRandomizedInt(cc.hpBase 
+                + cc.hpPerZone * Game.Instance.zone
+                + cc.hpPerEncounter * Game.Instance.collectorMeetings
+                + cc.hpPerDebt * Game.Instance.debt 
+                + cc.hpPerDifficulty * Game.Instance.Difficulty);
+
+            Game.Instance.collectorMeetings++;
+            e.speed = cc.speed;
             e.CreateBar();
-            e.contactDamage = 0;
+            e.contactDamage = cc.contactDamage;
+            e.coinDrop = cc.coins;
             return e;
         }
 
@@ -135,7 +173,7 @@ namespace PayWithPixels
             e.bossBullet = zone == 1 ? "bullet_boss" : zone == 2 ? "bullet_boss2" : "bullet_boss3";
             e.sr = Art.MakeRenderer(go, Art.Square(e.bossSprite + "_0", 48), 6);
             e.radius = 1.4f;
-            e.hp = e.maxHp = Mathf.CeilToInt((zone == 1 ? 50 : zone == 2 ? 95 : 130) * Game.Instance.BossHpMul);
+            e.hp = e.maxHp = Mathf.CeilToInt((zone == 1 ? 60 : zone == 2 ? 100 : 150) * Game.Instance.BossHpMul);
             e.contactDamage = 2;
             e.shootTimer = 2f;
             e.spawnAddsTimer = 6f;
@@ -147,9 +185,11 @@ namespace PayWithPixels
         private static readonly Stack<List<Enemy>> cellPool = new Stack<List<Enemy>>();
 
         /// <summary>
-        /// Miekkie rozpychanie: zwykli wrogowie odpychaja sasiadow, gdy sa blizej niz 0.75 sumy promieni
-        /// (sila proporcjonalna do zakladki, bez fizyki). Siatka przestrzenna 1.5 j. - tanie przy 60+ wrogach.
+        /// Miekkie rozpychanie: zwykli wrogowie odpychaja sasiadow, gdy sa blizej niz 1.5 sumy promieni
+        /// (sila proporcjonalna do zakladki, bez fizyki). Siatka przestrzenna 2.5 j. (>= 1.5 * najwieksza suma promieni 1.4) - tanie przy 60+ wrogach.
         /// </summary>
+        private const float SeparationCell = 2.5f, SeparationFactor = 1.5f;
+
         public static void Separate(float dt)
         {
             foreach (var kv in grid) { kv.Value.Clear(); cellPool.Push(kv.Value); }
@@ -159,7 +199,7 @@ namespace PayWithPixels
                 var e = All[i];
                 if (!e.IsRegular) continue;
                 Vector2 p = e.transform.position;
-                long key = Key(Mathf.FloorToInt(p.x / 1.5f), Mathf.FloorToInt(p.y / 1.5f));
+                long key = Key(Mathf.FloorToInt(p.x / SeparationCell), Mathf.FloorToInt(p.y / SeparationCell));
                 if (!grid.TryGetValue(key, out var cell)) grid[key] = cell = cellPool.Count > 0 ? cellPool.Pop() : new List<Enemy>();
                 cell.Add(e);
             }
@@ -169,7 +209,7 @@ namespace PayWithPixels
                 var a = All[i];
                 if (!a.IsRegular) continue;
                 Vector2 pa = a.transform.position;
-                int cx = Mathf.FloorToInt(pa.x / 1.5f), cy = Mathf.FloorToInt(pa.y / 1.5f);
+                int cx = Mathf.FloorToInt(pa.x / SeparationCell), cy = Mathf.FloorToInt(pa.y / SeparationCell);
                 Vector2 push = Vector2.zero;
                 for (int dx = -1; dx <= 1; dx++)
                     for (int dy = -1; dy <= 1; dy++)
@@ -179,7 +219,7 @@ namespace PayWithPixels
                         {
                             if (b == a) continue;
                             Vector2 d = pa - (Vector2)b.transform.position;
-                            float min = 0.75f * (a.radius + b.radius);
+                            float min = SeparationFactor * (a.radius + b.radius);
                             float sq = d.sqrMagnitude;
                             if (sq >= min * min) continue;
                             float dist = Mathf.Sqrt(sq);
@@ -245,7 +285,44 @@ namespace PayWithPixels
         public bool Blocks(Vector2 bulletVelocity)
         {
             if (type != EnemyType.Guard) return false;
-            return Vector2.Dot(-bulletVelocity.normalized, facing) > 0.7f;
+            return Vector2.Dot(-bulletVelocity.normalized, ShieldVector) > 0.695f;   // 46 stopni wokol kierunku tarczy (8 kierunkow), tak jak rysowany luk
+        }
+
+        private int FacingDir8 => (Mathf.RoundToInt(Mathf.Atan2(facing.y, facing.x) * Mathf.Rad2Deg / 45f) + 8) % 8;
+        private Vector2 ShieldVector { get { float a = FacingDir8 * 45f * Mathf.Deg2Rad; return new Vector2(Mathf.Cos(a), Mathf.Sin(a)); } }
+
+        private void UpdateShield()
+        {
+            if (shieldSr == null) return;
+            shieldSr.transform.rotation = Quaternion.identity;   // korpus obraca sie do ruchu, tarcza nie
+            int d = FacingDir8;
+            if (d != shieldDir) { shieldDir = d; shieldSr.sprite = Art.ShieldArc(d); }
+        }
+
+        /// <summary>Poborca dotknal gracza: zabiera zysk, nie znika, tylko ucieka za brzeg areny.</summary>
+        private void StartFleeing(Game game)
+        {
+            fleeing = true;
+            heldGain = game.OnCollectorTouch(out heldLevel);
+            speed = 3.8f;
+            if (heldGain == null) return;
+            walkName = "enemy_collector_empty";   // korpus bez dolara, w srodku ikona zabranego zysku
+            var gain = Catalog.Gains.Find(g => g.name == heldGain);
+            var icon = gain != null ? Resources.Load<Sprite>("Icons/" + gain.icon) : null;
+            if (icon == null) return;
+            var go = new GameObject("HeldGain");
+            go.transform.SetParent(transform, false);
+            go.transform.localScale = Vector3.one * 0.75f;
+            Art.MakeRenderer(go, icon, 7);
+        }
+
+        /// <summary>Oddaje graczowi zysk zabrany przez tego Poborce (zabity w ucieczce albo wymieciony z areny).</summary>
+        public void ReturnHeldGain()
+        {
+            if (heldGain == null) return;
+            string g = heldGain;
+            heldGain = null;
+            Game.Instance.RestoreGain(g, heldLevel);
         }
 
         public void Damage(int dmg, bool crit = false)
@@ -255,7 +332,7 @@ namespace PayWithPixels
             Sfx.Play(Sound.Kill);
             if (type == EnemyType.Boss)
             {
-                Game.Instance.OnBossKilled();
+                Game.Instance.OnBossKilled(this);
                 return;
             }
             Shard.Burst(transform.parent, transform.position, 5);
@@ -265,16 +342,20 @@ namespace PayWithPixels
                 if (st.critBlast > 0) Explosion.Spawn(transform.parent, transform.position, 1.6f, 2);
                 if (st.critCoins > 0) Game.Instance.SpawnCoin(transform.position, st.critCoins);
             }
-            if (type != EnemyType.Collector) Game.Instance.OnEnemyKilled(transform.position);
+            if (type != EnemyType.Collector)
+                Game.Instance.OnEnemyKilled(transform.position);
             if (type == EnemyType.Collector)
             {
-                Game.Instance.OnCollectorKilled();
-                Game.Instance.SpawnCoin(transform.position, 6);
+                ReturnHeldGain();
+                Game.Instance.OnCollectorKilled(this);
                 Destroy(gameObject);
                 return;
             }
-            if (coinDrop > 0) Game.Instance.SpawnCoin(transform.position, coinDrop);
-            else if (Random.value < 0.5f) Game.Instance.SpawnCoin(transform.position, 1);
+            if (type == EnemyType.Spawner)
+                Game.Instance.SpawnCoin(transform.position, GetCoins(coinDrop + (SpawnerMaxSpawnCount - spawned) / 2));
+            else
+                Game.Instance.SpawnCoin(transform.position, GetCoins());
+
             Destroy(gameObject);
         }
 
@@ -449,7 +530,7 @@ namespace PayWithPixels
             }
         }
 
-        /// <summary>Strefa 3: The Auctioneer - sprzedaje Twoje zyski podczas walki (wracaja po czasie albo po jego smierci).</summary>
+        /// <summary>Strefa 3: The Auctioneer - sprzedaje Twoje zyski podczas walki (wracaja dopiero po jego smierci).</summary>
         private void UpdateAuctioneer(Game game)
         {
             Vector2 pos = new Vector2(Mathf.Sin(clock * 0.45f) * (Game.ArenaHalf.x - 2.5f), 2.2f + Mathf.Sin(clock * 0.9f) * 1.6f);
@@ -477,7 +558,7 @@ namespace PayWithPixels
             if (auctionTimer <= 0)
             {
                 auctionTimer = 22f;
-                game.AuctionOffGain(14f);
+                game.AuctionOffGain();
             }
 
             shootTimer -= Time.deltaTime;
@@ -614,6 +695,7 @@ namespace PayWithPixels
                     else
                     {
                         move = dir;
+                        moveSpeed = Mathf.Lerp(0.1f, speed, Mathf.InverseLerp(1, 5, dist));
                         dashTimer -= dt;
                         if (dashTimer <= 0 && attacking && dist < 8f) { telegraph = 0.55f; move = Vector2.zero; }
                     }
@@ -631,13 +713,25 @@ namespace PayWithPixels
                     break;
 
                 case EnemyType.Spawner:
-                    move = dist < 5f ? -dir : Vector2.zero;
+                    move = dist < 7f ? -dir
+                        : dist > 10f ? dir
+                        : Vector2.zero;
                     shootTimer -= dt;
-                    if (shootTimer <= 0 && attacking && spawned < 8)
+                    if (shootTimer <= 0 && attacking && spawned < SpawnerMaxSpawnCount)
                     {
                         shootTimer = 4f;
                         spawned++;
-                        Spawn(transform.parent, EnemyType.Chaser, pos, game.Difficulty);
+                        Spawn(transform.parent, EnemyType.Chaser, pos, game.Difficulty, 0);
+                    }
+                    break;
+
+                case EnemyType.Collector:
+                    if (!fleeing) move = dir;
+                    else
+                    {
+                        // ucieczka od gracza, lekko w strone najblizszego brzegu, zeby nie utknal na srodku
+                        Vector2 outward = pos.sqrMagnitude > 0.01f ? pos.normalized : Vector2.up;
+                        move = (-dir + 0.35f * outward).normalized;
                     }
                     break;
 
@@ -656,11 +750,22 @@ namespace PayWithPixels
                 sr.sprite = Art.Square(walkName + "_walk_" + (Mathf.FloorToInt(clock / 0.25f) % 2), spriteSize);
 
             pos += move * (moveSpeed * dt);
-            pos.x = Mathf.Clamp(pos.x, -Game.ArenaHalf.x, Game.ArenaHalf.x);
-            pos.y = Mathf.Clamp(pos.y, -Game.ArenaHalf.y, Game.ArenaHalf.y);
+            if (!fleeing)
+            {
+                pos.x = Mathf.Clamp(pos.x, -Game.ArenaHalf.x, Game.ArenaHalf.x);
+                pos.y = Mathf.Clamp(pos.y, -Game.ArenaHalf.y, Game.ArenaHalf.y);
+            }
             pos = Obstacles.Push(pos, radius * 0.8f);
             transform.position = pos;
+            if (fleeing && (Mathf.Abs(pos.x) > Game.ArenaHalf.x + 1f || Mathf.Abs(pos.y) > Game.ArenaHalf.y + 1f))
+            {
+                game.OnCollectorEscaped(heldGain);   // uciekl: zysk przepada
+                heldGain = null;
+                Destroy(gameObject);
+                return;
+            }
             if (rotates && dir != Vector2.zero && dashLeft <= 0) transform.rotation = Art.FaceRotation(dir);
+            UpdateShield();
 
             float r = radius + Player.Radius;
             if (dist < r * 0.85f && type != EnemyType.Collector)   // miekkie wypychanie: wrog nie zostaje "w srodku" gracza
@@ -669,8 +774,7 @@ namespace PayWithPixels
             {
                 if (type == EnemyType.Collector)
                 {
-                    game.OnCollectorTouch();
-                    Destroy(gameObject);
+                    if (!fleeing) StartFleeing(game);
                     return;
                 }
                 game.player.Hurt(contactDamage);

@@ -90,7 +90,7 @@ Obecne: Mgła, Pikselizacja, Migotanie, Ociężałość (sluggish aim), Ciężki
 - **Reroll** oferty za monety (koszt rośnie), **Haggle**: za moneta+ryzyko zamień cenę oferty (zła cena na inną).
 
 ## Wrogowie (docelowo ~9 + 3 bossy)
-Obecni: Goniec, Strzelec, Tank. Dodać: Skaczek (dash na gracza), Oblężnik (pocisk obszarowy z ostrzeżeniem), Rój (małe, grupami), Strażnik (tarcza z przodu), Spawner (rodzi gońców), Poborca (zobacz Dług). Bossy: strefa 1 (obecny, "The Toll Keeper"), strefa 2 (wielofazowy, "The Banker"), strefa 3 ("The Auctioneer": sprzedaje twoje zyski podczas walki).
+Obecni: Goniec, Strzelec, Tank. Dodać: Skaczek (dash na gracza), Oblężnik (pocisk obszarowy z ostrzeżeniem), Rój (małe, grupami), Strażnik (tarcza z przodu), Spawner (rodzi gońców), Poborca (zobacz Dług). Bossy: strefa 1 (obecny, "The Toll Keeper"), strefa 2 (wielofazowy, "The Banker"), strefa 3 ("The Auctioneer": sprzedaje twoje zyski podczas walki; wracają dopiero po jego pokonaniu).
 
 ## Meta (między runami)
 - Ekran końca runu: statystyki, rekord (localStorage/PlayerPrefs), **odblokowania**: nowe bronie startowe (pistolet, strzelba, laser), nowe zyski w puli (odblokowywane osiągnięciami "pokonaj bossa z mgłą x3", "ukończ run z długiem 0" itp.).
@@ -113,13 +113,13 @@ Obecni: Goniec, Strzelec, Tank. Dodać: Skaczek (dash na gracza), Oblężnik (po
 # GDD v3 — fabuła i Kontrakty (decyzja designera po uwadze Kosmika)
 
 ## Fabuła (lekka)
-- Gracz to Dłużnik: wszedł na Drogę Opłat, żeby spłacić dług, którego nie pamięta. Każdy boss to etap "rozliczenia": Toll Keeper (myto), Banker (kredyt), Auctioneer (licytuje Ciebie).
+- Gracz to Dłużnik: wszedł na Drogę Opłat, żeby spłacić dług, którego nie pamięta. Każdy boss to etap "rozliczenia": Toll Keeper (myto), Banker (kredyt), Auctioneer (licytuje Ciebie; sprzedane zyski odzyskujesz tylko pokonując go).
 - Intro: 3-4 kadry 1-bit na tytule (po pierwszym uruchomieniu, pomijalne klawiszem).
 - Przed każdym bossem 1 linijka dialogu w ramce. Po Auctioneerze zakończenie: "SOLD." i ekran z łączną ceną runu (suma stacków cen, długu, sprzedanych zysków).
 - Zakończenie złe (zgon): "PAID IN FULL" z liczbą fal.
 
 ## Kontrakty (nowa mechanika)
-- Przed falą (w sklepie, jako czwarta opcja co 2. sklep) można podpisać kontrakt: nagroda teraz, **mały druk** ujawniany po 2 falach.
+- Przed falą (w sklepie, jako czwarta opcja co 2. sklep) można podpisać kontrakt: nagroda teraz, **mały druk** ujawniany po 2 falach. Nagroda ("now", nadaje kontraktowi nazwę) i mały druk ("later", kara) są losowane osobno z dwóch pul (14 nagród, 14 kar), więc ta sama nagroda może mieć różne kary; gracz nie zna kary w chwili podpisania.
 - Przykłady: "+30 monet teraz / po 2 falach tracisz 1 losowy zysk"; "+1 max HP / po 2 falach dług +10"; "podwójne monety przez 2 fale / po nich Mgła x2 do końca strefy"; "leczenie do pełna / następny boss +20% HP".
 - Mały druk jest ukryty do czasu, ale kontrakty z tego samego typu są znane z doświadczenia (UI pokazuje "???"). Kontrakt można odrzucić.
 - Osiągnięcie: "READ THE FINE PRINT" (podpisz 0 kontraktów w runie), "SIGNED AND SEALED" (podpisz 5).
@@ -152,18 +152,20 @@ Obecni: Goniec, Strzelec, Tank. Dodać: Skaczek (dash na gracza), Oblężnik (po
 # STAN AKTUALNY (synchronizacja z kodem, build 5402db79) — ten rozdział ma pierwszeństwo przy rozbieżnościach
 
 ## Zgodne z GDD
-3 strefy (5 fal + boss każda), 3 bossy (Toll Keeper / Banker / Auctioneer), dług (kredyt, odsetki 20% po fali), Poborca (od fali 5 strefy przy długu), 8 zwykłych wrogów (Goniec, Strzelec, Tank, Skaczek, Oblężnik, Rój, Strażnik, Spawner) + Poborca, 16 zysków (poziomy do 3), 10 cen, synergie, reroll, haggle, kontrakty (8), REDEEM, fabuła (intro, linijki bossów, SOLD / PAID IN FULL), pauza z ustawieniami, tutorial, meta (rekordy, osiągnięcia, odblokowania broni), 3 pętle muzyczne, dźwięk proceduralny.
+3 strefy (5 fal + boss każda), 3 bossy (Toll Keeper / Banker / Auctioneer), dług (kredyt, odsetki 20% po fali), Poborca (od fali 5 strefy przy długu), 8 zwykłych wrogów (Goniec, Strzelec, Tank, Skaczek, Oblężnik, Rój, Strażnik, Spawner) + Poborca, 16 zysków (poziomy do 3), 10 cen, synergie, reroll, haggle, kontrakty (14 nagród x 14 kar, losowane osobno), REDEEM, fabuła (intro, linijki bossów, SOLD / PAID IN FULL), pauza z ustawieniami, tutorial, meta (rekordy, osiągnięcia, odblokowania broni), 3 pętle muzyczne, dźwięk proceduralny.
 
 ## Zmienione względem wcześniejszych zapisów
 - Rozdzielczość wewnętrzna **480x270** (nie 320x180), canvas WebGL 1280x720, HUD w osobnym pasku 14 px.
 - Limit kredytu **20** monet (nie 30). Odsetki 20% (30% od Ascension 4).
-- Zabicie Poborcy **zmniejsza dług o połowę** (nie zeruje), daje monety, nie zdejmuje ceny.
+- **Poborca (stan z 29.10.2026, zastępuje wcześniejsze zapisy):** szansa pojawienia się w fali = dług / limit (min. 10%, od 2. fali strefy, max 1 naraz, gwarancja w ostatniej fali przy długu >= połowy limitu), wchodzi po losowej liczbie zespawnowanych wrogów. Po dotknięciu gracza **zabiera losowy zysk i ucieka** za brzeg areny (zysk przepada, jeśli ucieknie); **zabity w ucieczce oddaje zysk** (z poziomem). W trakcie ucieczki zamiast dolara pokazuje ikonę zabranego zysku. Każde kolejne spotkanie w runie ma +12% HP. **Zabicie NIE zmniejsza długu i NIE daje monet** (nagrodą jest obrona zysku).
 - Koszt zysku: round((baza + 3*(poziom-1) + 1*posiadane_poziomy + fala/3) * 1.3). Strefy 2-3: +25% monet. Pierwszy zysk w pierwszym sklepie darmowy (cena zmysłu nadal się dolicza).
-- Reroll 3+2n monety; kolejny zakup w tej samej wizycie +25%; REDEEM w każdym sklepie (1/wizytę), koszt 10+5*stacki; kontrakt co 2. sklep.
+- Reroll 3+2n monety; ceny sa stale w trakcie wizyty (zamrazane przy otwarciu sklepu); kazdy zakup z poprzedniego sklepu +10% do cen w nastepnym (maks. +30%) (bez informacji w UI); REDEEM w każdym sklepie (1/wizytę), koszt 10+5*stacki; kontrakt co 2. sklep.
 - Haggle: 1 moneta, raz na sklep, przelosowuje CENY ZMYSŁÓW niekupionych ofert (etykieta w UI: NEW PRICES).
 - Pierwszy stack ceny słaby, kolejne mocniejsze (krzywe nieliniowe); od fali 7 drogie zyski (koszt >= 9) dostają cenę x2.
 - Wrogowie: limit prędkości (max 0.8 * prędkość gracza przy 1 stacku nóg, Rój 2.7); rozpychanie się; pocisk bez PIERCE trafia jednego wroga.
-- 3 bronie startowe (pistolet / strzelba / laser) z różnymi zachowaniami; shotgun odblokowuje boss 1, laser boss 2.
+- 3 bronie startowe (pistolet / strzelba / laser) z różnymi zachowaniami; shotgun odblokowuje boss 1, laser boss 2. Laser (wiązka) a zyski: RICOCHET i PIERCING nie wchodzą do puli (przy laserze bez sensu), TRIPLE SHOT poszerza wiązkę (x1,8 / x2,6), FASTER SHOTS skraca odstęp ticków wiązki (działają wszystkie 3 stacki).
+
+**Config balansu:** liczby sterujące balansem leżą w jednym assecie `Assets/_Project/Resources/GameConfig.asset` (ScriptableObject `GameConfig`, nagłówki sekcji: Run, Score, Player, Weapons, Enemies, Economy, Gains, Prices, Misc), wzory zostają w kodzie. Każdy zysk i każda cena to osobna struktura (np. `FasterShotsGain`, `FogPrice`), bronie i wrogowie to wpisy `WeaponConfig` / `EnemyConfig` z enumem typu (zachowania w kodzie wg `switch (type)`). Poza configiem świadomie: wzór REDEEM, Kontrakty (będą proceduralne), spawn fal i bossowie. Opisy kart w sklepie (np. "+50% FIRE RATE") są tekstem w kodzie i nie śledzą zmian configu. Asset z wartościami domyślnymi tworzy `Jam/Create Game Config`, kontrolę zgodności z dawnymi liczbami robi `Jam/Run Gain Checks`. Ustawienie `shouldPauseOnDefocus` też jest tutaj.
 
 ## Dodane, a nie ma w pierwotnym GDD
 **ASCENSION** 1-5 po pierwszej wygranej (A1 start z mgłą, A2 wrogowie +25% HP, A3 ciężkie nogi + pikselizacja, A4 wrogowie szybsi i odsetki 30%, A5 migotanie + zbliżenie i bossowie +20% HP; mnożnik wyniku 1+0.25*poziom), przycisk PAY DEBT (klawisz D), skróty w sklepie (1-3, R, H, D, Enter), debug (F1-F6, tylko z ?debug=1), 11 osiągnięć z opisem po najechaniu, RESET PROGRESS, szablon WebGL (czarny ekran ładowania), telegrafy ataków i limit 170 pocisków wrogów.
@@ -190,5 +192,5 @@ Obecni: Goniec, Strzelec, Tank. Dodać: Skaczek (dash na gracza), Oblężnik (po
 
 # GDD v5 — plan rozszerzeń (zatwierdzony przez Kosmika, jest dużo czasu)
 1. **Nowe zyski i ceny + drzewka zysków** (GDD v4): Dron / Dash / Krytyk, nowe ceny i zyski. Po wdrożeniu **pełny balans** (gra mocno się zmieni): telemetria bota (NOBUY / RANDOM / CAREFUL / HUMAN-LIKE z 65% zbieranych monet), cele względne, ekonomia.
-2. **Globalna tablica wyników** (Unity Leaderboards): logowanie anonimowe + nazwa gracza, wynik = SCORE (z mnożnikiem Ascension), pokazywana na ekranie końca runu i tytułowym (TOP 10 + pozycja gracza). Tryb offline: gra działa bez sieci, wynik czeka w kolejce.
+2. **Globalna tablica wyników** (Unity Leaderboards): logowanie anonimowe + nazwa gracza (każdy run wysyłany jako nowe konto anonimowe, więc jeden gracz może zająć kilka miejsc w TOP 10), wynik = SCORE (z mnożnikiem Ascension), pokazywana po ekranie końca runu (przycisk OK), tylko gdy wynik jest w TOP 10; z tytułu dostępna pod L (bez podświetlenia). Nazwę gracz wpisuje bezpośrednio w swoim wierszu (Enter/ESC zatwierdza, pusta nazwa przywraca domyślną losową nazwę z Authentication). Tryb offline: gra działa bez sieci, wynik czeka w kolejce.
 3. **Nowe poziomy**: strefa 4+ z nowymi bossami, wrogami i paletami; opcjonalnie tryb nieskończony po wygranej.
