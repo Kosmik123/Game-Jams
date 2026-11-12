@@ -25,5 +25,10 @@ Sticks work only when `TouchPointers.Enabled` is true: on mobile platforms, or w
 
 ## Input backends
 
-`IPointerSource` abstracts raw input. `LegacyPointerSource` (legacy Input Manager) is the default;
-call `TouchPointers.SetSource(...)` to plug in another one (for example for the Input System).
+`IPointerSource` abstracts raw input. The default is chosen at compile time:
+
+- `InputSystemPointerSource` when Active Input Handling includes the Input System (`ENABLE_INPUT_SYSTEM`) and the
+  `com.unity.inputsystem` package is installed (the asmdef sets `BIPOLAR_TOUCHSTICKS_INPUT_SYSTEM` through `versionDefines`),
+- otherwise `LegacyPointerSource` (`ENABLE_LEGACY_INPUT_MANAGER`).
+
+With both handlers active the Input System wins. Call `TouchPointers.SetSource(...)` to plug in your own source.

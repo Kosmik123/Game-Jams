@@ -77,7 +77,9 @@ namespace Bipolar.TouchSticks
 
         private static IPointerSource CreateDefaultSource()
         {
-#if ENABLE_LEGACY_INPUT_MANAGER
+#if ENABLE_INPUT_SYSTEM && BIPOLAR_TOUCHSTICKS_INPUT_SYSTEM
+            return new InputSystemPointerSource();
+#elif ENABLE_LEGACY_INPUT_MANAGER
             return new LegacyPointerSource();
 #else
             return null;
