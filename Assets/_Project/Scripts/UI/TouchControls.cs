@@ -32,6 +32,10 @@ namespace PayWithPixels
                 return;
             }
 
+        }
+
+        private void Start()
+        {
             moveStick = gameObject.AddComponent<VirtualJoystick>();
             moveStick.Configure(new Rect(0f, 0f, 0.5f, 1f), new Vector2(0f, 0f), MoveDeadZone, false);
             aimStick = gameObject.AddComponent<VirtualJoystick>();

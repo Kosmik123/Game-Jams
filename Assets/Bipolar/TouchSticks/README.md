@@ -1,4 +1,4 @@
-# TouchSticks
+# Touch Sticks
 
 Virtual on-screen joysticks for mobile, drawn with IMGUI. No Canvas, no EventSystem, no prefabs, no assets (textures are generated at runtime).
 

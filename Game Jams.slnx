@@ -6,6 +6,6 @@
   <Project Path="NaughtyAttributes.Editor.csproj" />
   <Project Path="Bipolar.InterfaceSerialization.csproj" />
   <Project Path="Assembly-CSharp-Editor.csproj" />
-  <Project Path="Bipolar.SpritesetAnimation.csproj" />
+  <Project Path="Bipolar.TouchSticks.csproj" />
   <Project Path="Bipolar.ComponentEvents.csproj" />
 </Solution>
