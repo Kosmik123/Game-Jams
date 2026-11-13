@@ -1,0 +1,3 @@
+[submodule "Assets/Bipolar/InterfaceSerialization"]
+	path = Assets/Bipolar/InterfaceSerialization
+	url = https://github.com/Bipolar-Games/Interface-Serialization.git
